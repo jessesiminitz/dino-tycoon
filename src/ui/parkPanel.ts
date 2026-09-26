@@ -15,9 +15,11 @@ import {
 import { expectedArrivals, fairPrice, parkAppeal } from '../sim/systems/visitors';
 import { STAFF_ROLES, STAFF_TYPES } from '../sim/data/staff';
 import { dailyWages, describeTask } from '../sim/systems/staff';
+import { SCENARIOS } from '../sim/data/scenarios';
+import { daysLeft, goalProgress } from '../sim/goals';
 import { formatMoney, type Hud } from './hud';
 
-type Tab = 'overview' | 'staff' | 'finances' | 'bank';
+type Tab = 'goals' | 'overview' | 'staff' | 'finances' | 'bank';
 
 /** Validated against the panel surface (#1c2620) with the dataviz palette checker. */
 const BAR_COLOR = '#c98500';
@@ -38,7 +40,9 @@ export function mountParkPanel(sim: Simulation, hud: Hud): { open(tab?: Tab): vo
   const modal = document.getElementById('park')!;
   const body = document.getElementById('park-body')!;
   const tabs = Array.from(modal.querySelectorAll<HTMLButtonElement>('.tab-btn'));
+  const hasGoals = SCENARIOS[sim.state.scenario.id].goals.length > 0;
   let tab: Tab = 'overview';
+  for (const t of tabs) if (t.dataset.tab === 'goals') t.hidden = !hasGoals;
   let timer: number | undefined;
 
   const act = (r: { ok: boolean; message: string }) => {
@@ -172,6 +176,35 @@ export function mountParkPanel(sim: Simulation, hud: Hud): { open(tab?: Tab): vo
       </table>`;
   }
 
+  function goalsTab(): string {
+    const { state } = sim;
+    const sc = SCENARIOS[state.scenario.id];
+    const left = daysLeft(state);
+    const status =
+      state.scenario.status === 'won'
+        ? '🏆 Complete! Keep building as long as you like.'
+        : state.scenario.status === 'lost'
+          ? 'This scenario has ended; you can keep playing for fun.'
+          : left !== null
+            ? `<b>${left}</b> day${left === 1 ? '' : 's'} left`
+            : '';
+    const rows = goalProgress(state)
+      .map((g) => {
+        const pct = Math.min(100, (100 * Math.max(0, g.value)) / g.goal.target);
+        const shown = g.goal.kind === 'cash' ? formatMoney(g.value) : `${g.value}/${g.goal.target}`;
+        return `<li class="goal ${g.done ? 'done' : ''}">
+          <span>${g.done ? '✅' : '⬜'} ${g.label}</span><span class="goal-value">${shown}</span>
+          <span class="meter"><span style="width:${pct}%"></span></span>
+        </li>`;
+      })
+      .join('');
+    return `
+      <h3>${sc.name}</h3>
+      <p class="note">${sc.blurb}</p>
+      <p class="note">${status}</p>
+      <ul class="goals">${rows}</ul>`;
+  }
+
   function staffTab(): string {
     const { state } = sim;
     const escaped = state.dinos.filter((d) => d.escaped).length;
@@ -235,7 +268,16 @@ export function mountParkPanel(sim: Simulation, hud: Hud): { open(tab?: Tab): vo
 
   function render(): void {
     for (const t of tabs) t.classList.toggle('active', t.dataset.tab === tab);
-    body.innerHTML = tab === 'overview' ? overview() : tab === 'staff' ? staffTab() : tab === 'finances' ? finances() : bank();
+    body.innerHTML =
+      tab === 'goals'
+        ? goalsTab()
+        : tab === 'overview'
+          ? overview()
+          : tab === 'staff'
+            ? staffTab()
+            : tab === 'finances'
+              ? finances()
+              : bank();
   }
 
   body.addEventListener('click', (e) => {

@@ -10,6 +10,7 @@ import { hourlyFences, hourlyHealth, stepEscapes } from './systems/incidents';
 import { stepStaff } from './systems/staff';
 import { hourlyEvents } from './systems/events';
 import { hourlyFossils } from './systems/fossils';
+import { hourlyScenario } from './goals';
 
 /** Real-time milliseconds per game-hour at 1× speed. */
 export const MS_PER_HOUR = 1000;
@@ -84,6 +85,7 @@ export class Simulation {
       hourlyVisitors(ctx);
       hourlyFossils(ctx);
       hourlyEconomy(ctx);
+      hourlyScenario(ctx);
     }
     state.rngState = rng.snapshot;
   }

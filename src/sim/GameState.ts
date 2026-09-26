@@ -6,12 +6,13 @@ import type { FeederKind } from './data/feeders';
 import { DEFAULT_TICKET_PRICE, type BuildingKind } from './data/economy';
 import { newFinance, normalizeFinance, type Finance } from './finance';
 import type { StaffRole } from './data/staff';
+import { SCENARIOS, type ScenarioId } from './data/scenarios';
 
 export const MAP_WIDTH = 64;
 export const MAP_HEIGHT = 48;
 export const STARTING_MONEY = 50_000;
 export const START_HOUR = 8;
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;
 
 export interface Dino {
   id: number;
@@ -96,6 +97,18 @@ export interface Visitor {
   look: number;
 }
 
+export interface ScenarioState {
+  id: ScenarioId;
+  /** 'free' = no goals (sandbox, or carrying on after a scenario ended). */
+  status: 'playing' | 'won' | 'lost' | 'free';
+}
+
+export interface Stats {
+  bestDayVisitors: number;
+  escapes: number;
+  inspectionsPassed: number;
+}
+
 /** Single serializable state tree. Everything the game needs to resume lives here. */
 export interface GameState {
   version: typeof SAVE_VERSION;
@@ -133,6 +146,10 @@ export interface GameState {
   fossils: Partial<Record<SpeciesId, number>>;
   /** Hours of storm left (0 = clear skies). */
   stormHours: number;
+  scenario: ScenarioState;
+  stats: Stats;
+  /** Current tutorial step, or null when there's no tutorial (or it's finished). */
+  tutorialStep: number | null;
   /** Next id for dinos, feeders and other entities. */
   nextId: number;
 }
@@ -166,8 +183,22 @@ export function newGame(seed: number): GameState {
     staff: [],
     fossils: {},
     stormHours: 0,
+    scenario: { id: 'sandbox', status: 'free' },
+    stats: { bestDayVisitors: 0, escapes: 0, inspectionsPassed: 0 },
+    tutorialStep: null,
     nextId: 1,
   };
+}
+
+/** A fresh park set up for a scenario: its island, budget, unlocked species and tutorial. */
+export function startScenario(id: ScenarioId, randomSeed: number): GameState {
+  const sc = SCENARIOS[id];
+  const state = newGame(sc.seed ?? randomSeed);
+  state.money = sc.startMoney;
+  if (sc.unlocked) state.unlockedSpecies = [...sc.unlocked];
+  state.scenario = { id, status: sc.goals.length > 0 ? 'playing' : 'free' };
+  state.tutorialStep = sc.tutorial ? 0 : null;
+  return state;
 }
 
 /** Upgrades older saves in place. Returns null for saves too old to carry over. */
@@ -211,6 +242,14 @@ export function migrate(raw: { version?: number } & Record<string, unknown>): Ga
   if (raw.version === 5) {
     Object.assign(raw, { version: 6, fossils: {}, stormHours: 0 });
     normalizeFinance(raw.finance as Finance);
+  }
+  if (raw.version === 6) {
+    Object.assign(raw, {
+      version: 7,
+      scenario: { id: 'sandbox', status: 'free' },
+      stats: { bestDayVisitors: 0, escapes: 0, inspectionsPassed: 0 },
+      tutorialStep: null,
+    });
   }
   return raw.version === SAVE_VERSION ? (raw as unknown as GameState) : null;
 }

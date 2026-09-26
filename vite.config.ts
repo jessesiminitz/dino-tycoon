@@ -46,6 +46,18 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,png,json,mp3,ogg}'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+        // The pixel title font comes from Google Fonts; keep a copy for offline play.
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts',
+              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
       },
     }),
   ],

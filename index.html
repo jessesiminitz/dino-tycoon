@@ -14,6 +14,9 @@
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
     <link rel="icon" type="image/png" href="icons/icon-192.png" />
     <title>Dino Tycoon</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/src/ui/style.css" />
   </head>
   <body>
@@ -28,12 +31,14 @@
         <span id="hud-guests" class="hud-stat">0 guests</span>
         <button id="btn-park" class="hud-btn" aria-label="Park report">📊<span>Park</span></button>
         <button id="btn-guide" class="hud-btn" aria-label="Dino Guide">📖<span>Guide</span></button>
+        <button id="btn-goals" class="hud-btn" aria-label="Goals">🏆<span>Goals</span></button>
       </div>
       <div class="hud-group" role="group" aria-label="Game speed">
         <button class="speed-btn" data-speed="0" aria-label="Pause">❚❚</button>
         <button class="speed-btn" data-speed="1" aria-label="Normal speed">▶</button>
         <button class="speed-btn" data-speed="2" aria-label="Fast">▶▶</button>
         <button class="speed-btn" data-speed="4" aria-label="Very fast">▶▶▶</button>
+        <button id="btn-menu" class="speed-btn" aria-label="Menu">☰</button>
       </div>
     </div>
 
@@ -92,6 +97,7 @@
       <div class="modal-card">
         <header class="modal-head">
           <div class="tabs" role="tablist">
+            <button class="tab-btn" data-tab="goals" role="tab">Goals</button>
             <button class="tab-btn" data-tab="overview" role="tab">Overview</button>
             <button class="tab-btn" data-tab="staff" role="tab">Staff</button>
             <button class="tab-btn" data-tab="finances" role="tab">Finances</button>
@@ -101,6 +107,30 @@
         </header>
         <div id="park-body" class="panel-body"></div>
       </div>
+    </div>
+
+    <div id="menu" class="menu hidden">
+      <div class="menu-sky"></div>
+      <div class="menu-content">
+        <h1 class="menu-title">DINO <br>TYCOON</h1>
+        <div class="menu-body"></div>
+      </div>
+      <div class="menu-parade" aria-hidden="true"></div>
+    </div>
+
+    <div id="pause" class="modal hidden" role="dialog" aria-label="Menu">
+      <div class="modal-card pause-card">
+        <h2>Paused</h2>
+        <button class="menu-btn primary" data-pause="resume">Resume</button>
+        <button class="menu-btn" data-pause="save">Save now</button>
+        <button class="menu-btn" data-pause="settings">Settings</button>
+        <div class="settings" hidden></div>
+        <button class="menu-btn" data-pause="menu">Save &amp; main menu</button>
+      </div>
+    </div>
+
+    <div id="outcome" class="modal hidden" role="dialog" aria-label="Scenario result">
+      <div class="modal-card outcome-card"><div class="outcome-body"></div></div>
     </div>
 
     <div id="rotate-hint" class="rotate-hint">

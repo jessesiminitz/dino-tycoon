@@ -1,24 +1,66 @@
 import Phaser from 'phaser';
 import { registerSW } from 'virtual:pwa-register';
-import { newGame } from './sim/GameState';
+import { newGame, type GameState } from './sim/GameState';
 import { Simulation } from './sim/Simulation';
 import { ParkScene } from './render/ParkScene';
 import { WeatherScene } from './render/WeatherScene';
-import { loadGame, saveGame } from './save/storage';
+import { loadSlot, saveSlot, setBootDirective, takeBootDirective, type SlotId } from './save/storage';
 import { mountHud } from './ui/hud';
+import { showMenu } from './ui/menu';
+import { mountPauseMenu, offerUpdate, showOutcome } from './ui/overlays';
 import { UiState } from './ui/uiState';
 
-const state = loadGame() ?? newGame((Math.random() * 2 ** 32) >>> 0);
-const sim = new Simulation(state);
-const ui = new UiState();
-const hud = mountHud(sim, ui);
+/** Saves the running park, if there is one. Set when a park starts. */
+let saveCurrent: () => void = () => {};
+let currentSlot: SlotId | null = null;
 
-// iOS may kill a backgrounded web app without warning, so save whenever we lose focus.
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden') saveGame(sim.state);
-});
-window.addEventListener('pagehide', () => saveGame(sim.state));
-setInterval(() => saveGame(sim.state), 30_000);
+/** Back to the title screen: save, then reload so the next park starts clean. */
+function toMainMenu(): void {
+  saveCurrent();
+  setBootDirective(null);
+  window.location.reload();
+}
+
+function startGame(state: GameState, slot: SlotId): void {
+  const sim = new Simulation(state);
+  const ui = new UiState();
+  const hud = mountHud(sim, ui);
+  saveCurrent = () => saveSlot(slot, sim.state);
+  currentSlot = slot;
+  saveCurrent(); // claim the slot straight away
+
+  // iOS may kill a backgrounded web app without warning, so save whenever we lose focus.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') saveCurrent();
+  });
+  window.addEventListener('pagehide', () => saveCurrent());
+  setInterval(() => saveCurrent(), 30_000);
+
+  mountPauseMenu(sim, { save: saveCurrent, mainMenu: toMainMenu, toast: (t) => hud.toast(t) });
+  sim.onEvent((e) => {
+    if (e.outcome) showOutcome(sim, e.outcome, toMainMenu);
+  });
+  document.body.classList.add('in-park');
+
+  const game = new Phaser.Game({
+    type: Phaser.AUTO,
+    parent: 'game',
+    backgroundColor: '#1b3a4b',
+    pixelArt: true,
+    scale: {
+      mode: Phaser.Scale.RESIZE,
+      width: window.innerWidth,
+      height: window.innerHeight,
+    },
+    input: { activePointers: 2 },
+    banner: false,
+  });
+  game.scene.add('park', ParkScene, true, { sim, ui, hud });
+  game.scene.add('weather', WeatherScene, true, { sim });
+
+  // Dev-only handle for debugging and automated browser checks; stripped from production builds.
+  if (import.meta.env.DEV) Object.assign(window, { __dino: { game, sim, ui, slot } });
+}
 
 // Offline support + updates. A home-screen app can stay open for days, so also
 // check for a new version whenever it comes back to the foreground.
@@ -27,8 +69,10 @@ const UPDATE_RELOAD_FALLBACK_MS = 1500;
 const updateSW = registerSW({
   immediate: true,
   onNeedRefresh() {
-    hud.offerUpdate(() => {
-      saveGame(sim.state);
+    offerUpdate(() => {
+      saveCurrent();
+      // Come straight back to this park after the reload.
+      if (currentSlot) setBootDirective({ kind: 'load', slot: currentSlot });
       void updateSW(true);
       // updateSW reloads once the new worker takes control; that signal never
       // comes if this page wasn't controlled yet (first visit), so reload anyway.
@@ -45,22 +89,17 @@ const updateSW = registerSW({
   },
 });
 
-const game = new Phaser.Game({
-  type: Phaser.AUTO,
-  parent: 'game',
-  backgroundColor: '#1b3a4b',
-  pixelArt: true,
-  scale: {
-    mode: Phaser.Scale.RESIZE,
-    width: window.innerWidth,
-    height: window.innerHeight,
-  },
-  input: { activePointers: 2 },
-  banner: false,
-});
+async function boot(): Promise<void> {
+  // Dev-only: /?quickstart jumps straight into a fresh classic park (used by automated browser checks).
+  if (import.meta.env.DEV && new URLSearchParams(location.search).has('quickstart')) {
+    return startGame(newGame((Math.random() * 2 ** 32) >>> 0), 3);
+  }
+  const directive = takeBootDirective();
+  if (directive?.kind === 'load') {
+    const rec = await loadSlot(directive.slot);
+    if (rec) return startGame(rec.state, rec.slot);
+  }
+  showMenu({ start: startGame });
+}
 
-game.scene.add('park', ParkScene, true, { sim, ui, hud });
-game.scene.add('weather', WeatherScene, true, { sim });
-
-// Dev-only handle for debugging and automated browser checks; stripped from production builds.
-if (import.meta.env.DEV) Object.assign(window, { __dino: { game, sim, ui } });
+void boot();

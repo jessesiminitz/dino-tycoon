@@ -59,6 +59,7 @@ export function stepEscapes(ctx: SimContext): void {
     const loose = regions.regions[regions.tileRegion[d.y * state.map.width + d.x]]?.kind !== 'paddock';
     if (loose && !d.escaped) {
       d.escaped = true;
+      state.stats.escapes++;
       ctx.emit({ text: `🚨 ${dinoLabel(d)} has escaped!`, kind: 'bad' });
     } else if (!loose) {
       d.escaped = false;

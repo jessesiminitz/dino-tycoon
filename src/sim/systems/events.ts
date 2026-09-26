@@ -6,6 +6,7 @@ import { earn, spend } from '../finance';
 import { allFenceEdges, fenceAt, fenceHp, setFenceHp } from '../fences';
 import type { SimContext } from './context';
 import { spawnVisitor } from './visitors';
+import { SCENARIOS } from '../data/scenarios';
 
 /** Rough hourly odds; e.g. a storm every ~12 days on average. */
 export const EVENT_CHANCES = {
@@ -30,7 +31,7 @@ export function hourlyEvents(ctx: SimContext): void {
     stormHour(ctx);
     state.stormHours--;
     if (state.stormHours === 0) ctx.emit({ text: '🌤️ The storm has passed', kind: 'info' });
-  } else if (rng.chance(EVENT_CHANCES.storm)) startStorm(ctx);
+  } else if (rng.chance(EVENT_CHANCES.storm * (SCENARIOS[state.scenario.id].stormRate ?? 1))) startStorm(ctx);
 
   if (state.dinos.length >= 2 && rng.chance(EVENT_CHANCES.outbreak)) outbreak(ctx);
   if (open && state.paths.some((p) => p === 1) && rng.chance(EVENT_CHANCES.schoolTrip)) schoolTrip(ctx);
@@ -108,6 +109,7 @@ export function inspection(ctx: SimContext): void {
   const issues = safetyIssues(ctx);
   if (issues.length === 0) {
     earn(state, 'awards', INSPECTION_AWARD);
+    state.stats.inspectionsPassed++;
     state.reputation = Math.min(100, state.reputation + 3);
     ctx.emit({ text: `📋 Safety inspection passed! You earned a ${usd(INSPECTION_AWARD)} safety award.`, kind: 'good' });
     return;

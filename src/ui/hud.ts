@@ -7,6 +7,7 @@ import { BUILDING_TYPES, PATH_COST, type BuildingKind } from '../sim/data/econom
 import { mountCatalog } from './catalog';
 import { mountParkPanel } from './parkPanel';
 import { mountGuide } from './guide';
+import { SCENARIOS } from '../sim/data/scenarios';
 import type { Mode, UiState } from './uiState';
 import type { GameEvent } from '../sim/systems/context';
 
@@ -58,8 +59,6 @@ export interface Hud {
   /** Show the current tool's usage hint (or hide the panel in Look mode). */
   showHint(): void;
   toast(text: string, kind?: 'ok' | 'error'): void;
-  /** Show the "new version available" banner; `apply` saves and reloads. */
-  offerUpdate(apply: () => void): void;
 }
 
 function modeHint(ui: UiState): string | null {
@@ -220,11 +219,6 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
     showHint() {
       hud.showInfo(modeHint(ui));
     },
-    offerUpdate(apply) {
-      const banner = $('update-banner');
-      banner.classList.remove('hidden');
-      $('update-apply').onclick = apply;
-    },
     toast(text, kind = 'ok') {
       const el = document.createElement('div');
       el.className = `toast ${kind}`;
@@ -248,6 +242,9 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
 
   const parkPanel = mountParkPanel(sim, hud);
   $('btn-park').addEventListener('click', () => parkPanel.open());
+  const goalsBtn = $('btn-goals');
+  goalsBtn.hidden = SCENARIOS[sim.state.scenario.id].goals.length === 0;
+  goalsBtn.addEventListener('click', () => parkPanel.open('goals'));
   const guide = mountGuide(sim);
   $('btn-guide').addEventListener('click', () => guide.open());
 

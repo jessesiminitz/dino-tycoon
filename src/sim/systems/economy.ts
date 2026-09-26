@@ -17,6 +17,7 @@ export function hourlyEconomy(ctx: SimContext): void {
   // Midnight: wages and building upkeep, then the day's summary.
   for (const m of state.staff) spend(state, 'wages', STAFF_TYPES[m.role].wage);
   for (const b of state.buildings) spend(state, 'upkeep', BUILDING_TYPES[b.kind].upkeep);
+  state.stats.bestDayVisitors = Math.max(state.stats.bestDayVisitors, finance.today.visitors);
   const dayProfit = operatingProfit(finance.today);
   ctx.emit({
     text: `Day ${day - 1}: ${finance.today.visitors} visitor${finance.today.visitors === 1 ? '' : 's'}, profit ${usd(dayProfit)}`,
