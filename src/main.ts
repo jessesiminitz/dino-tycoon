@@ -9,6 +9,7 @@ import { mountHud } from './ui/hud';
 import { showMenu } from './ui/menu';
 import { mountPauseMenu, offerUpdate, showOutcome } from './ui/overlays';
 import { UiState } from './ui/uiState';
+import { mountTutorial } from './ui/tutorial';
 
 /** Saves the running park, if there is one. Set when a park starts. */
 let saveCurrent: () => void = () => {};
@@ -37,6 +38,7 @@ function startGame(state: GameState, slot: SlotId): void {
   setInterval(() => saveCurrent(), 30_000);
 
   mountPauseMenu(sim, { save: saveCurrent, mainMenu: toMainMenu, toast: (t) => hud.toast(t) });
+  mountTutorial(sim, (t) => hud.toast(t));
   sim.onEvent((e) => {
     if (e.outcome) showOutcome(sim, e.outcome, toMainMenu);
   });
