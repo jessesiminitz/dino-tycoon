@@ -24,6 +24,7 @@
         <span class="hud-title">🦕 Dino Tycoon</span>
         <span id="hud-money" class="hud-stat">$0</span>
         <span id="hud-clock" class="hud-stat">Day 1 · 08:00</span>
+        <span id="hud-dinos" class="hud-stat">0 dinos</span>
       </div>
       <div class="hud-group" role="group" aria-label="Game speed">
         <button class="speed-btn" data-speed="0" aria-label="Pause">❚❚</button>
@@ -40,14 +41,27 @@
 
     <div class="toolbar">
       <div id="fence-picker" class="hud-group picker hidden" role="group" aria-label="Fence type"></div>
+      <div id="feeder-picker" class="hud-group picker hidden" role="group" aria-label="Feeder type"></div>
       <div class="hud-group tools" role="group" aria-label="Tools">
+        <button id="btn-catalog" class="tool-btn">🦖<span>Dinos</span></button>
+        <button class="tool-btn" data-mode="feeder">🍖<span>Feeder</span></button>
         <button class="tool-btn" data-mode="fence">🚧<span>Fence</span></button>
         <button class="tool-btn" data-mode="demolish">🧨<span>Remove</span></button>
         <button class="tool-btn" data-mode="land">🗺️<span>Land</span></button>
       </div>
     </div>
 
-    <div id="toast" class="toast hidden" role="status"></div>
+    <div id="toasts" class="toasts" role="status"></div>
+
+    <div id="catalog" class="modal hidden" role="dialog" aria-label="Buy dinosaurs">
+      <div class="modal-card">
+        <header class="modal-head">
+          <h2>Buy Dinosaurs</h2>
+          <button class="modal-close" aria-label="Close">✕</button>
+        </header>
+        <div class="species-grid"></div>
+      </div>
+    </div>
 
     <div id="rotate-hint" class="rotate-hint">
       <div>📱↻</div>

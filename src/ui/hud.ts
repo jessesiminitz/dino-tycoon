@@ -1,10 +1,16 @@
 import { calendar, type GameState } from '../sim/GameState';
 import type { Simulation, Speed } from '../sim/Simulation';
 import { FENCE_TYPE_IDS, FENCE_TYPES } from '../sim/data/fences';
+import { FEEDER_TYPES, type FeederKind } from '../sim/data/feeders';
+import { SPECIES } from '../sim/data/species';
+import { mountCatalog } from './catalog';
 import type { Mode, UiState } from './uiState';
 
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 export const formatMoney = (n: number) => money.format(n);
+
+const TOAST_MS = 3200;
+const MAX_TOASTS = 3;
 
 function $(id: string): HTMLElement {
   const el = document.getElementById(id);
@@ -25,24 +31,46 @@ export interface Hud {
   toast(text: string, kind?: 'ok' | 'error'): void;
 }
 
-const MODE_HINTS: Record<Mode, string | null> = {
-  select: null,
-  fence: 'Drag to draw a fence · two fingers to move the map',
-  demolish: 'Drag along fences or tap one to remove it',
-  land: 'Tap a highlighted plot to buy it',
-};
+function modeHint(ui: UiState): string | null {
+  switch (ui.mode) {
+    case 'select':
+      return null;
+    case 'fence':
+      return 'Drag to draw a fence · two fingers to move the map';
+    case 'demolish':
+      return 'Drag along fences or tap one to remove it · tap a feeder to remove it';
+    case 'land':
+      return 'Plots marked FOR SALE border your land · tap one to buy it';
+    case 'feeder':
+      return `Tap inside a paddock to build a ${FEEDER_TYPES[ui.feederKind].name.toLowerCase()} (${formatMoney(FEEDER_TYPES[ui.feederKind].cost)}, comes full)`;
+    case 'place-dino': {
+      const sp = ui.placing ? SPECIES[ui.placing] : null;
+      return sp ? `Tap inside a paddock to release your ${sp.name} (${formatMoney(sp.price)})` : null;
+    }
+  }
+}
+
+function pickButton(swatch: string, label: string, price: string): HTMLButtonElement {
+  const b = document.createElement('button');
+  b.className = 'pick-btn';
+  b.innerHTML = `<span class="swatch" style="background:${swatch}"></span>${label}<small>${price}</small>`;
+  return b;
+}
 
 /** DOM overlay: money, clock, speed buttons, tool bar, info panel and toasts. */
 export function mountHud(sim: Simulation, ui: UiState): Hud {
   const moneyEl = $('hud-money');
   const clockEl = $('hud-clock');
+  const dinosEl = $('hud-dinos');
   const info = $('info');
   const infoText = $('info-text');
   const infoAction = $('info-action') as HTMLButtonElement;
-  const toastEl = $('toast');
-  const picker = $('fence-picker');
+  const toasts = $('toasts');
+  const fencePicker = $('fence-picker');
+  const feederPicker = $('feeder-picker');
   const speedButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('.speed-btn'));
-  const toolButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('.tool-btn'));
+  const toolButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('.tool-btn[data-mode]'));
+  const catalog = mountCatalog(sim, ui);
 
   // --- money, clock, speed ---
   let lastMoney = sim.state.money;
@@ -56,6 +84,7 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
     }
     const { day, hour } = calendar(state);
     clockEl.textContent = `Day ${day} · ${String(hour).padStart(2, '0')}:00`;
+    dinosEl.textContent = `${state.dinos.length} dino${state.dinos.length === 1 ? '' : 's'}`;
     for (const b of speedButtons) b.classList.toggle('active', Number(b.dataset.speed) === sim.speed);
   };
   for (const b of speedButtons) {
@@ -67,33 +96,45 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
   // --- tools ---
   for (const id of FENCE_TYPE_IDS) {
     const t = FENCE_TYPES[id];
-    const b = document.createElement('button');
-    b.className = 'pick-btn';
+    const b = pickButton(`#${t.rail.toString(16).padStart(6, '0')}`, t.name, `$${t.cost}`);
     b.dataset.fence = String(id);
-    b.innerHTML = `<span class="swatch" style="background:#${t.rail.toString(16).padStart(6, '0')}"></span>${t.name}<small>$${t.cost}</small>`;
     b.addEventListener('click', () => ui.setFenceType(id));
-    picker.appendChild(b);
+    fencePicker.appendChild(b);
+  }
+  for (const kind of Object.keys(FEEDER_TYPES) as FeederKind[]) {
+    const t = FEEDER_TYPES[kind];
+    const b = pickButton(kind === 'plants' ? '#73b44f' : '#d9454d', kind === 'plants' ? 'Plants' : 'Meat', `$${t.cost}`);
+    b.dataset.feeder = kind;
+    b.addEventListener('click', () => ui.setFeederKind(kind));
+    feederPicker.appendChild(b);
   }
   for (const b of toolButtons) {
     // Tapping the active tool again goes back to Look.
     b.addEventListener('click', () => ui.setMode(ui.mode === b.dataset.mode ? 'select' : (b.dataset.mode as Mode)));
   }
+  $('btn-catalog').addEventListener('click', () => {
+    ui.setMode('select');
+    catalog.open();
+  });
 
-  let prevMode: Mode = ui.mode;
+  let prevHint: string | null = null;
   const renderTools = () => {
     for (const b of toolButtons) b.classList.toggle('active', b.dataset.mode === ui.mode);
-    picker.classList.toggle('hidden', ui.mode !== 'fence');
-    for (const b of picker.querySelectorAll<HTMLButtonElement>('.pick-btn'))
+    fencePicker.classList.toggle('hidden', ui.mode !== 'fence');
+    feederPicker.classList.toggle('hidden', ui.mode !== 'feeder');
+    for (const b of fencePicker.querySelectorAll<HTMLButtonElement>('.pick-btn'))
       b.classList.toggle('active', Number(b.dataset.fence) === ui.fenceType);
-    if (ui.mode !== prevMode) {
+    for (const b of feederPicker.querySelectorAll<HTMLButtonElement>('.pick-btn'))
+      b.classList.toggle('active', b.dataset.feeder === ui.feederKind);
+    const hint = modeHint(ui);
+    if (hint !== prevHint) {
       hud.showHint();
-      prevMode = ui.mode;
+      prevHint = hint;
     }
   };
   ui.onChange(renderTools);
 
   // --- info panel & toasts ---
-  let toastTimer: number | undefined;
   const hud: Hud = {
     showInfo(text, action) {
       if (!text) {
@@ -112,15 +153,19 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
       }
     },
     showHint() {
-      hud.showInfo(MODE_HINTS[ui.mode]);
+      hud.showInfo(modeHint(ui));
     },
     toast(text, kind = 'ok') {
-      toastEl.textContent = text;
-      toastEl.className = `toast ${kind}`;
-      window.clearTimeout(toastTimer);
-      toastTimer = window.setTimeout(() => toastEl.classList.add('hidden'), 2600);
+      const el = document.createElement('div');
+      el.className = `toast ${kind}`;
+      el.textContent = text;
+      toasts.appendChild(el);
+      while (toasts.children.length > MAX_TOASTS) toasts.firstElementChild!.remove();
+      window.setTimeout(() => el.remove(), TOAST_MS);
     },
   };
+
+  sim.onEvent((e) => hud.toast(e.text, e.kind === 'bad' ? 'error' : 'ok'));
 
   renderTools();
   return hud;

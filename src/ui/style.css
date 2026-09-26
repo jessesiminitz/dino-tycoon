@@ -184,11 +184,19 @@ button {
   background: rgba(242, 193, 78, 0.15);
 }
 
-.toast {
+.toasts {
   position: fixed;
   top: calc(var(--safe-top) + 62px);
   left: 50%;
   transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.toast {
   max-width: 80vw;
   padding: 6px 12px;
   font-size: 13px;
@@ -196,11 +204,153 @@ button {
   background: var(--panel);
   border: 2px solid var(--good);
   border-radius: 4px;
-  pointer-events: none;
+  animation: toast-in 0.2s ease-out;
 }
 
 .toast.error {
   border-color: var(--bad);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--safe-top) + 8px) calc(var(--safe-right) + 8px) calc(var(--safe-bottom) + 8px)
+    calc(var(--safe-left) + 8px);
+  background: rgba(0, 0, 0, 0.55);
+  touch-action: pan-y;
+}
+
+.modal-card {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 980px);
+  max-height: 100%;
+  background: #1c2620;
+  border: 2px solid var(--panel-edge);
+  border-radius: 6px;
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px 0 14px;
+  border-bottom: 2px solid var(--panel-edge);
+}
+
+.modal-head h2 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--accent);
+}
+
+.modal-close {
+  min-width: var(--tap);
+  min-height: var(--tap);
+  font-size: 18px;
+  background: transparent;
+  border: 0;
+}
+
+.species-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+  padding: 8px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+}
+
+.species-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+}
+
+.species-card.locked {
+  opacity: 0.55;
+}
+
+.species-card.locked .species-art {
+  filter: brightness(0);
+  opacity: 0.6;
+}
+
+.species-art {
+  height: 54px;
+  align-self: center;
+  image-rendering: pixelated;
+}
+
+.species-card header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.species-card h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.diet {
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.diet.carnivore {
+  color: var(--bad);
+}
+
+.diet.herbivore {
+  color: var(--good);
+}
+
+.species-card dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1px 8px;
+  margin: 0;
+  font-size: 11px;
+}
+
+.species-card dt {
+  opacity: 0.65;
+}
+
+.species-card dd {
+  margin: 0;
+}
+
+.fact {
+  flex: 1;
+  margin: 2px 0;
+  font-size: 11px;
+  line-height: 1.35;
+  opacity: 0.8;
+}
+
+.action-btn:disabled {
+  background: #555;
+  color: #bbb;
+  cursor: default;
 }
 
 #hud-money.up {

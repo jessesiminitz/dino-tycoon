@@ -1,12 +1,42 @@
 import { hEdgeCount, vEdgeCount } from './grid';
 import { findEntrance, initialParcels, type Point } from './land';
 import { generateIsland, type TerrainMap } from './terrain';
+import { STARTER_SPECIES, type SpeciesId } from './data/species';
+import type { FeederKind } from './data/feeders';
 
 export const MAP_WIDTH = 64;
 export const MAP_HEIGHT = 48;
 export const STARTING_MONEY = 50_000;
 export const START_HOUR = 8;
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
+
+export interface Dino {
+  id: number;
+  species: SpeciesId;
+  name: string;
+  /** Current tile. */
+  x: number;
+  y: number;
+  /** Tile at the previous movement step, for smooth rendering. */
+  px: number;
+  py: number;
+  /** Remaining route as tile indices (next step first). */
+  path: number[];
+  /** 0 = full … 100 = starving. */
+  hunger: number;
+  health: number;
+  happiness: number;
+  /** Game-hour the dino arrived. */
+  bornHour: number;
+}
+
+export interface Feeder {
+  id: number;
+  kind: FeederKind;
+  x: number;
+  y: number;
+  stock: number;
+}
 
 /** Single serializable state tree. Everything the game needs to resume lives here. */
 export interface GameState {
@@ -15,6 +45,8 @@ export interface GameState {
   rngState: number;
   /** Total game-hours elapsed since the park opened. */
   hours: number;
+  /** Movement steps elapsed within the current hour. */
+  stepInHour: number;
   money: number;
   map: TerrainMap;
   /** Park gate, where visitors arrive. */
@@ -24,6 +56,11 @@ export interface GameState {
   /** Fence type per edge (0 = none); indexed as in grid.ts. */
   hFences: number[];
   vFences: number[];
+  dinos: Dino[];
+  feeders: Feeder[];
+  unlockedSpecies: SpeciesId[];
+  /** Next id for dinos, feeders and other entities. */
+  nextId: number;
 }
 
 export function newGame(seed: number): GameState {
@@ -34,13 +71,33 @@ export function newGame(seed: number): GameState {
     seed,
     rngState: seed,
     hours: 0,
+    stepInHour: 0,
     money: STARTING_MONEY,
     map,
     entrance,
     parcelsOwned: initialParcels(map, entrance),
     hFences: new Array<number>(hEdgeCount(map)).fill(0),
     vFences: new Array<number>(vEdgeCount(map)).fill(0),
+    dinos: [],
+    feeders: [],
+    unlockedSpecies: [...STARTER_SPECIES],
+    nextId: 1,
   };
+}
+
+/** Upgrades older saves in place. Returns null for saves too old to carry over. */
+export function migrate(raw: { version?: number } & Record<string, unknown>): GameState | null {
+  if (raw.version === 2) {
+    Object.assign(raw, {
+      version: 3,
+      stepInHour: 0,
+      dinos: [],
+      feeders: [],
+      unlockedSpecies: [...STARTER_SPECIES],
+      nextId: 1,
+    });
+  }
+  return raw.version === SAVE_VERSION ? (raw as unknown as GameState) : null;
 }
 
 export function calendar(state: GameState): { day: number; hour: number } {

@@ -2,10 +2,12 @@ import Phaser from 'phaser';
 import type { Simulation } from '../sim/Simulation';
 import { FENCE_TYPES, type FenceTypeId } from '../sim/data/fences';
 import type { Edge } from '../sim/grid';
-import { isParcelOwned, parcelBuyBlocker, parcelGrid, PARCEL, type Point } from '../sim/land';
+import { isParcelOwned, parcelBuyBlocker, parcelGrid, parcelPrice, PARCEL, type Point } from '../sim/land';
+import { formatMoney } from '../ui/hud';
 import { TILE } from './tileset';
 
 const PADDOCK_TINTS = [0xf2c14e, 0x6ec6ff, 0xff8fb1, 0xb28dff, 0x7ee0b5, 0xffa257];
+const FOR_SALE = 0xff9f43;
 
 /** Rail thickness in world pixels per fence type. */
 const RAIL_WIDTH: Record<FenceTypeId, number> = { 1: 2, 2: 2, 3: 1, 4: 4 };
@@ -24,9 +26,10 @@ export class WorldLayers {
   private fences: Phaser.GameObjects.Graphics;
   private gate: Phaser.GameObjects.Graphics;
   private ghost: Phaser.GameObjects.Graphics;
+  private labels: Phaser.GameObjects.Text[] = [];
 
   constructor(
-    scene: Phaser.Scene,
+    private scene: Phaser.Scene,
     private sim: Simulation,
   ) {
     this.overlay = scene.add.graphics().setDepth(1);
@@ -36,9 +39,14 @@ export class WorldLayers {
     this.drawGate();
   }
 
-  /** Ownership shading, paddock tints and (in land mode) the plot grid. */
+  /**
+   * Ownership shading, paddock tints and the property line. In land mode, plots
+   * for sale get orange hatching, a border and a price sign; your land stays clear.
+   */
   drawOverlay(landMode: boolean, selectedParcel: Point | null): void {
     const g = this.overlay.clear();
+    for (const label of this.labels) label.destroy();
+    this.labels = [];
     const { state } = this.sim;
     const { width } = state.map;
 
@@ -55,20 +63,58 @@ export class WorldLayers {
     for (let py = 0; py < rows; py++) {
       for (let px = 0; px < cols; px++) {
         if (isParcelOwned(state, px, py)) continue;
-        const buyable = landMode && parcelBuyBlocker(state, px, py) === null;
-        g.fillStyle(buyable ? 0xf2c14e : 0x000000, buyable ? 0.18 : 0.32);
-        g.fillRect(px * size, py * size, size, size);
+        const x0 = px * size;
+        const y0 = py * size;
+        const forSale = landMode && parcelBuyBlocker(state, px, py) === null;
+        if (!forSale) {
+          g.fillStyle(0x000000, landMode ? 0.45 : 0.32);
+          g.fillRect(x0, y0, size, size);
+          continue;
+        }
+        g.fillStyle(0x000000, 0.2);
+        g.fillRect(x0, y0, size, size);
+        // Diagonal hatching, clipped to the plot.
+        g.lineStyle(2, FOR_SALE, 0.55);
+        for (let c = -size + 8; c < size; c += 12) {
+          g.lineBetween(x0 + Math.max(0, c), y0 + Math.max(0, -c), x0 + Math.min(size, size + c), y0 + Math.min(size, size - c));
+        }
+        g.lineStyle(2, FOR_SALE, 1);
+        g.strokeRect(x0 + 2, y0 + 2, size - 4, size - 4);
+        this.labels.push(
+          this.scene.add
+            .text(x0 + size / 2, y0 + size / 2, `FOR SALE\n${formatMoney(parcelPrice(state.map, px, py))}`, {
+              fontFamily: 'ui-monospace, Menlo, monospace',
+              fontSize: '10px',
+              fontStyle: 'bold',
+              color: '#ffe7c2',
+              backgroundColor: '#5a2f0ecc',
+              align: 'center',
+              padding: { x: 3, y: 2 },
+              resolution: 4,
+            })
+            .setOrigin(0.5)
+            .setDepth(6),
+        );
       }
     }
 
-    if (landMode) {
-      g.lineStyle(1, 0xffffff, 0.35);
-      for (let px = 0; px <= cols; px++) g.lineBetween(px * size, 0, px * size, rows * size);
-      for (let py = 0; py <= rows; py++) g.lineBetween(0, py * size, cols * size, py * size);
-      if (selectedParcel) {
-        g.lineStyle(2, 0xf2c14e, 1);
-        g.strokeRect(selectedParcel.x * size + 1, selectedParcel.y * size + 1, size - 2, size - 2);
+    // Property line wherever an owned plot meets one you don't own.
+    g.lineStyle(landMode ? 2 : 1, landMode ? 0x8fd16a : 0xffffff, landMode ? 1 : 0.5);
+    for (let py = 0; py < rows; py++) {
+      for (let px = 0; px < cols; px++) {
+        if (!isParcelOwned(state, px, py)) continue;
+        const x0 = px * size;
+        const y0 = py * size;
+        if (!isParcelOwned(state, px, py - 1)) g.lineBetween(x0, y0, x0 + size, y0);
+        if (!isParcelOwned(state, px, py + 1)) g.lineBetween(x0, y0 + size, x0 + size, y0 + size);
+        if (!isParcelOwned(state, px - 1, py)) g.lineBetween(x0, y0, x0, y0 + size);
+        if (!isParcelOwned(state, px + 1, py)) g.lineBetween(x0 + size, y0, x0 + size, y0 + size);
       }
+    }
+
+    if (landMode && selectedParcel) {
+      g.lineStyle(3, 0xffffff, 1);
+      g.strokeRect(selectedParcel.x * size + 1, selectedParcel.y * size + 1, size - 2, size - 2);
     }
   }
 

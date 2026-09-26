@@ -1,0 +1,16 @@
+import type { GameState } from '../GameState';
+import type { RegionMap } from '../regions';
+import type { Rng } from '../rng';
+
+export interface GameEvent {
+  text: string;
+  kind: 'info' | 'good' | 'bad';
+}
+
+/** What a system gets each step: the state, seeded randomness, current regions and an event sink. */
+export interface SimContext {
+  state: GameState;
+  rng: Rng;
+  regions: RegionMap;
+  emit(event: GameEvent): void;
+}

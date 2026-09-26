@@ -1,7 +1,10 @@
 import Phaser from 'phaser';
 import type { Simulation } from '../sim/Simulation';
-import { planFences } from '../sim/commands';
+import { planFences, refillCost } from '../sim/commands';
 import { FENCE_REFUND, FENCE_TYPES } from '../sim/data/fences';
+import { DINO_RESALE, FEEDER_TYPES } from '../sim/data/feeders';
+import { SPECIES } from '../sim/data/species';
+import { dinoLabel } from '../sim/systems/dinos';
 import { fenceAt } from '../sim/fences';
 import { pathEdges, type Edge } from '../sim/grid';
 import { isTileOwned, parcelBuyBlocker, parcelLandTiles, parcelOf, parcelPrice, type Point } from '../sim/land';
@@ -12,6 +15,10 @@ import type { UiState } from '../ui/uiState';
 import { createTextures, CURSOR_KEY, TILE, TILESET_KEY, tileIndex } from './tileset';
 import { MAX_ZOOM, TouchController } from './input/TouchController';
 import { WorldLayers } from './WorldLayers';
+import { EntityLayer } from './EntityLayer';
+
+/** How often (ms) the info panel refreshes while a dino or feeder is selected. */
+const INFO_REFRESH_MS = 250;
 
 /** How close (in tiles) a tap must be to an edge to pick that fence segment. */
 const EDGE_PICK = 0.3;
@@ -29,6 +36,8 @@ export class ParkScene extends Phaser.Scene {
   private hud!: Hud;
   private cursor!: Phaser.GameObjects.Image;
   private layers!: WorldLayers;
+  private entities!: EntityLayer;
+  private infoRefreshAt = 0;
   private touch!: TouchController;
   private drawnRevision = -1;
   private drag: Drag | null = null;
@@ -60,6 +69,7 @@ export class ParkScene extends Phaser.Scene {
     tilemap.createLayer(0, tileset, 0, 0);
 
     this.layers = new WorldLayers(this, this.sim);
+    this.entities = new EntityLayer(this, this.sim);
     this.cursor = this.add.image(0, 0, CURSOR_KEY).setOrigin(0).setVisible(false).setDepth(10);
 
     const worldW = map.width * TILE;
@@ -85,9 +95,14 @@ export class ParkScene extends Phaser.Scene {
     this.onModeChange();
   }
 
-  update(_time: number, delta: number): void {
+  update(time: number, delta: number): void {
     this.sim.advance(delta);
     if (this.drawnRevision !== this.sim.worldRevision) this.redrawWorld();
+    this.entities.update(time);
+    if (this.entities.selection && time >= this.infoRefreshAt) {
+      this.infoRefreshAt = time + INFO_REFRESH_MS;
+      this.showSelection();
+    }
   }
 
   private redrawWorld(): void {
@@ -100,7 +115,10 @@ export class ParkScene extends Phaser.Scene {
     const mode = this.ui.mode;
     this.touch.drawMode = mode === 'fence' || mode === 'demolish';
     this.cancelDrag();
-    if (mode !== 'select') this.cursor.setVisible(false);
+    if (mode !== 'select') {
+      this.cursor.setVisible(false);
+      this.entities.selection = null;
+    }
     if (mode !== 'land') this.selectedParcel = null;
     this.redrawWorld();
   }
@@ -110,15 +128,103 @@ export class ParkScene extends Phaser.Scene {
   private onTap(wx: number, wy: number): void {
     switch (this.ui.mode) {
       case 'select':
-        return this.inspectTile(wx, wy);
+        return this.inspect(wx, wy);
       case 'land':
         return this.selectParcel(wx, wy);
-      case 'fence':
-      case 'demolish': {
+      case 'fence': {
         const edge = this.edgeNear(wx, wy);
         if (edge) this.commitEdges([edge]);
         return;
       }
+      case 'demolish': {
+        const edge = this.edgeNear(wx, wy);
+        if (edge) return this.commitEdges([edge]);
+        const feeder = this.entities.feederAt(Math.floor(wx / TILE), Math.floor(wy / TILE));
+        if (feeder) this.report(this.sim.dispatch({ type: 'removeFeeder', id: feeder.id }));
+        return;
+      }
+      case 'feeder':
+        this.report(
+          this.sim.dispatch({ type: 'placeFeeder', kind: this.ui.feederKind, x: Math.floor(wx / TILE), y: Math.floor(wy / TILE) }),
+        );
+        return;
+      case 'place-dino':
+        return this.releaseDino(wx, wy);
+    }
+  }
+
+  private report(r: { ok: boolean; message: string }): void {
+    this.hud.toast(r.message, r.ok ? 'ok' : 'error');
+  }
+
+  private releaseDino(wx: number, wy: number): void {
+    const species = this.ui.placing;
+    if (!species) return;
+    const x = Math.floor(wx / TILE);
+    const y = Math.floor(wy / TILE);
+    const r = this.sim.dispatch({ type: 'buyDino', species, x, y });
+    this.report(r);
+    if (!r.ok) return;
+    const sp = SPECIES[species];
+    const { regions, tileRegion } = this.sim.regions();
+    const weakest = regions[tileRegion[y * this.sim.state.map.width + x]].weakestFence;
+    if (weakest !== 0 && weakest < sp.fenceNeeded) {
+      this.hud.toast(`Careful: ${sp.name} needs ${FENCE_TYPES[sp.fenceNeeded].name.toLowerCase()} fences or stronger`, 'error');
+    }
+    if (!this.sim.state.feeders.some((f) => FEEDER_TYPES[f.kind].diet === sp.diet)) {
+      this.hud.toast(`Tip: build a ${sp.diet === 'carnivore' ? 'meat' : 'plant'} feeder so it can eat`);
+    }
+    this.ui.setMode('select');
+    this.entities.selection = { kind: 'dino', id: this.sim.state.dinos[this.sim.state.dinos.length - 1].id };
+    this.showSelection();
+  }
+
+  /** Look mode: a dino under the finger wins, then a feeder, then the tile itself. */
+  private inspect(wx: number, wy: number): void {
+    const dino = this.entities.dinoAt(wx, wy);
+    const feeder = dino ? undefined : this.entities.feederAt(Math.floor(wx / TILE), Math.floor(wy / TILE));
+    if (dino || feeder) {
+      this.cursor.setVisible(false);
+      this.entities.selection = dino ? { kind: 'dino', id: dino.id } : { kind: 'feeder', id: feeder!.id };
+      this.showSelection();
+      return;
+    }
+    this.entities.selection = null;
+    this.inspectTile(wx, wy);
+  }
+
+  private showSelection(): void {
+    const sel = this.entities.selection;
+    if (!sel) return;
+    const { state } = this.sim;
+    if (sel.kind === 'dino') {
+      const d = state.dinos.find((d) => d.id === sel.id);
+      if (!d) {
+        this.entities.selection = null;
+        this.hud.showInfo(null);
+        return;
+      }
+      const sp = SPECIES[d.species];
+      const { regions, tileRegion } = this.sim.regions();
+      const loose = regions[tileRegion[d.y * state.map.width + d.x]]?.kind !== 'paddock';
+      const value = Math.floor(sp.price * DINO_RESALE);
+      this.hud.showInfo(
+        `${dinoLabel(d)}${loose ? ' · LOOSE!' : ''} · Hunger ${Math.round(d.hunger)}% · Health ${Math.round(d.health)}% · Happy ${d.happiness}%`,
+        { label: `Sell ${formatMoney(value)}`, onClick: () => this.report(this.sim.dispatch({ type: 'sellDino', id: d.id })) },
+      );
+    } else {
+      const f = state.feeders.find((f) => f.id === sel.id);
+      if (!f) {
+        this.entities.selection = null;
+        this.hud.showInfo(null);
+        return;
+      }
+      const type = FEEDER_TYPES[f.kind];
+      const cost = refillCost(state, f.id);
+      this.hud.showInfo(
+        `${type.name} · ${f.stock}/${type.capacity} food`,
+        cost > 0 ? { label: `Refill ${formatMoney(cost)}`, onClick: () => this.report(this.sim.dispatch({ type: 'refillFeeder', id: f.id })) } : undefined,
+      );
     }
   }
 
