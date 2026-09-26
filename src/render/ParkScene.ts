@@ -20,6 +20,7 @@ import { createTextures, CURSOR_KEY, TILE, TILESET_KEY, tileIndex } from './tile
 import { MAX_ZOOM, TouchController } from './input/TouchController';
 import { WorldLayers } from './WorldLayers';
 import { EntityLayer } from './EntityLayer';
+import { TerrainFx } from './TerrainFx';
 import { playSfx, type Sfx } from '../audio/audio';
 
 /** How often (ms) the info panel refreshes while a dino or feeder is selected. */
@@ -52,6 +53,7 @@ export class ParkScene extends Phaser.Scene {
   private cursor!: Phaser.GameObjects.Image;
   private layers!: WorldLayers;
   private entities!: EntityLayer;
+  private terrainFx!: TerrainFx;
   private infoRefreshAt = 0;
   private boundsZoom = 0;
   private drawnHour = -1;
@@ -86,6 +88,7 @@ export class ParkScene extends Phaser.Scene {
     const tileset = tilemap.addTilesetImage(TILESET_KEY, TILESET_KEY, TILE, TILE, 0, 0);
     if (!tileset) throw new Error('Tileset failed to load');
     tilemap.createLayer(0, tileset, 0, 0);
+    this.terrainFx = new TerrainFx(this, map);
 
     this.layers = new WorldLayers(this, this.sim);
     this.entities = new EntityLayer(this, this.sim);
@@ -125,6 +128,7 @@ export class ParkScene extends Phaser.Scene {
       this.layers.drawFences();
     }
     this.entities.update(time);
+    this.terrainFx.update(time);
     if ((this.entities.selection || this.selectedFence) && time >= this.infoRefreshAt) {
       this.infoRefreshAt = time + INFO_REFRESH_MS;
       this.showSelection();

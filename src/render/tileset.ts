@@ -44,16 +44,29 @@ const PAINTERS: Record<Terrain, Painter> = {
   [Terrain.Grass]: (px, r) => {
     fill(px, '#5f9e3f');
     speckle(px, r, ['#4e8a33', '#73b44f', '#86c25c'], 0.22);
+    // Now and then a few wildflowers.
+    if (r(77, 7) < 0.35) {
+      const colors = ['#f4ecd2', '#f2d24e', '#ff9fb8'];
+      for (let i = 0; i < 3; i++) px(Math.floor(r(i, 40) * 14) + 1, Math.floor(r(40, i) * 14) + 1, colors[Math.floor(r(i, i) * 3)]);
+    }
   },
   [Terrain.Forest]: (px, r) => {
     fill(px, '#3f7a2c');
     speckle(px, r, ['#356a25'], 0.2);
-    // A small conifer, nudged by the variant so forests don't tile visibly.
+    // A conifer or a round broadleaf, nudged by the variant so forests don't tile visibly.
     const ox = Math.floor(r(99, 1) * 5) - 2;
     const trunkX = 7 + ox;
-    for (let row = 0; row < 9; row++) {
-      const half = Math.floor(row / 2) + 1;
-      for (let dx = -half; dx < half; dx++) px(trunkX + dx + 1, 2 + row, row % 3 === 0 ? '#2f6b3a' : '#1f4d2a');
+    if (r(50, 50) < 0.5) {
+      for (let row = 0; row < 9; row++) {
+        const half = Math.floor(row / 2) + 1;
+        for (let dx = -half; dx < half; dx++) px(trunkX + dx + 1, 2 + row, row % 3 === 0 ? '#2f6b3a' : '#1f4d2a');
+      }
+    } else {
+      for (let y = 1; y < 10; y++)
+        for (let x = -4; x <= 5; x++) {
+          const d = ((x - 0.5) / 5) ** 2 + ((y - 5) / 4.5) ** 2;
+          if (d < 1) px(trunkX + x, y, y < 4 && x < 2 ? '#5b9a3f' : d > 0.7 ? '#24552a' : '#3a7a31');
+        }
     }
     px(trunkX, 11, '#5a3b1f');
     px(trunkX + 1, 11, '#5a3b1f');

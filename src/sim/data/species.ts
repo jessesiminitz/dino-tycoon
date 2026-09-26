@@ -17,7 +17,7 @@ export type SpeciesId =
 export type Diet = 'herbivore' | 'carnivore';
 
 /** Body template used to paint the sprite (see render/dinoArt.ts). */
-export type BodyTemplate = 'raptor' | 'theropod' | 'ceratops' | 'stego' | 'ankylo' | 'hadro' | 'sauropod';
+export type BodyTemplate = 'raptor' | 'theropod' | 'ceratops' | 'trike' | 'stego' | 'ankylo' | 'hadro' | 'dome' | 'sauropod';
 
 export interface Species {
   id: SpeciesId;
@@ -118,7 +118,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
       'It is one of the most commonly found dinosaurs in rocks from the very end of the dinosaur age.',
     ],
     fossilsNeeded: 0, fossilWeight: 0,
-    art: { template: 'ceratops', body: '#7d8a96', dark: '#4b5560', accent: '#d9c7a3' },
+    art: { template: 'trike', body: '#7d8a96', dark: '#4b5560', accent: '#d9c7a3' },
   },
   compsognathus: {
     id: 'compsognathus', name: 'Compsognathus', diet: 'carnivore', price: 2500, size: 1,
@@ -163,7 +163,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
       'Its name means “thick-headed lizard”.',
     ],
     fossilsNeeded: 3, fossilWeight: 30,
-    art: { template: 'hadro', body: '#a07f5a', dark: '#6b5238', accent: '#e8d8b0' },
+    art: { template: 'dome', body: '#a07f5a', dark: '#6b5238', accent: '#e8d8b0' },
   },
   ankylosaurus: {
     id: 'ankylosaurus', name: 'Ankylosaurus', diet: 'herbivore', price: 14000, size: 3,

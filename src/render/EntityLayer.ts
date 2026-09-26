@@ -9,14 +9,14 @@ import { SPECIES, SPECIES_IDS, type SpeciesId } from '../sim/data/species';
 import { paintDino } from './dinoArt';
 import { TILE } from './tileset';
 
-const dinoKey = (id: SpeciesId) => `dino-${id}`;
+const dinoKey = (id: SpeciesId, frame: 0 | 1 = 0) => `dino-${id}-${frame}`;
 const feederKey = (kind: FeederKind, full: boolean) => `feeder-${kind}-${full ? 'full' : 'empty'}`;
 /** Sprites stand with their feet this far down the tile. */
 const FOOT_Y = 13;
 
 export type Selection = { kind: 'dino' | 'feeder' | 'building' | 'visitor' | 'staff'; id: number } | null;
 
-const staffKey = (role: StaffRole) => `staff-${role}`;
+const staffKey = (role: StaffRole, frame: 0 | 1 = 0) => `staff-${role}-${frame}`;
 /** Uniform, cap and trouser colours per role. */
 const UNIFORMS: Record<StaffRole, { U: string; C: string; L: string }> = {
   worker: { U: '#e8892f', C: '#f2d24e', L: '#5a4a3a' },
@@ -25,7 +25,7 @@ const UNIFORMS: Record<StaffRole, { U: string; C: string; L: string }> = {
   guide: { U: '#4fae5a', C: '#c9a36b', L: '#6b5238' },
 };
 
-const visitorKey = (look: number) => `visitor-${look}`;
+const visitorKey = (look: number, frame: 0 | 1 = 0) => `visitor-${look}-${frame}`;
 const buildingKey = (kind: BuildingKind) => `building-${kind}`;
 const VISITOR_LOOKS = 6;
 const SHIRTS = ['#e05a4f', '#4f8fe0', '#f2c14e', '#9b6be0', '#4fc08d', '#f28fb1'];
@@ -52,8 +52,11 @@ function paintRows(rows: string[], colors: Record<string, string>): HTMLCanvasEl
   return c;
 }
 
-function paintVisitor(look: number): HTMLCanvasElement {
-  return paintRows(['.HHH.', '.SSS.', 'TTTTT', 'STTTS', '.TTT.', '.LLL.', '.L.L.', '.L.L.'], {
+/** Person legs: standing, and mid-stride. */
+const LEGS: Record<0 | 1, string[]> = { 0: ['.L.L.', '.L.L.'], 1: ['.L.L.', 'L...L'] };
+
+function paintVisitor(look: number, frame: 0 | 1): HTMLCanvasElement {
+  return paintRows(['.HHH.', '.SSS.', 'TTTTT', 'STTTS', '.TTT.', '.LLL.', ...LEGS[frame]], {
     H: HAIR[look % HAIR.length],
     S: SKIN[look % SKIN.length],
     T: SHIRTS[look % SHIRTS.length],
@@ -61,8 +64,8 @@ function paintVisitor(look: number): HTMLCanvasElement {
   });
 }
 
-function paintStaff(role: StaffRole): HTMLCanvasElement {
-  return paintRows(['CCCCC', '.SSS.', 'UUUUU', 'SUUUS', '.UUU.', '.LLL.', '.L.L.', '.L.L.'], {
+function paintStaff(role: StaffRole, frame: 0 | 1): HTMLCanvasElement {
+  return paintRows(['CCCCC', '.SSS.', 'UUUUU', 'SUUUS', '.UUU.', '.LLL.', ...LEGS[frame]], {
     ...UNIFORMS[role],
     S: '#e0b48a',
   });
@@ -155,13 +158,17 @@ export class EntityLayer {
     private sim: Simulation,
   ) {
     for (const id of SPECIES_IDS) {
-      if (!scene.textures.exists(dinoKey(id))) scene.textures.addCanvas(dinoKey(id), paintDino(SPECIES[id]));
+      for (const frame of [0, 1] as const) {
+        if (!scene.textures.exists(dinoKey(id, frame))) scene.textures.addCanvas(dinoKey(id, frame), paintDino(SPECIES[id], frame));
+      }
     }
     for (const kind of Object.keys(FEEDER_TYPES) as FeederKind[]) {
       for (const full of [true, false]) scene.textures.addCanvas(feederKey(kind, full), paintFeeder(kind, full));
     }
-    for (let look = 0; look < VISITOR_LOOKS; look++) scene.textures.addCanvas(visitorKey(look), paintVisitor(look));
-    for (const role of STAFF_ROLES) scene.textures.addCanvas(staffKey(role), paintStaff(role));
+    for (const frame of [0, 1] as const) {
+      for (let look = 0; look < VISITOR_LOOKS; look++) scene.textures.addCanvas(visitorKey(look, frame), paintVisitor(look, frame));
+      for (const role of STAFF_ROLES) scene.textures.addCanvas(staffKey(role, frame), paintStaff(role, frame));
+    }
     for (const kind of Object.keys(BUILDING_TYPES) as BuildingKind[]) scene.textures.addCanvas(buildingKey(kind), paintBuilding(kind));
     this.markers = scene.add.graphics().setDepth(9);
   }
@@ -290,7 +297,9 @@ export class EntityLayer {
       const img = this.visitors.get(v.id)!;
       const { x, y } = this.visitorPosition(v);
       const moving = v.x !== v.px || v.y !== v.py;
-      img.setPosition(Math.round(x), Math.round(y) + (moving && this.sim.stepProgress < 0.5 ? -1 : 0));
+      const stride = moving && this.sim.stepProgress >= 0.5;
+      img.setTexture(visitorKey(v.look, stride ? 1 : 0));
+      img.setPosition(Math.round(x), Math.round(y) + (moving && !stride ? -1 : 0));
       img.setDepth(4 + y / 10000);
       if (this.selection?.kind === 'visitor' && this.selection.id === v.id) {
         g.lineStyle(1, 0xf2c14e, 1).strokeEllipse(Math.round(x), Math.round(y), 9, 4);
@@ -304,6 +313,8 @@ export class EntityLayer {
       const img = this.staff.get(m.id)!;
       const { x, y } = this.staffPosition(m);
       const working = m.task !== null && m.progress > 0;
+      const walking = Math.abs(m.x - m.px) + Math.abs(m.y - m.py) > 0.01;
+      img.setTexture(staffKey(m.role, walking && Math.floor(time / 150) % 2 === 1 ? 1 : 0));
       img.setPosition(Math.round(x), Math.round(y) + (working && Math.floor(time / 180) % 2 === 0 ? -1 : 0));
       img.setDepth(4 + y / 10000);
       if (working) {
@@ -330,6 +341,7 @@ export class EntityLayer {
       const { x, y } = this.dinoPosition(d);
       // A one-pixel bob while walking; idle animals breathe slowly.
       const bob = moving ? (this.sim.stepProgress < 0.5 ? -1 : 0) : Math.sin(time / 600 + d.id) > 0.9 ? -1 : 0;
+      img.setTexture(dinoKey(d.species, moving && this.sim.stepProgress >= 0.5 ? 1 : 0));
       img.setPosition(Math.round(x), Math.round(y) + bob);
       img.setFlipX(this.facingLeft.get(d.id) ?? false);
       img.setDepth(4 + y / 10000);
