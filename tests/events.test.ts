@@ -173,6 +173,20 @@ describe('random events', () => {
     expect(events.some((ev) => /storm has passed/.test(ev.text))).toBe(true);
   });
 
+  it('storms hurt weak fences far more than strong ones', () => {
+    const worst = (fence: 1 | 4) => {
+      const s = park(fence);
+      const c = ctxFor(s, 7);
+      for (let h = 0; h < 12; h++) stormHour(c); // a long storm
+      const hps = [...s.hFenceHp.filter((_, i) => s.hFences[i]), ...s.vFenceHp.filter((_, i) => s.vFences[i])];
+      return { min: Math.min(...hps), avg: hps.reduce((a, b) => a + b, 0) / hps.length };
+    };
+    const wood = worst(1);
+    const concrete = worst(4);
+    expect(concrete.min).toBeGreaterThan(40); // every concrete segment comes through a long storm standing
+    expect(concrete.avg).toBeGreaterThan(wood.avg + 20);
+  });
+
   it('outbreaks make several dinos sick', () => {
     const s = park();
     for (const x of [3, 5, 7]) applyCommand(s, { type: 'buyDino', species: 'protoceratops', x, y: 4 });

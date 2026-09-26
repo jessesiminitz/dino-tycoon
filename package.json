@@ -8,9 +8,10 @@
     "dev": "vite --host",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host",
-    "test": "vitest run",
+    "test": "vitest run --exclude tests/perf.test.ts && vitest run tests/perf.test.ts",
     "typecheck": "tsc --noEmit",
-    "icons": "node scripts/make-icons.mjs"
+    "icons": "node scripts/make-icons.mjs",
+    "bench": "vitest run tests/perf.test.ts --silent=false"
   },
   "dependencies": {
     "phaser": "^3.90.0"

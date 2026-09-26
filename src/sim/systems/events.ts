@@ -43,13 +43,22 @@ export function startStorm(ctx: SimContext): void {
   ctx.emit({ text: '⛈️ A storm is rolling in! Fences will take a beating and fewer visitors will come.', kind: 'bad' });
 }
 
-/** Each storm hour batters every fence; now and then a falling tree does real damage. */
+/** Chance per fence segment per storm hour of a falling tree or flying debris. */
+const HEAVY_HIT_CHANCE = 0.01;
+
+/**
+ * Each storm hour batters every fence; now and then a falling tree does real
+ * damage. Stronger fences shrug off more of it (concrete takes a quarter of
+ * what wood does), so building well pays off in bad weather.
+ */
 export function stormHour(ctx: SimContext): void {
   const { state, rng } = ctx;
   let broken = 0;
   for (const e of allFenceEdges(state)) {
-    if (!fenceAt(state, e)) continue;
-    const hit = rng.chance(0.03) ? rng.int(25, 45) : rng.int(1, 4);
+    const type = fenceAt(state, e);
+    if (!type) continue;
+    const toughness = 1.5 / FENCE_TYPES[type].strength;
+    const hit = (rng.chance(HEAVY_HIT_CHANCE) ? rng.int(30, 50) : rng.int(1, 3)) * toughness;
     const next = fenceHp(state, e) - hit;
     setFenceHp(state, e, next);
     if (next <= 0) broken++;
