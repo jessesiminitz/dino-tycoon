@@ -1,0 +1,24 @@
+{
+  "name": "dino-tycoon",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Touch-first spiritual successor to DinoPark Tycoon, built as an iPhone PWA.",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "icons": "node scripts/make-icons.mjs"
+  },
+  "dependencies": {
+    "phaser": "^3.90.0"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vite": "^6.4.3",
+    "vite-plugin-pwa": "^1.3.0",
+    "vitest": "^5.0.2"
+  }
+}

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Dino Tycoon" />
+    <meta name="theme-color" content="#1b3a4b" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <title>Dino Tycoon</title>
+    <link rel="stylesheet" href="/src/ui/style.css" />
+  </head>
+  <body>
+    <div id="game"></div>
+
+    <div id="hud" class="hud">
+      <div class="hud-group">
+        <span class="hud-title">🦕 Dino Tycoon</span>
+        <span id="hud-money" class="hud-stat">$0</span>
+        <span id="hud-clock" class="hud-stat">Day 1 · 08:00</span>
+      </div>
+      <div class="hud-group" role="group" aria-label="Game speed">
+        <button class="speed-btn" data-speed="0" aria-label="Pause">⏸</button>
+        <button class="speed-btn" data-speed="1" aria-label="Normal speed">▶</button>
+        <button class="speed-btn" data-speed="2" aria-label="Fast">▶▶</button>
+        <button class="speed-btn" data-speed="4" aria-label="Very fast">▶▶▶</button>
+      </div>
+    </div>
+
+    <div id="info" class="info hidden" aria-live="polite"></div>
+
+    <div id="rotate-hint" class="rotate-hint">
+      <div>📱↻</div>
+      <p>Turn your phone sideways to play</p>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
