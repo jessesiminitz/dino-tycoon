@@ -6,7 +6,7 @@ import { edgeKey, type Edge } from './grid';
 import { isTileOwned, parcelBuyBlocker, parcelGrid, parcelPrice } from './land';
 import { DINO_NAMES, SPECIES, type SpeciesId } from './data/species';
 import { DINO_RESALE, FEEDER_REFUND, FEEDER_TYPES, type FeederKind } from './data/feeders';
-import { computeRegions } from './regions';
+import { computeRegions, isOccupiedPaddock, regionHasPaths } from './regions';
 import { Rng } from './rng';
 import { isLand, terrainAt } from './terrain';
 import {
@@ -158,6 +158,9 @@ export function applyCommand(state: GameState, cmd: Command): CommandResult {
       if (regions[tileRegion[cmd.y * state.map.width + cmd.x]].kind !== 'paddock') {
         return { ok: false, message: 'Dinosaurs must go inside a fenced paddock' };
       }
+      if (regionHasPaths(state, { regions, tileRegion }, cmd.y * state.map.width + cmd.x)) {
+        return { ok: false, message: 'This area has visitor paths in it. Remove them before letting a dinosaur in' };
+      }
       if (sp.price > state.money) return { ok: false, message: `Not enough money: need ${usd(sp.price)}` };
       const name = pickName(state, DINO_NAMES, state.dinos.map((d) => d.name));
       state.dinos.push({
@@ -251,7 +254,9 @@ export function applyCommand(state: GameState, cmd: Command): CommandResult {
       const i = cmd.y * state.map.width + cmd.x;
       if (state.paths[i]) return { ok: false, message: 'Build next to a path, not on it' };
       const { regions, tileRegion } = computeRegions(state);
-      if (regions[tileRegion[i]].kind === 'paddock') return { ok: false, message: "Buildings can't go inside paddocks" };
+      if (isOccupiedPaddock(state, { regions, tileRegion }, i)) {
+        return { ok: false, message: "Buildings can't go inside a paddock with animals or feeders" };
+      }
       if (type.needsPath && !touchesWalkway(state, cmd.x, cmd.y)) {
         return { ok: false, message: 'Must be next to a path so visitors can reach it' };
       }

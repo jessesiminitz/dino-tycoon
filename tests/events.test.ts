@@ -95,9 +95,10 @@ describe('species data for the Dino Guide', () => {
 });
 
 describe('fossil digs', () => {
-  it('dig sites need no path, but must be on your land outside paddocks', () => {
+  it('dig sites need no path, but must be on your land outside occupied paddocks', () => {
     const s = park();
     expect(applyCommand(s, { type: 'placeBuilding', kind: 'digsite', x: 16, y: 3 }).ok).toBe(true);
+    applyCommand(s, { type: 'placeFeeder', kind: 'plants', x: 3, y: 3 });
     expect(applyCommand(s, { type: 'placeBuilding', kind: 'digsite', x: 5, y: 5 }).message).toMatch(/paddock/);
   });
 

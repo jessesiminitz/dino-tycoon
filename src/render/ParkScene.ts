@@ -13,6 +13,7 @@ import { pathEdges, tileLine, type Edge } from '../sim/grid';
 import { BUILDING_TYPES, PATH_COST, PATH_REFUND } from '../sim/data/economy';
 import { isTileOwned, parcelBuyBlocker, parcelLandTiles, parcelOf, parcelPrice, type Point } from '../sim/land';
 import { isLand, terrainAt, TERRAIN_NAMES } from '../sim/terrain';
+import { isOccupiedPaddock } from '../sim/regions';
 import type { Hud } from '../ui/hud';
 import { formatMoney } from '../ui/hud';
 import type { UiState } from '../ui/uiState';
@@ -396,7 +397,9 @@ export class ParkScene extends Phaser.Scene {
       if (tx === this.sim.state.entrance.x && ty === this.sim.state.entrance.y) parts.push('Park gate');
       if (!isTileOwned(this.sim.state, tx, ty)) parts.push('not your land');
       else if (region.kind === 'public') parts.push('visitor area');
-      else if (region.kind === 'paddock') {
+      else if (region.kind === 'paddock' && !isOccupiedPaddock(this.sim.state, { regions, tileRegion }, ty * this.sim.state.map.width + tx)) {
+        parts.push(`Enclosed area · ${region.tiles.length} tiles · no animals or feeders yet, so paths and buildings are fine`);
+      } else if (region.kind === 'paddock') {
         const n = regions.filter((r) => r.kind === 'paddock' && r.id <= region.id).length;
         const weakest = region.weakestFence ? FENCE_TYPES[region.weakestFence].name.toLowerCase() : 'none';
         parts.push(`Paddock ${n} · ${region.tiles.length} tiles · weakest fence: ${weakest}`);

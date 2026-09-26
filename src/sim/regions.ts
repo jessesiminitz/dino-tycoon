@@ -85,3 +85,25 @@ export function computeRegions(state: GameState): RegionMap {
 
   return { regions, tileRegion };
 }
+
+/**
+ * True if tile `i` is in a paddock that holds animals or feeders. Land sealed
+ * off by fences and water (say a strip of beach below a paddock) is technically
+ * enclosed too, but until something lives there it's just ground: paths and
+ * buildings may go on it.
+ */
+export function isOccupiedPaddock(state: GameState, map: RegionMap, i: number): boolean {
+  const id = map.tileRegion[i];
+  if (map.regions[id]?.kind !== 'paddock') return false;
+  const w = state.map.width;
+  return (
+    state.dinos.some((d) => map.tileRegion[d.y * w + d.x] === id) ||
+    state.feeders.some((f) => map.tileRegion[f.y * w + f.x] === id)
+  );
+}
+
+/** True if the region containing tile `i` has any footpath in it. */
+export function regionHasPaths(state: GameState, map: RegionMap, i: number): boolean {
+  const id = map.tileRegion[i];
+  return id >= 0 && state.paths.some((p, j) => p === 1 && map.tileRegion[j] === id);
+}

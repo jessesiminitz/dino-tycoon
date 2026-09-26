@@ -1282,9 +1282,14 @@ body:not(.in-park) #info {
 
 .tutorial-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 4px 8px;
+}
+
+.tutorial-skip-all {
+  margin-left: auto;
 }
 
 .tutorial-skip {

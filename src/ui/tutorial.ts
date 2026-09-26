@@ -83,6 +83,7 @@ export function mountTutorial(sim: Simulation, toast: (text: string) => void): v
   const text = card.querySelector<HTMLElement>('.tutorial-text')!;
   const count = card.querySelector<HTMLElement>('.tutorial-count')!;
   const next = card.querySelector<HTMLButtonElement>('.tutorial-next')!;
+  const skipStep = card.querySelector<HTMLButtonElement>('.tutorial-skip-step')!;
   let highlighted: Element | null = null;
   let celebrating = false;
 
@@ -108,6 +109,8 @@ export function mountTutorial(sim: Simulation, toast: (text: string) => void): v
     count.textContent = `${i + 1} / ${STEPS.length}`;
     next.hidden = !step.button;
     next.textContent = step.button ?? '';
+    // Action steps can be skipped one at a time (steps with a button just use it).
+    skipStep.hidden = !step.done;
     card.classList.remove('hidden', 'celebrate');
     highlight(step.target);
   };
@@ -121,7 +124,10 @@ export function mountTutorial(sim: Simulation, toast: (text: string) => void): v
   };
 
   next.addEventListener('click', advance);
-  card.querySelector('.tutorial-skip')!.addEventListener('click', () => finish('Tutorial skipped. Tips are in each tool’s hint.'));
+  skipStep.addEventListener('click', () => {
+    if (!celebrating) advance();
+  });
+  card.querySelector('.tutorial-skip-all')!.addEventListener('click', () => finish('Tutorial skipped. Tips are in each tool’s hint.'));
 
   const timer = window.setInterval(() => {
     const i = sim.state.tutorialStep;

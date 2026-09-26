@@ -1,6 +1,6 @@
 import type { GameState } from './GameState';
 import { isTileOwned } from './land';
-import type { RegionMap } from './regions';
+import { isOccupiedPaddock, type RegionMap } from './regions';
 import { isLand } from './terrain';
 import type { CanEnter } from './pathfind';
 
@@ -26,7 +26,7 @@ export function pathBlocker(state: GameState, regions: RegionMap, x: number, y: 
   const i = y * width + x;
   if (!isLand(tiles[i])) return 'Paths need dry land';
   if (!isTileOwned(state, x, y)) return "You don't own this land";
-  if (regions.regions[regions.tileRegion[i]]?.kind === 'paddock') return "Paths can't go inside paddocks";
+  if (isOccupiedPaddock(state, regions, i)) return "Paths can't go inside a paddock with animals or feeders";
   return tileOccupant(state, x, y);
 }
 
