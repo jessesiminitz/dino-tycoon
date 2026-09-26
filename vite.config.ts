@@ -1,17 +1,31 @@
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { execSync } from 'node:child_process';
+
+function gitVersion(): string {
+  try {
+    return execSync('git rev-parse --short HEAD').toString().trim();
+  } catch {
+    return 'dev';
+  }
+}
 
 export default defineConfig({
   // Relative base so the build works both at a domain root and under a
   // GitHub Pages project path (https://<user>.github.io/dino-tycoon/).
   base: './',
+  define: {
+    __APP_VERSION__: JSON.stringify(gitVersion()),
+    __BUILD_DATE__: JSON.stringify(new Date().toISOString().slice(0, 10)),
+  },
   build: {
     target: 'es2020',
     chunkSizeWarningLimit: 2000, // Phaser is ~1.2 MB on its own
   },
   plugins: [
     VitePWA({
-      registerType: 'autoUpdate',
+      // Ask before swapping in a new version, so an update never interrupts play.
+      registerType: 'prompt',
       includeAssets: ['icons/apple-touch-icon.png'],
       manifest: {
         name: 'Dino Tycoon',

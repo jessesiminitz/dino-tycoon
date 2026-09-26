@@ -31,6 +31,8 @@ export interface Hud {
   /** Show the current tool's usage hint (or hide the panel in Look mode). */
   showHint(): void;
   toast(text: string, kind?: 'ok' | 'error'): void;
+  /** Show the "new version available" banner; `apply` saves and reloads. */
+  offerUpdate(apply: () => void): void;
 }
 
 function modeHint(ui: UiState): string | null {
@@ -188,6 +190,11 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
     },
     showHint() {
       hud.showInfo(modeHint(ui));
+    },
+    offerUpdate(apply) {
+      const banner = $('update-banner');
+      banner.classList.remove('hidden');
+      $('update-apply').onclick = apply;
     },
     toast(text, kind = 'ok') {
       const el = document.createElement('div');

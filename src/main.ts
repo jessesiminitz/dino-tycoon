@@ -7,8 +7,6 @@ import { loadGame, saveGame } from './save/storage';
 import { mountHud } from './ui/hud';
 import { UiState } from './ui/uiState';
 
-registerSW({ immediate: true });
-
 const state = loadGame() ?? newGame((Math.random() * 2 ** 32) >>> 0);
 const sim = new Simulation(state);
 const ui = new UiState();
@@ -20,6 +18,31 @@ document.addEventListener('visibilitychange', () => {
 });
 window.addEventListener('pagehide', () => saveGame(sim.state));
 setInterval(() => saveGame(sim.state), 30_000);
+
+// Offline support + updates. A home-screen app can stay open for days, so also
+// check for a new version whenever it comes back to the foreground.
+const UPDATE_CHECK_MS = 30 * 60 * 1000;
+const UPDATE_RELOAD_FALLBACK_MS = 1500;
+const updateSW = registerSW({
+  immediate: true,
+  onNeedRefresh() {
+    hud.offerUpdate(() => {
+      saveGame(sim.state);
+      void updateSW(true);
+      // updateSW reloads once the new worker takes control; that signal never
+      // comes if this page wasn't controlled yet (first visit), so reload anyway.
+      window.setTimeout(() => window.location.reload(), UPDATE_RELOAD_FALLBACK_MS);
+    });
+  },
+  onRegisteredSW(_url, registration) {
+    if (!registration) return;
+    const check = () => void registration.update().catch(() => {});
+    setInterval(check, UPDATE_CHECK_MS);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') check();
+    });
+  },
+});
 
 const game = new Phaser.Game({
   type: Phaser.AUTO,

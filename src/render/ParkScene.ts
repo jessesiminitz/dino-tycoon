@@ -21,6 +21,13 @@ import { EntityLayer } from './EntityLayer';
 /** How often (ms) the info panel refreshes while a dino or feeder is selected. */
 const INFO_REFRESH_MS = 250;
 
+/**
+ * Screen pixels the HUD and toolbars can cover on each side. The camera may
+ * scroll this far past the map edge, so every tile can be brought into the
+ * clear, including the gate on the south beach under the toolbar.
+ */
+const UI_MARGIN = { top: 110, bottom: 230, left: 80, right: 80 };
+
 /** How close (in tiles) a tap must be to an edge to pick that fence segment. */
 const EDGE_PICK = 0.3;
 
@@ -42,6 +49,7 @@ export class ParkScene extends Phaser.Scene {
   private layers!: WorldLayers;
   private entities!: EntityLayer;
   private infoRefreshAt = 0;
+  private boundsZoom = 0;
   private touch!: TouchController;
   private drawnRevision = -1;
   private drag: Drag | null = null;
@@ -81,9 +89,9 @@ export class ParkScene extends Phaser.Scene {
     const cam = this.cameras.main;
     cam.setBackgroundColor('#1f4e79');
     cam.setRoundPixels(true);
-    cam.setBounds(-TILE * 4, -TILE * 4, worldW + TILE * 8, worldH + TILE * 8);
     // Start zoomed in on the gate, where the player's land is.
     cam.setZoom(Phaser.Math.Clamp(Math.floor(Math.min(cam.width / worldW, cam.height / worldH) * 3), 2, MAX_ZOOM));
+    this.fitBounds();
     cam.centerOn(this.sim.state.entrance.x * TILE, (this.sim.state.entrance.y - 6) * TILE);
 
     this.touch = new TouchController(this);
@@ -100,6 +108,8 @@ export class ParkScene extends Phaser.Scene {
   }
 
   update(time: number, delta: number): void {
+    const cam = this.cameras.main;
+    if (cam.zoom !== this.boundsZoom) this.fitBounds();
     this.sim.advance(delta);
     if (this.drawnRevision !== this.sim.worldRevision) this.redrawWorld();
     this.entities.update(time);
@@ -107,6 +117,19 @@ export class ParkScene extends Phaser.Scene {
       this.infoRefreshAt = time + INFO_REFRESH_MS;
       this.showSelection();
     }
+  }
+
+  /** Camera bounds: the map plus room (in screen pixels) to scroll edges out from under the UI. */
+  private fitBounds(): void {
+    const cam = this.cameras.main;
+    const { width, height } = this.sim.state.map;
+    const z = cam.zoom;
+    this.boundsZoom = z;
+    const left = UI_MARGIN.left / z + TILE;
+    const right = UI_MARGIN.right / z + TILE;
+    const top = UI_MARGIN.top / z + TILE;
+    const bottom = UI_MARGIN.bottom / z + TILE;
+    cam.setBounds(-left, -top, width * TILE + left + right, height * TILE + top + bottom);
   }
 
   private redrawWorld(): void {

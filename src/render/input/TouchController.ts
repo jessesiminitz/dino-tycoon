@@ -6,6 +6,8 @@ export const MAX_ZOOM = 6;
 const TAP_SLOP_PX = 10;
 const TAP_MAX_MS = 300;
 const LONG_PRESS_MS = 450;
+/** After the last finger lifts, how long to wait before clearing touches the browser never ended. */
+const STALE_TOUCH_MS = 80;
 
 /**
  * Camera gestures for touch (and mouse, for desktop testing):
@@ -46,6 +48,34 @@ export class TouchController extends Phaser.Events.EventEmitter {
     scene.input.on('pointerup', this.onUp, this);
     scene.input.on('pointerupoutside', this.onUp, this);
     scene.input.on('wheel', this.onWheel, this);
+
+    // Safety net: iOS can swallow a touchend (system gestures, notifications,
+    // the app switcher). A pointer stuck "down" would turn the next one-finger
+    // drag into a pinch and make the map feel frozen, so once the screen
+    // reports no fingers at all, clear any pointer still marked down.
+    const onAllFingersUp = (e: TouchEvent) => {
+      if (e.touches.length > 0) return;
+      window.setTimeout(() => this.clearStaleTouches(), STALE_TOUCH_MS);
+    };
+    window.addEventListener('touchend', onAllFingersUp, { passive: true });
+    window.addEventListener('touchcancel', onAllFingersUp, { passive: true });
+    scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      window.removeEventListener('touchend', onAllFingersUp);
+      window.removeEventListener('touchcancel', onAllFingersUp);
+    });
+  }
+
+  private clearStaleTouches(): void {
+    const stale = this.scene.input.manager.pointers.filter((p) => p.isDown && p.wasTouch);
+    if (stale.length === 0) return;
+    for (const p of stale) p.reset();
+    const wasPinching = this.multiTouch;
+    this.cancelLongPress();
+    this.cancelDraw();
+    this.multiTouch = false;
+    this.pinchDist = 0;
+    this.moved = false;
+    if (wasPinching) this.settleZoom(this.cam.width / 2, this.cam.height / 2);
   }
 
   /** Zoom so that world point under screen (sx, sy) stays under it. */
@@ -122,7 +152,7 @@ export class TouchController extends Phaser.Events.EventEmitter {
       return;
     }
 
-    if (this.multiTouch) return; // lifting one finger of a pinch shouldn't jump-pan
+    if (this.multiTouch) return; // mid-pinch; single-finger handling resumes once only one finger is left
 
     if (this.drawing) {
       if (Phaser.Math.Distance.Between(pointer.x, pointer.y, this.downX, this.downY) > TAP_SLOP_PX) this.moved = true;
@@ -148,6 +178,14 @@ export class TouchController extends Phaser.Events.EventEmitter {
       if (remaining === 0) {
         this.multiTouch = false;
         this.settleZoom(pointer.x, pointer.y);
+      } else if (remaining === 1) {
+        // One finger of a pinch lifted: carry on panning with the other one
+        // (never drawing, and no tap when it lifts).
+        this.multiTouch = false;
+        this.pinchDist = 0;
+        this.moved = true;
+        const other = this.activePointers()[0];
+        this.settleZoom(other.x, other.y);
       } else {
         this.pinchDist = 0;
       }

@@ -82,7 +82,8 @@ export function mountParkPanel(sim: Simulation, hud: Hud): { open(tab?: Tab): vo
       <section class="panel-section">
         <p class="note">Building upkeep: <b>${formatMoney(upkeep)}</b> a day · Debt: <b>${formatMoney(totalDebt(state))}</b></p>
         <p class="note">Tips: build paths from the gate past your paddocks so visitors can see the dinos. A restaurant keeps them happy; a gift shop earns extra.</p>
-      </section>`;
+      </section>
+      <p class="note version">Version ${__APP_VERSION__} · ${__BUILD_DATE__}</p>`;
   }
 
   function ledgerRows(current: Ledger, last: Ledger | undefined): string {
