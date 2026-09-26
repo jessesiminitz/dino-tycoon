@@ -20,6 +20,7 @@ import { createTextures, CURSOR_KEY, TILE, TILESET_KEY, tileIndex } from './tile
 import { MAX_ZOOM, TouchController } from './input/TouchController';
 import { WorldLayers } from './WorldLayers';
 import { EntityLayer } from './EntityLayer';
+import { playSfx, type Sfx } from '../audio/audio';
 
 /** How often (ms) the info panel refreshes while a dino or feeder is selected. */
 const INFO_REFRESH_MS = 250;
@@ -204,8 +205,9 @@ export class ParkScene extends Phaser.Scene {
     }
   }
 
-  private report(r: { ok: boolean; message: string }): void {
+  private report(r: { ok: boolean; message: string }, sound: Sfx = 'build'): void {
     this.hud.toast(r.message, r.ok ? 'ok' : 'error');
+    playSfx(r.ok ? sound : 'error');
   }
 
   private releaseDino(wx: number, wy: number): void {
@@ -214,7 +216,7 @@ export class ParkScene extends Phaser.Scene {
     const x = Math.floor(wx / TILE);
     const y = Math.floor(wy / TILE);
     const r = this.sim.dispatch({ type: 'buyDino', species, x, y });
-    this.report(r);
+    this.report(r, 'roar');
     if (!r.ok) return;
     const sp = SPECIES[species];
     const { regions, tileRegion } = this.sim.regions();
@@ -562,6 +564,6 @@ export class ParkScene extends Phaser.Scene {
       this.ui.mode === 'fence'
         ? this.sim.dispatch({ type: 'buildFences', edges, fence: this.ui.fenceType })
         : this.sim.dispatch({ type: 'removeFences', edges });
-    this.hud.toast(r.message, r.ok ? 'ok' : 'error');
+    this.report(r);
   }
 }

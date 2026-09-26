@@ -10,6 +10,7 @@ import { showMenu } from './ui/menu';
 import { mountPauseMenu, offerUpdate, showOutcome } from './ui/overlays';
 import { UiState } from './ui/uiState';
 import { mountTutorial } from './ui/tutorial';
+import { audioDebug, initAudio, playSfx, type Sfx } from './audio/audio';
 
 /** Saves the running park, if there is one. Set when a park starts. */
 let saveCurrent: () => void = () => {};
@@ -40,6 +41,8 @@ function startGame(state: GameState, slot: SlotId): void {
   mountPauseMenu(sim, { save: saveCurrent, mainMenu: toMainMenu, toast: (t) => hud.toast(t) });
   mountTutorial(sim, (t) => hud.toast(t));
   sim.onEvent((e) => {
+    const sound = eventSound(e.text, e.kind, e.outcome);
+    if (sound) playSfx(sound);
     if (e.outcome) showOutcome(sim, e.outcome, toMainMenu);
   });
   document.body.classList.add('in-park');
@@ -61,7 +64,7 @@ function startGame(state: GameState, slot: SlotId): void {
   game.scene.add('weather', WeatherScene, true, { sim });
 
   // Dev-only handle for debugging and automated browser checks; stripped from production builds.
-  if (import.meta.env.DEV) Object.assign(window, { __dino: { game, sim, ui, slot } });
+  if (import.meta.env.DEV) Object.assign(window, { __dino: { game, sim, ui, slot, audioDebug, playSfx } });
 }
 
 // Offline support + updates. A home-screen app can stay open for days, so also
@@ -89,6 +92,22 @@ const updateSW = registerSW({
       if (document.visibilityState === 'visible') check();
     });
   },
+});
+
+/** Which sound (if any) a park event makes. */
+function eventSound(text: string, kind: string, outcome?: 'won' | 'lost'): Sfx | null {
+  if (outcome) return outcome === 'won' ? 'fanfare' : 'sad';
+  if (/^🦴/.test(text)) return 'chime';
+  if (/^⛈️ A storm/.test(text)) return 'thunder';
+  if (/^(🚨|🚑|🦠|📋 Failed)|smashed through|knocked down|rotted/.test(text)) return 'alert';
+  if (/^(📋 Safety inspection passed|🚌)/.test(text)) return 'cash';
+  return kind === 'bad' && /died|starved/.test(text) ? 'sad' : null;
+}
+
+initAudio();
+// Every button gives a little click.
+document.addEventListener('click', (e) => {
+  if ((e.target as HTMLElement).closest('button')) playSfx('click');
 });
 
 async function boot(): Promise<void> {

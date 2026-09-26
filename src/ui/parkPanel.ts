@@ -18,6 +18,7 @@ import { dailyWages, describeTask } from '../sim/systems/staff';
 import { SCENARIOS } from '../sim/data/scenarios';
 import { daysLeft, goalProgress } from '../sim/goals';
 import { formatMoney, type Hud } from './hud';
+import { playSfx } from '../audio/audio';
 
 type Tab = 'goals' | 'overview' | 'staff' | 'finances' | 'bank';
 
@@ -47,6 +48,7 @@ export function mountParkPanel(sim: Simulation, hud: Hud): { open(tab?: Tab): vo
 
   const act = (r: { ok: boolean; message: string }) => {
     hud.toast(r.message, r.ok ? 'ok' : 'error');
+    playSfx(r.ok ? 'cash' : 'error');
     render();
   };
 

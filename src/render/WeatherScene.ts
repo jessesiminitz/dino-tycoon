@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import type { Simulation } from '../sim/Simulation';
+import { playSfx, setRain } from '../audio/audio';
 
 const DROPS = 140;
 const FADE_PER_MS = 1 / 1500;
@@ -50,6 +51,7 @@ export class WeatherScene extends Phaser.Scene {
   update(_time: number, delta: number): void {
     const stormy = this.sim.state.stormHours > 0;
     this.intensity = Phaser.Math.Clamp(this.intensity + (stormy ? 1 : -1) * delta * FADE_PER_MS, 0, 1);
+    setRain(this.sim.speed > 0 ? this.intensity : 0);
     const g = this.g.clear();
     if (this.intensity <= 0) return;
 
@@ -66,7 +68,11 @@ export class WeatherScene extends Phaser.Scene {
       g.lineBetween(d.x, d.y, d.x + 3, d.y - 9);
     }
 
-    if (stormy && this.sim.speed > 0 && Math.random() < LIGHTNING_CHANCE * (delta / 16.7)) this.flash = 1;
+    if (stormy && this.sim.speed > 0 && Math.random() < LIGHTNING_CHANCE * (delta / 16.7)) {
+      this.flash = 1;
+      // Thunder follows the flash.
+      this.time.delayedCall(250 + Math.random() * 500, () => playSfx('thunder'));
+    }
     if (this.flash > 0) {
       g.fillStyle(0xffffff, 0.35 * this.flash).fillRect(0, 0, width, height);
       this.flash = Math.max(0, this.flash - delta / 180);
