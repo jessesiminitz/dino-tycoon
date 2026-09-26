@@ -14,7 +14,11 @@ const LONG_PRESS_MS = 450;
  *
  * Zoom settles on whole-number steps after a pinch so pixel art stays crisp.
  *
- * Events: 'tap' (worldX, worldY), 'longpress' (worldX, worldY).
+ * With `drawMode` on (fence tools), one finger draws instead of panning and
+ * two fingers still pan/zoom. Right- or middle-mouse drag always pans (desktop).
+ *
+ * Events: 'tap' (worldX, worldY), 'longpress' (worldX, worldY),
+ *         'drawstart' | 'drawmove' | 'drawend' (worldX, worldY), 'drawcancel'.
  */
 export class TouchController extends Phaser.Events.EventEmitter {
   private cam: Phaser.Cameras.Scene2D.Camera;
@@ -27,11 +31,15 @@ export class TouchController extends Phaser.Events.EventEmitter {
   private pinchDist = 0;
   private pinchZoom = 1;
   private zoomTween?: Phaser.Tweens.Tween;
+  private drawing = false;
+  private mousePan = false;
+  drawMode = false;
 
   constructor(private scene: Phaser.Scene) {
     super();
     this.cam = scene.cameras.main;
     scene.input.addPointer(1); // two fingers total
+    scene.input.mouse?.disableContextMenu(); // right-drag pans on desktop
 
     scene.input.on('pointerdown', this.onDown, this);
     scene.input.on('pointermove', this.onMove, this);
@@ -65,6 +73,7 @@ export class TouchController extends Phaser.Events.EventEmitter {
     if (active.length >= 2) {
       this.multiTouch = true;
       this.cancelLongPress();
+      this.cancelDraw();
       const [a, b] = active;
       this.pinchDist = Phaser.Math.Distance.Between(a.x, a.y, b.x, b.y);
       this.pinchZoom = this.cam.zoom;
@@ -76,6 +85,14 @@ export class TouchController extends Phaser.Events.EventEmitter {
     this.downAt = pointer.downTime;
     this.downX = pointer.x;
     this.downY = pointer.y;
+    this.mousePan = pointer.rightButtonDown() || pointer.middleButtonDown();
+
+    if (this.drawMode && !this.mousePan) {
+      this.drawing = true;
+      this.emitWorld('drawstart', pointer);
+      return;
+    }
+
     this.longPressTimer = this.scene.time.delayedCall(LONG_PRESS_MS, () => {
       if (!this.moved && !this.multiTouch && pointer.isDown) {
         const w = this.cam.getWorldPoint(pointer.x, pointer.y);
@@ -107,6 +124,12 @@ export class TouchController extends Phaser.Events.EventEmitter {
 
     if (this.multiTouch) return; // lifting one finger of a pinch shouldn't jump-pan
 
+    if (this.drawing) {
+      if (Phaser.Math.Distance.Between(pointer.x, pointer.y, this.downX, this.downY) > TAP_SLOP_PX) this.moved = true;
+      this.emitWorld('drawmove', pointer);
+      return;
+    }
+
     if (!this.moved && Phaser.Math.Distance.Between(pointer.x, pointer.y, this.downX, this.downY) > TAP_SLOP_PX) {
       this.moved = true;
       this.cancelLongPress();
@@ -131,10 +154,29 @@ export class TouchController extends Phaser.Events.EventEmitter {
       return;
     }
 
-    if (!this.moved && pointer.upTime - this.downAt < TAP_MAX_MS) {
-      const w = this.cam.getWorldPoint(pointer.x, pointer.y);
-      this.emit('tap', w.x, w.y);
+    if (this.drawing) {
+      this.drawing = false;
+      if (this.moved) {
+        this.emitWorld('drawend', pointer);
+        return;
+      }
+      this.emit('drawcancel');
     }
+
+    if (!this.moved && !this.mousePan && pointer.upTime - this.downAt < TAP_MAX_MS) {
+      this.emitWorld('tap', pointer);
+    }
+  }
+
+  private emitWorld(event: string, pointer: Phaser.Input.Pointer): void {
+    const w = this.cam.getWorldPoint(pointer.x, pointer.y);
+    this.emit(event, w.x, w.y);
+  }
+
+  private cancelDraw(): void {
+    if (!this.drawing) return;
+    this.drawing = false;
+    this.emit('drawcancel');
   }
 
   private onWheel(pointer: Phaser.Input.Pointer, _objs: unknown, _dx: number, dy: number): void {

@@ -1,4 +1,6 @@
 import type { GameState } from './GameState';
+import { applyCommand, type Command, type CommandResult } from './commands';
+import { computeRegions, type RegionMap } from './regions';
 
 /** Real-time milliseconds per game-hour at 1× speed. */
 export const MS_PER_HOUR = 1000;
@@ -9,13 +11,15 @@ type Listener = (state: GameState) => void;
 
 /**
  * Owns the GameState and advances it on a fixed timestep, independent of
- * render frame rate. Rendering reads `state`; input goes through `dispatch`
- * (commands arrive in Milestone 2).
+ * render frame rate. Rendering reads `state`; player input goes through `dispatch`.
  */
 export class Simulation {
   speed: Speed = 1;
+  /** Bumped whenever the built world changes (fences, land), so renderers know to redraw. */
+  worldRevision = 0;
   private accumulator = 0;
   private listeners = new Set<Listener>();
+  private regionCache?: { revision: number; map: RegionMap };
 
   constructor(public state: GameState) {}
 
@@ -37,6 +41,23 @@ export class Simulation {
   /** One game-hour. Systems (dinos, visitors, economy...) plug in here. */
   tick(): void {
     this.state.hours += 1;
+  }
+
+  dispatch(cmd: Command): CommandResult {
+    const result = applyCommand(this.state, cmd);
+    if (result.ok) {
+      this.worldRevision++;
+      this.emit();
+    }
+    return result;
+  }
+
+  /** Paddocks and other connected areas, recomputed only after the world changes. */
+  regions(): RegionMap {
+    if (this.regionCache?.revision !== this.worldRevision) {
+      this.regionCache = { revision: this.worldRevision, map: computeRegions(this.state) };
+    }
+    return this.regionCache.map;
   }
 
   setSpeed(speed: Speed): void {

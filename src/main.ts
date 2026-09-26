@@ -2,15 +2,17 @@ import Phaser from 'phaser';
 import { registerSW } from 'virtual:pwa-register';
 import { newGame } from './sim/GameState';
 import { Simulation } from './sim/Simulation';
-import { ParkScene, type TileInfo } from './render/ParkScene';
+import { ParkScene } from './render/ParkScene';
 import { loadGame, saveGame } from './save/storage';
 import { mountHud } from './ui/hud';
+import { UiState } from './ui/uiState';
 
 registerSW({ immediate: true });
 
 const state = loadGame() ?? newGame((Math.random() * 2 ** 32) >>> 0);
 const sim = new Simulation(state);
-const hud = mountHud(sim);
+const ui = new UiState();
+const hud = mountHud(sim, ui);
 
 // iOS may kill a backgrounded web app without warning, so save whenever we lose focus.
 document.addEventListener('visibilitychange', () => {
@@ -33,7 +35,7 @@ const game = new Phaser.Game({
   banner: false,
 });
 
-game.scene.add('park', ParkScene, true, { sim });
-game.events.once(Phaser.Core.Events.READY, () => {
-  game.scene.getScene('park').events.on('tile-selected', (t: TileInfo | null) => hud.showTile(t));
-});
+game.scene.add('park', ParkScene, true, { sim, ui, hud });
+
+// Dev-only handle for debugging and automated browser checks; stripped from production builds.
+if (import.meta.env.DEV) Object.assign(window, { __dino: { game, sim, ui } });

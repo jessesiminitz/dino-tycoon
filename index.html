@@ -12,6 +12,7 @@
     <meta name="apple-mobile-web-app-title" content="Dino Tycoon" />
     <meta name="theme-color" content="#1b3a4b" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" href="icons/icon-192.png" />
     <title>Dino Tycoon</title>
     <link rel="stylesheet" href="/src/ui/style.css" />
   </head>
@@ -25,14 +26,28 @@
         <span id="hud-clock" class="hud-stat">Day 1 · 08:00</span>
       </div>
       <div class="hud-group" role="group" aria-label="Game speed">
-        <button class="speed-btn" data-speed="0" aria-label="Pause">⏸</button>
+        <button class="speed-btn" data-speed="0" aria-label="Pause">❚❚</button>
         <button class="speed-btn" data-speed="1" aria-label="Normal speed">▶</button>
         <button class="speed-btn" data-speed="2" aria-label="Fast">▶▶</button>
         <button class="speed-btn" data-speed="4" aria-label="Very fast">▶▶▶</button>
       </div>
     </div>
 
-    <div id="info" class="info hidden" aria-live="polite"></div>
+    <div id="info" class="info hidden" aria-live="polite">
+      <span id="info-text"></span>
+      <button id="info-action" class="action-btn hidden"></button>
+    </div>
+
+    <div class="toolbar">
+      <div id="fence-picker" class="hud-group picker hidden" role="group" aria-label="Fence type"></div>
+      <div class="hud-group tools" role="group" aria-label="Tools">
+        <button class="tool-btn" data-mode="fence">🚧<span>Fence</span></button>
+        <button class="tool-btn" data-mode="demolish">🧨<span>Remove</span></button>
+        <button class="tool-btn" data-mode="land">🗺️<span>Land</span></button>
+      </div>
+    </div>
+
+    <div id="toast" class="toast hidden" role="status"></div>
 
     <div id="rotate-hint" class="rotate-hint">
       <div>📱↻</div>

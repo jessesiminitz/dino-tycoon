@@ -4,6 +4,8 @@
   --panel-edge: #6b8f4e;
   --text: #f4ecd2;
   --accent: #f2c14e;
+  --good: #8fd16a;
+  --bad: #ff7a6b;
   --tap: 44px; /* Apple's minimum comfortable tap target */
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
@@ -95,11 +97,130 @@ body {
   position: fixed;
   left: calc(var(--safe-left) + 8px);
   bottom: calc(var(--safe-bottom) + 8px);
-  padding: 8px 12px;
+  max-width: min(46vw, 420px);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  font-size: 13px;
   background: var(--panel);
   border: 2px solid var(--panel-edge);
   border-radius: 4px;
+}
+
+button {
+  font: inherit;
+  color: var(--text);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.action-btn {
+  min-height: var(--tap);
+  padding: 0 14px;
+  font-weight: bold;
+  color: #1b1b1b;
+  background: var(--accent);
+  border: 2px solid #1b1b1b;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.toolbar {
+  position: fixed;
+  right: calc(var(--safe-right) + 8px);
+  bottom: calc(var(--safe-bottom) + 8px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.tools,
+.picker {
+  padding: 3px;
+  gap: 3px;
+}
+
+.tool-btn,
+.pick-btn {
+  min-width: var(--tap);
+  min-height: var(--tap);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 2px 6px;
+  font-size: 18px;
+  line-height: 1;
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: 4px;
+}
+
+.tool-btn span,
+.pick-btn small {
+  font-size: 10px;
+}
+
+.pick-btn {
+  font-size: 11px;
+}
+
+.pick-btn small {
+  color: var(--accent);
+}
+
+.swatch {
+  width: 22px;
+  height: 5px;
+  border: 1px solid #1b1b1b;
+}
+
+.tool-btn.active,
+.pick-btn.active {
+  border-color: var(--accent);
+  background: rgba(242, 193, 78, 0.15);
+}
+
+.toast {
+  position: fixed;
+  top: calc(var(--safe-top) + 62px);
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 80vw;
+  padding: 6px 12px;
+  font-size: 13px;
+  text-align: center;
+  background: var(--panel);
+  border: 2px solid var(--good);
+  border-radius: 4px;
   pointer-events: none;
+}
+
+.toast.error {
+  border-color: var(--bad);
+}
+
+#hud-money.up {
+  animation: flash-good 0.6s;
+}
+
+#hud-money.down {
+  animation: flash-bad 0.6s;
+}
+
+@keyframes flash-good {
+  from {
+    color: var(--good);
+  }
+}
+
+@keyframes flash-bad {
+  from {
+    color: var(--bad);
+  }
 }
 
 .hidden {

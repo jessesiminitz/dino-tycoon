@@ -1,4 +1,4 @@
-import type { GameState } from '../sim/GameState';
+import { SAVE_VERSION, type GameState } from '../sim/GameState';
 
 // Milestone 1 uses localStorage; Milestone 7 moves saves to IndexedDB slots.
 const KEY = 'dino-tycoon:autosave';
@@ -16,7 +16,8 @@ export function loadGame(): GameState | null {
     const raw = localStorage.getItem(KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as GameState;
-    return parsed.version === 1 ? parsed : null;
+    // Older saves predate land and fences; start a fresh park rather than migrate.
+    return parsed.version === SAVE_VERSION ? parsed : null;
   } catch {
     return null;
   }
