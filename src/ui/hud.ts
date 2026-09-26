@@ -6,6 +6,7 @@ import { SPECIES } from '../sim/data/species';
 import { BUILDING_TYPES, PATH_COST, type BuildingKind } from '../sim/data/economy';
 import { mountCatalog } from './catalog';
 import { mountParkPanel } from './parkPanel';
+import { mountGuide } from './guide';
 import type { Mode, UiState } from './uiState';
 import type { GameEvent } from '../sim/systems/context';
 
@@ -79,7 +80,8 @@ function modeHint(ui: UiState): string | null {
         : `Drag to lay a path (${formatMoney(PATH_COST)} a tile) · connect it to the gate`;
     case 'building': {
       const t = BUILDING_TYPES[ui.buildingKind];
-      return `Tap a spot next to a path to build a ${t.name.toLowerCase()} (${formatMoney(t.cost)}, ${formatMoney(t.upkeep)}/day upkeep)`;
+      const where = t.needsPath ? 'a spot next to a path' : 'your land outside paddocks (rocky ground digs faster)';
+      return `Tap ${where} to build a ${t.name.toLowerCase()} (${formatMoney(t.cost)}, ${formatMoney(t.upkeep)}/day)`;
     }
     case 'place-dino': {
       const sp = ui.placing ? SPECIES[ui.placing] : null;
@@ -153,7 +155,8 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
   }
   for (const kind of Object.keys(BUILDING_TYPES) as BuildingKind[]) {
     const t = BUILDING_TYPES[kind];
-    const b = pickButton(kind === 'restaurant' ? '#d9454d' : '#3f7fb0', t.name, formatMoney(t.cost));
+    const swatch = { restaurant: '#d9454d', giftshop: '#3f7fb0', digsite: '#d9c7a3' }[kind];
+    const b = pickButton(swatch, t.name, formatMoney(t.cost));
     b.dataset.building = kind;
     b.addEventListener('click', () => ui.setBuildingKind(kind));
     buildingPicker.appendChild(b);
@@ -245,6 +248,8 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
 
   const parkPanel = mountParkPanel(sim, hud);
   $('btn-park').addEventListener('click', () => parkPanel.open());
+  const guide = mountGuide(sim);
+  $('btn-guide').addEventListener('click', () => guide.open());
 
   renderTools();
   return hud;

@@ -69,6 +69,23 @@ function paintStaff(role: StaffRole): HTMLCanvasElement {
 }
 
 function paintBuilding(kind: BuildingKind): HTMLCanvasElement {
+  if (kind === 'digsite') {
+    // Canvas tent, a spoil heap, a pickaxe and a partly dug-out bone.
+    return paintRows(
+      [
+        '......T.........',
+        '.....TTT........',
+        '....TTtTT.......',
+        '...TTTtTTT..H...',
+        '..TTTTtTTTT.H...',
+        '.TTTTTdTTTTTHHH.',
+        '......dddd......',
+        '..MMM.dBBBd.MM..',
+        '.MMMMMdddddMMMM.',
+      ],
+      { T: '#d9c7a3', t: '#a88a6a', d: '#5a3b1f', B: '#f4ecd2', M: '#8a6a3e', H: '#8f8f96' },
+    );
+  }
   // Awning stripes alternate A/a; walls W; window G; door D; sign S/s.
   const rows = [
     '......SSSS......',

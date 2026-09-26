@@ -8,6 +8,8 @@ import { hourlyVisitors, stepVisitors } from './systems/visitors';
 import { hourlyEconomy } from './systems/economy';
 import { hourlyFences, hourlyHealth, stepEscapes } from './systems/incidents';
 import { stepStaff } from './systems/staff';
+import { hourlyEvents } from './systems/events';
+import { hourlyFossils } from './systems/fossils';
 
 /** Real-time milliseconds per game-hour at 1× speed. */
 export const MS_PER_HOUR = 1000;
@@ -78,7 +80,9 @@ export class Simulation {
       hourlyDinos(ctx);
       hourlyHealth(ctx);
       hourlyFences(ctx);
+      hourlyEvents(ctx);
       hourlyVisitors(ctx);
+      hourlyFossils(ctx);
       hourlyEconomy(ctx);
     }
     state.rngState = rng.snapshot;

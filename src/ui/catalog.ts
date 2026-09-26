@@ -48,7 +48,9 @@ export function mountCatalog(sim: Simulation, ui: UiState): { open(): void } {
       const sp = SPECIES[id];
       const unlocked = sim.state.unlockedSpecies.includes(id);
       btn.disabled = !unlocked || sp.price > sim.state.money;
-      btn.textContent = unlocked ? `Buy · ${formatMoney(sp.price)}` : '🔒 Dig up fossils to unlock';
+      btn.textContent = unlocked
+        ? `Buy · ${formatMoney(sp.price)}`
+        : `🦴 Fossils ${sim.state.fossils[id] ?? 0}/${sp.fossilsNeeded}${sim.state.buildings.some((b) => b.kind === 'digsite') ? ' · keep digging' : ' · build a dig site'}`;
       btn.closest('.species-card')!.classList.toggle('locked', !unlocked);
     }
   };

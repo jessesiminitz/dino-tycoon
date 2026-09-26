@@ -27,6 +27,7 @@
         <span id="hud-dinos" class="hud-stat">0 dinos</span>
         <span id="hud-guests" class="hud-stat">0 guests</span>
         <button id="btn-park" class="hud-btn" aria-label="Park report">📊<span>Park</span></button>
+        <button id="btn-guide" class="hud-btn" aria-label="Dino Guide">📖<span>Guide</span></button>
       </div>
       <div class="hud-group" role="group" aria-label="Game speed">
         <button class="speed-btn" data-speed="0" aria-label="Pause">❚❚</button>
@@ -71,6 +72,19 @@
           <button class="modal-close" aria-label="Close">✕</button>
         </header>
         <div class="species-grid"></div>
+      </div>
+    </div>
+
+    <div id="guide" class="modal hidden" role="dialog" aria-label="Dino Guide">
+      <div class="modal-card">
+        <header class="modal-head">
+          <h2>📖 Dino Guide</h2>
+          <button class="modal-close" aria-label="Close">✕</button>
+        </header>
+        <div class="guide-body">
+          <nav class="guide-list" role="tablist" aria-label="Species"></nav>
+          <article class="guide-detail" aria-live="polite"></article>
+        </div>
       </div>
     </div>
 

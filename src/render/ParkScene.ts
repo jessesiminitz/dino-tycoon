@@ -3,6 +3,7 @@ import type { Simulation } from '../sim/Simulation';
 import { planFences, planPaths, refillCost, repairCost } from '../sim/commands';
 import { STAFF_TYPES } from '../sim/data/staff';
 import { describeTask } from '../sim/systems/staff';
+import { digChance, lockedSpecies } from '../sim/systems/fossils';
 import { FENCE_REFUND, FENCE_TYPES } from '../sim/data/fences';
 import { DINO_RESALE, FEEDER_TYPES } from '../sim/data/feeders';
 import { SPECIES } from '../sim/data/species';
@@ -346,6 +347,13 @@ export class ParkScene extends Phaser.Scene {
         return;
       }
       const t = BUILDING_TYPES[b.kind];
+      if (b.kind === 'digsite') {
+        const chance = Math.round(digChance(state, b.x, b.y) * 100);
+        const left = lockedSpecies(state).length;
+        const note = left > 0 ? `${left} species still to unlock` : 'everything unlocked: finds go to museums';
+        this.hud.showInfo(`${t.name} · ${chance}% chance of a find each night · ${note} · upkeep ${formatMoney(t.upkeep)}/day`);
+        return;
+      }
       const sold = b.kind === 'restaurant' ? state.finance.today.income.food : state.finance.today.income.souvenirs;
       this.hud.showInfo(`${t.name} · sells at ${formatMoney(t.salePrice)} · takings today ${formatMoney(sold)} · upkeep ${formatMoney(t.upkeep)}/day`);
     } else {

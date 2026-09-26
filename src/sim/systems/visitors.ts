@@ -19,6 +19,8 @@ const LOOKS = 6;
 const PANIC_RADIUS = 3;
 const INJURY_CHANCE = 0.1;
 const GUIDE_RADIUS = 3;
+/** Fraction of the usual arrivals who still come in a storm. */
+const STORM_ARRIVALS = 0.4;
 
 /**
  * How much there is to see: each dino in a paddock adds its species' appeal,
@@ -44,7 +46,8 @@ export function fairPrice(appeal: number): number {
 export function expectedArrivals(state: GameState, regions: RegionMap): number {
   const appeal = parkAppeal(state, regions);
   const priceFactor = Math.max(0, Math.min(1.5, 2 - state.ticketPrice / fairPrice(appeal)));
-  return (2 + appeal * 0.25) * (0.5 + state.reputation / 100) * priceFactor;
+  const weather = state.stormHours > 0 ? STORM_ARRIVALS : 1;
+  return (2 + appeal * 0.25) * (0.5 + state.reputation / 100) * priceFactor * weather;
 }
 
 function buildingNear(state: GameState, x: number, y: number, kind: BuildingKind): Building | undefined {
@@ -72,6 +75,7 @@ export function hourlyVisitors(ctx: SimContext): void {
     v.hunger = Math.min(100, v.hunger + 8);
     if (v.hunger >= 90) v.satisfaction -= 3;
     if (v.seen.length === 0) v.satisfaction -= 4; // bored: nothing to see
+    if (state.stormHours > 0) v.satisfaction -= 2; // soaked
     v.satisfaction = Math.max(0, v.satisfaction);
   }
 
@@ -81,28 +85,32 @@ export function hourlyVisitors(ctx: SimContext): void {
   n = Math.min(n, MAX_VISITORS - state.visitors.length);
   const fair = fairPrice(parkAppeal(state, regions));
   const pricePenalty = state.ticketPrice > fair ? Math.min(30, (state.ticketPrice / fair - 1) * 40) : 0;
-  const { x, y } = state.entrance;
 
-  for (let i = 0; i < n; i++) {
-    state.visitors.push({
-      id: state.nextId++,
-      x,
-      y,
-      px: x,
-      py: y,
-      from: -1,
-      path: [],
-      hunger: rng.int(0, 40),
-      satisfaction: START_SATISFACTION - pricePenalty,
-      seen: [],
-      leaveHour: state.hours + rng.int(3, 6),
-      boughtSouvenir: false,
-      look: rng.int(0, LOOKS - 1),
-    });
-    earn(state, 'admissions', state.ticketPrice);
-    state.finance.today.visitors++;
-    state.finance.month.visitors++;
-  }
+  for (let i = 0; i < n; i++) spawnVisitor(ctx, START_SATISFACTION - pricePenalty, state.ticketPrice);
+}
+
+/** A new visitor at the gate who pays `ticket` for admission. */
+export function spawnVisitor(ctx: SimContext, satisfaction: number, ticket: number): void {
+  const { state, rng } = ctx;
+  const { x, y } = state.entrance;
+  state.visitors.push({
+    id: state.nextId++,
+    x,
+    y,
+    px: x,
+    py: y,
+    from: -1,
+    path: [],
+    hunger: rng.int(0, 40),
+    satisfaction,
+    seen: [],
+    leaveHour: state.hours + rng.int(3, 6),
+    boughtSouvenir: false,
+    look: rng.int(0, LOOKS - 1),
+  });
+  earn(state, 'admissions', ticket);
+  state.finance.today.visitors++;
+  state.finance.month.visitors++;
 }
 
 /** One movement step for every visitor: look, shop, eat, walk, or head home. */

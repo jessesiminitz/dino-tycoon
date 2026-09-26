@@ -3,6 +3,7 @@ import { registerSW } from 'virtual:pwa-register';
 import { newGame } from './sim/GameState';
 import { Simulation } from './sim/Simulation';
 import { ParkScene } from './render/ParkScene';
+import { WeatherScene } from './render/WeatherScene';
 import { loadGame, saveGame } from './save/storage';
 import { mountHud } from './ui/hud';
 import { UiState } from './ui/uiState';
@@ -59,6 +60,7 @@ const game = new Phaser.Game({
 });
 
 game.scene.add('park', ParkScene, true, { sim, ui, hud });
+game.scene.add('weather', WeatherScene, true, { sim });
 
 // Dev-only handle for debugging and automated browser checks; stripped from production builds.
 if (import.meta.env.DEV) Object.assign(window, { __dino: { game, sim, ui } });

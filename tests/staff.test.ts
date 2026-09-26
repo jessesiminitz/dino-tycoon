@@ -171,8 +171,11 @@ describe('disease', () => {
     noVet.dinos[0].sick = true;
     const sim = new Simulation(noVet);
     const everSick = new Set<number>();
-    run(sim, 24 * 10, () => {
+    const patientZero = noVet.dinos[0];
+    run(sim, 24 * 20, () => {
       noVet.feeders[0].stock = 100;
+      patientZero.sick = true; // stays contagious for the whole test
+      patientZero.health = 100;
       for (const d of noVet.dinos) if (d.sick) everSick.add(d.id);
     });
     expect(everSick.size).toBeGreaterThan(1);

@@ -82,6 +82,8 @@ export function mountParkPanel(sim: Simulation, hud: Hud): { open(tab?: Tab): vo
           Expect about <b>${perHour.toFixed(1)}</b> new visitors an hour while open (08:00–18:00).</p>
       </section>
       <section class="panel-section">
+        <p class="note">Weather: <b>${state.stormHours > 0 ? `⛈️ storm (about ${state.stormHours}h left)` : '🌤️ clear'}</b> ·
+          Species unlocked: <b>${state.unlockedSpecies.length}/12</b>${state.buildings.some((b) => b.kind === 'digsite') ? '' : ' (build a dig site to find more)'}</p>
         <p class="note">Daily costs: wages <b>${formatMoney(dailyWages(state))}</b> · building upkeep <b>${formatMoney(upkeep)}</b> · Debt: <b>${formatMoney(totalDebt(state))}</b></p>
         <p class="note">Tips: build paths from the gate past your paddocks so visitors can see the dinos. A restaurant keeps them happy; a gift shop earns extra.</p>
       </section>

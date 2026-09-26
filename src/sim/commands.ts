@@ -252,11 +252,13 @@ export function applyCommand(state: GameState, cmd: Command): CommandResult {
       if (state.paths[i]) return { ok: false, message: 'Build next to a path, not on it' };
       const { regions, tileRegion } = computeRegions(state);
       if (regions[tileRegion[i]].kind === 'paddock') return { ok: false, message: "Buildings can't go inside paddocks" };
-      if (!touchesWalkway(state, cmd.x, cmd.y)) return { ok: false, message: 'Must be next to a path so visitors can reach it' };
+      if (type.needsPath && !touchesWalkway(state, cmd.x, cmd.y)) {
+        return { ok: false, message: 'Must be next to a path so visitors can reach it' };
+      }
       if (type.cost > state.money) return { ok: false, message: `Not enough money: need ${usd(type.cost)}` };
       state.buildings.push({ id: state.nextId++, kind: cmd.kind, x: cmd.x, y: cmd.y });
       spend(state, 'construction', type.cost);
-      return { ok: true, cost: type.cost, message: `Opened a ${type.name.toLowerCase()} for ${usd(type.cost)}` };
+      return { ok: true, cost: type.cost, message: `Built a ${type.name.toLowerCase()} for ${usd(type.cost)}` };
     }
 
     case 'removeBuilding': {

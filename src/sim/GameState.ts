@@ -11,7 +11,7 @@ export const MAP_WIDTH = 64;
 export const MAP_HEIGHT = 48;
 export const STARTING_MONEY = 50_000;
 export const START_HOUR = 8;
-export const SAVE_VERSION = 5;
+export const SAVE_VERSION = 6;
 
 export interface Dino {
   id: number;
@@ -129,6 +129,10 @@ export interface GameState {
   reputation: number;
   finance: Finance;
   staff: Staff[];
+  /** Fossil fragments found so far, per locked species. */
+  fossils: Partial<Record<SpeciesId, number>>;
+  /** Hours of storm left (0 = clear skies). */
+  stormHours: number;
   /** Next id for dinos, feeders and other entities. */
   nextId: number;
 }
@@ -160,6 +164,8 @@ export function newGame(seed: number): GameState {
     reputation: 50,
     finance: newFinance(),
     staff: [],
+    fossils: {},
+    stormHours: 0,
     nextId: 1,
   };
 }
@@ -200,6 +206,10 @@ export function migrate(raw: { version?: number } & Record<string, unknown>): Ga
       vFenceHp: vFences.map((f) => (f ? 100 : 0)),
       staff: [],
     });
+    normalizeFinance(raw.finance as Finance);
+  }
+  if (raw.version === 5) {
+    Object.assign(raw, { version: 6, fossils: {}, stormHours: 0 });
     normalizeFinance(raw.finance as Finance);
   }
   return raw.version === SAVE_VERSION ? (raw as unknown as GameState) : null;

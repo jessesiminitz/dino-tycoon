@@ -1,4 +1,4 @@
-export type BuildingKind = 'restaurant' | 'giftshop';
+export type BuildingKind = 'restaurant' | 'giftshop' | 'digsite';
 
 export interface BuildingType {
   kind: BuildingKind;
@@ -6,13 +6,26 @@ export interface BuildingType {
   cost: number;
   /** Charged every midnight. */
   upkeep: number;
-  /** What a visitor pays per purchase. */
+  /** What a visitor pays per purchase (0 for buildings visitors don't use). */
   salePrice: number;
+  /** Visitors must be able to reach it from a path. */
+  needsPath: boolean;
+  description: string;
 }
 
 export const BUILDING_TYPES: Record<BuildingKind, BuildingType> = {
-  restaurant: { kind: 'restaurant', name: 'Restaurant', cost: 3000, upkeep: 40, salePrice: 8 },
-  giftshop: { kind: 'giftshop', name: 'Gift shop', cost: 2000, upkeep: 25, salePrice: 12 },
+  restaurant: {
+    kind: 'restaurant', name: 'Restaurant', cost: 3000, upkeep: 40, salePrice: 8, needsPath: true,
+    description: 'Hungry visitors buy meals here.',
+  },
+  giftshop: {
+    kind: 'giftshop', name: 'Gift shop', cost: 2000, upkeep: 25, salePrice: 12, needsPath: true,
+    description: 'Visitors walking past may buy a souvenir.',
+  },
+  digsite: {
+    kind: 'digsite', name: 'Dig site', cost: 2500, upkeep: 150, salePrice: 0, needsPath: false,
+    description: 'A fossil crew digs here every day. Finds unlock new species. Best on rocky ground.',
+  },
 };
 
 export const BUILDING_REFUND = 0.25;
@@ -38,3 +51,9 @@ export const LOAN_MONTHLY_RATE = 0.015;
 export const LOAN_TERM_MONTHS = 12;
 
 export const MAX_VISITORS = 150;
+
+/** Nightly chance a dig site turns up a fossil (rocky ground multiplies it). */
+export const DIG_FIND_CHANCE = 0.2;
+export const ROCK_DIG_BONUS = 1.6;
+/** What a museum pays for a find once every species is unlocked. */
+export const MUSEUM_PRICE = 600;
