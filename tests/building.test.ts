@@ -188,3 +188,13 @@ describe('land', () => {
     expect(computeRegions(copy).regions.length).toBe(computeRegions(s).regions.length);
   });
 });
+
+describe('tileLine', () => {
+  it('covers both legs of the L without repeating the corner', async () => {
+    const { tileLine } = await import('../src/sim/grid');
+    expect(tileLine(0, 0, 2, 1, true)).toEqual([[0, 0], [1, 0], [2, 0], [2, 1]]);
+    expect(tileLine(0, 0, 2, 1, false)).toEqual([[0, 0], [0, 1], [1, 1], [2, 1]]);
+    expect(tileLine(3, 3, 3, 3, true)).toEqual([[3, 3]]);
+    expect(tileLine(2, 2, 0, 2, true)).toEqual([[2, 2], [1, 2], [0, 2]]);
+  });
+});

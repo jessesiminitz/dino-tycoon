@@ -189,15 +189,21 @@ describe('determinism and saves', () => {
     expect(make()).toEqual(make());
   });
 
-  it('migrates a version 2 save', () => {
-    const v3 = newGame(3);
-    const { dinos: _d, feeders: _f, unlockedSpecies: _u, nextId: _n, stepInHour: _s, ...rest } = v3;
+  it('migrates a version 2 save all the way to the current version', () => {
+    const current = newGame(3);
+    const {
+      dinos: _d, feeders: _f, unlockedSpecies: _u, nextId: _n, stepInHour: _s,
+      paths: _p, buildings: _b, visitors: _v, ticketPrice: _t, reputation: _r, finance: _fi,
+      ...rest
+    } = current;
     const v2 = JSON.parse(JSON.stringify({ ...rest, version: 2 }));
     const migrated = migrate(v2)!;
-    expect(migrated.version).toBe(3);
+    expect(migrated.version).toBe(4);
     expect(migrated.dinos).toEqual([]);
     expect(migrated.unlockedSpecies).toHaveLength(6);
     expect(migrated.money).toBe(STARTING_MONEY);
+    expect(migrated.paths).toHaveLength(migrated.map.width * migrated.map.height);
+    expect(migrated.finance.loans).toEqual([]);
     expect(computeRegions(migrated).regions.length).toBeGreaterThan(0);
   });
 });

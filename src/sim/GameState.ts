@@ -3,12 +3,14 @@ import { findEntrance, initialParcels, type Point } from './land';
 import { generateIsland, type TerrainMap } from './terrain';
 import { STARTER_SPECIES, type SpeciesId } from './data/species';
 import type { FeederKind } from './data/feeders';
+import { DEFAULT_TICKET_PRICE, type BuildingKind } from './data/economy';
+import { newFinance, type Finance } from './finance';
 
 export const MAP_WIDTH = 64;
 export const MAP_HEIGHT = 48;
 export const STARTING_MONEY = 50_000;
 export const START_HOUR = 8;
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 
 export interface Dino {
   id: number;
@@ -38,6 +40,33 @@ export interface Feeder {
   stock: number;
 }
 
+export interface Building {
+  id: number;
+  kind: BuildingKind;
+  x: number;
+  y: number;
+}
+
+export interface Visitor {
+  id: number;
+  x: number;
+  y: number;
+  px: number;
+  py: number;
+  /** Tile index walked from, so wandering doesn't double back. */
+  from: number;
+  path: number[];
+  hunger: number;
+  /** 0–100; on leaving, above 50 raises the park's reputation, below lowers it. */
+  satisfaction: number;
+  /** Dino ids already seen, each worth a satisfaction boost once. */
+  seen: number[];
+  leaveHour: number;
+  boughtSouvenir: boolean;
+  /** Sprite variant. */
+  look: number;
+}
+
 /** Single serializable state tree. Everything the game needs to resume lives here. */
 export interface GameState {
   version: typeof SAVE_VERSION;
@@ -59,6 +88,14 @@ export interface GameState {
   dinos: Dino[];
   feeders: Feeder[];
   unlockedSpecies: SpeciesId[];
+  /** 1 where a tile has a footpath. */
+  paths: number[];
+  buildings: Building[];
+  visitors: Visitor[];
+  ticketPrice: number;
+  /** 0–100: a running average of how satisfied departing visitors were. */
+  reputation: number;
+  finance: Finance;
   /** Next id for dinos, feeders and other entities. */
   nextId: number;
 }
@@ -81,6 +118,12 @@ export function newGame(seed: number): GameState {
     dinos: [],
     feeders: [],
     unlockedSpecies: [...STARTER_SPECIES],
+    paths: new Array<number>(map.width * map.height).fill(0),
+    buildings: [],
+    visitors: [],
+    ticketPrice: DEFAULT_TICKET_PRICE,
+    reputation: 50,
+    finance: newFinance(),
     nextId: 1,
   };
 }
@@ -95,6 +138,18 @@ export function migrate(raw: { version?: number } & Record<string, unknown>): Ga
       feeders: [],
       unlockedSpecies: [...STARTER_SPECIES],
       nextId: 1,
+    });
+  }
+  if (raw.version === 3) {
+    const map = raw.map as TerrainMap;
+    Object.assign(raw, {
+      version: 4,
+      paths: new Array<number>(map.width * map.height).fill(0),
+      buildings: [],
+      visitors: [],
+      ticketPrice: DEFAULT_TICKET_PRICE,
+      reputation: 50,
+      finance: newFinance(),
     });
   }
   return raw.version === SAVE_VERSION ? (raw as unknown as GameState) : null;

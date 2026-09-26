@@ -25,6 +25,8 @@
         <span id="hud-money" class="hud-stat">$0</span>
         <span id="hud-clock" class="hud-stat">Day 1 · 08:00</span>
         <span id="hud-dinos" class="hud-stat">0 dinos</span>
+        <span id="hud-guests" class="hud-stat">0 guests</span>
+        <button id="btn-park" class="hud-btn" aria-label="Park report">📊<span>Park</span></button>
       </div>
       <div class="hud-group" role="group" aria-label="Game speed">
         <button class="speed-btn" data-speed="0" aria-label="Pause">❚❚</button>
@@ -42,9 +44,13 @@
     <div class="toolbar">
       <div id="fence-picker" class="hud-group picker hidden" role="group" aria-label="Fence type"></div>
       <div id="feeder-picker" class="hud-group picker hidden" role="group" aria-label="Feeder type"></div>
+      <div id="building-picker" class="hud-group picker hidden" role="group" aria-label="Building type"></div>
+      <div id="path-picker" class="hud-group picker hidden" role="group" aria-label="Path tool"></div>
       <div class="hud-group tools" role="group" aria-label="Tools">
         <button id="btn-catalog" class="tool-btn">🦖<span>Dinos</span></button>
         <button class="tool-btn" data-mode="feeder">🍖<span>Feeder</span></button>
+        <button class="tool-btn" data-mode="building">🏪<span>Build</span></button>
+        <button class="tool-btn" data-mode="path">🛤️<span>Path</span></button>
         <button class="tool-btn" data-mode="fence">🚧<span>Fence</span></button>
         <button class="tool-btn" data-mode="demolish">🧨<span>Remove</span></button>
         <button class="tool-btn" data-mode="land">🗺️<span>Land</span></button>
@@ -60,6 +66,20 @@
           <button class="modal-close" aria-label="Close">✕</button>
         </header>
         <div class="species-grid"></div>
+      </div>
+    </div>
+
+    <div id="park" class="modal hidden" role="dialog" aria-label="Park report">
+      <div class="modal-card">
+        <header class="modal-head">
+          <div class="tabs" role="tablist">
+            <button class="tab-btn" data-tab="overview" role="tab">Overview</button>
+            <button class="tab-btn" data-tab="finances" role="tab">Finances</button>
+            <button class="tab-btn" data-tab="bank" role="tab">Bank</button>
+          </div>
+          <button class="modal-close" aria-label="Close">✕</button>
+        </header>
+        <div id="park-body" class="panel-body"></div>
       </div>
     </div>
 

@@ -1,12 +1,13 @@
 import Phaser from 'phaser';
 import type { Simulation } from '../sim/Simulation';
-import { planFences, refillCost } from '../sim/commands';
+import { planFences, planPaths, refillCost } from '../sim/commands';
 import { FENCE_REFUND, FENCE_TYPES } from '../sim/data/fences';
 import { DINO_RESALE, FEEDER_TYPES } from '../sim/data/feeders';
 import { SPECIES } from '../sim/data/species';
 import { dinoLabel } from '../sim/systems/dinos';
 import { fenceAt } from '../sim/fences';
-import { pathEdges, type Edge } from '../sim/grid';
+import { pathEdges, tileLine, type Edge } from '../sim/grid';
+import { BUILDING_TYPES, PATH_COST, PATH_REFUND } from '../sim/data/economy';
 import { isTileOwned, parcelBuyBlocker, parcelLandTiles, parcelOf, parcelPrice, type Point } from '../sim/land';
 import { isLand, terrainAt, TERRAIN_NAMES } from '../sim/terrain';
 import type { Hud } from '../ui/hud';
@@ -28,6 +29,9 @@ interface Drag {
   startWorld: Point;
   horizontalFirst: boolean | null;
   edges: Edge[];
+  /** Path tool: start tile and the tile indices under the drag. */
+  startTile: Point;
+  tiles: number[];
 }
 
 export class ParkScene extends Phaser.Scene {
@@ -108,12 +112,13 @@ export class ParkScene extends Phaser.Scene {
   private redrawWorld(): void {
     this.drawnRevision = this.sim.worldRevision;
     this.layers.drawFences();
+    this.layers.drawPaths();
     this.layers.drawOverlay(this.ui.mode === 'land', this.selectedParcel);
   }
 
   private onModeChange(): void {
     const mode = this.ui.mode;
-    this.touch.drawMode = mode === 'fence' || mode === 'demolish';
+    this.touch.drawMode = mode === 'fence' || mode === 'demolish' || mode === 'path';
     this.cancelDrag();
     if (mode !== 'select') {
       this.cursor.setVisible(false);
@@ -139,10 +144,21 @@ export class ParkScene extends Phaser.Scene {
       case 'demolish': {
         const edge = this.edgeNear(wx, wy);
         if (edge) return this.commitEdges([edge]);
-        const feeder = this.entities.feederAt(Math.floor(wx / TILE), Math.floor(wy / TILE));
+        const tx = Math.floor(wx / TILE);
+        const ty = Math.floor(wy / TILE);
+        const building = this.entities.buildingAt(tx, ty);
+        if (building) return this.report(this.sim.dispatch({ type: 'removeBuilding', id: building.id }));
+        const feeder = this.entities.feederAt(tx, ty);
         if (feeder) this.report(this.sim.dispatch({ type: 'removeFeeder', id: feeder.id }));
         return;
       }
+      case 'path':
+        return this.commitTiles([Math.floor(wy / TILE) * this.sim.state.map.width + Math.floor(wx / TILE)]);
+      case 'building':
+        this.report(
+          this.sim.dispatch({ type: 'placeBuilding', kind: this.ui.buildingKind, x: Math.floor(wx / TILE), y: Math.floor(wy / TILE) }),
+        );
+        return;
       case 'feeder':
         this.report(
           this.sim.dispatch({ type: 'placeFeeder', kind: this.ui.feederKind, x: Math.floor(wx / TILE), y: Math.floor(wy / TILE) }),
@@ -179,13 +195,26 @@ export class ParkScene extends Phaser.Scene {
     this.showSelection();
   }
 
-  /** Look mode: a dino under the finger wins, then a feeder, then the tile itself. */
+  /** Look mode: a dino under the finger wins, then a visitor, building or feeder, then the tile itself. */
   private inspect(wx: number, wy: number): void {
+    const tx = Math.floor(wx / TILE);
+    const ty = Math.floor(wy / TILE);
     const dino = this.entities.dinoAt(wx, wy);
-    const feeder = dino ? undefined : this.entities.feederAt(Math.floor(wx / TILE), Math.floor(wy / TILE));
-    if (dino || feeder) {
+    const visitor = dino ? null : this.entities.visitorAt(wx, wy);
+    const building = dino || visitor ? undefined : this.entities.buildingAt(tx, ty);
+    const feeder = dino || visitor || building ? undefined : this.entities.feederAt(tx, ty);
+    const selection = dino
+      ? ({ kind: 'dino', id: dino.id } as const)
+      : visitor
+        ? ({ kind: 'visitor', id: visitor.id } as const)
+        : building
+          ? ({ kind: 'building', id: building.id } as const)
+          : feeder
+            ? ({ kind: 'feeder', id: feeder.id } as const)
+            : null;
+    if (selection) {
       this.cursor.setVisible(false);
-      this.entities.selection = dino ? { kind: 'dino', id: dino.id } : { kind: 'feeder', id: feeder!.id };
+      this.entities.selection = selection;
       this.showSelection();
       return;
     }
@@ -212,6 +241,27 @@ export class ParkScene extends Phaser.Scene {
         `${dinoLabel(d)}${loose ? ' · LOOSE!' : ''} · Hunger ${Math.round(d.hunger)}% · Health ${Math.round(d.health)}% · Happy ${d.happiness}%`,
         { label: `Sell ${formatMoney(value)}`, onClick: () => this.report(this.sim.dispatch({ type: 'sellDino', id: d.id })) },
       );
+    } else if (sel.kind === 'visitor') {
+      const v = state.visitors.find((v) => v.id === sel.id);
+      if (!v) {
+        this.entities.selection = null;
+        this.hud.showInfo(null);
+        return;
+      }
+      const mood = v.satisfaction >= 70 ? 'Loving it' : v.satisfaction >= 50 ? 'Enjoying it' : v.satisfaction >= 30 ? 'Bored' : 'Unhappy';
+      this.hud.showInfo(
+        `Visitor · ${mood} (${Math.round(v.satisfaction)}%) · Hunger ${Math.round(v.hunger)}% · Seen ${v.seen.length} dino${v.seen.length === 1 ? '' : 's'}`,
+      );
+    } else if (sel.kind === 'building') {
+      const b = state.buildings.find((b) => b.id === sel.id);
+      if (!b) {
+        this.entities.selection = null;
+        this.hud.showInfo(null);
+        return;
+      }
+      const t = BUILDING_TYPES[b.kind];
+      const sold = b.kind === 'restaurant' ? state.finance.today.income.food : state.finance.today.income.souvenirs;
+      this.hud.showInfo(`${t.name} · sells at ${formatMoney(t.salePrice)} · takings today ${formatMoney(sold)} · upkeep ${formatMoney(t.upkeep)}/day`);
     } else {
       const f = state.feeders.find((f) => f.id === sel.id);
       if (!f) {
@@ -303,8 +353,23 @@ export class ParkScene extends Phaser.Scene {
     };
   }
 
+  private tileAt(wx: number, wy: number): Point {
+    const { width, height } = this.sim.state.map;
+    return {
+      x: Phaser.Math.Clamp(Math.floor(wx / TILE), 0, width - 1),
+      y: Phaser.Math.Clamp(Math.floor(wy / TILE), 0, height - 1),
+    };
+  }
+
   private onDrawStart(wx: number, wy: number): void {
-    this.drag = { start: this.vertexAt(wx, wy), startWorld: { x: wx, y: wy }, horizontalFirst: null, edges: [] };
+    this.drag = {
+      start: this.vertexAt(wx, wy),
+      startWorld: { x: wx, y: wy },
+      horizontalFirst: null,
+      edges: [],
+      startTile: this.tileAt(wx, wy),
+      tiles: [],
+    };
   }
 
   private onDrawMove(wx: number, wy: number): void {
@@ -316,6 +381,13 @@ export class ParkScene extends Phaser.Scene {
       const dy = wy - d.startWorld.y;
       if (Math.hypot(dx, dy) > TILE / 2) d.horizontalFirst = Math.abs(dx) >= Math.abs(dy);
     }
+    if (this.ui.mode === 'path') {
+      const end = this.tileAt(wx, wy);
+      const w = this.sim.state.map.width;
+      d.tiles = tileLine(d.startTile.x, d.startTile.y, end.x, end.y, d.horizontalFirst ?? true).map(([x, y]) => y * w + x);
+      this.previewTiles(d.tiles);
+      return;
+    }
     const end = this.vertexAt(wx, wy);
     d.edges = pathEdges(d.start.x, d.start.y, end.x, end.y, d.horizontalFirst ?? true);
     this.previewEdges(d.edges);
@@ -323,14 +395,41 @@ export class ParkScene extends Phaser.Scene {
 
   private onDrawEnd(): void {
     const edges = this.drag?.edges ?? [];
+    const tiles = this.drag?.tiles ?? [];
     this.cancelDrag();
-    if (edges.length > 0) this.commitEdges(edges);
+    if (this.ui.mode === 'path') {
+      if (tiles.length > 0) this.commitTiles(tiles);
+    } else if (edges.length > 0) this.commitEdges(edges);
   }
 
   private cancelDrag(): void {
     this.drag = null;
     this.layers.clearGhost();
-    if (this.ui.mode === 'fence' || this.ui.mode === 'demolish') this.hud.showHint();
+    if (this.ui.mode === 'fence' || this.ui.mode === 'demolish' || this.ui.mode === 'path') this.hud.showHint();
+  }
+
+  private previewTiles(tiles: number[]): void {
+    const { state } = this.sim;
+    const w = state.map.width;
+    const at = (i: number) => ({ x: i % w, y: Math.floor(i / w) });
+    if (this.ui.pathErase) {
+      const count = tiles.filter((i) => state.paths[i]).length;
+      this.layers.drawTileGhost(tiles.map((i) => ({ ...at(i), style: state.paths[i] ? 'remove' : 'none' })));
+      this.hud.showInfo(`Remove ${count} path tile${count === 1 ? '' : 's'} · +${formatMoney(Math.floor(count * PATH_COST * PATH_REFUND))}`);
+      return;
+    }
+    const plan = planPaths(state, tiles);
+    const building = new Set(plan.build);
+    this.layers.drawTileGhost(tiles.map((i) => ({ ...at(i), style: building.has(i) ? 'build' : state.paths[i] ? 'none' : 'blocked' })));
+    const short = plan.cost > state.money ? ' · not enough money!' : '';
+    const why = plan.blocked ? ` · red: ${plan.blockReason.toLowerCase()}` : '';
+    this.hud.showInfo(`${plan.build.length} path tile${plan.build.length === 1 ? '' : 's'} · ${formatMoney(plan.cost)}${short}${why}`);
+  }
+
+  private commitTiles(tiles: number[]): void {
+    this.report(
+      this.ui.pathErase ? this.sim.dispatch({ type: 'removePaths', tiles }) : this.sim.dispatch({ type: 'buildPaths', tiles }),
+    );
   }
 
   private previewEdges(edges: Edge[]): void {

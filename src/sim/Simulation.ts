@@ -4,6 +4,8 @@ import { computeRegions, type RegionMap } from './regions';
 import { Rng } from './rng';
 import type { GameEvent, SimContext } from './systems/context';
 import { hourlyDinos, stepDinos, STEPS_PER_HOUR } from './systems/dinos';
+import { hourlyVisitors, stepVisitors } from './systems/visitors';
+import { hourlyEconomy } from './systems/economy';
 
 /** Real-time milliseconds per game-hour at 1× speed. */
 export const MS_PER_HOUR = 1000;
@@ -58,11 +60,14 @@ export class Simulation {
     const rng = new Rng(state.rngState);
     const ctx: SimContext = { state, rng, regions: this.regions(), emit: (e) => this.emitEvent(e) };
     stepDinos(ctx);
+    stepVisitors(ctx);
     state.stepInHour++;
     if (state.stepInHour >= STEPS_PER_HOUR) {
       state.stepInHour = 0;
       state.hours++;
       hourlyDinos(ctx);
+      hourlyVisitors(ctx);
+      hourlyEconomy(ctx);
     }
     state.rngState = rng.snapshot;
   }

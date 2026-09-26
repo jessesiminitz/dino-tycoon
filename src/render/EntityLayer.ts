@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
-import type { Dino, Feeder } from '../sim/GameState';
+import type { Building, Dino, Feeder, Visitor } from '../sim/GameState';
+import { BUILDING_TYPES, type BuildingKind } from '../sim/data/economy';
+import { hash2 } from '../sim/rng';
 import type { Simulation } from '../sim/Simulation';
 import { FEEDER_TYPES, type FeederKind } from '../sim/data/feeders';
 import { SPECIES, SPECIES_IDS, type SpeciesId } from '../sim/data/species';
@@ -11,7 +13,69 @@ const feederKey = (kind: FeederKind, full: boolean) => `feeder-${kind}-${full ? 
 /** Sprites stand with their feet this far down the tile. */
 const FOOT_Y = 13;
 
-export type Selection = { kind: 'dino' | 'feeder'; id: number } | null;
+export type Selection = { kind: 'dino' | 'feeder' | 'building' | 'visitor'; id: number } | null;
+
+const visitorKey = (look: number) => `visitor-${look}`;
+const buildingKey = (kind: BuildingKind) => `building-${kind}`;
+const VISITOR_LOOKS = 6;
+const SHIRTS = ['#e05a4f', '#4f8fe0', '#f2c14e', '#9b6be0', '#4fc08d', '#f28fb1'];
+const HAIR = ['#3a2a1a', '#7a4a2a', '#d9b060', '#1b1b1b'];
+const SKIN = ['#f1c7a0', '#c98b5f', '#8a5a3a'];
+
+/** Pixel canvas from rows of palette keys, with an automatic dark outline. */
+function paintRows(rows: string[], colors: Record<string, string>): HTMLCanvasElement {
+  const w = rows[0].length + 2;
+  const h = rows.length + 2;
+  const at = (x: number, y: number) => rows[y - 1]?.[x - 1] ?? '.';
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = h;
+  const ctx = c.getContext('2d')!;
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      const k = at(x, y);
+      if (k !== '.') ctx.fillStyle = colors[k];
+      else if ([at(x - 1, y), at(x + 1, y), at(x, y - 1), at(x, y + 1)].some((n) => n !== '.')) ctx.fillStyle = '#1b1b14';
+      else continue;
+      ctx.fillRect(x, y, 1, 1);
+    }
+  return c;
+}
+
+function paintVisitor(look: number): HTMLCanvasElement {
+  return paintRows(['.HHH.', '.SSS.', 'TTTTT', 'STTTS', '.TTT.', '.LLL.', '.L.L.', '.L.L.'], {
+    H: HAIR[look % HAIR.length],
+    S: SKIN[look % SKIN.length],
+    T: SHIRTS[look % SHIRTS.length],
+    L: '#3b4a6b',
+  });
+}
+
+function paintBuilding(kind: BuildingKind): HTMLCanvasElement {
+  // Awning stripes alternate A/a; walls W; window G; door D; sign S/s.
+  const rows = [
+    '......SSSS......',
+    '......SssS......',
+    '..AaAaAaAaAaAa..',
+    '.AaAaAaAaAaAaAa.',
+    '.WWWWWWWWWWWWWW.',
+    '.WGGGWWWWWWGGGW.',
+    '.WGGGWWDDWWGGGW.',
+    '.WGGGWWDDWWGGGW.',
+    '.WWWWWWDDWWWWWW.',
+    '.WWWWWWDDWWWWWW.',
+  ];
+  const restaurant = kind === 'restaurant';
+  return paintRows(rows, {
+    A: restaurant ? '#d9454d' : '#3f7fb0',
+    a: '#f4ecd2',
+    W: restaurant ? '#b07a3f' : '#a88a6a',
+    G: '#8fd3ea',
+    D: '#5a3b1f',
+    S: restaurant ? '#f2c14e' : '#6fb34f',
+    s: restaurant ? '#d9454d' : '#2f6b3a',
+  });
+}
 
 /** Paints feeder troughs: a wooden box, plus greens or meat when stocked. */
 function paintFeeder(kind: FeederKind, full: boolean): HTMLCanvasElement {
@@ -46,6 +110,8 @@ export class EntityLayer {
   private dinos = new Map<number, Phaser.GameObjects.Image>();
   private feeders = new Map<number, Phaser.GameObjects.Image>();
   private facingLeft = new Map<number, boolean>();
+  private visitors = new Map<number, Phaser.GameObjects.Image>();
+  private buildings = new Map<number, Phaser.GameObjects.Image>();
   private markers: Phaser.GameObjects.Graphics;
   selection: Selection = null;
 
@@ -59,7 +125,38 @@ export class EntityLayer {
     for (const kind of Object.keys(FEEDER_TYPES) as FeederKind[]) {
       for (const full of [true, false]) scene.textures.addCanvas(feederKey(kind, full), paintFeeder(kind, full));
     }
+    for (let look = 0; look < VISITOR_LOOKS; look++) scene.textures.addCanvas(visitorKey(look), paintVisitor(look));
+    for (const kind of Object.keys(BUILDING_TYPES) as BuildingKind[]) scene.textures.addCanvas(buildingKey(kind), paintBuilding(kind));
     this.markers = scene.add.graphics().setDepth(9);
+  }
+
+  /** Where a visitor is drawn (feet), nudged per person so crowds don't stack. */
+  visitorPosition(v: Visitor): { x: number; y: number } {
+    const t = this.sim.stepProgress;
+    const jx = Math.round((hash2(v.id, 1, 5) - 0.5) * 8);
+    const jy = Math.round((hash2(v.id, 2, 5) - 0.5) * 6);
+    return {
+      x: (v.px + (v.x - v.px) * t) * TILE + TILE / 2 + jx,
+      y: (v.py + (v.y - v.py) * t) * TILE + FOOT_Y + jy,
+    };
+  }
+
+  visitorAt(wx: number, wy: number): Visitor | null {
+    let best: Visitor | null = null;
+    let bestD = 7;
+    for (const v of this.sim.state.visitors) {
+      const p = this.visitorPosition(v);
+      const d = Math.hypot(p.x - wx, p.y - 5 - wy);
+      if (d < bestD) {
+        best = v;
+        bestD = d;
+      }
+    }
+    return best;
+  }
+
+  buildingAt(tx: number, ty: number): Building | undefined {
+    return this.sim.state.buildings.find((b) => b.x === tx && b.y === ty);
   }
 
   /** Where a dino is drawn right now (feet position, world pixels). */
@@ -122,6 +219,27 @@ export class EntityLayer {
       }
     }
 
+    // Buildings
+    this.sync(this.buildings, state.buildings, (b) =>
+      this.scene.add.image(b.x * TILE + TILE / 2, (b.y + 1) * TILE, buildingKey(b.kind)).setOrigin(0.5, 1).setDepth(4 + ((b.y + 1) * TILE) / 10000),
+    );
+    const selB = this.selection?.kind === 'building' ? state.buildings.find((b) => b.id === this.selection!.id) : undefined;
+    if (selB) g.lineStyle(1, 0xf2c14e, 1).strokeRect(selB.x * TILE - 0.5, selB.y * TILE - 0.5, TILE + 1, TILE + 1);
+
+    // Visitors
+    this.sync(this.visitors, state.visitors, (v) => this.scene.add.image(0, 0, visitorKey(v.look)).setOrigin(0.5, 1));
+    for (const v of state.visitors) {
+      const img = this.visitors.get(v.id)!;
+      const { x, y } = this.visitorPosition(v);
+      const moving = v.x !== v.px || v.y !== v.py;
+      img.setPosition(Math.round(x), Math.round(y) + (moving && this.sim.stepProgress < 0.5 ? -1 : 0));
+      img.setDepth(4 + y / 10000);
+      if (this.selection?.kind === 'visitor' && this.selection.id === v.id) {
+        g.lineStyle(1, 0xf2c14e, 1).strokeEllipse(Math.round(x), Math.round(y), 9, 4);
+      }
+    }
+    if (this.selection?.kind === 'visitor' && !state.visitors.some((v) => v.id === this.selection!.id)) this.selection = null;
+
     // Dinosaurs
     const liveDinos = new Set<number>();
     for (const d of state.dinos) {
@@ -156,6 +274,25 @@ export class EntityLayer {
         this.dinos.delete(id);
         this.facingLeft.delete(id);
         if (this.selection?.kind === 'dino' && this.selection.id === id) this.selection = null;
+      }
+    }
+  }
+
+  /** Creates sprites for new entities and destroys sprites of removed ones. */
+  private sync<T extends { id: number }>(
+    sprites: Map<number, Phaser.GameObjects.Image>,
+    entities: T[],
+    create: (e: T) => Phaser.GameObjects.Image,
+  ): void {
+    const live = new Set<number>();
+    for (const e of entities) {
+      live.add(e.id);
+      if (!sprites.has(e.id)) sprites.set(e.id, create(e));
+    }
+    for (const [id, img] of sprites) {
+      if (!live.has(id)) {
+        img.destroy();
+        sprites.delete(id);
       }
     }
   }

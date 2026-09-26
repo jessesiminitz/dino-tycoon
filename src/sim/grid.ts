@@ -73,3 +73,23 @@ export function pathEdges(ax: number, ay: number, bx: number, by: number, horizo
   }
   return edges;
 }
+
+/**
+ * Tiles along an L-shaped path from tile (ax, ay) to tile (bx, by), both ends
+ * included, turning at (bx, ay) with `horizontalFirst`, else at (ax, by).
+ */
+export function tileLine(ax: number, ay: number, bx: number, by: number, horizontalFirst: boolean): [number, number][] {
+  const out: [number, number][] = [];
+  const [cx, cy] = horizontalFirst ? [bx, ay] : [ax, by];
+  const walk = (x0: number, y0: number, x1: number, y1: number) => {
+    const dx = Math.sign(x1 - x0);
+    const dy = Math.sign(y1 - y0);
+    for (let x = x0, y = y0; ; x += dx, y += dy) {
+      if (out.length === 0 || out[out.length - 1][0] !== x || out[out.length - 1][1] !== y) out.push([x, y]);
+      if (x === x1 && y === y1) break;
+    }
+  };
+  walk(ax, ay, cx, cy);
+  walk(cx, cy, bx, by);
+  return out;
+}

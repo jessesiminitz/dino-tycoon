@@ -3,7 +3,9 @@ import type { Simulation, Speed } from '../sim/Simulation';
 import { FENCE_TYPE_IDS, FENCE_TYPES } from '../sim/data/fences';
 import { FEEDER_TYPES, type FeederKind } from '../sim/data/feeders';
 import { SPECIES } from '../sim/data/species';
+import { BUILDING_TYPES, PATH_COST, type BuildingKind } from '../sim/data/economy';
 import { mountCatalog } from './catalog';
+import { mountParkPanel } from './parkPanel';
 import type { Mode, UiState } from './uiState';
 
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
@@ -43,6 +45,14 @@ function modeHint(ui: UiState): string | null {
       return 'Plots marked FOR SALE border your land · tap one to buy it';
     case 'feeder':
       return `Tap inside a paddock to build a ${FEEDER_TYPES[ui.feederKind].name.toLowerCase()} (${formatMoney(FEEDER_TYPES[ui.feederKind].cost)}, comes full)`;
+    case 'path':
+      return ui.pathErase
+        ? 'Drag over paths to remove them'
+        : `Drag to lay a path (${formatMoney(PATH_COST)} a tile) · connect it to the gate`;
+    case 'building': {
+      const t = BUILDING_TYPES[ui.buildingKind];
+      return `Tap a spot next to a path to build a ${t.name.toLowerCase()} (${formatMoney(t.cost)}, ${formatMoney(t.upkeep)}/day upkeep)`;
+    }
     case 'place-dino': {
       const sp = ui.placing ? SPECIES[ui.placing] : null;
       return sp ? `Tap inside a paddock to release your ${sp.name} (${formatMoney(sp.price)})` : null;
@@ -68,6 +78,9 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
   const toasts = $('toasts');
   const fencePicker = $('fence-picker');
   const feederPicker = $('feeder-picker');
+  const buildingPicker = $('building-picker');
+  const pathPicker = $('path-picker');
+  const guestsEl = $('hud-guests');
   const speedButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('.speed-btn'));
   const toolButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('.tool-btn[data-mode]'));
   const catalog = mountCatalog(sim, ui);
@@ -85,6 +98,8 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
     const { day, hour } = calendar(state);
     clockEl.textContent = `Day ${day} · ${String(hour).padStart(2, '0')}:00`;
     dinosEl.textContent = `${state.dinos.length} dino${state.dinos.length === 1 ? '' : 's'}`;
+    guestsEl.textContent = `${state.visitors.length} guest${state.visitors.length === 1 ? '' : 's'}`;
+    moneyEl.classList.toggle('negative', state.money < 0);
     for (const b of speedButtons) b.classList.toggle('active', Number(b.dataset.speed) === sim.speed);
   };
   for (const b of speedButtons) {
@@ -108,6 +123,19 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
     b.addEventListener('click', () => ui.setFeederKind(kind));
     feederPicker.appendChild(b);
   }
+  for (const kind of Object.keys(BUILDING_TYPES) as BuildingKind[]) {
+    const t = BUILDING_TYPES[kind];
+    const b = pickButton(kind === 'restaurant' ? '#d9454d' : '#3f7fb0', t.name, formatMoney(t.cost));
+    b.dataset.building = kind;
+    b.addEventListener('click', () => ui.setBuildingKind(kind));
+    buildingPicker.appendChild(b);
+  }
+  for (const erase of [false, true]) {
+    const b = pickButton(erase ? '#ff7a6b' : '#cdb58a', erase ? 'Erase' : 'Path', erase ? 'refund 25%' : `$${PATH_COST}/tile`);
+    b.dataset.erase = String(erase);
+    b.addEventListener('click', () => ui.setPathErase(erase));
+    pathPicker.appendChild(b);
+  }
   for (const b of toolButtons) {
     // Tapping the active tool again goes back to Look.
     b.addEventListener('click', () => ui.setMode(ui.mode === b.dataset.mode ? 'select' : (b.dataset.mode as Mode)));
@@ -122,6 +150,12 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
     for (const b of toolButtons) b.classList.toggle('active', b.dataset.mode === ui.mode);
     fencePicker.classList.toggle('hidden', ui.mode !== 'fence');
     feederPicker.classList.toggle('hidden', ui.mode !== 'feeder');
+    buildingPicker.classList.toggle('hidden', ui.mode !== 'building');
+    pathPicker.classList.toggle('hidden', ui.mode !== 'path');
+    for (const b of buildingPicker.querySelectorAll<HTMLButtonElement>('.pick-btn'))
+      b.classList.toggle('active', b.dataset.building === ui.buildingKind);
+    for (const b of pathPicker.querySelectorAll<HTMLButtonElement>('.pick-btn'))
+      b.classList.toggle('active', b.dataset.erase === String(ui.pathErase));
     for (const b of fencePicker.querySelectorAll<HTMLButtonElement>('.pick-btn'))
       b.classList.toggle('active', Number(b.dataset.fence) === ui.fenceType);
     for (const b of feederPicker.querySelectorAll<HTMLButtonElement>('.pick-btn'))
@@ -166,6 +200,9 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
   };
 
   sim.onEvent((e) => hud.toast(e.text, e.kind === 'bad' ? 'error' : 'ok'));
+
+  const parkPanel = mountParkPanel(sim, hud);
+  $('btn-park').addEventListener('click', () => parkPanel.open());
 
   renderTools();
   return hud;

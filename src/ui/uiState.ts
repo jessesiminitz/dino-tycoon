@@ -1,8 +1,9 @@
 import type { FenceTypeId } from '../sim/data/fences';
 import type { FeederKind } from '../sim/data/feeders';
 import type { SpeciesId } from '../sim/data/species';
+import type { BuildingKind } from '../sim/data/economy';
 
-export type Mode = 'select' | 'fence' | 'demolish' | 'land' | 'feeder' | 'place-dino';
+export type Mode = 'select' | 'fence' | 'demolish' | 'land' | 'feeder' | 'place-dino' | 'path' | 'building';
 
 type Listener = (ui: UiState) => void;
 
@@ -11,6 +12,9 @@ export class UiState {
   mode: Mode = 'select';
   fenceType: FenceTypeId = 1;
   feederKind: FeederKind = 'plants';
+  buildingKind: BuildingKind = 'restaurant';
+  /** Path tool erases instead of building. */
+  pathErase = false;
   /** Species being released while in 'place-dino' mode. */
   placing: SpeciesId | null = null;
   private listeners = new Set<Listener>();
@@ -29,6 +33,16 @@ export class UiState {
 
   setFeederKind(kind: FeederKind): void {
     this.feederKind = kind;
+    this.emit();
+  }
+
+  setBuildingKind(kind: BuildingKind): void {
+    this.buildingKind = kind;
+    this.emit();
+  }
+
+  setPathErase(erase: boolean): void {
+    this.pathErase = erase;
     this.emit();
   }
 
