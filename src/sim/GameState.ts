@@ -4,13 +4,14 @@ import { generateIsland, type TerrainMap } from './terrain';
 import { STARTER_SPECIES, type SpeciesId } from './data/species';
 import type { FeederKind } from './data/feeders';
 import { DEFAULT_TICKET_PRICE, type BuildingKind } from './data/economy';
-import { newFinance, type Finance } from './finance';
+import { newFinance, normalizeFinance, type Finance } from './finance';
+import type { StaffRole } from './data/staff';
 
 export const MAP_WIDTH = 64;
 export const MAP_HEIGHT = 48;
 export const STARTING_MONEY = 50_000;
 export const START_HOUR = 8;
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 
 export interface Dino {
   id: number;
@@ -30,6 +31,34 @@ export interface Dino {
   happiness: number;
   /** Game-hour the dino arrived. */
   bornHour: number;
+  sick: boolean;
+  /** Out of its paddock (a fence broke). */
+  escaped: boolean;
+  /** Last tile it stood on inside a paddock; guards bring it back here. */
+  homeX: number;
+  homeY: number;
+}
+
+export type StaffTask =
+  | { kind: 'refill'; feederId: number }
+  | { kind: 'repair'; dir: 'h' | 'v'; x: number; y: number }
+  | { kind: 'recapture'; dinoId: number }
+  | { kind: 'treat'; dinoId: number };
+
+export interface Staff {
+  id: number;
+  role: StaffRole;
+  name: string;
+  /** Position in tiles (fractional while travelling). */
+  x: number;
+  y: number;
+  px: number;
+  py: number;
+  task: StaffTask | null;
+  /** Steps of work done on site for the current task. */
+  progress: number;
+  /** Tour guides walk the paths like visitors. */
+  from: number;
 }
 
 export interface Feeder {
@@ -85,6 +114,9 @@ export interface GameState {
   /** Fence type per edge (0 = none); indexed as in grid.ts. */
   hFences: number[];
   vFences: number[];
+  /** Fence condition per edge, 0–100 (0 with a fence type = broken). */
+  hFenceHp: number[];
+  vFenceHp: number[];
   dinos: Dino[];
   feeders: Feeder[];
   unlockedSpecies: SpeciesId[];
@@ -96,6 +128,7 @@ export interface GameState {
   /** 0–100: a running average of how satisfied departing visitors were. */
   reputation: number;
   finance: Finance;
+  staff: Staff[];
   /** Next id for dinos, feeders and other entities. */
   nextId: number;
 }
@@ -115,6 +148,8 @@ export function newGame(seed: number): GameState {
     parcelsOwned: initialParcels(map, entrance),
     hFences: new Array<number>(hEdgeCount(map)).fill(0),
     vFences: new Array<number>(vEdgeCount(map)).fill(0),
+    hFenceHp: new Array<number>(hEdgeCount(map)).fill(0),
+    vFenceHp: new Array<number>(vEdgeCount(map)).fill(0),
     dinos: [],
     feeders: [],
     unlockedSpecies: [...STARTER_SPECIES],
@@ -124,6 +159,7 @@ export function newGame(seed: number): GameState {
     ticketPrice: DEFAULT_TICKET_PRICE,
     reputation: 50,
     finance: newFinance(),
+    staff: [],
     nextId: 1,
   };
 }
@@ -151,6 +187,20 @@ export function migrate(raw: { version?: number } & Record<string, unknown>): Ga
       reputation: 50,
       finance: newFinance(),
     });
+  }
+  if (raw.version === 4) {
+    const hFences = raw.hFences as number[];
+    const vFences = raw.vFences as number[];
+    for (const d of raw.dinos as Dino[]) {
+      Object.assign(d, { sick: false, escaped: false, homeX: d.x, homeY: d.y });
+    }
+    Object.assign(raw, {
+      version: 5,
+      hFenceHp: hFences.map((f) => (f ? 100 : 0)),
+      vFenceHp: vFences.map((f) => (f ? 100 : 0)),
+      staff: [],
+    });
+    normalizeFinance(raw.finance as Finance);
   }
   return raw.version === SAVE_VERSION ? (raw as unknown as GameState) : null;
 }

@@ -2,6 +2,7 @@ import type { Dino, Feeder, GameState } from '../GameState';
 import { FEEDER_TYPES } from '../data/feeders';
 import { SPECIES } from '../data/species';
 import { canStep, findPath, walkableNeighbours } from '../pathfind';
+import { fenceAt, tileEdges } from '../fences';
 import type { SimContext } from './context';
 
 /** Movement steps per game-hour. */
@@ -15,6 +16,14 @@ const FOOD_SEARCH = 80;
 const HUNT_SEARCH = 40;
 /** Chase routes are cut short so the hunter re-targets as the prey moves. */
 const CHASE_LOOKAHEAD = 3;
+const FENCE_SEARCH = 40;
+/** Health lost per hour while sick: about a week from full health to death if untreated. */
+const SICK_HEALTH_LOSS = 0.6;
+
+/** Starving or miserable animals go looking for a way out. */
+export function isRestless(d: Dino): boolean {
+  return d.hunger >= 80 || d.happiness < 40;
+}
 
 export const dinoLabel = (d: Dino) => `${d.name} the ${SPECIES[d.species].name}`;
 
@@ -47,6 +56,10 @@ function eatFromFeeder(ctx: SimContext, d: Dino, f: Feeder): void {
 export function stepDinos(ctx: SimContext): void {
   const { state, rng } = ctx;
   const stepNo = state.hours * STEPS_PER_HOUR + state.stepInHour;
+  // Escaped animals a guard has reached stay put while they're calmed.
+  const held = new Set(
+    state.staff.filter((m) => m.task?.kind === 'recapture' && m.progress > 0).map((m) => (m.task as { dinoId: number }).dinoId),
+  );
 
   for (const d of [...state.dinos]) {
     if (!state.dinos.includes(d)) continue; // eaten earlier this step
@@ -75,7 +88,7 @@ export function stepDinos(ctx: SimContext): void {
     }
 
     // Big animals move less often than small ones; the id offsets keep herds out of lockstep.
-    if ((stepNo + d.id) % sp.pace !== 0) continue;
+    if (held.has(d.id) || (stepNo + d.id) % sp.pace !== 0) continue;
     if (d.path.length === 0) d.path = plan(d, here) ?? [];
     const next = d.path.shift();
     if (next === undefined) continue;
@@ -98,6 +111,14 @@ export function stepDinos(ctx: SimContext): void {
         if (chase) return chase.slice(0, CHASE_LOOKAHEAD);
       }
     }
+    if (isRestless(d) && !d.escaped) {
+      // Pace the fence line, and stay put once there, testing it (see hourlyFences).
+      const w = state.map.width;
+      const atFence = (i: number) => tileEdges(i % w, Math.floor(i / w)).some((e) => fenceAt(state, e) !== 0);
+      if (atFence(here)) return null;
+      const toFence = findPath(state, here, atFence, FENCE_SEARCH);
+      if (toFence) return toFence;
+    }
     if (!rng.chance(WANDER_CHANCE)) return null;
     const { width, height } = state.map;
     const tx = Math.min(width - 1, Math.max(0, d.x + rng.int(-WANDER_RADIUS, WANDER_RADIUS)));
@@ -119,10 +140,11 @@ export function hourlyDinos(ctx: SimContext): void {
       ctx.emit({ text: `${dinoLabel(d)} is starving!`, kind: 'bad' });
     }
     if (d.hunger >= 100) d.health -= 4;
-    else if (d.hunger < 60) d.health = Math.min(100, d.health + 1);
+    else if (d.hunger < 60 && !d.sick) d.health = Math.min(100, d.health + 1);
+    if (d.sick) d.health -= SICK_HEALTH_LOSS;
     if (d.health <= 0) {
       state.dinos.splice(state.dinos.indexOf(d), 1);
-      ctx.emit({ text: `${dinoLabel(d)} starved to death`, kind: 'bad' });
+      ctx.emit({ text: `${dinoLabel(d)} ${d.hunger >= 100 ? 'starved to death' : 'died of illness'}`, kind: 'bad' });
     }
   }
 

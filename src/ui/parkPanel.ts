@@ -13,9 +13,11 @@ import {
   type Ledger,
 } from '../sim/finance';
 import { expectedArrivals, fairPrice, parkAppeal } from '../sim/systems/visitors';
+import { STAFF_ROLES, STAFF_TYPES } from '../sim/data/staff';
+import { dailyWages, describeTask } from '../sim/systems/staff';
 import { formatMoney, type Hud } from './hud';
 
-type Tab = 'overview' | 'finances' | 'bank';
+type Tab = 'overview' | 'staff' | 'finances' | 'bank';
 
 /** Validated against the panel surface (#1c2620) with the dataviz palette checker. */
 const BAR_COLOR = '#c98500';
@@ -80,7 +82,7 @@ export function mountParkPanel(sim: Simulation, hud: Hud): { open(tab?: Tab): vo
           Expect about <b>${perHour.toFixed(1)}</b> new visitors an hour while open (08:00–18:00).</p>
       </section>
       <section class="panel-section">
-        <p class="note">Building upkeep: <b>${formatMoney(upkeep)}</b> a day · Debt: <b>${formatMoney(totalDebt(state))}</b></p>
+        <p class="note">Daily costs: wages <b>${formatMoney(dailyWages(state))}</b> · building upkeep <b>${formatMoney(upkeep)}</b> · Debt: <b>${formatMoney(totalDebt(state))}</b></p>
         <p class="note">Tips: build paths from the gate past your paddocks so visitors can see the dinos. A restaurant keeps them happy; a gift shop earns extra.</p>
       </section>
       <p class="note version">Version ${__APP_VERSION__} · ${__BUILD_DATE__}</p>`;
@@ -168,6 +170,38 @@ export function mountParkPanel(sim: Simulation, hud: Hud): { open(tab?: Tab): vo
       </table>`;
   }
 
+  function staffTab(): string {
+    const { state } = sim;
+    const escaped = state.dinos.filter((d) => d.escaped).length;
+    const sick = state.dinos.filter((d) => d.sick).length;
+    const worn = [...state.hFenceHp.filter((hp, i) => state.hFences[i] && hp < 50), ...state.vFenceHp.filter((hp, i) => state.vFences[i] && hp < 50)].length;
+    const cards = STAFF_ROLES.map((role) => {
+      const t = STAFF_TYPES[role];
+      const n = state.staff.filter((m) => m.role === role).length;
+      return `<div class="staff-card">
+          <div><b>${t.name}</b> <span class="note">· ${formatMoney(t.wage)}/day · on staff: ${n}</span></div>
+          <p class="note">${t.description}</p>
+          <button class="action-btn" data-hire="${role}">Hire</button>
+        </div>`;
+    }).join('');
+    const roster = state.staff
+      .map(
+        (m) => `<li class="loan">
+          <span><b>${esc(m.name)}</b> · ${STAFF_TYPES[m.role].name} · ${esc(describeTask(state, m))}</span>
+          <button class="step-btn fire-btn" data-fire="${m.id}" aria-label="Fire ${esc(m.name)}">Fire</button>
+        </li>`,
+      )
+      .join('');
+    return `
+      <p class="note">Needs attention: <b>${worn}</b> worn fence segment${worn === 1 ? '' : 's'} · <b>${sick}</b> sick · <b>${escaped}</b> escaped.
+        Wages: <b>${formatMoney(dailyWages(state))}</b> a day, paid at midnight.</p>
+      <div class="staff-grid">${cards}</div>
+      <section class="panel-section">
+        <h3>Your staff</h3>
+        ${roster ? `<ul class="loans">${roster}</ul>` : '<p class="note">Nobody yet. Feeders and fences won’t look after themselves!</p>'}
+      </section>`;
+  }
+
   function bank(): string {
     const { state } = sim;
     const debt = totalDebt(state);
@@ -199,15 +233,17 @@ export function mountParkPanel(sim: Simulation, hud: Hud): { open(tab?: Tab): vo
 
   function render(): void {
     for (const t of tabs) t.classList.toggle('active', t.dataset.tab === tab);
-    body.innerHTML = tab === 'overview' ? overview() : tab === 'finances' ? finances() : bank();
+    body.innerHTML = tab === 'overview' ? overview() : tab === 'staff' ? staffTab() : tab === 'finances' ? finances() : bank();
   }
 
   body.addEventListener('click', (e) => {
-    const el = (e.target as HTMLElement).closest<HTMLElement>('[data-price],[data-loan],[data-repay],.bar');
+    const el = (e.target as HTMLElement).closest<HTMLElement>('[data-price],[data-loan],[data-repay],[data-hire],[data-fire],.bar');
     if (!el) return;
     if (el.dataset.price) act(sim.dispatch({ type: 'setTicketPrice', price: sim.state.ticketPrice + Number(el.dataset.price) }));
     else if (el.dataset.loan) act(sim.dispatch({ type: 'takeLoan', amount: Number(el.dataset.loan) }));
     else if (el.dataset.repay) act(sim.dispatch({ type: 'repayLoan', id: Number(el.dataset.repay) }));
+    else if (el.dataset.hire) act(sim.dispatch({ type: 'hireStaff', role: el.dataset.hire as (typeof STAFF_ROLES)[number] }));
+    else if (el.dataset.fire) act(sim.dispatch({ type: 'fireStaff', id: Number(el.dataset.fire) }));
     else showTip(el);
   });
   body.addEventListener('pointerover', (e) => {

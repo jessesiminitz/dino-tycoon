@@ -194,11 +194,15 @@ describe('determinism and saves', () => {
     const {
       dinos: _d, feeders: _f, unlockedSpecies: _u, nextId: _n, stepInHour: _s,
       paths: _p, buildings: _b, visitors: _v, ticketPrice: _t, reputation: _r, finance: _fi,
+      hFenceHp: _hh, vFenceHp: _vh, staff: _st,
       ...rest
     } = current;
     const v2 = JSON.parse(JSON.stringify({ ...rest, version: 2 }));
     const migrated = migrate(v2)!;
-    expect(migrated.version).toBe(4);
+    expect(migrated.version).toBe(5);
+    expect(migrated.staff).toEqual([]);
+    expect(migrated.hFenceHp).toHaveLength(migrated.hFences.length);
+    expect(migrated.finance.today.expenses.wages).toBe(0);
     expect(migrated.dinos).toEqual([]);
     expect(migrated.unlockedSpecies).toHaveLength(6);
     expect(migrated.money).toBe(STARTING_MONEY);

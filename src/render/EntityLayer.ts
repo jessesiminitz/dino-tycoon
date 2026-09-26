@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import type { Building, Dino, Feeder, Visitor } from '../sim/GameState';
+import type { Building, Dino, Feeder, Staff, Visitor } from '../sim/GameState';
+import { STAFF_ROLES, type StaffRole } from '../sim/data/staff';
 import { BUILDING_TYPES, type BuildingKind } from '../sim/data/economy';
 import { hash2 } from '../sim/rng';
 import type { Simulation } from '../sim/Simulation';
@@ -13,7 +14,16 @@ const feederKey = (kind: FeederKind, full: boolean) => `feeder-${kind}-${full ? 
 /** Sprites stand with their feet this far down the tile. */
 const FOOT_Y = 13;
 
-export type Selection = { kind: 'dino' | 'feeder' | 'building' | 'visitor'; id: number } | null;
+export type Selection = { kind: 'dino' | 'feeder' | 'building' | 'visitor' | 'staff'; id: number } | null;
+
+const staffKey = (role: StaffRole) => `staff-${role}`;
+/** Uniform, cap and trouser colours per role. */
+const UNIFORMS: Record<StaffRole, { U: string; C: string; L: string }> = {
+  worker: { U: '#e8892f', C: '#f2d24e', L: '#5a4a3a' },
+  guard: { U: '#2f4a7a', C: '#1b2a45', L: '#1b2a45' },
+  vet: { U: '#f4f4f0', C: '#d9454d', L: '#6b7a8a' },
+  guide: { U: '#4fae5a', C: '#c9a36b', L: '#6b5238' },
+};
 
 const visitorKey = (look: number) => `visitor-${look}`;
 const buildingKey = (kind: BuildingKind) => `building-${kind}`;
@@ -48,6 +58,13 @@ function paintVisitor(look: number): HTMLCanvasElement {
     S: SKIN[look % SKIN.length],
     T: SHIRTS[look % SHIRTS.length],
     L: '#3b4a6b',
+  });
+}
+
+function paintStaff(role: StaffRole): HTMLCanvasElement {
+  return paintRows(['CCCCC', '.SSS.', 'UUUUU', 'SUUUS', '.UUU.', '.LLL.', '.L.L.', '.L.L.'], {
+    ...UNIFORMS[role],
+    S: '#e0b48a',
   });
 }
 
@@ -112,6 +129,7 @@ export class EntityLayer {
   private facingLeft = new Map<number, boolean>();
   private visitors = new Map<number, Phaser.GameObjects.Image>();
   private buildings = new Map<number, Phaser.GameObjects.Image>();
+  private staff = new Map<number, Phaser.GameObjects.Image>();
   private markers: Phaser.GameObjects.Graphics;
   selection: Selection = null;
 
@@ -126,6 +144,7 @@ export class EntityLayer {
       for (const full of [true, false]) scene.textures.addCanvas(feederKey(kind, full), paintFeeder(kind, full));
     }
     for (let look = 0; look < VISITOR_LOOKS; look++) scene.textures.addCanvas(visitorKey(look), paintVisitor(look));
+    for (const role of STAFF_ROLES) scene.textures.addCanvas(staffKey(role), paintStaff(role));
     for (const kind of Object.keys(BUILDING_TYPES) as BuildingKind[]) scene.textures.addCanvas(buildingKey(kind), paintBuilding(kind));
     this.markers = scene.add.graphics().setDepth(9);
   }
@@ -149,6 +168,28 @@ export class EntityLayer {
       const d = Math.hypot(p.x - wx, p.y - 5 - wy);
       if (d < bestD) {
         best = v;
+        bestD = d;
+      }
+    }
+    return best;
+  }
+
+  staffPosition(m: Staff): { x: number; y: number } {
+    const t = this.sim.stepProgress;
+    return {
+      x: (m.px + (m.x - m.px) * t) * TILE + TILE / 2,
+      y: (m.py + (m.y - m.py) * t) * TILE + FOOT_Y,
+    };
+  }
+
+  staffAt(wx: number, wy: number): Staff | null {
+    let best: Staff | null = null;
+    let bestD = 8;
+    for (const m of this.sim.state.staff) {
+      const p = this.staffPosition(m);
+      const d = Math.hypot(p.x - wx, p.y - 5 - wy);
+      if (d < bestD) {
+        best = m;
         bestD = d;
       }
     }
@@ -240,6 +281,24 @@ export class EntityLayer {
     }
     if (this.selection?.kind === 'visitor' && !state.visitors.some((v) => v.id === this.selection!.id)) this.selection = null;
 
+    // Staff
+    this.sync(this.staff, state.staff, (m) => this.scene.add.image(0, 0, staffKey(m.role)).setOrigin(0.5, 1));
+    for (const m of state.staff) {
+      const img = this.staff.get(m.id)!;
+      const { x, y } = this.staffPosition(m);
+      const working = m.task !== null && m.progress > 0;
+      img.setPosition(Math.round(x), Math.round(y) + (working && Math.floor(time / 180) % 2 === 0 ? -1 : 0));
+      img.setDepth(4 + y / 10000);
+      if (working) {
+        // Busy sparks above the head.
+        g.fillStyle(0xf2c14e, 1).fillRect(Math.round(x) + (Math.floor(time / 240) % 2 === 0 ? -3 : 2), Math.round(y) - 14, 1, 1);
+      }
+      if (this.selection?.kind === 'staff' && this.selection.id === m.id) {
+        g.lineStyle(1, 0xf2c14e, 1).strokeEllipse(Math.round(x), Math.round(y), 9, 4);
+      }
+    }
+    if (this.selection?.kind === 'staff' && !state.staff.some((m) => m.id === this.selection!.id)) this.selection = null;
+
     // Dinosaurs
     const liveDinos = new Set<number>();
     for (const d of state.dinos) {
@@ -259,7 +318,19 @@ export class EntityLayer {
       img.setDepth(4 + y / 10000);
 
       const top = Math.round(y) - img.height - 3;
-      if (d.hunger >= 75 || d.health < 50) {
+      const cx = Math.round(x);
+      if (d.escaped) {
+        // Escaped: pulsing orange ring and a double "!".
+        const pulse = Math.floor(time / 300) % 2 === 0;
+        g.lineStyle(1, 0xff9f43, pulse ? 1 : 0.5).strokeEllipse(cx, Math.round(y), Math.max(14, img.width), 6);
+        g.fillStyle(0x1b1b14, 1).fillRect(cx - 4, top - 7, 8, 9);
+        g.fillStyle(0xff9f43, 1).fillRect(cx - 3, top - 6, 2, 4).fillRect(cx - 3, top - 1, 2, 2);
+        g.fillRect(cx + 1, top - 6, 2, 4).fillRect(cx + 1, top - 1, 2, 2);
+      } else if (d.sick) {
+        // Sick: green cross.
+        g.fillStyle(0x1b1b14, 1).fillRect(cx - 3, top - 7, 7, 7);
+        g.fillStyle(0x6fd36a, 1).fillRect(cx - 2, top - 5, 5, 1).fillRect(cx, top - 6, 1, 5);
+      } else if (d.hunger >= 75 || d.health < 50) {
         // Red "!" above animals that need help.
         g.fillStyle(0x1b1b14, 1).fillRect(Math.round(x) - 2, top - 7, 4, 9);
         g.fillStyle(0xff5a4a, 1).fillRect(Math.round(x) - 1, top - 6, 2, 4).fillRect(Math.round(x) - 1, top - 1, 2, 2);

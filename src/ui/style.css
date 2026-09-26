@@ -189,20 +189,21 @@ button {
 .toasts {
   position: fixed;
   top: calc(var(--safe-top) + 62px);
-  left: 50%;
-  transform: translateX(-50%);
+  left: calc(var(--safe-left) + 8px);
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: 4px;
   pointer-events: none;
 }
 
+/* Top-left, under the money bar: out of the way of the map's centre. */
 .toast {
-  max-width: 80vw;
-  padding: 6px 12px;
-  font-size: 13px;
-  text-align: center;
+  max-width: min(42vw, 360px);
+  padding: 5px 10px;
+  font-size: 12px;
+  line-height: 1.3;
+  text-align: left;
   background: var(--panel);
   border: 2px solid var(--good);
   border-radius: 4px;
@@ -663,6 +664,32 @@ button {
 .ledger .profit th,
 .ledger .profit td {
   border-top: 2px solid var(--panel-edge);
+}
+
+.staff-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.staff-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+}
+
+.staff-card .note {
+  flex: 1;
+}
+
+.fire-btn {
+  padding: 0 10px;
+  font-size: 13px;
 }
 
 .loan-offers {

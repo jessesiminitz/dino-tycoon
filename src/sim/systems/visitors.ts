@@ -15,6 +15,10 @@ const HUNGRY = 60;
 const SOUVENIR_CHANCE = 0.3;
 const PAUSE_CHANCE = 0.2;
 const LOOKS = 6;
+/** Visitors within this many tiles of an escaped carnivore run for the gate. */
+const PANIC_RADIUS = 3;
+const INJURY_CHANCE = 0.1;
+const GUIDE_RADIUS = 3;
 
 /**
  * How much there is to see: each dino in a paddock adds its species' appeal,
@@ -60,7 +64,11 @@ export function hourlyVisitors(ctx: SimContext): void {
   const { state, rng, regions } = ctx;
   const { hour } = calendar(state);
 
+  const guides = state.staff.filter((m) => m.role === 'guide');
   for (const v of state.visitors) {
+    if (guides.some((g) => Math.abs(g.x - v.x) <= GUIDE_RADIUS && Math.abs(g.y - v.y) <= GUIDE_RADIUS)) {
+      v.satisfaction = Math.min(100, v.satisfaction + 3);
+    }
     v.hunger = Math.min(100, v.hunger + 8);
     if (v.hunger >= 90) v.satisfaction -= 3;
     if (v.seen.length === 0) v.satisfaction -= 4; // bored: nothing to see
@@ -106,10 +114,26 @@ export function stepVisitors(ctx: SimContext): void {
   const closing = hour >= CLOSE_HOUR || hour < OPEN_HOUR;
   const hasRestaurant = state.buildings.some((b) => b.kind === 'restaurant');
 
+  const loose = state.dinos.filter((d) => d.escaped);
+
   for (const v of [...state.visitors]) {
     v.px = v.x;
     v.py = v.y;
     const here = v.y * width + v.x;
+
+    // Escaped dinosaurs: carnivores send visitors fleeing (some get hurt); herbivores unsettle them.
+    const near = (r: number) => loose.filter((d) => Math.abs(d.x - v.x) <= r && Math.abs(d.y - v.y) <= r);
+    const predator = near(PANIC_RADIUS).find((d) => SPECIES[d.species].diet === 'carnivore');
+    if (predator) {
+      v.satisfaction = Math.max(0, v.satisfaction - 40);
+      if (rng.chance(INJURY_CHANCE)) {
+        state.reputation = Math.max(0, state.reputation - 2);
+        ctx.emit({ text: `🚑 A visitor was hurt by an escaped ${SPECIES[predator.species].name}!`, kind: 'bad' });
+      }
+      leave(state, v);
+      continue;
+    }
+    if (near(2).length > 0) v.satisfaction = Math.max(0, v.satisfaction - 2);
 
     for (const d of state.dinos) {
       if (Math.abs(d.x - v.x) <= VIEW_RADIUS && Math.abs(d.y - v.y) <= VIEW_RADIUS && !v.seen.includes(d.id)) {

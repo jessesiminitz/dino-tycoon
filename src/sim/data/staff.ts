@@ -1,0 +1,36 @@
+export type StaffRole = 'worker' | 'guard' | 'vet' | 'guide';
+
+export interface StaffType {
+  role: StaffRole;
+  name: string;
+  /** Charged every midnight. */
+  wage: number;
+  description: string;
+}
+
+export const STAFF_TYPES: Record<StaffRole, StaffType> = {
+  worker: { role: 'worker', name: 'Worker', wage: 60, description: 'Refills feeders that run low and repairs worn or broken fences.' },
+  guard: { role: 'guard', name: 'Guard', wage: 80, description: 'Tracks down escaped dinosaurs and returns them to their paddock.' },
+  vet: { role: 'vet', name: 'Vet', wage: 100, description: 'Treats sick and injured dinosaurs before illness spreads.' },
+  guide: { role: 'guide', name: 'Tour guide', wage: 50, description: 'Walks the paths telling visitors about the dinosaurs, keeping them happier.' },
+};
+
+export const STAFF_ROLES = Object.keys(STAFF_TYPES) as StaffRole[];
+
+/** Tiles a staff member covers per movement step (they drive a park buggy). */
+export const STAFF_SPEED = 2;
+/** Movement steps each job takes once on site. */
+export const WORK_STEPS = { refill: 2, repair: 4, recapture: 4, treat: 4 } as const;
+
+/** Workers refill feeders below this fraction of capacity. */
+export const REFILL_BELOW = 0.4;
+/** Workers repair fences below this condition. */
+export const REPAIR_BELOW = 60;
+/** Fraction of a fence's build cost charged to bring it back to full condition. */
+export const REPAIR_COST_FRACTION = 0.3;
+export const MEDICINE_COST = 150;
+
+export const STAFF_NAMES = [
+  'Alex', 'Sam', 'Jordan', 'Riley', 'Casey', 'Morgan', 'Jamie', 'Taylor', 'Robin', 'Drew',
+  'Quinn', 'Avery', 'Rowan', 'Kai', 'Emery', 'Sky', 'Reese', 'Harper', 'Ellis', 'Noor',
+];

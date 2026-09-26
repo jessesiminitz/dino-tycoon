@@ -7,12 +7,38 @@ import { BUILDING_TYPES, PATH_COST, type BuildingKind } from '../sim/data/econom
 import { mountCatalog } from './catalog';
 import { mountParkPanel } from './parkPanel';
 import type { Mode, UiState } from './uiState';
+import type { GameEvent } from '../sim/systems/context';
 
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 export const formatMoney = (n: number) => money.format(n);
 
 const TOAST_MS = 3200;
 const MAX_TOASTS = 3;
+/** Park events arriving this close together are shown as one batch. */
+const EVENT_BATCH_MS = 150;
+
+/** "a", "a and b", "a, b and c" */
+function listNames(names: string[]): string {
+  return names.length <= 1 ? (names[0] ?? '') : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+}
+
+/**
+ * Collapses a burst of park events: several escapes become one alert naming
+ * them all, and anything beyond two other messages is summarised.
+ */
+export function batchEvents(events: GameEvent[]): GameEvent[] {
+  const escapes = events.filter((e) => /has escaped!$/.test(e.text));
+  const rest = events.filter((e) => !escapes.includes(e));
+  const out: GameEvent[] = [];
+  if (escapes.length === 1) out.push(escapes[0]);
+  else if (escapes.length > 1) {
+    const names = escapes.map((e) => e.text.replace(/^🚨 /, '').replace(/ the .*$/, ''));
+    out.push({ text: `🚨 ${listNames(names)} have escaped!`, kind: 'bad' });
+  }
+  out.push(...rest.slice(0, 2));
+  if (rest.length > 2) out.push({ text: `…and ${rest.length - 2} more thing${rest.length === 3 ? '' : 's'} happened`, kind: 'info' });
+  return out;
+}
 
 function $(id: string): HTMLElement {
   const el = document.getElementById(id);
@@ -206,7 +232,16 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
     },
   };
 
-  sim.onEvent((e) => hud.toast(e.text, e.kind === 'bad' ? 'error' : 'ok'));
+  let pending: GameEvent[] = [];
+  sim.onEvent((e) => {
+    if (pending.length === 0) {
+      window.setTimeout(() => {
+        for (const b of batchEvents(pending)) hud.toast(b.text, b.kind === 'bad' ? 'error' : 'ok');
+        pending = [];
+      }, EVENT_BATCH_MS);
+    }
+    pending.push(e);
+  });
 
   const parkPanel = mountParkPanel(sim, hud);
   $('btn-park').addEventListener('click', () => parkPanel.open());

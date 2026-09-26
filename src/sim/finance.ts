@@ -2,7 +2,17 @@ import type { GameState } from './GameState';
 import { LOAN_MONTHLY_RATE, LOAN_TERM_MONTHS, MAX_DEBT } from './data/economy';
 
 export const INCOME_CATEGORIES = ['admissions', 'food', 'souvenirs', 'sales', 'loans'] as const;
-export const EXPENSE_CATEGORIES = ['construction', 'land', 'dinosaurs', 'feed', 'upkeep', 'interest', 'repayments'] as const;
+export const EXPENSE_CATEGORIES = [
+  'construction',
+  'land',
+  'dinosaurs',
+  'feed',
+  'wages',
+  'maintenance',
+  'upkeep',
+  'interest',
+  'repayments',
+] as const;
 export type IncomeCategory = (typeof INCOME_CATEGORIES)[number];
 export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
 
@@ -16,6 +26,8 @@ export const CATEGORY_LABELS: Record<IncomeCategory | ExpenseCategory, string> =
   land: 'Land',
   dinosaurs: 'Dinosaurs',
   feed: 'Dino food',
+  wages: 'Staff wages',
+  maintenance: 'Repairs & medicine',
   upkeep: 'Building upkeep',
   interest: 'Loan interest',
   repayments: 'Loan repayments',
@@ -55,6 +67,17 @@ export function emptyLedger(): Ledger {
     expenses: Object.fromEntries(EXPENSE_CATEGORIES.map((c) => [c, 0])) as Record<ExpenseCategory, number>,
     visitors: 0,
   };
+}
+
+/** Adds categories introduced after a save was made, as zeros. */
+export function normalizeFinance(f: Finance): void {
+  const fix = (l: Ledger) => {
+    for (const c of INCOME_CATEGORIES) l.income[c] ??= 0;
+    for (const c of EXPENSE_CATEGORIES) l.expenses[c] ??= 0;
+  };
+  fix(f.today);
+  fix(f.month);
+  for (const h of f.history) fix(h.ledger);
 }
 
 export function newFinance(): Finance {

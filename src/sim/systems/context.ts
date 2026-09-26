@@ -13,4 +13,6 @@ export interface SimContext {
   rng: Rng;
   regions: RegionMap;
   emit(event: GameEvent): void;
+  /** Call when fences break or get fixed, so paddocks are recomputed. */
+  invalidateWorld(): void;
 }

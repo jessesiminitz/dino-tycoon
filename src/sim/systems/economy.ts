@@ -1,5 +1,6 @@
 import { calendar } from '../GameState';
 import { BUILDING_TYPES, DAYS_PER_MONTH } from '../data/economy';
+import { STAFF_TYPES } from '../data/staff';
 import { emptyLedger, loanPayment, operatingProfit, spend } from '../finance';
 import type { SimContext } from './context';
 
@@ -13,7 +14,8 @@ export function hourlyEconomy(ctx: SimContext): void {
   if (hour !== 0) return;
   const finance = state.finance;
 
-  // Midnight: building upkeep, then the day's summary.
+  // Midnight: wages and building upkeep, then the day's summary.
+  for (const m of state.staff) spend(state, 'wages', STAFF_TYPES[m.role].wage);
   for (const b of state.buildings) spend(state, 'upkeep', BUILDING_TYPES[b.kind].upkeep);
   const dayProfit = operatingProfit(finance.today);
   ctx.emit({

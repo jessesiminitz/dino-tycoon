@@ -1,11 +1,13 @@
 import Phaser from 'phaser';
 import type { Simulation } from '../sim/Simulation';
-import { planFences, planPaths, refillCost } from '../sim/commands';
+import { planFences, planPaths, refillCost, repairCost } from '../sim/commands';
+import { STAFF_TYPES } from '../sim/data/staff';
+import { describeTask } from '../sim/systems/staff';
 import { FENCE_REFUND, FENCE_TYPES } from '../sim/data/fences';
 import { DINO_RESALE, FEEDER_TYPES } from '../sim/data/feeders';
 import { SPECIES } from '../sim/data/species';
 import { dinoLabel } from '../sim/systems/dinos';
-import { fenceAt } from '../sim/fences';
+import { fenceAt, fenceHp, fenceTypeAt } from '../sim/fences';
 import { pathEdges, tileLine, type Edge } from '../sim/grid';
 import { BUILDING_TYPES, PATH_COST, PATH_REFUND } from '../sim/data/economy';
 import { isTileOwned, parcelBuyBlocker, parcelLandTiles, parcelOf, parcelPrice, type Point } from '../sim/land';
@@ -50,6 +52,9 @@ export class ParkScene extends Phaser.Scene {
   private entities!: EntityLayer;
   private infoRefreshAt = 0;
   private boundsZoom = 0;
+  private drawnHour = -1;
+  /** Fence segment being inspected in Look mode. */
+  private selectedFence: Edge | null = null;
   private touch!: TouchController;
   private drawnRevision = -1;
   private drag: Drag | null = null;
@@ -112,8 +117,13 @@ export class ParkScene extends Phaser.Scene {
     if (cam.zoom !== this.boundsZoom) this.fitBounds();
     this.sim.advance(delta);
     if (this.drawnRevision !== this.sim.worldRevision) this.redrawWorld();
+    else if (this.drawnHour !== this.sim.state.hours) {
+      // Fences wear hour by hour; redraw so damage shows up.
+      this.drawnHour = this.sim.state.hours;
+      this.layers.drawFences();
+    }
     this.entities.update(time);
-    if (this.entities.selection && time >= this.infoRefreshAt) {
+    if ((this.entities.selection || this.selectedFence) && time >= this.infoRefreshAt) {
       this.infoRefreshAt = time + INFO_REFRESH_MS;
       this.showSelection();
     }
@@ -146,6 +156,7 @@ export class ParkScene extends Phaser.Scene {
     if (mode !== 'select') {
       this.cursor.setVisible(false);
       this.entities.selection = null;
+      this.selectFence(null);
     }
     if (mode !== 'land') this.selectedParcel = null;
     this.redrawWorld();
@@ -222,19 +233,32 @@ export class ParkScene extends Phaser.Scene {
   private inspect(wx: number, wy: number): void {
     const tx = Math.floor(wx / TILE);
     const ty = Math.floor(wy / TILE);
+    this.selectFence(null);
     const dino = this.entities.dinoAt(wx, wy);
-    const visitor = dino ? null : this.entities.visitorAt(wx, wy);
-    const building = dino || visitor ? undefined : this.entities.buildingAt(tx, ty);
-    const feeder = dino || visitor || building ? undefined : this.entities.feederAt(tx, ty);
+    const staff = dino ? null : this.entities.staffAt(wx, wy);
+    const visitor = dino || staff ? null : this.entities.visitorAt(wx, wy);
+    const building = dino || staff || visitor ? undefined : this.entities.buildingAt(tx, ty);
+    const feeder = dino || staff || visitor || building ? undefined : this.entities.feederAt(tx, ty);
     const selection = dino
       ? ({ kind: 'dino', id: dino.id } as const)
-      : visitor
-        ? ({ kind: 'visitor', id: visitor.id } as const)
-        : building
-          ? ({ kind: 'building', id: building.id } as const)
-          : feeder
-            ? ({ kind: 'feeder', id: feeder.id } as const)
-            : null;
+      : staff
+        ? ({ kind: 'staff', id: staff.id } as const)
+        : visitor
+          ? ({ kind: 'visitor', id: visitor.id } as const)
+          : building
+            ? ({ kind: 'building', id: building.id } as const)
+            : feeder
+              ? ({ kind: 'feeder', id: feeder.id } as const)
+              : null;
+    if (!selection) {
+      const edge = this.edgeNear(wx, wy);
+      if (edge && fenceTypeAt(this.sim.state, edge)) {
+        this.cursor.setVisible(false);
+        this.entities.selection = null;
+        this.selectFence(edge);
+        return;
+      }
+    }
     if (selection) {
       this.cursor.setVisible(false);
       this.entities.selection = selection;
@@ -245,7 +269,36 @@ export class ParkScene extends Phaser.Scene {
     this.inspectTile(wx, wy);
   }
 
+  /** Highlights a fence segment for Look mode (or clears it). */
+  private selectFence(edge: Edge | null): void {
+    this.selectedFence = edge;
+    if (edge) {
+      this.layers.drawGhost([{ edge, style: 'none' }]);
+      this.showSelection();
+    } else if (!this.drag) this.layers.clearGhost();
+  }
+
+  private showFence(edge: Edge): void {
+    const { state } = this.sim;
+    const type = fenceTypeAt(state, edge);
+    if (!type) {
+      this.selectFence(null);
+      this.hud.showInfo(null);
+      return;
+    }
+    const hp = Math.round(fenceHp(state, edge));
+    const cond = hp <= 0 ? 'BROKEN' : hp < 25 ? 'about to give way' : hp < 50 ? 'worn' : hp < 80 ? 'fair' : 'good';
+    const cost = repairCost(state, edge);
+    this.hud.showInfo(
+      `${FENCE_TYPES[type].name} fence · condition ${hp}% (${cond})`,
+      cost > 0
+        ? { label: `Repair ${formatMoney(cost)}`, onClick: () => this.report(this.sim.dispatch({ type: 'repairFence', edge })) }
+        : undefined,
+    );
+  }
+
   private showSelection(): void {
+    if (this.selectedFence) return this.showFence(this.selectedFence);
     const sel = this.entities.selection;
     if (!sel) return;
     const { state } = this.sim;
@@ -259,11 +312,21 @@ export class ParkScene extends Phaser.Scene {
       const sp = SPECIES[d.species];
       const { regions, tileRegion } = this.sim.regions();
       const loose = regions[tileRegion[d.y * state.map.width + d.x]]?.kind !== 'paddock';
+      const status = [loose ? 'ESCAPED!' : '', d.sick ? 'SICK' : ''].filter(Boolean).join(' · ');
       const value = Math.floor(sp.price * DINO_RESALE);
       this.hud.showInfo(
-        `${dinoLabel(d)}${loose ? ' · LOOSE!' : ''} · Hunger ${Math.round(d.hunger)}% · Health ${Math.round(d.health)}% · Happy ${d.happiness}%`,
+        `${dinoLabel(d)}${status ? ` · ${status}` : ''} · Hunger ${Math.round(d.hunger)}% · Health ${Math.round(d.health)}% · Happy ${d.happiness}%`,
         { label: `Sell ${formatMoney(value)}`, onClick: () => this.report(this.sim.dispatch({ type: 'sellDino', id: d.id })) },
       );
+    } else if (sel.kind === 'staff') {
+      const m = state.staff.find((m) => m.id === sel.id);
+      if (!m) {
+        this.entities.selection = null;
+        this.hud.showInfo(null);
+        return;
+      }
+      const t = STAFF_TYPES[m.role];
+      this.hud.showInfo(`${m.name} · ${t.name} · ${describeTask(state, m)} · ${formatMoney(t.wage)}/day`);
     } else if (sel.kind === 'visitor') {
       const v = state.visitors.find((v) => v.id === sel.id);
       if (!v) {

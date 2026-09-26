@@ -127,13 +127,15 @@ export class WorldLayers {
     const { width, height } = state.map;
     for (let y = 0; y <= height; y++)
       for (let x = 0; x < width; x++) {
-        const f = state.hFences[y * width + x] as FenceTypeId | 0;
-        if (f) this.drawSegment(g, { dir: 'h', x, y }, f);
+        const i = y * width + x;
+        const f = state.hFences[i] as FenceTypeId | 0;
+        if (f) this.drawSegment(g, { dir: 'h', x, y }, f, state.hFenceHp[i]);
       }
     for (let y = 0; y < height; y++)
       for (let x = 0; x <= width; x++) {
-        const f = state.vFences[y * (width + 1) + x] as FenceTypeId | 0;
-        if (f) this.drawSegment(g, { dir: 'v', x, y }, f);
+        const i = y * (width + 1) + x;
+        const f = state.vFences[i] as FenceTypeId | 0;
+        if (f) this.drawSegment(g, { dir: 'v', x, y }, f, state.vFenceHp[i]);
       }
   }
 
@@ -189,12 +191,31 @@ export class WorldLayers {
     this.ghost.clear();
   }
 
-  private drawSegment(g: Phaser.GameObjects.Graphics, e: Edge, f: FenceTypeId): void {
+  /** One fence segment. Worn fences (< 50%) show gaps; broken ones are posts and rubble. */
+  private drawSegment(g: Phaser.GameObjects.Graphics, e: Edge, f: FenceTypeId, hp: number): void {
     const t = FENCE_TYPES[f];
     const w = RAIL_WIDTH[f];
     const half = Math.floor(w / 2);
     const x = e.x * TILE;
     const y = e.y * TILE;
+    const [x2, y2] = e.dir === 'h' ? [x + TILE, y] : [x, y + TILE];
+    const p = f === 4 ? 4 : 3;
+
+    if (hp <= 0) {
+      // Broken: leaning posts, a scatter of rubble and a red warning dash.
+      g.fillStyle(t.post, 1);
+      g.fillRect(x - 1, y - 1, 2, 2);
+      g.fillRect(x2 - 1, y2 - 1, 2, 2);
+      g.fillStyle(t.rail, 0.9);
+      const [ax, ay] = e.dir === 'h' ? [x + 3, y + 2] : [x + 2, y + 3];
+      const [bx, by] = e.dir === 'h' ? [x + 10, y - 3] : [x - 3, y + 10];
+      g.fillRect(ax, ay, 2, 1);
+      g.fillRect(bx, by, 2, 1);
+      g.fillStyle(0xff5a4a, 0.9);
+      if (e.dir === 'h') g.fillRect(x + 6, y, 4, 1);
+      else g.fillRect(x, y + 6, 1, 4);
+      return;
+    }
 
     if (f === 3) {
       // Electric: a faint glow behind a thin live wire.
@@ -202,14 +223,23 @@ export class WorldLayers {
       if (e.dir === 'h') g.fillRect(x, y - 2, TILE, 4);
       else g.fillRect(x - 2, y, 4, TILE);
     }
-    g.fillStyle(t.rail, 1);
-    if (e.dir === 'h') g.fillRect(x, y - half, TILE, w);
+    g.fillStyle(t.rail, hp < 50 ? 0.75 : 1);
+    if (hp < 50) {
+      // Worn: the rail has gaps.
+      const gap = hp < 25 ? 6 : 3;
+      const seg = (TILE - gap) / 2;
+      if (e.dir === 'h') {
+        g.fillRect(x, y - half, seg, w);
+        g.fillRect(x + seg + gap, y - half, seg, w);
+      } else {
+        g.fillRect(x - half, y, w, seg);
+        g.fillRect(x - half, y + seg + gap, w, seg);
+      }
+    } else if (e.dir === 'h') g.fillRect(x, y - half, TILE, w);
     else g.fillRect(x - half, y, w, TILE);
 
     // Posts at both ends (shared posts simply overdraw).
     g.fillStyle(t.post, 1);
-    const [x2, y2] = e.dir === 'h' ? [x + TILE, y] : [x, y + TILE];
-    const p = f === 4 ? 4 : 3;
     g.fillRect(x - Math.floor(p / 2), y - Math.floor(p / 2), p, p);
     g.fillRect(x2 - Math.floor(p / 2), y2 - Math.floor(p / 2), p, p);
     if (f === 1) {

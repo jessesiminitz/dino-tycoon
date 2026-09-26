@@ -6,6 +6,8 @@ import type { GameEvent, SimContext } from './systems/context';
 import { hourlyDinos, stepDinos, STEPS_PER_HOUR } from './systems/dinos';
 import { hourlyVisitors, stepVisitors } from './systems/visitors';
 import { hourlyEconomy } from './systems/economy';
+import { hourlyFences, hourlyHealth, stepEscapes } from './systems/incidents';
+import { stepStaff } from './systems/staff';
 
 /** Real-time milliseconds per game-hour at 1× speed. */
 export const MS_PER_HOUR = 1000;
@@ -25,7 +27,7 @@ type EventListener = (event: GameEvent) => void;
  */
 export class Simulation {
   speed: Speed = 1;
-  /** Bumped whenever the built world changes (fences, land), so renderers know to redraw. */
+  /** Bumped whenever the built world changes (fences built or broken, land), so renderers and paddocks update. */
   worldRevision = 0;
   private accumulator = 0;
   private listeners = new Set<Listener>();
@@ -58,14 +60,24 @@ export class Simulation {
   step(): void {
     const { state } = this;
     const rng = new Rng(state.rngState);
-    const ctx: SimContext = { state, rng, regions: this.regions(), emit: (e) => this.emitEvent(e) };
+    const ctx: SimContext = {
+      state,
+      rng,
+      regions: this.regions(),
+      emit: (e) => this.emitEvent(e),
+      invalidateWorld: () => this.worldRevision++,
+    };
     stepDinos(ctx);
+    stepEscapes(ctx);
     stepVisitors(ctx);
+    stepStaff(ctx);
     state.stepInHour++;
     if (state.stepInHour >= STEPS_PER_HOUR) {
       state.stepInHour = 0;
       state.hours++;
       hourlyDinos(ctx);
+      hourlyHealth(ctx);
+      hourlyFences(ctx);
       hourlyVisitors(ctx);
       hourlyEconomy(ctx);
     }
