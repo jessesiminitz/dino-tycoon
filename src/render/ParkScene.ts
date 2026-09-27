@@ -21,7 +21,7 @@ import { formatMoney } from '../ui/hud';
 import type { UiState } from '../ui/uiState';
 import { createTextures, CURSOR_KEY, TILE, TILESET_KEY, tileIndex } from './tileset';
 import { MAX_ZOOM, TouchController } from './input/TouchController';
-import { WorldLayers } from './WorldLayers';
+import { WorldLayers, type GhostStyle } from './WorldLayers';
 import { EntityLayer } from './EntityLayer';
 import { TerrainFx } from './TerrainFx';
 import { SceneryLayer } from './SceneryLayer';
@@ -204,7 +204,9 @@ export class ParkScene extends Phaser.Scene {
         const feeder = this.entities.feederAt(tx, ty);
         if (feeder) return this.report(this.sim.dispatch({ type: 'removeFeeder', id: feeder.id }));
         const decor = this.sim.state.decor.find((d) => d.x === tx && d.y === ty);
-        if (decor) this.report(this.sim.dispatch({ type: 'removeDecor', id: decor.id }));
+        if (decor) return this.report(this.sim.dispatch({ type: 'removeDecor', id: decor.id }));
+        const w = this.sim.state.map.width;
+        if (this.sim.state.paths[ty * w + tx]) this.report(this.sim.dispatch({ type: 'removePaths', tiles: [ty * w + tx] }));
         return;
       }
       case 'decor':
@@ -524,12 +526,14 @@ export class ParkScene extends Phaser.Scene {
       const dy = wy - d.startWorld.y;
       if (Math.hypot(dx, dy) > TILE / 2) d.horizontalFirst = Math.abs(dx) >= Math.abs(dy);
     }
-    if (this.ui.mode === 'path') {
+    if (this.ui.mode === 'path' || this.ui.mode === 'demolish') {
       const end = this.tileAt(wx, wy);
       const w = this.sim.state.map.width;
       d.tiles = tileLine(d.startTile.x, d.startTile.y, end.x, end.y, d.horizontalFirst ?? true).map(([x, y]) => y * w + x);
-      this.previewTiles(d.tiles);
-      return;
+      if (this.ui.mode === 'path') {
+        this.previewTiles(d.tiles);
+        return;
+      }
     }
     const end = this.vertexAt(wx, wy);
     d.edges = pathEdges(d.start.x, d.start.y, end.x, end.y, d.horizontalFirst ?? true);
@@ -542,7 +546,21 @@ export class ParkScene extends Phaser.Scene {
     this.cancelDrag();
     if (this.ui.mode === 'path') {
       if (tiles.length > 0) this.commitTiles(tiles);
+    } else if (this.ui.mode === 'demolish') {
+      this.commitDemolish(edges, tiles);
     } else if (edges.length > 0) this.commitEdges(edges);
+  }
+
+  /** Remove tool drag: fences along the line and any path tiles under it. */
+  private commitDemolish(edges: Edge[], tiles: number[]): void {
+    const pathTiles = tiles.filter((i) => this.sim.state.paths[i]);
+    const hasFence = edges.some((e) => fenceTypeAt(this.sim.state, e));
+    if (!hasFence && pathTiles.length === 0) return this.report({ ok: false, message: 'Nothing to remove there' });
+    const results = [];
+    if (hasFence) results.push(this.sim.dispatch({ type: 'removeFences', edges }));
+    if (pathTiles.length) results.push(this.sim.dispatch({ type: 'removePaths', tiles: pathTiles }));
+    const ok = results.filter((r) => r.ok);
+    this.report(ok.length ? { ok: true, message: ok.map((r) => r.message).join(' · ') } : results[0]);
   }
 
   private cancelDrag(): void {
@@ -592,17 +610,23 @@ export class ParkScene extends Phaser.Scene {
     } else {
       let refund = 0;
       let count = 0;
-      this.layers.drawGhost(
-        edges.map((edge) => {
-          const f = fenceAt(state, edge);
-          if (f) {
-            refund += FENCE_TYPES[f].cost * FENCE_REFUND;
-            count++;
-          }
-          return { edge, style: f ? 'remove' : 'none' };
-        }),
-      );
-      this.hud.showInfo(`Remove ${count} segment${count === 1 ? '' : 's'} · +${formatMoney(Math.floor(refund))}`);
+      const ghost = edges.map((edge) => {
+        const f = fenceTypeAt(state, edge);
+        if (f) {
+          refund += FENCE_TYPES[f].cost * FENCE_REFUND;
+          count++;
+        }
+        return { edge, style: (f ? 'remove' : 'none') as GhostStyle };
+      });
+      const w = state.map.width;
+      const pathTiles = (this.drag?.tiles ?? []).filter((i) => state.paths[i]);
+      refund += pathTiles.length * PATH_COST * PATH_REFUND;
+      this.layers.drawGhost(ghost, pathTiles.map((i) => ({ x: i % w, y: Math.floor(i / w), style: 'remove' as GhostStyle })));
+      const parts = [
+        count ? `${count} fence segment${count === 1 ? '' : 's'}` : '',
+        pathTiles.length ? `${pathTiles.length} path tile${pathTiles.length === 1 ? '' : 's'}` : '',
+      ].filter(Boolean);
+      this.hud.showInfo(parts.length ? `Remove ${parts.join(' and ')} · +${formatMoney(Math.floor(refund))}` : 'Nothing to remove along this line');
     }
   }
 

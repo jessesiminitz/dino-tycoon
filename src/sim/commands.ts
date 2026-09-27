@@ -162,10 +162,19 @@ export function applyCommand(state: GameState, cmd: Command): CommandResult {
       if (regions[tileRegion[cmd.y * state.map.width + cmd.x]].kind !== 'paddock') {
         return { ok: false, message: 'Dinosaurs must go inside a fenced paddock' };
       }
-      if (regionHasPaths(state, { regions, tileRegion }, cmd.y * state.map.width + cmd.x)) {
-        return { ok: false, message: 'This area has visitor paths in it. Remove them before letting a dinosaur in' };
-      }
       if (sp.price > state.money) return { ok: false, message: `Not enough money: need ${usd(sp.price)}` };
+      // Paths left inside the paddock (laid while it was empty) are cleared: visitors can't reach them anyway.
+      const region = tileRegion[cmd.y * state.map.width + cmd.x];
+      let cleared = 0;
+      if (regionHasPaths(state, { regions, tileRegion }, cmd.y * state.map.width + cmd.x)) {
+        for (let i = 0; i < state.paths.length; i++) {
+          if (state.paths[i] && tileRegion[i] === region) {
+            state.paths[i] = 0;
+            cleared++;
+          }
+        }
+        earn(state, 'sales', Math.floor(cleared * PATH_COST * PATH_REFUND));
+      }
       const name = pickName(state, DINO_NAMES, state.dinos.map((d) => d.name));
       state.dinos.push({
         id: state.nextId++,
@@ -186,7 +195,8 @@ export function applyCommand(state: GameState, cmd: Command): CommandResult {
         homeY: cmd.y,
       });
       spend(state, 'dinosaurs', sp.price);
-      return { ok: true, cost: sp.price, message: `Welcome ${name} the ${sp.name}!` };
+      const note = cleared ? ` (cleared ${cleared} path tile${cleared === 1 ? '' : 's'} from inside the paddock)` : '';
+      return { ok: true, cost: sp.price, message: `Welcome ${name} the ${sp.name}!${note}` };
     }
 
     case 'sellDino': {

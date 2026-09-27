@@ -69,7 +69,7 @@ function modeHint(ui: UiState): string | null {
     case 'fence':
       return 'Drag to draw a fence · two fingers to move the map';
     case 'demolish':
-      return 'Drag along fences or tap one to remove it · tap a feeder to remove it';
+      return 'Drag along fences or paths to remove them · tap a fence, path, building, feeder or garden item to remove it';
     case 'land':
       return 'Plots marked FOR SALE border your land · tap one to buy it';
     case 'feeder':

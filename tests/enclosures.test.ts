@@ -47,12 +47,17 @@ describe('enclosed pockets of land', () => {
     expect(r.message).toMatch(/animals or feeders/);
   });
 
-  it('dinosaurs are not released into an enclosure that visitors walk through', () => {
+  it('releasing a dinosaur clears any paths left inside its paddock (refunded)', () => {
+    // Reported trap: a path laid into an empty enclosure used to block releasing a dino there,
+    // and paths couldn't be removed with the Remove tool.
     const { s, strip } = beachPaddock();
     applyCommand(s, { type: 'buildPaths', tiles: strip });
     const w = s.map.width;
+    const before = s.money;
     const r = applyCommand(s, { type: 'buyDino', species: 'protoceratops', x: strip[0] % w, y: Math.floor(strip[0] / w) });
-    expect(r.ok).toBe(false);
-    expect(r.message).toMatch(/paths/);
+    expect(r.ok).toBe(true);
+    expect(r.message).toMatch(/cleared \d+ path tile/);
+    for (const i of strip) expect(s.paths[i]).toBe(0);
+    expect(s.money).toBe(before - 3000 + Math.floor(strip.length * 10 * 0.25));
   });
 });

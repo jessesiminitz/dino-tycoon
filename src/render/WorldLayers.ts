@@ -189,8 +189,12 @@ export class WorldLayers {
     }
   }
 
-  drawGhost(edges: { edge: Edge; style: GhostStyle }[]): void {
+  drawGhost(edges: { edge: Edge; style: GhostStyle }[], tiles: { x: number; y: number; style: GhostStyle }[] = []): void {
     const g = this.ghost.clear();
+    for (const { x, y, style } of tiles) {
+      g.fillStyle(GHOST_COLORS[style], 0.4).fillRect(x * TILE, y * TILE, TILE, TILE);
+      g.lineStyle(1, GHOST_COLORS[style], 0.9).strokeRect(x * TILE + 0.5, y * TILE + 0.5, TILE - 1, TILE - 1);
+    }
     for (const { edge, style } of edges) {
       g.fillStyle(GHOST_COLORS[style], 0.9);
       const x = edge.x * TILE;
