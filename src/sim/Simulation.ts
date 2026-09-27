@@ -4,6 +4,7 @@ import { computeRegions, type RegionMap } from './regions';
 import { Rng } from './rng';
 import type { GameEvent, SimContext } from './systems/context';
 import { hourlyDinos, stepDinos, STEPS_PER_HOUR } from './systems/dinos';
+import { hourlyBreeding } from './systems/breeding';
 import { hourlyVisitors, stepVisitors } from './systems/visitors';
 import { hourlyEconomy } from './systems/economy';
 import { hourlyFences, hourlyHealth, stepEscapes } from './systems/incidents';
@@ -85,6 +86,7 @@ export class Simulation {
       state.stepInHour = 0;
       state.hours++;
       hourlyDinos(ctx);
+      hourlyBreeding(ctx);
       hourlyHealth(ctx);
       hourlyFences(ctx);
       hourlyEvents(ctx);

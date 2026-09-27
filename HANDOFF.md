@@ -46,12 +46,13 @@ End commit messages with the Co-Authored-By / Claude-Session trailers the harnes
 - `src/audio/`: `audio.ts` (sfx, rain, piano synth, shuffled playlist), `ragNotes.ts` (decoder and alphabet), `rags.ts` (generated, lazy-loaded chunk).
 - `src/save/storage.ts`: 3 IndexedDB slots plus a localStorage mirror, and a boot directive (used to return to the park after an update reload).
 
-### Save format: **v12**
+### Save format: **v13**
 
-Always bump `SAVE_VERSION` and add a step to `migrate()` when the state shape changes, then update the version assertions in the tests (`tests/{dinos,island,visitorlife,mess}.test.ts` check `toBe(12)`). Recent steps:
+Always bump `SAVE_VERSION` and add a step to `migrate()` when the state shape changes, then update the version assertions in the tests (`tests/{dinos,island,visitorlife,mess}.test.ts` check `toBe(13)`). Recent steps:
 - v10 added the log.
 - v11 added visitor names, thoughts and thirst, soda and snack fields, plus `messes` and `reviews`.
 - v12 added scenario `round`, `roundStart` and `earned`. Saves that had already won carry on into Silver.
+- v13 added `Dino.baby`, `eggs` and `stats.hatched`.
 
 ## Features in place (all deployed)
 
@@ -64,6 +65,13 @@ Always bump `SAVE_VERSION` and add a step to `migrate()` when the state shape ch
   - Park-specific thoughts; star reviews when they leave.
 - **Mess:** visitor accidents (yellow pee puddle or small poop, picked by `accidentKind(id)`), litter without trash cans, janitors, trash cans, and a "filthy paths" inspection issue. Cleanliness was deliberately **toned down** at the owner's request, so keep it mild.
 - **Dino droppings:** about 1 per dino every 1–2 days. They crumble after 72 h, workers shovel them when free, and they only upset dinos when piled past 2 per animal.
+- **Baby dinosaurs** (`systems/breeding.ts`):
+  - Happy, fed pairs of the same species in an uncrowded paddock lay eggs: about 1 in 48 per pair per hour, one egg per paddock at a time.
+  - The park caps eggs plus babies at a quarter of the adults (minimum 4).
+  - Eggs wobble before hatching at 48 h, and babies grow up in 7 days.
+  - Babies eat half meals, don't push fences, can't be sold, count as smaller prey, add appeal, and get an "Aww!" from visitors.
+  - Sprites are shrunk from each species' own art; eggs are speckled.
+  - 👥 Dinos has a 🍼 Babies & eggs filter.
 - **Placing dinos:** a fence gap is circled in red with a "Close gap · $x" button that fences or repairs it and releases the dino.
 - **Panels:** 👥 People, 🔔 alert log (newest first, filters, unread badge), 🏆 Goals medal track, 📖 Dino Guide.
 - **Scenarios:** First Steps (tutorial), Fossil Fever, Storm Coast, Rex Rising, each with 3 rounds of milestones; plus Sandbox. You can keep playing after winning or losing.

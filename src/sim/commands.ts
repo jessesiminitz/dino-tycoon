@@ -80,7 +80,7 @@ export function planFences(state: GameState, edges: Edge[], fence: FenceTypeId) 
 }
 
 /** A random name from `pool`, avoiding ones already `taken` while any are left. */
-function pickName(state: GameState, pool: string[], taken: string[]): string {
+export function pickName(state: GameState, pool: string[], taken: string[]): string {
   const free = pool.filter((n) => !taken.includes(n));
   const options = free.length > 0 ? free : pool;
   const rng = new Rng(state.rngState);
@@ -196,6 +196,7 @@ export function applyCommand(state: GameState, cmd: Command): CommandResult {
         escaped: false,
         homeX: cmd.x,
         homeY: cmd.y,
+        baby: false,
       });
       spend(state, 'dinosaurs', sp.price);
       const note = cleared ? ` (cleared ${cleared} path tile${cleared === 1 ? '' : 's'} from inside the paddock)` : '';
@@ -205,6 +206,7 @@ export function applyCommand(state: GameState, cmd: Command): CommandResult {
     case 'sellDino': {
       const d = state.dinos.find((d) => d.id === cmd.id);
       if (!d) return { ok: false, message: 'That dinosaur is gone' };
+      if (d.baby) return { ok: false, message: `${d.name} is too little to leave home yet` };
       const value = Math.floor(SPECIES[d.species].price * DINO_RESALE);
       state.dinos.splice(state.dinos.indexOf(d), 1);
       earn(state, 'sales', value);

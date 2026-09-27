@@ -20,7 +20,7 @@ export class UiState {
   /** Species being released while in 'place-dino' mode. */
   placing: SpeciesId | null = null;
   /** Someone the camera should jump to and select (set by the People panel, consumed by the park scene). */
-  focusTarget: { kind: 'visitor' | 'dino' | 'staff'; id: number } | null = null;
+  focusTarget: { kind: 'visitor' | 'dino' | 'staff' | 'egg'; id: number } | null = null;
   private listeners = new Set<Listener>();
 
   setMode(mode: Mode): void {
@@ -61,7 +61,7 @@ export class UiState {
     this.emit();
   }
 
-  focus(kind: 'visitor' | 'dino' | 'staff', id: number): void {
+  focus(kind: 'visitor' | 'dino' | 'staff' | 'egg', id: number): void {
     this.mode = 'select';
     this.placing = null;
     this.focusTarget = { kind, id };

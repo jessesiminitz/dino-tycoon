@@ -36,7 +36,7 @@ export function hourlyFences(ctx: SimContext): void {
   }
 
   for (const d of state.dinos) {
-    if (d.escaped || !isRestless(d)) continue;
+    if (d.escaped || d.baby || !isRestless(d)) continue;
     const sp = SPECIES[d.species];
     for (const e of tileEdges(d.x, d.y)) {
       const type = fenceAt(state, e);

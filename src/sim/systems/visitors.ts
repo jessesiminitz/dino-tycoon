@@ -140,7 +140,8 @@ export function parkAppeal(state: GameState, regions: RegionMap): number {
   let appeal = 0;
   for (const d of state.dinos) {
     if (regions.regions[regions.tileRegion[d.y * state.map.width + d.x]]?.kind !== 'paddock') continue;
-    appeal += SPECIES[d.species].appeal * (0.5 + d.happiness / 200);
+    // Babies are the stars of the show.
+    appeal += SPECIES[d.species].appeal * (0.5 + d.happiness / 200) * (d.baby ? 1.25 : 1);
     species.add(d.species);
   }
   // Gardens make the whole park more inviting, a little.
@@ -420,7 +421,8 @@ export function stepVisitors(ctx: SimContext): void {
       if (Math.abs(d.x - v.x) <= VIEW_RADIUS && Math.abs(d.y - v.y) <= VIEW_RADIUS && !v.seen.includes(d.id)) {
         v.seen.push(d.id);
         v.satisfaction = Math.min(100, v.satisfaction + Math.max(4, SPECIES[d.species].appeal * 3));
-        if (!d.escaped) think(state, v, 'dinos', true, { species: SPECIES[d.species].name, name: d.name });
+        if (d.baby) think(state, v, 'dinos', true, {}, `Aww, a baby ${SPECIES[d.species].name}! ${d.name} is so cute!`);
+        else if (!d.escaped) think(state, v, 'dinos', true, { species: SPECIES[d.species].name, name: d.name });
       }
     }
     if (v.snack && state.hours >= v.snackUntil) {

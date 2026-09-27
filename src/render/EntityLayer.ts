@@ -6,17 +6,19 @@ import { hash2 } from '../sim/rng';
 import type { Simulation } from '../sim/Simulation';
 import { FEEDER_TYPES, type FeederKind } from '../sim/data/feeders';
 import { SPECIES, SPECIES_IDS, type SpeciesId } from '../sim/data/species';
-import { paintDino } from './dinoArt';
+import { paintDino, paintEgg } from './dinoArt';
+import { hoursToHatch, WOBBLE_HOURS } from '../sim/systems/breeding';
 import { TILE } from './tileset';
 import { paintRows } from './pixels';
 import { paintDigSite, paintRestaurant, paintRestroom, paintSnackStall, paintSouvenirShop, paintTrashCan, paintTrough } from './sceneryArt';
 
-const dinoKey = (id: SpeciesId, frame: 0 | 1 = 0) => `dino-${id}-${frame}`;
+const dinoKey = (id: SpeciesId, frame: 0 | 1 = 0, baby = false) => `dino-${id}-${frame}${baby ? '-baby' : ''}`;
+const eggKey = (id: SpeciesId) => `egg-${id}`;
 const feederKey = (kind: FeederKind, full: boolean) => `feeder-${kind}-${full ? 'full' : 'empty'}`;
 /** Sprites stand with their feet this far down the tile. */
 const FOOT_Y = 13;
 
-export type Selection = { kind: 'dino' | 'feeder' | 'building' | 'visitor' | 'staff'; id: number } | null;
+export type Selection = { kind: 'dino' | 'feeder' | 'building' | 'visitor' | 'staff' | 'egg'; id: number } | null;
 
 const staffKey = (role: StaffRole, frame: 0 | 1 = 0) => `staff-${role}-${frame}`;
 /** Uniform, cap and trouser colours per role. */
@@ -109,6 +111,7 @@ export class EntityLayer {
   private visitors = new Map<number, Phaser.GameObjects.Image>();
   private buildings = new Map<number, Phaser.GameObjects.Image>();
   private staff = new Map<number, Phaser.GameObjects.Image>();
+  private eggs = new Map<number, Phaser.GameObjects.Image>();
   private markers: Phaser.GameObjects.Graphics;
   /** Litter and messes on the ground, under everyone's feet. */
   private dirt: Phaser.GameObjects.Graphics;
@@ -121,9 +124,10 @@ export class EntityLayer {
     private sim: Simulation,
   ) {
     for (const id of SPECIES_IDS) {
-      for (const frame of [0, 1] as const) {
-        if (!scene.textures.exists(dinoKey(id, frame))) scene.textures.addCanvas(dinoKey(id, frame), paintDino(SPECIES[id], frame));
-      }
+      for (const frame of [0, 1] as const)
+        for (const baby of [false, true])
+          if (!scene.textures.exists(dinoKey(id, frame, baby))) scene.textures.addCanvas(dinoKey(id, frame, baby), paintDino(SPECIES[id], frame, baby));
+      if (!scene.textures.exists(eggKey(id))) scene.textures.addCanvas(eggKey(id), paintEgg(SPECIES[id]));
     }
     for (const kind of Object.keys(FEEDER_TYPES) as FeederKind[]) {
       for (const full of [true, false]) scene.textures.addCanvas(feederKey(kind, full), paintFeeder(kind, full));
@@ -311,6 +315,19 @@ export class EntityLayer {
     }
     if (this.selection?.kind === 'staff' && !state.staff.some((m) => m.id === this.selection!.id)) this.selection = null;
 
+    // Eggs: nestled in the grass, wobbling as they get ready to hatch.
+    this.sync(this.eggs, state.eggs, (e) => this.scene.add.image(0, 0, eggKey(e.species)).setOrigin(0.5, 1));
+    for (const e of state.eggs) {
+      const img = this.eggs.get(e.id)!;
+      const x = e.x * TILE + TILE / 2;
+      const y = e.y * TILE + FOOT_Y;
+      const wobbling = hoursToHatch(state, e.laidHour) <= WOBBLE_HOURS && Math.floor(time / 400 + e.id) % 3 === 0;
+      img.setPosition(x, y).setAngle(wobbling ? Math.sin(time / 60) * 12 : 0).setDepth(4 + y / 10000);
+      sh.fillEllipse(x, y - 1, 9, 3);
+      if (this.selection?.kind === 'egg' && this.selection.id === e.id) g.lineStyle(1, 0xf2c14e, 1).strokeEllipse(x, y, 13, 5);
+    }
+    if (this.selection?.kind === 'egg' && !state.eggs.some((e) => e.id === this.selection!.id)) this.selection = null;
+
     // Dinosaurs
     const liveDinos = new Set<number>();
     for (const d of state.dinos) {
@@ -323,9 +340,10 @@ export class EntityLayer {
       const moving = d.x !== d.px || d.y !== d.py;
       if (d.x !== d.px) this.facingLeft.set(d.id, d.x < d.px);
       const { x, y } = this.dinoPosition(d);
-      // A one-pixel bob while walking; idle animals breathe slowly.
-      const bob = moving ? (this.sim.stepProgress < 0.5 ? -1 : 0) : Math.sin(time / 600 + d.id) > 0.9 ? -1 : 0;
-      img.setTexture(dinoKey(d.species, moving && this.sim.stepProgress >= 0.5 ? 1 : 0));
+      // A one-pixel bob while walking (babies hop); idle animals breathe slowly.
+      const hop = d.baby ? -2 : -1;
+      const bob = moving ? (this.sim.stepProgress < 0.5 ? hop : 0) : Math.sin(time / 600 + d.id) > 0.9 ? -1 : 0;
+      img.setTexture(dinoKey(d.species, moving && this.sim.stepProgress >= 0.5 ? 1 : 0, d.baby));
       img.setPosition(Math.round(x), Math.round(y) + bob);
       sh.fillEllipse(Math.round(x), Math.round(y) - 1, img.width * 0.7, Math.max(4, img.height * 0.14));
       img.setFlipX(this.facingLeft.get(d.id) ?? false);

@@ -46,7 +46,7 @@ export function isRestless(d: Dino): boolean {
   return d.hunger >= 80 || d.happiness < 40;
 }
 
-export const dinoLabel = (d: Dino) => `${d.name} the ${SPECIES[d.species].name}`;
+export const dinoLabel = (d: Dino) => `${d.name} the ${d.baby ? 'baby ' : ''}${SPECIES[d.species].name}`;
 
 /** Droppings lying in each region. */
 export function dungByRegion(state: GameState, regions: RegionMap): Map<number, number> {
@@ -74,14 +74,20 @@ function feederFor(state: GameState, i: number, d: Dino): Feeder | undefined {
   return state.feeders.find((f) => f.y * w + f.x === i && f.stock > 0 && FEEDER_TYPES[f.kind].diet === diet);
 }
 
+/** Babies count as this much smaller than grown-ups when it comes to being hunted. */
+const BABY_SIZE_DROP = 2;
+
 export function canEat(hunter: Dino, prey: Dino): boolean {
   const h = SPECIES[hunter.species];
   const p = SPECIES[prey.species];
-  return h.diet === 'carnivore' && p.diet === 'herbivore' && p.size <= h.size;
+  if (hunter.baby || h.diet !== 'carnivore') return false;
+  // Babies of any other species are fair game if they're small enough, even little carnivores.
+  const size = prey.baby ? Math.max(1, p.size - BABY_SIZE_DROP) : p.size;
+  return (p.diet === 'herbivore' || prey.baby) && prey.species !== hunter.species && size <= h.size;
 }
 
 function eatFromFeeder(ctx: SimContext, d: Dino, f: Feeder): void {
-  const meal = SPECIES[d.species].meal;
+  const meal = SPECIES[d.species].meal * (d.baby ? 0.5 : 1);
   const eaten = Math.min(meal, f.stock);
   f.stock -= eaten;
   d.hunger = Math.max(0, d.hunger - (100 * eaten) / meal);
@@ -172,7 +178,7 @@ export function hourlyDinos(ctx: SimContext): void {
   for (const d of [...state.dinos]) {
     const sp = SPECIES[d.species];
     const before = d.hunger;
-    d.hunger = Math.min(100, d.hunger + sp.hungerRate);
+    d.hunger = Math.min(100, d.hunger + sp.hungerRate * (d.baby ? 0.6 : 1));
     if (before < STARVING_WARNING && d.hunger >= STARVING_WARNING) {
       ctx.emit({ text: `${dinoLabel(d)} is starving!`, kind: 'bad' });
     }

@@ -541,8 +541,9 @@ function tint(hex: string, amount: number): string {
 }
 
 /** The painted key grid for a species (for tests and tools). */
-export function dinoShape(species: Species, frame: 0 | 1 = 0): (string | null)[][] {
-  return ART[species.id](frame).grid;
+export function dinoShape(species: Species, frame: 0 | 1 = 0, baby = false): (string | null)[][] {
+  const s = ART[species.id](frame);
+  return (baby ? babyGrid(s) : s).grid;
 }
 
 /**
@@ -550,10 +551,82 @@ export function dinoShape(species: Species, frame: 0 | 1 = 0): (string | null)[]
  * left: a bright rim along the top, shadow underneath and on the right,
  * the species' stripes or spots, and a dark outline. Frame 1 is mid-stride.
  */
-export function paintDino(species: Species, frame: 0 | 1 = 0): HTMLCanvasElement {
-  const s = ART[species.id](frame);
+/** How big a baby is next to a grown-up. */
+const BABY_SCALE = 0.6;
+
+/**
+ * Shrinks a sprite's key grid for a baby: each small pixel takes the most
+ * common key under it (if the area is mostly filled), and the eye always
+ * survives so the little face stays readable.
+ */
+function babyGrid(s: Sprite): Sprite {
+  const out = new Sprite(Math.ceil(s.w * BABY_SCALE), Math.ceil(s.h * BABY_SCALE));
+  for (let y = 0; y < out.h; y++)
+    for (let x = 0; x < out.w; x++) {
+      const x0 = Math.floor(x / BABY_SCALE);
+      const x1 = Math.max(x0 + 1, Math.floor((x + 1) / BABY_SCALE));
+      const y0 = Math.floor(y / BABY_SCALE);
+      const y1 = Math.max(y0 + 1, Math.floor((y + 1) / BABY_SCALE));
+      const counts = new Map<Key, number>();
+      let filled = 0;
+      let eye = false;
+      for (let sy = y0; sy < y1; sy++)
+        for (let sx = x0; sx < x1; sx++) {
+          const k = s.get(sx, sy);
+          if (!k) continue;
+          filled++;
+          if (k === 'E') eye = true;
+          counts.set(k, (counts.get(k) ?? 0) + 1);
+        }
+      if (eye) out.set(x, y, 'E');
+      else if (filled >= (x1 - x0) * (y1 - y0) * 0.4) out.set(x, y, [...counts].sort((a, b) => b[1] - a[1])[0][0]);
+    }
+  return out;
+}
+
+/** A speckled egg in the species' colours (about the size of a baby's head). */
+export function paintEgg(species: Species): HTMLCanvasElement {
+  const w = 9;
+  const h = 11;
+  const canvas = document.createElement('canvas');
+  canvas.width = w + 2;
+  canvas.height = h + 2;
+  const ctx = canvas.getContext('2d')!;
+  const shell = tint(species.art.accent, 0.55);
+  const inside = (x: number, y: number) => {
+    // Egg shape: narrower at the top.
+    const cy = h * 0.58;
+    const ry = y < cy ? cy : h - cy;
+    const rx = (w / 2) * (y < cy ? 0.85 : 1);
+    return ((x + 0.5 - w / 2) / rx) ** 2 + ((y + 0.5 - cy) / ry) ** 2 <= 1;
+  };
+  for (let y = -1; y <= h; y++)
+    for (let x = -1; x <= w; x++) {
+      if (inside(x, y)) {
+        let c = shell;
+        if (hash2(x, y, species.id.length * 13) < 0.16) c = tint(species.art.dark, 0.1); // speckles
+        if (x < w / 2 - 1 && y < h * 0.45 && hash2(x, y, 5) < 0.5) c = tint(shell, 0.4); // shine
+        if (x > w * 0.6 && y > h * 0.55) c = tint(shell, -0.15);
+        ctx.fillStyle = c;
+      } else if (inside(x - 1, y) || inside(x + 1, y) || inside(x, y - 1) || inside(x, y + 1)) {
+        ctx.fillStyle = OUTLINE;
+      } else continue;
+      ctx.fillRect(x + 1, y + 1, 1, 1);
+    }
+  return canvas;
+}
+
+export function paintDino(species: Species, frame: 0 | 1 = 0, baby = false): HTMLCanvasElement {
+  const grown = ART[species.id](frame);
+  const s = baby ? babyGrid(grown) : grown;
   const { w, h } = s;
-  const { body, dark, accent, pattern } = species.art;
+  // Babies are a touch paler and softer.
+  const soften = (c: string) => (baby ? tint(c, 0.12) : c);
+  const art = species.art;
+  const { pattern } = art;
+  const body = soften(art.body);
+  const dark = soften(art.dark);
+  const accent = soften(art.accent);
   const colors: Record<Key, string> = {
     B: body,
     D: dark,

@@ -17,7 +17,7 @@ export const MAP_WIDTH = 64;
 export const MAP_HEIGHT = 48;
 export const STARTING_MONEY = 50_000;
 export const START_HOUR = 8;
-export const SAVE_VERSION = 12;
+export const SAVE_VERSION = 13;
 
 export interface Dino {
   id: number;
@@ -43,6 +43,17 @@ export interface Dino {
   /** Last tile it stood on inside a paddock; guards bring it back here. */
   homeX: number;
   homeY: number;
+  /** Hatched in the park and not yet grown up (see systems/breeding.ts). */
+  baby: boolean;
+}
+
+/** An egg laid by a happy pair; it hatches where it lies. */
+export interface Egg {
+  id: number;
+  species: SpeciesId;
+  x: number;
+  y: number;
+  laidHour: number;
 }
 
 export type StaffTask =
@@ -188,6 +199,8 @@ export interface Stats {
   inspectionsPassed: number;
   /** Last game day visitors complained about the lack of restrooms (at most once a day). */
   restroomComplaintDay: number;
+  /** Babies hatched in this park. */
+  hatched: number;
   /** Last game day the park was warned about accidents, and about litter. */
   messDay: number;
   litterDay: number;
@@ -245,6 +258,8 @@ export interface GameState {
   messes: Mess[];
   /** What departed visitors said, oldest first. */
   reviews: Review[];
+  /** Eggs waiting to hatch. */
+  eggs: Egg[];
   /** Next id for dinos, feeders and other entities. */
   nextId: number;
 }
@@ -279,7 +294,7 @@ export function newGame(seed: number): GameState {
     fossils: {},
     stormHours: 0,
     scenario: { id: 'sandbox', status: 'free', round: 0, roundStart: 1, earned: [] },
-    stats: { bestDayVisitors: 0, escapes: 0, inspectionsPassed: 0, restroomComplaintDay: 0, messDay: 0, litterDay: 0 },
+    stats: { bestDayVisitors: 0, escapes: 0, inspectionsPassed: 0, restroomComplaintDay: 0, hatched: 0, messDay: 0, litterDay: 0 },
     tutorialStep: null,
     fossilBeds: [],
     decor: [],
@@ -287,6 +302,7 @@ export function newGame(seed: number): GameState {
     log: [],
     messes: [],
     reviews: [],
+    eggs: [],
     nextId: 1,
   };
   state.fossilBeds = bedsFor(state);
@@ -407,6 +423,13 @@ export function migrate(raw: { version?: number } & Record<string, unknown>): Ga
     const won = sc.status === 'won';
     Object.assign(sc, { status: won ? 'playing' : sc.status, round: won ? 1 : 0, roundStart: won ? calendar(state).day : 1, earned: won ? [[]] : [] });
     raw.version = 12;
+  }
+  if (raw.version === 12) {
+    const state = raw as unknown as GameState;
+    for (const d of state.dinos) d.baby = false;
+    state.eggs = [];
+    state.stats.hatched = 0;
+    raw.version = 13;
   }
   return raw.version === SAVE_VERSION ? (raw as unknown as GameState) : null;
 }

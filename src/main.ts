@@ -101,7 +101,7 @@ const updateSW = registerSW({
 /** Which sound (if any) a park event makes. */
 function eventSound(text: string, kind: string, outcome?: 'won' | 'lost' | 'milestone'): Sfx | null {
   if (outcome) return outcome === 'lost' ? 'sad' : 'fanfare';
-  if (/^🦴/.test(text)) return 'chime';
+  if (/^(🦴|🥚|🐣)/.test(text)) return 'chime';
   if (/^(⛈️ A storm|🌋)/.test(text)) return 'thunder';
   if (/^(🚨|🚑|🦠|📋 Failed)|smashed through|knocked down|rotted/.test(text)) return 'alert';
   if (/^(📋 Safety inspection passed|🚌)/.test(text)) return 'cash';

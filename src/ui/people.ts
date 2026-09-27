@@ -6,12 +6,13 @@ import { SPECIES } from '../sim/data/species';
 import { STAFF_ROLES, STAFF_TYPES } from '../sim/data/staff';
 import { TOPIC_LABELS, type Topic } from '../sim/data/thoughts';
 import { describeTask } from '../sim/systems/staff';
+import { hoursToGrow, hoursToHatch } from '../sim/systems/breeding';
 import type { ItemKind } from '../sim/data/economy';
 import type { UiState } from './uiState';
 import { formatMoney } from './hud';
 
 type Tab = 'visitors' | 'reviews' | 'dinos' | 'staff';
-type Kind = 'visitor' | 'dino' | 'staff';
+type Kind = 'visitor' | 'dino' | 'staff' | 'egg';
 
 const REFRESH_MS = 1000;
 /** Hours a thought counts toward a filter like "grossed out". */
@@ -49,6 +50,7 @@ function visitorFilters(state: GameState): Filter<Visitor>[] {
 const DINO_FILTERS: Filter<{ d: Dino; concerns: Concern<DinoTag>[] }>[] = [
   { id: 'all', label: 'All', test: () => true },
   { id: 'unhappy', label: '😠 Unhappy', test: ({ d }) => d.happiness < 50 },
+  { id: 'babies', label: '🍼 Babies & eggs', test: ({ d }) => d.baby },
   ...(
     [
       ['hungry', '🍖 Hungry'],
@@ -187,15 +189,32 @@ export function mountPeople(sim: Simulation, ui: UiState): void {
     const cards = list.map(({ d, concerns }) => {
       const key = `dino:${d.id}`;
       const sp = SPECIES[d.species];
+      const grows = Math.ceil(hoursToGrow(state, d) / 24);
+      const sub = d.baby ? `Baby ${sp.name} · grows up in ${grows} day${grows === 1 ? '' : 's'}` : sp.name;
       return `<article class="person-card ${concerns.some((c) => !c.good) ? 'unhappy' : ''}" data-card="${key}">
-        ${head('dino', d.id, d.escaped ? '🚨' : d.sick ? '🤒' : face(d.happiness), d.name, sp.name, editing === key)}
+        ${head('dino', d.id, d.escaped ? '🚨' : d.sick ? '🤒' : d.baby ? '🍼' : face(d.happiness), d.name, sub, editing === key)}
         <div class="needs">${meter('😊', 'Happiness', d.happiness, d.happiness < 50)}${meter('🍖', 'Hunger', d.hunger, d.hunger >= 50)}${meter('❤️', 'Health', d.health, d.health < 60)}</div>
         <ul class="thoughts">${concerns.map((c) => `<li class="${c.good ? 'good' : 'bad'}">${esc(c.text)}</li>`).join('')}</ul>
       </article>`;
     });
+    // Eggs show under All and Babies & eggs.
+    const eggs =
+      active.id === 'all' || active.id === 'babies'
+        ? state.eggs.map((e) => {
+            const h = hoursToHatch(state, e.laidHour);
+            const when = h <= 1 ? 'Hatching any minute!' : h < 24 ? `Hatches in about ${h} hours` : `Hatches in about ${Math.round(h / 24)} day${Math.round(h / 24) === 1 ? '' : 's'}`;
+            return `<article class="person-card egg-card" data-card="egg:${e.id}">
+              <div class="person-head"><span class="face">🥚</span>
+                <div class="who"><div class="name-row"><b class="pname">${SPECIES[e.species].name} egg</b></div><small class="sub">${when}</small></div>
+                <button class="icon-btn" data-locate="egg:${e.id}" aria-label="Show on map">📍</button></div>
+              <ul class="thoughts"><li class="good">Keep the parents happy and fed, and keep meat-eaters out of this paddock.</li></ul>
+            </article>`;
+          })
+        : [];
+    const counts = DINO_FILTERS.map((f) => ({ id: f.id, label: f.label, count: all.filter(f.test).length + (f.id === 'babies' ? state.eggs.length : 0) }));
     return [
-      chipRow(DINO_FILTERS.map((f) => ({ id: f.id, label: f.label, count: all.filter(f.test).length }))),
-      `<div class="people-grid">${cards.join('') || `<p class="note">${state.dinos.length ? 'No dinosaurs match this filter.' : 'No dinosaurs yet. Buy some from 🦖 Dinos.'}</p>`}</div>`,
+      chipRow(counts),
+      `<div class="people-grid">${[...eggs, ...cards].join('') || `<p class="note">${state.dinos.length ? 'No dinosaurs match this filter.' : 'No dinosaurs yet. Buy some from 🦖 Dinos.'}</p>`}</div>`,
     ];
   }
 
@@ -250,7 +269,7 @@ export function mountPeople(sim: Simulation, ui: UiState): void {
     const [kind, id] = editing.split(':');
     editing = null;
     if (save) {
-      const r = sim.dispatch({ type: 'rename', kind: kind as Kind, id: Number(id), name: input.value });
+      const r = sim.dispatch({ type: 'rename', kind: kind as Exclude<Kind, 'egg'>, id: Number(id), name: input.value });
       if (!r.ok) console.warn(r.message);
     }
     render();

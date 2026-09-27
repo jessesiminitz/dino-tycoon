@@ -9,6 +9,7 @@ import { DINO_RESALE, FEEDER_TYPES } from '../sim/data/feeders';
 import { SPECIES, type SpeciesId } from '../sim/data/species';
 import { findFenceGaps, gapCost } from '../sim/gaps';
 import { dinoLabel } from '../sim/systems/dinos';
+import { hoursToGrow, hoursToHatch } from '../sim/systems/breeding';
 import { SNACK_NAMES } from '../sim/systems/visitors';
 import { fenceAt, fenceHp, fenceTypeAt } from '../sim/fences';
 import { pathEdges, tileLine, type Edge } from '../sim/grid';
@@ -189,13 +190,22 @@ export class ParkScene extends Phaser.Scene {
   }
 
   /** Glide the camera to someone and select them (from the People panel's 📍 button). */
-  private focusOn(target: { kind: 'visitor' | 'dino' | 'staff'; id: number }): void {
+  private focusOn(target: { kind: 'visitor' | 'dino' | 'staff' | 'egg'; id: number }): void {
     const { state } = this.sim;
     const find = <T extends { id: number }>(list: T[]) => list.find((e) => e.id === target.id);
     const v = target.kind === 'visitor' ? find(state.visitors) : undefined;
     const d = target.kind === 'dino' ? find(state.dinos) : undefined;
     const m = target.kind === 'staff' ? find(state.staff) : undefined;
-    const pos = v ? this.entities.visitorPosition(v) : d ? this.entities.dinoPosition(d) : m ? this.entities.staffPosition(m) : null;
+    const egg = target.kind === 'egg' ? find(state.eggs) : undefined;
+    const pos = v
+      ? this.entities.visitorPosition(v)
+      : d
+        ? this.entities.dinoPosition(d)
+        : m
+          ? this.entities.staffPosition(m)
+          : egg
+            ? { x: egg.x * TILE + TILE / 2, y: egg.y * TILE + TILE - 3 }
+            : null;
     if (!pos) return;
     const cam = this.cameras.main;
     if (cam.zoom < 2) cam.setZoom(2);
@@ -341,12 +351,15 @@ export class ParkScene extends Phaser.Scene {
     const dino = this.entities.dinoAt(wx, wy);
     const staff = dino ? null : this.entities.staffAt(wx, wy);
     const visitor = dino || staff ? null : this.entities.visitorAt(wx, wy);
-    const building = dino || staff || visitor ? undefined : this.entities.buildingAt(tx, ty);
+    const egg = dino || staff || visitor ? undefined : this.sim.state.eggs.find((e) => e.x === tx && e.y === ty);
+    const building = dino || staff || visitor || egg ? undefined : this.entities.buildingAt(tx, ty);
     const feeder = dino || staff || visitor || building ? undefined : this.entities.feederAt(tx, ty);
     const selection = dino
       ? ({ kind: 'dino', id: dino.id } as const)
       : staff
         ? ({ kind: 'staff', id: staff.id } as const)
+        : egg
+          ? ({ kind: 'egg', id: egg.id } as const)
         : visitor
           ? ({ kind: 'visitor', id: visitor.id } as const)
           : building
@@ -418,10 +431,26 @@ export class ParkScene extends Phaser.Scene {
       const loose = regions[tileRegion[d.y * state.map.width + d.x]]?.kind !== 'paddock';
       const status = [loose ? 'ESCAPED!' : '', d.sick ? 'SICK' : ''].filter(Boolean).join(' · ');
       const value = Math.floor(sp.price * DINO_RESALE);
-      this.hud.showInfo(
-        `${dinoLabel(d)}${status ? ` · ${status}` : ''} · Hunger ${Math.round(d.hunger)}% · Health ${Math.round(d.health)}% · Happy ${d.happiness}%`,
-        { label: `Sell ${formatMoney(value)}`, onClick: () => this.report(this.sim.dispatch({ type: 'sellDino', id: d.id })) },
-      );
+      const stats = `Hunger ${Math.round(d.hunger)}% · Health ${Math.round(d.health)}% · Happy ${d.happiness}%`;
+      if (d.baby) {
+        const days = Math.ceil(hoursToGrow(state, d) / 24);
+        this.hud.showInfo(`${dinoLabel(d)}${status ? ` · ${status}` : ''} · grows up in ${days} day${days === 1 ? '' : 's'} · ${stats}`);
+        return;
+      }
+      this.hud.showInfo(`${dinoLabel(d)}${status ? ` · ${status}` : ''} · ${stats}`, {
+        label: `Sell ${formatMoney(value)}`,
+        onClick: () => this.report(this.sim.dispatch({ type: 'sellDino', id: d.id })),
+      });
+    } else if (sel.kind === 'egg') {
+      const egg = state.eggs.find((e) => e.id === sel.id);
+      if (!egg) {
+        this.entities.selection = null;
+        this.hud.showInfo(null);
+        return;
+      }
+      const h = hoursToHatch(state, egg.laidHour);
+      const when = h <= 1 ? 'hatching any minute now!' : h < 24 ? `hatches in about ${h} hours` : `hatches in about ${Math.round(h / 24)} day${Math.round(h / 24) === 1 ? '' : 's'}`;
+      this.hud.showInfo(`🥚 ${SPECIES[egg.species].name} egg · ${when}`);
     } else if (sel.kind === 'staff') {
       const m = state.staff.find((m) => m.id === sel.id);
       if (!m) {

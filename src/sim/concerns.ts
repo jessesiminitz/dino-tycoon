@@ -50,7 +50,10 @@ export function dinoConcerns(state: GameState, regions: RegionMap, d: Dino): Con
     if (region.weakestFence !== 0 && region.weakestFence < sp.fenceNeeded)
       out.push({ text: `${FENCE_TYPES[region.weakestFence].name} fences can't hold me. I need ${FENCE_TYPES[sp.fenceNeeded].name.toLowerCase()} or stronger.`, good: false, tag: 'fence' });
   }
-  if (out.length === 0) out.push({ text: d.happiness >= 80 ? 'Life is good!' : 'Doing fine.', good: true });
+  if (out.length === 0) {
+    const text = d.baby ? 'Growing up fast! Keep the treats coming.' : d.happiness >= 80 ? 'Life is good!' : 'Doing fine.';
+    out.push({ text, good: true });
+  }
   return out;
 }
 
