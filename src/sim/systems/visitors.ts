@@ -54,17 +54,19 @@ const THIRSTY = 60;
 const SODA_QUENCHES = 55;
 const SODA_HOURS = 2;
 /** At a full bladder with no restroom in reach, the chance per hour of an accident. */
-const ACCIDENT_CHANCE = 0.3;
+const ACCIDENT_CHANCE = 0.1;
 /** Visitors bin rubbish if a trash can is this close (Chebyshev); otherwise some drop it. */
 const TRASH_RADIUS = 3;
-const LITTER_CHANCE = 0.4;
+const LITTER_CHANCE = 0.2;
 const MAX_MESSES = 300;
 /** Litter on the ground before the park is warned about it (once a day). */
-const LITTER_WARNING = 12;
-const MESS_RADIUS = 2;
-const MESS_GROSS = 4;
+const LITTER_WARNING = 25;
+const MESS_RADIUS = 1;
+const MESS_GROSS = 2;
 const LITTER_GROSS = 1;
-const MAX_LITTER_GROSS = 3;
+const MAX_LITTER_GROSS = 1;
+/** A stray wrapper or two goes unnoticed; a pile-up doesn't. */
+const LITTER_NOTICED = 3;
 /** Thoughts kept per visitor, and hours before the same thought comes up again. */
 const MAX_THOUGHTS = 6;
 const REPEAT_HOURS = 4;
@@ -268,9 +270,9 @@ export function hourlyVisitors(ctx: SimContext): void {
       v.satisfaction -= MESS_GROSS;
       think(state, v, 'mess', false);
     }
-    if (litter > 0) {
+    if (litter >= LITTER_NOTICED) {
       v.satisfaction -= Math.min(MAX_LITTER_GROSS, litter * LITTER_GROSS);
-      if (litter >= 2) think(state, v, 'litter', false);
+      think(state, v, 'litter', false);
     }
     v.satisfaction = Math.max(0, Math.min(100, v.satisfaction));
   }

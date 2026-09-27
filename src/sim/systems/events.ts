@@ -20,8 +20,8 @@ export const INSPECTION_AWARD = 2000;
 export const FINE_PER_ISSUE = 1000;
 const MAX_FINE = 5000;
 /** Dirt that fails an inspection. */
-const FILTHY_MESSES = 3;
-const FILTHY_LITTER = 20;
+const FILTHY_MESSES = 8;
+const FILTHY_LITTER = 40;
 
 const usd = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`;
 

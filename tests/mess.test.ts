@@ -63,6 +63,8 @@ function visitorAt(s: GameState, x: number, y: number, extra: Partial<Visitor> =
   return v;
 }
 
+const ctx0 = (s: GameState) => ({ state: s, rng: new Rng(1), regions: computeRegions(s), emit: () => {}, invalidateWorld: () => {} });
+
 describe('mess', () => {
   it('desperate visitors with no restroom have accidents that gross out people nearby', () => {
     const s = openPark();
@@ -135,9 +137,10 @@ describe('mess', () => {
   it('a filthy park fails inspection', async () => {
     const { safetyIssues } = await import('../src/sim/systems/events');
     const s = openPark();
-    for (let i = 0; i < 20; i++) s.messes.push({ id: 9000 + i, kind: 'litter', x: 1 + (i % 10), y: 9, hour: 0 });
-    const ctx = { state: s, rng: new Rng(1), regions: computeRegions(s), emit: () => {}, invalidateWorld: () => {} };
-    expect(safetyIssues(ctx).some((t) => /filthy/.test(t))).toBe(true);
+    for (let i = 0; i < 40; i++) s.messes.push({ id: 9000 + i, kind: 'litter', x: 1 + (i % 10), y: 9, hour: 0 });
+    expect(safetyIssues(ctx0(s)).some((t) => /filthy/.test(t))).toBe(true);
+    s.messes.length = 39;
+    expect(safetyIssues(ctx0(s)).some((t) => /filthy/.test(t))).toBe(false); // a bit of litter is tolerated
   });
 });
 
