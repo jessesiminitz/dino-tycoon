@@ -1,4 +1,4 @@
-export type StaffRole = 'worker' | 'guard' | 'vet' | 'guide';
+export type StaffRole = 'worker' | 'guard' | 'vet' | 'guide' | 'mascot';
 
 export interface StaffType {
   role: StaffRole;
@@ -13,6 +13,12 @@ export const STAFF_TYPES: Record<StaffRole, StaffType> = {
   guard: { role: 'guard', name: 'Guard', wage: 80, description: 'Tracks down escaped dinosaurs and returns them to their paddock.' },
   vet: { role: 'vet', name: 'Vet', wage: 100, description: 'Treats sick and injured dinosaurs before illness spreads.' },
   guide: { role: 'guide', name: 'Tour guide', wage: 50, description: 'Walks the paths telling visitors about the dinosaurs, keeping them happier.' },
+  mascot: {
+    role: 'mascot',
+    name: 'Mascot',
+    wage: 45,
+    description: 'A friendly dino costume on the paths. Visitors love it (kids most of all), and souvenirs sell better nearby.',
+  },
 };
 
 export const STAFF_ROLES = Object.keys(STAFF_TYPES) as StaffRole[];

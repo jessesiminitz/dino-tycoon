@@ -1,5 +1,14 @@
 import { calendar, type Building, type GameState, type Visitor } from '../GameState';
-import { BUILDING_TYPES, CLOSE_HOUR, LAST_ENTRY_HOUR, MAX_VISITORS, OPEN_HOUR, type BuildingKind } from '../data/economy';
+import {
+  BUILDING_TYPES,
+  CLOSE_HOUR,
+  LAST_ENTRY_HOUR,
+  MAX_VISITORS,
+  OPEN_HOUR,
+  SOUVENIRS,
+  type BuildingKind,
+  type ItemKind,
+} from '../data/economy';
 import { SPECIES } from '../data/species';
 import { earn } from '../finance';
 import { canStep, findPath, walkableNeighbours } from '../pathfind';
@@ -12,7 +21,23 @@ const VIEW_RADIUS = 4;
 /** A day out starts out fun; what they see (or don't) moves it from here. */
 const START_SATISFACTION = 60;
 const HUNGRY = 60;
+/** Peckish enough to buy a snack in passing. */
+const PECKISH = 25;
+const SNACK_CHANCE = 0.5;
+const SNACK_FILLS = 35;
+const SNACK_HOURS = 2;
 const SOUVENIR_CHANCE = 0.3;
+/** Most visitors caught in a storm near a souvenir shop buy a poncho. */
+const PONCHO_CHANCE = 0.7;
+const MAX_SOUVENIRS = 2;
+/** Bladder: rises every hour and after eating; visitors look for restrooms past NEEDS_RESTROOM. */
+const BLADDER_PER_HOUR = 12;
+const NEEDS_RESTROOM = 70;
+const DESPERATE = 90;
+/** Desperate visitors at one time before they complain (once a day) about missing restrooms. */
+const RESTROOM_COMPLAINT = 4;
+const KID_CHANCE = 0.25;
+const MASCOT_RADIUS = 3;
 const PAUSE_CHANCE = 0.2;
 const LOOKS = 6;
 /** Visitors within this many tiles of an escaped carnivore run for the gate. */
@@ -67,16 +92,28 @@ export function hourlyVisitors(ctx: SimContext): void {
   const { state, rng, regions } = ctx;
   const { hour } = calendar(state);
 
-  const guides = state.staff.filter((m) => m.role === 'guide');
+  const near = (role: string, v: Visitor, r: number) =>
+    state.staff.some((m) => m.role === role && Math.abs(m.x - v.x) <= r && Math.abs(m.y - v.y) <= r);
+  let desperate = 0;
   for (const v of state.visitors) {
-    if (guides.some((g) => Math.abs(g.x - v.x) <= GUIDE_RADIUS && Math.abs(g.y - v.y) <= GUIDE_RADIUS)) {
-      v.satisfaction = Math.min(100, v.satisfaction + 3);
-    }
+    if (near('guide', v, GUIDE_RADIUS)) v.satisfaction += 3;
+    // Meeting the mascot is a highlight, especially for kids.
+    if (near('mascot', v, MASCOT_RADIUS)) v.satisfaction += v.kid ? 8 : 4;
     v.hunger = Math.min(100, v.hunger + 8);
+    v.bladder = Math.min(100, v.bladder + BLADDER_PER_HOUR);
     if (v.hunger >= 90) v.satisfaction -= 3;
+    if (v.bladder >= DESPERATE) {
+      v.satisfaction -= 8;
+      desperate++;
+    } else if (v.bladder >= NEEDS_RESTROOM) v.satisfaction -= 2; // uncomfortable
     if (v.seen.length === 0) v.satisfaction -= 4; // bored: nothing to see
-    if (state.stormHours > 0) v.satisfaction -= 2; // soaked
-    v.satisfaction = Math.max(0, v.satisfaction);
+    if (state.stormHours > 0 && !v.items.includes('poncho')) v.satisfaction -= 2; // soaked
+    v.satisfaction = Math.max(0, Math.min(100, v.satisfaction));
+  }
+  const day = calendar(state).day;
+  if (desperate >= RESTROOM_COMPLAINT && !state.buildings.some((b) => b.kind === 'restroom') && state.stats.restroomComplaintDay !== day) {
+    state.stats.restroomComplaintDay = day;
+    ctx.emit({ text: '🚻 Visitors are desperate for restrooms! Build some next to your paths.', kind: 'bad' });
   }
 
   if (hour < OPEN_HOUR || hour > LAST_ENTRY_HOUR) return;
@@ -90,7 +127,7 @@ export function hourlyVisitors(ctx: SimContext): void {
 }
 
 /** A new visitor at the gate who pays `ticket` for admission. */
-export function spawnVisitor(ctx: SimContext, satisfaction: number, ticket: number): void {
+export function spawnVisitor(ctx: SimContext, satisfaction: number, ticket: number, kid?: boolean): void {
   const { state, rng } = ctx;
   const { x, y } = state.entrance;
   state.visitors.push({
@@ -105,12 +142,41 @@ export function spawnVisitor(ctx: SimContext, satisfaction: number, ticket: numb
     satisfaction,
     seen: [],
     leaveHour: state.hours + rng.int(3, 6),
-    boughtSouvenir: false,
+    items: [],
+    snackUntil: 0,
+    bladder: rng.int(0, 30),
+    kid: kid ?? rng.chance(KID_CHANCE),
     look: rng.int(0, LOOKS - 1),
   });
   earn(state, 'admissions', ticket);
   state.finance.today.visitors++;
   state.finance.month.visitors++;
+}
+
+/** Souvenir shopping: ponchos when it's pouring, otherwise a plush, cap or balloon (kids love balloons). */
+function shop(ctx: SimContext, v: Visitor): void {
+  const { state, rng } = ctx;
+  const buy = (item: ItemKind) => {
+    v.items.push(item);
+    v.satisfaction = Math.min(100, v.satisfaction + 3);
+    earn(state, 'souvenirs', SOUVENIRS[item].price);
+  };
+  if (state.stormHours > 0 && !v.items.includes('poncho')) {
+    if (rng.chance(PONCHO_CHANCE)) buy('poncho');
+    return;
+  }
+  const extras = v.items.filter((i) => i !== 'poncho');
+  if (extras.length >= MAX_SOUVENIRS) return;
+  const mascotNearby = state.staff.some((m) => m.role === 'mascot' && Math.abs(m.x - v.x) <= 4 && Math.abs(m.y - v.y) <= 4);
+  if (!rng.chance(SOUVENIR_CHANCE * (mascotNearby ? 1.5 : 1))) return;
+  const wants: [ItemKind, number][] = (
+    v.kid
+      ? [['balloon', 3], ['plush', 2], ['hat', 1]]
+      : [['plush', 2], ['hat', 2], ['balloon', 1]]
+  ).filter(([item]) => !v.items.includes(item as ItemKind)) as [ItemKind, number][];
+  if (wants.length === 0) return;
+  let roll = rng.next() * wants.reduce((sum, [, w]) => sum + w, 0);
+  buy(wants.find(([, w]) => (roll -= w) < 0)?.[0] ?? wants[0][0]);
 }
 
 /** One movement step for every visitor: look, shop, eat, walk, or head home. */
@@ -120,7 +186,9 @@ export function stepVisitors(ctx: SimContext): void {
   const gate = state.entrance.y * width + state.entrance.x;
   const { hour } = calendar(state);
   const closing = hour >= CLOSE_HOUR || hour < OPEN_HOUR;
-  const hasRestaurant = state.buildings.some((b) => b.kind === 'restaurant');
+  const has = (kind: BuildingKind) => state.buildings.some((b) => b.kind === kind);
+  const routeTo = (from: number, kind: BuildingKind) =>
+    findPath(state, from, (i) => buildingNear(state, i % width, Math.floor(i / width), kind) !== undefined, 60, onWalkway);
 
   const loose = state.dinos.filter((d) => d.escaped);
 
@@ -149,16 +217,29 @@ export function stepVisitors(ctx: SimContext): void {
         v.satisfaction = Math.min(100, v.satisfaction + Math.max(4, SPECIES[d.species].appeal * 3));
       }
     }
-    if (!v.boughtSouvenir && buildingNear(state, v.x, v.y, 'giftshop') && rng.chance(SOUVENIR_CHANCE)) {
-      v.boughtSouvenir = true;
-      v.satisfaction = Math.min(100, v.satisfaction + 3);
-      earn(state, 'souvenirs', BUILDING_TYPES.giftshop.salePrice);
+    if (buildingNear(state, v.x, v.y, 'giftshop')) shop(ctx, v);
+    if (v.bladder >= 40 && buildingNear(state, v.x, v.y, 'restroom')) {
+      v.bladder = 0;
+      v.path = [];
+      v.satisfaction = Math.min(100, v.satisfaction + 4); // relief!
     }
     if (v.hunger >= HUNGRY && buildingNear(state, v.x, v.y, 'restaurant')) {
       v.hunger = 0;
+      v.bladder = Math.min(100, v.bladder + 15);
       v.path = [];
       v.satisfaction = Math.min(100, v.satisfaction + 5);
       earn(state, 'food', BUILDING_TYPES.restaurant.salePrice);
+    } else if (
+      v.hunger >= PECKISH &&
+      state.hours >= v.snackUntil &&
+      buildingNear(state, v.x, v.y, 'snackstall') &&
+      rng.chance(SNACK_CHANCE)
+    ) {
+      v.hunger = Math.max(0, v.hunger - SNACK_FILLS);
+      v.bladder = Math.min(100, v.bladder + 10);
+      v.snackUntil = state.hours + SNACK_HOURS;
+      v.satisfaction = Math.min(100, v.satisfaction + 3);
+      earn(state, 'snacks', BUILDING_TYPES.snackstall.salePrice);
     }
 
     const leaving = closing || state.hours >= v.leaveHour;
@@ -177,9 +258,10 @@ export function stepVisitors(ctx: SimContext): void {
           continue;
         }
         v.path = home;
-      } else if (v.hunger >= HUNGRY && hasRestaurant) {
-        v.path =
-          findPath(state, here, (i) => buildingNear(state, i % width, Math.floor(i / width), 'restaurant') !== undefined, 60, onWalkway) ?? [];
+      } else if (v.bladder >= NEEDS_RESTROOM && has('restroom')) {
+        v.path = routeTo(here, 'restroom') ?? [];
+      } else if (v.hunger >= HUNGRY && (has('restaurant') || has('snackstall'))) {
+        v.path = (has('restaurant') ? routeTo(here, 'restaurant') : null) ?? routeTo(here, 'snackstall') ?? [];
       }
       if (v.path.length === 0 && !leaving && !rng.chance(PAUSE_CHANCE)) {
         // Wander the path network, avoiding doubling back unless at a dead end.

@@ -154,7 +154,7 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
   }
   for (const kind of Object.keys(BUILDING_TYPES) as BuildingKind[]) {
     const t = BUILDING_TYPES[kind];
-    const swatch = { restaurant: '#d9454d', giftshop: '#3f7fb0', digsite: '#d9c7a3' }[kind];
+    const swatch = { restaurant: '#d9454d', snackstall: '#f28fb1', giftshop: '#3f7fb0', restroom: '#6ec6ff', digsite: '#d9c7a3' }[kind];
     const b = pickButton(swatch, t.name, formatMoney(t.cost));
     b.dataset.building = kind;
     b.addEventListener('click', () => ui.setBuildingKind(kind));

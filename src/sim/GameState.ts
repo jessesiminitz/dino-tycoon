@@ -3,7 +3,7 @@ import { findEntrance, initialParcels, type Point } from './land';
 import { generateIsland, type TerrainMap } from './terrain';
 import { STARTER_SPECIES, type SpeciesId } from './data/species';
 import type { FeederKind } from './data/feeders';
-import { DEFAULT_TICKET_PRICE, type BuildingKind } from './data/economy';
+import { DEFAULT_TICKET_PRICE, type BuildingKind, type ItemKind } from './data/economy';
 import { newFinance, normalizeFinance, type Finance } from './finance';
 import type { StaffRole } from './data/staff';
 import { SCENARIOS, type ScenarioId } from './data/scenarios';
@@ -12,7 +12,7 @@ export const MAP_WIDTH = 64;
 export const MAP_HEIGHT = 48;
 export const STARTING_MONEY = 50_000;
 export const START_HOUR = 8;
-export const SAVE_VERSION = 7;
+export const SAVE_VERSION = 8;
 
 export interface Dino {
   id: number;
@@ -92,7 +92,13 @@ export interface Visitor {
   /** Dino ids already seen, each worth a satisfaction boost once. */
   seen: number[];
   leaveHour: number;
-  boughtSouvenir: boolean;
+  /** Souvenirs bought, shown on the sprite. */
+  items: ItemKind[];
+  /** Holding a snack (ice cream cone) until this game-hour. */
+  snackUntil: number;
+  /** 0 = fine … 100 = desperate for a restroom. */
+  bladder: number;
+  kid: boolean;
   /** Sprite variant. */
   look: number;
 }
@@ -107,6 +113,8 @@ export interface Stats {
   bestDayVisitors: number;
   escapes: number;
   inspectionsPassed: number;
+  /** Last game day visitors complained about the lack of restrooms (at most once a day). */
+  restroomComplaintDay: number;
 }
 
 /** Single serializable state tree. Everything the game needs to resume lives here. */
@@ -184,7 +192,7 @@ export function newGame(seed: number): GameState {
     fossils: {},
     stormHours: 0,
     scenario: { id: 'sandbox', status: 'free' },
-    stats: { bestDayVisitors: 0, escapes: 0, inspectionsPassed: 0 },
+    stats: { bestDayVisitors: 0, escapes: 0, inspectionsPassed: 0, restroomComplaintDay: 0 },
     tutorialStep: null,
     nextId: 1,
   };
@@ -250,6 +258,15 @@ export function migrate(raw: { version?: number } & Record<string, unknown>): Ga
       stats: { bestDayVisitors: 0, escapes: 0, inspectionsPassed: 0 },
       tutorialStep: null,
     });
+  }
+  if (raw.version === 7) {
+    for (const v of raw.visitors as (Visitor & { boughtSouvenir?: boolean })[]) {
+      Object.assign(v, { items: v.boughtSouvenir ? ['plush'] : [], snackUntil: 0, bladder: 0, kid: false });
+      delete v.boughtSouvenir;
+    }
+    (raw.stats as Stats).restroomComplaintDay = 0;
+    raw.version = 8;
+    normalizeFinance(raw.finance as Finance);
   }
   return raw.version === SAVE_VERSION ? (raw as unknown as GameState) : null;
 }

@@ -204,7 +204,8 @@ export function applyCommand(state: GameState, cmd: Command): CommandResult {
       if (type.cost > state.money) return { ok: false, message: `Not enough money: need ${usd(type.cost)}` };
       state.feeders.push({ id: state.nextId++, kind: cmd.kind, x: cmd.x, y: cmd.y, stock: type.capacity });
       spend(state, 'construction', type.cost);
-      return { ok: true, cost: type.cost, message: `Built a ${type.name.toLowerCase()} for ${usd(type.cost)}` };
+      const what = type.name.toLowerCase();
+      return { ok: true, cost: type.cost, message: `Built ${what.endsWith('s') ? what : `a ${what}`} for ${usd(type.cost)}` };
     }
 
     case 'removeFeeder': {
@@ -263,7 +264,8 @@ export function applyCommand(state: GameState, cmd: Command): CommandResult {
       if (type.cost > state.money) return { ok: false, message: `Not enough money: need ${usd(type.cost)}` };
       state.buildings.push({ id: state.nextId++, kind: cmd.kind, x: cmd.x, y: cmd.y });
       spend(state, 'construction', type.cost);
-      return { ok: true, cost: type.cost, message: `Built a ${type.name.toLowerCase()} for ${usd(type.cost)}` };
+      const what = type.name.toLowerCase();
+      return { ok: true, cost: type.cost, message: `Built ${what.endsWith('s') ? what : `a ${what}`} for ${usd(type.cost)}` };
     }
 
     case 'removeBuilding': {

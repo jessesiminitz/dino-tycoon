@@ -140,8 +140,8 @@ export function stepStaff(ctx: SimContext): void {
     m.px = m.x;
     m.py = m.y;
 
-    if (m.role === 'guide') {
-      // Guides stroll the paths among the visitors.
+    if (m.role === 'guide' || m.role === 'mascot') {
+      // Guides and the mascot stroll the paths among the visitors.
       const here = Math.round(m.y) * w + Math.round(m.x);
       const options = walkableNeighbours(state, here, onWalkway);
       const forward = options.filter((n) => n !== m.from);
@@ -191,6 +191,7 @@ export function stepStaff(ctx: SimContext): void {
 /** Human-readable current activity, for the info panel and staff list. */
 export function describeTask(state: GameState, m: Staff): string {
   if (m.role === 'guide') return 'Showing visitors around';
+  if (m.role === 'mascot') return 'Waving at visitors';
   const t = m.task;
   if (!t) return 'Waiting for work';
   const spot = taskSpot(state, t);

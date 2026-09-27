@@ -23,9 +23,13 @@ const UNIFORMS: Record<StaffRole, { U: string; C: string; L: string }> = {
   guard: { U: '#2f4a7a', C: '#1b2a45', L: '#1b2a45' },
   vet: { U: '#f4f4f0', C: '#d9454d', L: '#6b7a8a' },
   guide: { U: '#4fae5a', C: '#c9a36b', L: '#6b5238' },
+  mascot: { U: '#5fb84a', C: '#5fb84a', L: '#5fb84a' }, // painted separately as a dino costume
 };
 
-const visitorKey = (look: number, frame: 0 | 1 = 0) => `visitor-${look}-${frame}`;
+const visitorKey = (look: number, frame: 0 | 1 = 0, kid = false, poncho = false) =>
+  `visitor-${look}-${frame}-${kid ? 'k' : 'a'}-${poncho ? 'p' : 'n'}`;
+const PONCHO = '#f2d24e';
+const BALLOONS = [0xe05a4f, 0x4f8fe0, 0xf2c14e, 0x9b6be0];
 const buildingKey = (kind: BuildingKind) => `building-${kind}`;
 const VISITOR_LOOKS = 6;
 const SHIRTS = ['#e05a4f', '#4f8fe0', '#f2c14e', '#9b6be0', '#4fc08d', '#f28fb1'];
@@ -55,16 +59,36 @@ function paintRows(rows: string[], colors: Record<string, string>): HTMLCanvasEl
 /** Person legs: standing, and mid-stride. */
 const LEGS: Record<0 | 1, string[]> = { 0: ['.L.L.', '.L.L.'], 1: ['.L.L.', 'L...L'] };
 
-function paintVisitor(look: number, frame: 0 | 1): HTMLCanvasElement {
-  return paintRows(['.HHH.', '.SSS.', 'TTTTT', 'STTTS', '.TTT.', '.LLL.', ...LEGS[frame]], {
-    H: HAIR[look % HAIR.length],
+/** Adults, and shorter kids; a poncho turns the shirt (and hood) bright yellow. */
+function paintVisitor(look: number, frame: 0 | 1, kid: boolean, poncho: boolean): HTMLCanvasElement {
+  const rows = kid
+    ? ['.HHH.', '.SSS.', 'TTTTT', 'STTTS', '.LLL.', LEGS[frame][1]]
+    : ['.HHH.', '.SSS.', 'TTTTT', 'STTTS', '.TTT.', '.LLL.', ...LEGS[frame]];
+  return paintRows(rows, {
+    H: poncho ? PONCHO : HAIR[look % HAIR.length],
     S: SKIN[look % SKIN.length],
-    T: SHIRTS[look % SHIRTS.length],
+    T: poncho ? PONCHO : SHIRTS[look % SHIRTS.length],
     L: '#3b4a6b',
   });
 }
 
 function paintStaff(role: StaffRole, frame: 0 | 1): HTMLCanvasElement {
+  if (role === 'mascot') {
+    // A cheerful green dino costume, tail and all.
+    const rows = [
+        '..GGG..',
+        '.GGGEG.',
+        '.GGGGGW',
+        '..GGG..',
+        '.GGGGG.',
+        'GGBBBGG',
+        '.GBBBG.',
+        '.GGGGG.',
+        'TGG.GG.',
+    ];
+    rows.push(frame === 0 ? '.GG.GG.' : 'GG...GG');
+    return paintRows(rows, { G: '#5fb84a', B: '#d9e8a0', E: '#101010', W: '#f4ecd2', T: '#4a9a3a' });
+  }
   return paintRows(['CCCCC', '.SSS.', 'UUUUU', 'SUUUS', '.UUU.', '.LLL.', ...LEGS[frame]], {
     ...UNIFORMS[role],
     S: '#e0b48a',
@@ -72,6 +96,38 @@ function paintStaff(role: StaffRole, frame: 0 | 1): HTMLCanvasElement {
 }
 
 function paintBuilding(kind: BuildingKind): HTMLCanvasElement {
+  if (kind === 'snackstall') {
+    // A striped umbrella over an ice-cream cart.
+    return paintRows(
+      [
+        '....RWRWRWRW....',
+        '...RWRWRWRWRW...',
+        '..RWRWRWRWRWRW..',
+        '.......PP.......',
+        '.......PP.......',
+        '..CCCCCCCCCCCC..',
+        '..cyyccppccyyc..',
+        '..cccccccccccc..',
+        '..K..........K..',
+      ],
+      { R: '#f28fb1', W: '#f4ecd2', P: '#8f8f96', C: '#f4ecd2', c: '#e8a0b8', y: '#f2d24e', p: '#b07a3f', K: '#3b3b3b' },
+    );
+  }
+  if (kind === 'restroom') {
+    return paintRows(
+      [
+        '..SSSSSSSSSSSS..',
+        '.SSSSSSSSSSSSSS.',
+        '..WWWWWWWWWWWW..',
+        '..WbWWWWWWWWgW..',
+        '..WbWWDDDDWWgW..',
+        '..WWWWDDDDWWWW..',
+        '..WWWWDDDDWWWW..',
+        '..WWWWDDDDWWWW..',
+      ],
+      { S: '#3f8f9a', W: '#e8f0ec', D: '#5a6b7a', b: '#3f7fb0', g: '#e05a8f' },
+    );
+  }
   if (kind === 'digsite') {
     // Canvas tent, a spoil heap, a pickaxe and a partly dug-out bone.
     return paintRows(
@@ -166,7 +222,10 @@ export class EntityLayer {
       for (const full of [true, false]) scene.textures.addCanvas(feederKey(kind, full), paintFeeder(kind, full));
     }
     for (const frame of [0, 1] as const) {
-      for (let look = 0; look < VISITOR_LOOKS; look++) scene.textures.addCanvas(visitorKey(look, frame), paintVisitor(look, frame));
+      for (let look = 0; look < VISITOR_LOOKS; look++)
+        for (const kid of [false, true])
+          for (const poncho of [false, true])
+            scene.textures.addCanvas(visitorKey(look, frame, kid, poncho), paintVisitor(look, frame, kid, poncho));
       for (const role of STAFF_ROLES) scene.textures.addCanvas(staffKey(role, frame), paintStaff(role, frame));
     }
     for (const kind of Object.keys(BUILDING_TYPES) as BuildingKind[]) scene.textures.addCanvas(buildingKey(kind), paintBuilding(kind));
@@ -298,8 +357,11 @@ export class EntityLayer {
       const { x, y } = this.visitorPosition(v);
       const moving = v.x !== v.px || v.y !== v.py;
       const stride = moving && this.sim.stepProgress >= 0.5;
-      img.setTexture(visitorKey(v.look, stride ? 1 : 0));
-      img.setPosition(Math.round(x), Math.round(y) + (moving && !stride ? -1 : 0));
+      img.setTexture(visitorKey(v.look, stride ? 1 : 0, v.kid, v.items.includes('poncho')));
+      const vx = Math.round(x);
+      const vy = Math.round(y) + (moving && !stride ? -1 : 0);
+      img.setPosition(vx, vy);
+      this.drawCarried(g, v, vx, vy, img.height);
       img.setDepth(4 + y / 10000);
       if (this.selection?.kind === 'visitor' && this.selection.id === v.id) {
         g.lineStyle(1, 0xf2c14e, 1).strokeEllipse(Math.round(x), Math.round(y), 9, 4);
@@ -375,6 +437,28 @@ export class EntityLayer {
         this.facingLeft.delete(id);
         if (this.selection?.kind === 'dino' && this.selection.id === id) this.selection = null;
       }
+    }
+  }
+
+  /** What a visitor has bought: a cap on the head, a balloon on a string, a plush or ice cream in hand. */
+  private drawCarried(g: Phaser.GameObjects.Graphics, v: Visitor, x: number, y: number, h: number): void {
+    const top = y - h + 1;
+    if (v.items.includes('hat')) {
+      g.fillStyle(0x3f8f3a, 1).fillRect(x - 3, top, 6, 2);
+      g.fillStyle(0x2f6b2a, 1).fillRect(x, top + 1, 4, 1); // brim
+    }
+    if (v.items.includes('balloon')) {
+      g.lineStyle(1, 0xf4ecd2, 0.8).lineBetween(x + 3, top + 5, x + 4, top - 6);
+      g.fillStyle(BALLOONS[v.id % BALLOONS.length], 1).fillEllipse(x + 4, top - 9, 5, 6);
+      g.fillStyle(0xffffff, 0.6).fillRect(x + 3, top - 11, 1, 1);
+    }
+    if (v.items.includes('plush')) {
+      g.fillStyle(0x5fb84a, 1).fillRect(x - 5, y - 6, 3, 3);
+      g.fillStyle(0x101010, 1).fillRect(x - 4, y - 6, 1, 1);
+    }
+    if (this.sim.state.hours < v.snackUntil) {
+      g.fillStyle(0xd9a45a, 1).fillRect(x + 3, y - 6, 2, 3); // cone
+      g.fillStyle(v.id % 2 ? 0xf28fb1 : 0xf4ecd2, 1).fillRect(x + 2, y - 8, 4, 2); // scoop
     }
   }
 

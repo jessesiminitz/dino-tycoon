@@ -88,7 +88,7 @@ export function schoolTrip(ctx: SimContext): void {
   const n = Math.min(rng.int(12, 24), MAX_VISITORS - state.visitors.length);
   if (n <= 0) return;
   const ticket = Math.round(state.ticketPrice / 2);
-  for (let i = 0; i < n; i++) spawnVisitor(ctx, 70, ticket);
+  for (let i = 0; i < n; i++) spawnVisitor(ctx, 70, ticket, true);
   ctx.emit({ text: `🚌 A school trip of ${n} kids has arrived (half-price tickets)!`, kind: 'good' });
 }
 

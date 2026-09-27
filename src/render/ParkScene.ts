@@ -10,7 +10,7 @@ import { SPECIES } from '../sim/data/species';
 import { dinoLabel } from '../sim/systems/dinos';
 import { fenceAt, fenceHp, fenceTypeAt } from '../sim/fences';
 import { pathEdges, tileLine, type Edge } from '../sim/grid';
-import { BUILDING_TYPES, PATH_COST, PATH_REFUND } from '../sim/data/economy';
+import { BUILDING_TYPES, PATH_COST, PATH_REFUND, SOUVENIRS } from '../sim/data/economy';
 import { isTileOwned, parcelBuyBlocker, parcelLandTiles, parcelOf, parcelPrice, type Point } from '../sim/land';
 import { isLand, terrainAt, TERRAIN_NAMES } from '../sim/terrain';
 import { isOccupiedPaddock } from '../sim/regions';
@@ -343,8 +343,17 @@ export class ParkScene extends Phaser.Scene {
         return;
       }
       const mood = v.satisfaction >= 70 ? 'Loving it' : v.satisfaction >= 50 ? 'Enjoying it' : v.satisfaction >= 30 ? 'Bored' : 'Unhappy';
+      const carrying = [...v.items.map((i) => SOUVENIRS[i].name), ...(state.hours < v.snackUntil ? ['an ice cream'] : [])];
+      const needs = [v.bladder >= 70 ? 'needs a restroom' : '', v.hunger >= 60 ? 'hungry' : ''].filter(Boolean);
       this.hud.showInfo(
-        `Visitor · ${mood} (${Math.round(v.satisfaction)}%) · Hunger ${Math.round(v.hunger)}% · Seen ${v.seen.length} dino${v.seen.length === 1 ? '' : 's'}`,
+        [
+          `${v.kid ? 'Young visitor' : 'Visitor'} · ${mood} (${Math.round(v.satisfaction)}%)`,
+          `seen ${v.seen.length} dino${v.seen.length === 1 ? '' : 's'}`,
+          carrying.length ? `carrying ${carrying.join(', ')}` : '',
+          needs.join(', '),
+        ]
+          .filter(Boolean)
+          .join(' · '),
       );
     } else if (sel.kind === 'building') {
       const b = state.buildings.find((b) => b.id === sel.id);
@@ -361,8 +370,17 @@ export class ParkScene extends Phaser.Scene {
         this.hud.showInfo(`${t.name} · ${chance}% chance of a find each night · ${note} · upkeep ${formatMoney(t.upkeep)}/day`);
         return;
       }
-      const sold = b.kind === 'restaurant' ? state.finance.today.income.food : state.finance.today.income.souvenirs;
-      this.hud.showInfo(`${t.name} · sells at ${formatMoney(t.salePrice)} · takings today ${formatMoney(sold)} · upkeep ${formatMoney(t.upkeep)}/day`);
+      if (b.kind === 'restroom') {
+        const waiting = state.visitors.filter((v) => v.bladder >= 70).length;
+        this.hud.showInfo(`${t.name} · free for visitors · ${waiting} visitor${waiting === 1 ? '' : 's'} looking for one right now · upkeep ${formatMoney(t.upkeep)}/day`);
+        return;
+      }
+      const income = state.finance.today.income;
+      const sold = b.kind === 'restaurant' ? income.food : b.kind === 'snackstall' ? income.snacks : income.souvenirs;
+      const what = b.kind === 'giftshop' ? 'plushes, caps, balloons and ponchos' : `snacks at ${formatMoney(t.salePrice)}`;
+      this.hud.showInfo(
+        `${t.name} · ${b.kind === 'restaurant' ? `meals at ${formatMoney(t.salePrice)}` : what} · takings today ${formatMoney(sold)} · upkeep ${formatMoney(t.upkeep)}/day`,
+      );
     } else {
       const f = state.feeders.find((f) => f.id === sel.id);
       if (!f) {
