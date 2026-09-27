@@ -10,13 +10,14 @@
     "preview": "vite preview --host",
     "test": "vitest run --exclude tests/perf.test.ts && vitest run tests/perf.test.ts",
     "typecheck": "tsc --noEmit",
-    "icons": "npx -y -p puppeteer-core node scripts/make-icons.mjs",
+    "icons": "node scripts/make-icons.mjs",
     "bench": "vitest run tests/perf.test.ts --silent=false"
   },
   "dependencies": {
     "phaser": "^3.90.0"
   },
   "devDependencies": {
+    "puppeteer-core": "^25.12.0",
     "typescript": "^7.0.2",
     "vite": "^6.4.3",
     "vite-plugin-pwa": "^1.3.0",

@@ -30,7 +30,7 @@ Pushing to `main` runs the tests, builds and deploys to GitHub Pages.
 ## How it's built
 
 - **TypeScript + Vite + Phaser 3.** No art or audio files: pixel art is painted in code and sound is synthesised with Web Audio.
-- `src/sim/`: the game rules, as pure TypeScript with no Phaser. One serializable `GameState`; a fixed-timestep `Simulation` (4 steps per game-hour) runs systems in `src/sim/systems/`; player actions go through `Simulation.dispatch(command)`. Seeded randomness makes runs reproducible.
+- `src/sim/`: the game rules, as pure TypeScript with no Phaser. One serializable `GameState`; a fixed-timestep `Simulation` (16 steps per game-hour; a game day is 5 real minutes at 1×) runs systems in `src/sim/systems/`; player actions go through `Simulation.dispatch(command)`. Seeded randomness makes runs reproducible.
 - `src/render/`: Phaser scenes that draw the state (terrain, fences, sprites, weather) and turn touches into commands.
 - `src/ui/`: DOM overlays: HUD, toolbar, panels, title screen, tutorial.
 - `src/save/`: save slots in IndexedDB with a synchronous localStorage mirror, and versioned migrations so old saves keep loading.

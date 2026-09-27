@@ -1,7 +1,6 @@
 // Regenerates the Home Screen / PWA icons from src/render/iconArt.ts, painted in a
 // headless Chrome so it can reuse the game's own sprite code.
-// Needs the dev server running (npm run dev) and puppeteer-core:
-//   npx -y -p puppeteer-core node scripts/make-icons.mjs
+// Needs the dev server running (npm run dev), then: npm run icons
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 

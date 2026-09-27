@@ -1,0 +1,40 @@
+import puppeteer from 'puppeteer-core';
+const OUT = new URL('.', import.meta.url).pathname;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+const page = await browser.newPage();
+const errors = []; page.on('pageerror', (e) => errors.push(e.message));
+await page.setViewport({ width: 844, height: 390, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'networkidle0' });
+await sleep(500);
+await page.evaluate(async () => {
+  window.__accident = await import('/src/sim/GameState.ts');
+  const { sim, game } = window.__dino; const s = sim.state; s.money = 1e7; sim.setSpeed(0);
+  const { x: ex, y: ey } = s.entrance; const w = s.map.width;
+  const tiles = []; for (let x = ex - 5; x <= ex + 5; x++) tiles.push((ey - 2) * w + x);
+  sim.dispatch({ type: 'buildPaths', tiles });
+  sim.dispatch({ type: 'placeBuilding', kind: 'trashcan', x: ex + 3, y: ey - 3 });
+  sim.dispatch({ type: 'hireStaff', role: 'janitor' });
+  s.staff[0].x = s.staff[0].px = ex + 1; s.staff[0].y = s.staff[0].py = ey - 2; s.staff[0].task = { kind: 'clean', messId: 999999 }; s.staff[0].progress = 1;
+  s.stormHours = 4; s.hours += 1;
+  const base = { from: -1, path: [], hunger: 0, satisfaction: 60, seen: [], leaveHour: s.hours + 5, items: [], snack: null, snackUntil: s.hours + 3, sodaUntil: 0, thirst: 0, bladder: 0, kid: false, thoughts: [], name: 'X' };
+  const add = (dx, extra, look) => s.visitors.push({ ...base, ...extra, id: 90000 + dx + 10, look, x: ex + dx, y: ey - 2, px: ex + dx, py: ey - 2 });
+  add(-4, { items: ['umbrella'] }, 0);
+  add(-3, { snack: 'popcorn', sodaUntil: s.hours + 3 }, 1);
+  add(-2, { snack: 'hotdog' }, 2);
+  add(-1, { snack: 'icecream', kid: true, items: ['balloon'] }, 3);
+  add(2, { items: ['poncho', 'hat'], sodaUntil: s.hours + 2 }, 4);
+  add(4, { items: ['plush'], sodaUntil: s.hours + 2 }, 5);
+  let id = 80000;
+  const { accidentKind } = window.__accident;
+  const pee = [...Array(40).keys()].map((i) => 80000 + i).filter((i) => accidentKind(i) === 'pee');
+  const poop = [...Array(40).keys()].map((i) => 80000 + i).filter((i) => accidentKind(i) === 'poop');
+  s.messes.push({ id: pee[0], kind: 'mess', x: ex - 5, y: ey - 2, hour: s.hours }, { id: poop[0], kind: 'mess', x: ex, y: ey - 2, hour: s.hours },
+    { id: pee[1], kind: 'mess', x: ex + 5, y: ey - 2, hour: s.hours }, { id: 81001, kind: 'litter', x: ex + 1, y: ey - 2, hour: s.hours },
+    { id: poop[1], kind: 'mess', x: ex + 3, y: ey - 2, hour: s.hours }, { id: 81002, kind: 'dung', x: ex - 2, y: ey - 3, hour: s.hours });
+  const cam = game.scene.getScene('park').cameras.main; cam.setZoom(5); cam.centerOn(ex * 16 + 8, (ey - 2) * 16 + 4);
+});
+await sleep(900);
+await page.screenshot({ path: `${OUT}items-1.png` });
+console.log('errors:', errors.length ? errors : 'none');
+await browser.close();

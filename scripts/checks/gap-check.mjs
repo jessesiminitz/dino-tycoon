@@ -1,0 +1,40 @@
+import puppeteer from 'puppeteer-core';
+const OUT = new URL('.', import.meta.url).pathname;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+const page = await browser.newPage();
+const errors = []; page.on('pageerror', (e) => errors.push(e.message));
+await page.setViewport({ width: 844, height: 390, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'networkidle0' });
+await sleep(500);
+const setup = await page.evaluate(() => {
+  const { sim, game, ui } = window.__dino; const s = sim.state; s.money = 100000; sim.setSpeed(0);
+  const { x: ex, y: ey } = s.entrance;
+  const A = { x: ex - 4, y: ey - 10 }, C = { x: ex + 3, y: ey - 4 };
+  const edges = [];
+  for (let x = A.x; x < C.x; x++) edges.push({ dir: 'h', x, y: A.y }, { dir: 'h', x, y: C.y });
+  for (let y = A.y; y < C.y; y++) edges.push({ dir: 'v', x: A.x, y }, { dir: 'v', x: C.x, y });
+  // Leave a two-segment gap on the left side, on the row we'll tap.
+  const tapY = A.y + 3;
+  const gap = edges.filter((e) => !(e.dir === 'v' && e.x === A.x && (e.y === tapY || e.y === tapY + 1)));
+  const built = sim.dispatch({ type: 'buildFences', edges: gap, fence: 2 }).message;
+  // And one storm-broken segment on the bottom.
+  const i = (C.y) * s.map.width + A.x + 4; s.hFenceHp[i] = 0; sim.invalidateWorld?.();
+  const cam = game.scene.getScene('park').cameras.main; cam.setZoom(3); cam.centerOn((A.x + 4) * 16, (A.y + 3) * 16);
+  ui.startPlacing('triceratops');
+  return { built, A, C, tapY, money: s.money };
+});
+console.log('setup', setup);
+await sleep(300);
+const toScreen = (vx, vy) => page.evaluate((vx, vy) => { const c = window.__dino.game.scene.getScene('park').cameras.main; const cx = c.width / 2, cy = c.height / 2; return { x: (vx * 16 - c.scrollX - cx) * c.zoom + cx, y: (vy * 16 - c.scrollY - cy) * c.zoom + cy }; }, vx, vy);
+const p = await toScreen(setup.A.x + 4.5, setup.tapY + 0.5);
+await page.touchscreen.tap(p.x, p.y); await sleep(400);
+const info = await page.evaluate(() => ({ text: document.getElementById('info-text').textContent, action: document.getElementById('info-action').textContent, hidden: document.getElementById('info-action').classList.contains('hidden') }));
+console.log('after tap:', info, '| dinos', await page.evaluate(() => window.__dino.sim.state.dinos.length));
+await page.screenshot({ path: `${OUT}gap-1-offer.png` });
+await (await page.$('#info-action')).tap(); await sleep(500);
+const after = await page.evaluate(() => ({ dinos: window.__dino.sim.state.dinos.map((d) => d.species), money: window.__dino.sim.state.money, toasts: [...document.querySelectorAll('.toast')].map((t) => t.textContent) }));
+console.log('after close:', after);
+await page.screenshot({ path: `${OUT}gap-2-done.png` });
+console.log('errors:', errors.length ? errors : 'none');
+await browser.close();

@@ -1,0 +1,18 @@
+import puppeteer from 'puppeteer-core';
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required'] });
+const page = await browser.newPage();
+const errors = []; page.on('pageerror', (e) => errors.push(e.message));
+await page.setViewport({ width: 844, height: 390, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
+await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'networkidle0' });
+await sleep(400);
+await page.touchscreen.tap(420, 200);
+await sleep(300);
+const a = await page.evaluate(() => window.__dino.audioDebug());
+console.log('toasts right after tap:', await page.$$eval('.toast', (t) => t.map((x) => x.textContent)));
+await sleep(3000);
+const b = await page.evaluate(() => window.__dino.audioDebug());
+console.log('song', a.song, '->', b.song, '| state', b.state, 'music gain', b.music.toFixed(2));
+console.log('toasts:', await page.$$eval('.toast', (t) => t.map((x) => x.textContent)));
+console.log('errors:', errors.length ? errors : 'none');
+await browser.close();
