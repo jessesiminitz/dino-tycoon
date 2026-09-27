@@ -45,11 +45,14 @@ await (await page.$('[data-filter="gross"]'))?.tap(); await sleep(200);
 console.log('gross chip:', await page.$$eval('#people .person-card', (c) => c.length));
 await (await page.$('[data-filter="all"]')).tap(); await sleep(200);
 // Rename the first visitor.
-await (await page.$('[data-rename^="visitor:"]')).tap(); await sleep(200);
-await page.keyboard.down('Meta'); await page.keyboard.press('a'); await page.keyboard.up('Meta');
-await page.keyboard.type('Dr. Grant');
-await page.keyboard.press('Enter'); await sleep(200);
-console.log('renamed:', await page.evaluate(() => window.__dino.sim.state.visitors.filter((v) => v.name === 'Dr. Grant').length));
+const renameBtn = await page.$('[data-rename^="visitor:"]');
+if (renameBtn) {
+  await renameBtn.tap(); await sleep(200);
+  await page.keyboard.down('Meta'); await page.keyboard.press('a'); await page.keyboard.up('Meta');
+  await page.keyboard.type('Rosa Q.');
+  await page.keyboard.press('Enter'); await sleep(200);
+  console.log('renamed:', await page.evaluate(() => window.__dino.sim.state.visitors.filter((v) => v.name === 'Rosa Q.').length));
+} else console.log('renamed: skipped (no visitors on this island yet)');
 for (const t of ['reviews', 'dinos', 'staff']) {
   await (await page.$(`[data-tab="${t}"]`)).tap(); await sleep(300);
   await page.screenshot({ path: `${OUT}people-2-${t}-${W}.png` });

@@ -15,6 +15,17 @@ type Tab = 'visitors' | 'reviews' | 'dinos' | 'staff';
 type Kind = 'visitor' | 'dino' | 'staff' | 'egg';
 
 const REFRESH_MS = 1000;
+/** After a touch on the panel, wait this long before the next live refresh. */
+const TOUCH_QUIET_MS = 1500;
+
+const shown = new WeakMap<HTMLElement, string>();
+/** Replaces an element's contents only when they've actually changed. */
+function setHtml(el: HTMLElement, html: string): void {
+  if (shown.get(el) === html) return;
+  shown.set(el, html);
+  el.innerHTML = html;
+}
+
 /** Hours a thought counts toward a filter like "grossed out". */
 const RECENT = 6;
 
@@ -101,6 +112,8 @@ export function mountPeople(sim: Simulation, ui: UiState): void {
   let editing: string | null = null;
   const expanded = new Set<string>();
   let timer = 0;
+  let lastTouch = 0;
+  modal.addEventListener('pointerdown', () => (lastTouch = performance.now()), true);
   // Short phone screens start with the summary folded so the cards are visible.
   let sayingsOpen = window.innerHeight > 500;
 
@@ -250,13 +263,16 @@ export function mountPeople(sim: Simulation, ui: UiState): void {
     const { state } = sim;
     const counts: Record<Tab, number> = { visitors: state.visitors.length, reviews: state.reviews.length, dinos: state.dinos.length, staff: state.staff.length };
     const labels: Record<Tab, string> = { visitors: '🧍 Visitors', reviews: '⭐ Reviews', dinos: '🦖 Dinos', staff: '🧹 Staff' };
-    tabsEl.innerHTML = (Object.keys(labels) as Tab[])
-      .map((t) => `<button class="tab-btn ${t === tab ? 'active' : ''}" role="tab" aria-selected="${t === tab}" data-tab="${t}">${labels[t]} <small>${counts[t]}</small></button>`)
-      .join('');
+    setHtml(
+      tabsEl,
+      (Object.keys(labels) as Tab[])
+        .map((t) => `<button class="tab-btn ${t === tab ? 'active' : ''}" role="tab" aria-selected="${t === tab}" data-tab="${t}">${labels[t]} <small>${counts[t]}</small></button>`)
+        .join(''),
+    );
     const [chipHtml, bodyHtml] =
       tab === 'visitors' ? visitorsTab(state) : tab === 'reviews' ? reviewsTab(state) : tab === 'dinos' ? dinosTab(state) : staffTab(state);
-    chips.innerHTML = chipHtml;
-    body.innerHTML = bodyHtml;
+    setHtml(chips, chipHtml);
+    setHtml(body, bodyHtml);
     const input = body.querySelector<HTMLInputElement>('.rename-input');
     if (input && document.activeElement !== input) {
       input.focus();
@@ -338,7 +354,8 @@ export function mountPeople(sim: Simulation, ui: UiState): void {
     modal.classList.remove('hidden');
     clearInterval(timer);
     timer = window.setInterval(() => {
-      if (!editing) render();
+      // Hold off while a finger is on the panel, so a tap never lands on a button that was just replaced.
+      if (!editing && performance.now() - lastTouch > TOUCH_QUIET_MS) render();
     }, REFRESH_MS);
   };
   const close = () => {
