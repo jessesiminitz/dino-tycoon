@@ -97,6 +97,39 @@ body {
   pointer-events: auto;
 }
 
+/* The speed controls and ☰ must always stay on screen; the stats and buttons give way instead (see fitHud). */
+.hud > .hud-group:first-child {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.hud > .hud-group:last-child {
+  flex-shrink: 0;
+}
+
+.hud.fit-1 #hud-dinos {
+  display: none;
+}
+
+.hud.fit-2 .hud-group {
+  gap: 3px;
+  padding: 4px 5px;
+}
+
+.hud.fit-2 .hud-btn {
+  padding: 0 4px;
+}
+
+.hud.fit-2 .speed-btn {
+  min-width: 36px;
+  padding: 0 1px;
+}
+
+.hud.fit-3 .hud-stat {
+  font-size: 11px;
+}
+
 .hud-title {
   font-weight: bold;
   color: var(--accent-ink);

@@ -13,11 +13,12 @@ import { hourlyFossils } from './systems/fossils';
 import { hourlyScenario } from './goals';
 
 /** Real-time milliseconds per game-hour at 1× speed: a game day takes a minute. */
-export const MS_PER_HOUR = 2500;
+/** Real milliseconds per game-hour at 1× speed: a game day lasts five minutes. */
+export const MS_PER_HOUR = 12_500;
 /** Real-time milliseconds per movement step at 1× speed. */
 export const MS_PER_STEP = MS_PER_HOUR / STEPS_PER_HOUR;
 
-export type Speed = 0 | 1 | 2 | 4;
+export type Speed = 0 | 1 | 3 | 8;
 
 type Listener = (state: GameState) => void;
 type EventListener = (event: GameEvent) => void;
@@ -52,6 +53,11 @@ export class Simulation {
     }
     if (steps > 0) this.emit();
     return steps;
+  }
+
+  /** How far through the current game-hour we are (0–1), for the clock's minutes. */
+  get stepProgressInHour(): number {
+    return Math.min(1, (this.state.stepInHour + (this.speed === 0 ? 0 : this.accumulator / MS_PER_STEP)) / STEPS_PER_HOUR);
   }
 
   /** Progress (0–1) from the last step toward the next, for smooth rendering. */

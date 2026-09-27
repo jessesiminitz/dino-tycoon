@@ -58,7 +58,7 @@ export const THOUGHTS: Record<Topic, Lines> = {
   },
   mess: {
     good: [],
-    bad: ['Ew! Someone had an accident right on the path.', 'Gross, what is that smell?', "Nobody's cleaning this up?"],
+    bad: ['Ew! Someone {item} right on the path.', 'Gross! Who {item} here?', "Nobody's cleaning this up?", 'What is that smell?!'],
   },
   litter: {
     good: ['The paths are so clean here.'],

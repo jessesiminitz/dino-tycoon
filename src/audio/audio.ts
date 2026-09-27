@@ -47,8 +47,9 @@ function unlock(): void {
     src.buffer = noise;
     src.loop = true;
     const filter = ctx.createBiquadFilter();
-    filter.type = 'highpass';
-    filter.frequency.value = 1200;
+    filter.type = 'bandpass';
+    filter.frequency.value = 2500;
+    filter.Q.value = 0.4;
     rainGain = ctx.createGain();
     rainGain.gain.value = 0;
     src.connect(filter).connect(rainGain).connect(sfxGain);
@@ -156,10 +157,13 @@ export function playSfx(name: Sfx): void {
   }
 }
 
+/** Rain at full downpour, relative to other sound effects: a soft patter under the music. */
+const RAIN_VOLUME = 0.045;
+
 /** Fades the rain loop in and out (0 = dry, 1 = downpour). */
 export function setRain(level: number): void {
   if (!ctx) return;
-  rainGain.gain.setTargetAtTime(level * 0.25, ctx.currentTime, 0.8);
+  rainGain.gain.setTargetAtTime(level * RAIN_VOLUME, ctx.currentTime, 0.8);
 }
 
 // --- Music: Scott Joplin rags (public domain) on a synthesised honky-tonk piano. ---

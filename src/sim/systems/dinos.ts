@@ -7,7 +7,17 @@ import type { SimContext } from './context';
 import type { RegionMap } from '../regions';
 
 /** Movement steps per game-hour. */
-export const STEPS_PER_HOUR = 4;
+export const STEPS_PER_HOUR = 16;
+/** Steps per hour the per-step odds below were first tuned for. */
+const TUNED_STEPS_PER_HOUR = 4;
+
+/**
+ * Converts a chance tuned for one step at the old pace into the equivalent
+ * per-step chance now, so the odds per game-hour stay the same.
+ */
+export function perStep(chance: number): number {
+  return 1 - (1 - chance) ** (TUNED_STEPS_PER_HOUR / STEPS_PER_HOUR);
+}
 /** Hunger at which dinos go looking for food. */
 export const HUNGRY = 50;
 const STARVING_WARNING = 80;

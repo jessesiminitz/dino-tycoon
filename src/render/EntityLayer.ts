@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import type { Building, Dino, Feeder, Staff, Visitor } from '../sim/GameState';
+import { accidentKind, type Building, type Dino, type Feeder, type Staff, type Visitor } from '../sim/GameState';
 import { STAFF_ROLES, type StaffRole } from '../sim/data/staff';
 import { BUILDING_TYPES, type BuildingKind } from '../sim/data/economy';
 import { hash2 } from '../sim/rng';
@@ -379,11 +379,18 @@ export class EntityLayer {
           const t = Math.floor(time / 250 + m.id) % 3;
           g.fillStyle(0xf4ecd2, 0.5).fillRect(ox - 1 + (t === 1 ? 1 : 0), oy - 5 - t, 1, 1);
         }
+      } else if (m.kind === 'mess' && accidentKind(m.id) === 'pee') {
+        // A yellow puddle with a glint.
+        g.fillStyle(0xc9a82a, 0.75).fillEllipse(ox, oy, 9, 4);
+        g.fillStyle(0xf2d24e, 0.85).fillEllipse(ox - 1, oy, 6, 2);
+        g.fillStyle(0xfff6c4, 0.9).fillRect(ox - 2, oy - 1, 2, 1);
       } else if (m.kind === 'mess') {
-        g.fillStyle(0x8a6a2a, 0.85).fillEllipse(ox, oy, 8, 4);
-        g.fillStyle(0xb8942f, 0.9).fillEllipse(ox - 1, oy, 4, 2);
+        // A little brown swirl, with flies buzzing round it.
+        g.fillStyle(0x4a3018, 1).fillEllipse(ox, oy, 6, 3);
+        g.fillStyle(0x6b4424, 1).fillEllipse(ox, oy - 1, 4, 2);
+        g.fillStyle(0x7e5230, 1).fillRect(ox - 1, oy - 3, 2, 1);
         const f = Math.floor(time / 120 + m.id);
-        g.fillStyle(0x101010, 1).fillRect(ox - 2 + (f % 3), oy - 5 - (f % 2), 1, 1).fillRect(ox + 2 - (f % 2), oy - 7 + (f % 3), 1, 1);
+        g.fillStyle(0x101010, 1).fillRect(ox - 3 + (f % 3), oy - 5 - (f % 2), 1, 1).fillRect(ox + 2 - (f % 2), oy - 7 + (f % 3), 1, 1);
       } else {
         const kind = m.id % 3;
         if (kind === 0) {

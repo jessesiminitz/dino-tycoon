@@ -148,6 +148,11 @@ export interface Mess {
 
 export const MAX_REVIEWS = 60;
 
+/** Whether a visitor's accident was a puddle of pee or a poop (fixed by its id; more often pee). */
+export function accidentKind(id: number): 'pee' | 'poop' {
+  return hash2(id, 7, 13) < 0.6 ? 'pee' : 'poop';
+}
+
 export interface Decor {
   id: number;
   kind: DecorKind;

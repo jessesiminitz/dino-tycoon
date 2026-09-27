@@ -25,9 +25,9 @@ export const STAFF_TYPES: Record<StaffRole, StaffType> = {
 export const STAFF_ROLES = Object.keys(STAFF_TYPES) as StaffRole[];
 
 /** Tiles a staff member covers per movement step (they drive a park buggy). */
-export const STAFF_SPEED = 2;
-/** Movement steps each job takes once on site. */
-export const WORK_STEPS = { refill: 2, repair: 4, recapture: 4, treat: 4, clean: 1 } as const;
+export const STAFF_SPEED = 1.5;
+/** Movement steps each job takes once on site (16 steps to a game-hour). */
+export const WORK_STEPS = { refill: 8, repair: 16, recapture: 16, treat: 16, clean: 4 } as const;
 /** Janitors clean everything within this many tiles (Chebyshev) of where they stop. */
 export const CLEAN_RADIUS = 1;
 

@@ -123,6 +123,30 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
   const catalog = mountCatalog(sim, ui);
 
   // --- money, clock, speed ---
+  const hudEl = $('hud');
+  let lastWidth = 0;
+  /**
+   * Squeezes the top bar until the ☰ menu and speed buttons fit: phones differ
+   * in width and in how much the notch takes, so measure rather than guess.
+   */
+  function fitHud(): void {
+    const left = hudEl.querySelector<HTMLElement>('.hud-group')!;
+    const levels = ['fit-1', 'fit-2', 'fit-3'];
+    hudEl.classList.remove(...levels);
+    for (const level of levels) {
+      if (left.scrollWidth <= left.clientWidth + 1) break;
+      hudEl.classList.add(level);
+    }
+  }
+  const refit = () =>
+    requestAnimationFrame(() => {
+      lastWidth = 0;
+      render(sim.state);
+    });
+  window.addEventListener('resize', refit);
+  // Safe-area insets and fonts can settle after the first layout.
+  new ResizeObserver(refit).observe(hudEl);
+  document.fonts?.ready.then(refit);
   let lastMoney = sim.state.money;
   const render = (state: GameState) => {
     moneyEl.textContent = money.format(state.money);
@@ -133,7 +157,17 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
       lastMoney = state.money;
     }
     const { day, hour } = calendar(state);
-    clockEl.textContent = `Day ${day} · ${String(hour).padStart(2, '0')}:00`;
+    // Minutes tick by in quarter hours, so the clock visibly moves on slow days.
+    const minutes = Math.floor((sim.stepProgressInHour * 60) / 15) * 15;
+    const time = `${String(hour).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+    clockEl.textContent = hudEl.classList.contains('fit-3') ? `D${day} ${time}` : `Day ${day} · ${time}`;
+    const width = moneyEl.textContent.length + clockEl.textContent.length;
+    const left = hudEl.querySelector<HTMLElement>('.hud-group')!;
+    // Refit when the text changes length, or if anything (a badge, a font loading) made it overflow.
+    if (width !== lastWidth || left.scrollWidth > left.clientWidth + 1) {
+      lastWidth = width;
+      fitHud();
+    }
     dinosEl.textContent = `${state.dinos.length} dino${state.dinos.length === 1 ? '' : 's'}`;
     guestsEl.textContent = String(state.visitors.length);
     moneyEl.classList.toggle('negative', state.money < 0);

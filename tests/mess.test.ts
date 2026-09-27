@@ -76,8 +76,8 @@ describe('mess', () => {
     run(sim, 1, () => (bystander.path = [])); // keep the bystander in place
     const messes = s.messes.filter((m) => m.kind === 'mess');
     expect(messes.length).toBeGreaterThan(0);
-    expect(events.some((t) => t.startsWith('🤢'))).toBe(true);
-    expect(bursting.some((v) => v.thoughts.some((t) => /restroom in time/.test(t.text)))).toBe(true);
+    expect(events.some((t) => /^(💦|💩) A visitor couldn't find a restroom in time and (peed|pooped) on the path/.test(t))).toBe(true);
+    expect(bursting.some((v) => v.thoughts.some((t) => /I (peed|pooped)!/.test(t.text)))).toBe(true);
     // Another hour next to the mess and the bystander is grossed out.
     Object.assign(bystander, { x: messes[0].x, y: messes[0].y });
     run(sim, 1, () => {
@@ -85,6 +85,7 @@ describe('mess', () => {
       bystander.x = messes[0].x;
     });
     expect(bystander.thoughts.some((t) => t.topic === 'mess' && !t.good)).toBe(true);
+    expect(bystander.thoughts.find((t) => t.topic === 'mess')!.text).not.toMatch(/\{/); // placeholders filled in
   });
 
   it('a restroom in reach prevents accidents', () => {

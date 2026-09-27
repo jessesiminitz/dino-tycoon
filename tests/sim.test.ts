@@ -56,17 +56,21 @@ describe('Simulation clock', () => {
   it('advances one game-hour per MS_PER_HOUR at 1× and scales with speed', () => {
     const sim = new Simulation(newGame(1));
     // Frame-sized chunks (the sim ignores any single gap longer than 250 ms).
-    const frame = MS_PER_HOUR / 25;
-    for (let i = 0; i < 50; i++) sim.advance(frame);
+    const frame = MS_PER_HOUR / 50;
+    for (let i = 0; i < 100; i++) sim.advance(frame);
     expect(sim.state.hours).toBe(2);
 
-    sim.setSpeed(4);
+    sim.setSpeed(8);
     for (let i = 0; i < 50; i++) sim.advance(frame);
     expect(sim.state.hours).toBe(10);
 
     sim.setSpeed(0);
     sim.advance(10_000);
     expect(sim.state.hours).toBe(10);
+  });
+
+  it('a game day lasts five minutes at normal speed', () => {
+    expect((MS_PER_HOUR * 24) / 60_000).toBe(5);
   });
 
   it('calendar starts at day 1, 08:00 and rolls over', () => {

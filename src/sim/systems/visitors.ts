@@ -1,4 +1,4 @@
-import { calendar, MAX_REVIEWS, type Building, type GameState, type Mess, type SnackKind, type Visitor } from '../GameState';
+import { accidentKind, calendar, MAX_REVIEWS, type Building, type GameState, type Mess, type SnackKind, type Visitor } from '../GameState';
 import { thoughtText, TOPICS, visitorName, type ThoughtVars, type Topic } from '../data/thoughts';
 import { hash2 } from '../rng';
 import {
@@ -18,6 +18,7 @@ import { canStep, findPath, walkableNeighbours } from '../pathfind';
 import { onWalkway } from '../paths';
 import type { RegionMap } from '../regions';
 import type { SimContext } from './context';
+import { perStep } from './dinos';
 
 /** Tiles (Chebyshev distance) within which a visitor can see a dinosaur. */
 const VIEW_RADIUS = 4;
@@ -38,7 +39,7 @@ const BLADDER_PER_HOUR = 12;
 const NEEDS_RESTROOM = 70;
 const DESPERATE = 90;
 /** Desperate visitors at one time before they complain (once a day) about missing restrooms. */
-const RESTROOM_COMPLAINT = 4;
+const RESTROOM_COMPLAINT = 3;
 const KID_CHANCE = 0.25;
 const MASCOT_RADIUS = 3;
 const PAUSE_CHANCE = 0.2;
@@ -201,21 +202,28 @@ export function hourlyVisitors(ctx: SimContext): void {
     c[m.kind]++;
     dirt.set(k, c);
   }
+  // Which accident is where, so the grossed-out visitors know what they saw.
+  const accidentAt = new Map<number, 'pee' | 'poop'>();
+  for (const m of state.messes) if (m.kind === 'mess') accidentAt.set(m.y * w + m.x, accidentKind(m.id));
   const dirtAround = (x: number, y: number) => {
     let mess = 0;
     let litter = 0;
+    let seen: 'pee' | 'poop' = 'pee';
     for (let dy = -MESS_RADIUS; dy <= MESS_RADIUS; dy++)
       for (let dx = -MESS_RADIUS; dx <= MESS_RADIUS; dx++) {
-        const c = dirt.get((y + dy) * w + x + dx);
+        const k = (y + dy) * w + x + dx;
+        const c = dirt.get(k);
         if (!c) continue;
         mess += c.mess;
+        if (c.mess) seen = accidentAt.get(k) ?? seen;
         if (Math.abs(dx) <= 1 && Math.abs(dy) <= 1) litter += c.litter;
       }
-    return { mess, litter };
+    return { mess, litter, seen };
   };
 
   let desperate = 0;
   let accidents = 0;
+  let firstAccident: 'pee' | 'poop' = 'pee';
   for (const v of [...state.visitors]) {
     if (near('guide', v, GUIDE_RADIUS)) {
       v.satisfaction += 3;
@@ -247,13 +255,15 @@ export function hourlyVisitors(ctx: SimContext): void {
     } else if (v.bladder >= NEEDS_RESTROOM) v.satisfaction -= 2; // uncomfortable
     if (v.bladder >= 100 && rng.chance(ACCIDENT_CHANCE)) {
       // Couldn't make it. Mortified, they head straight home.
+      const kind = accidentKind(state.nextId);
       drop(state, 'mess', v.x, v.y);
+      if (accidents === 0) firstAccident = kind;
       accidents++;
       v.bladder = 0;
       v.satisfaction -= 30;
       v.leaveHour = state.hours;
       v.path = [];
-      v.thoughts.push({ hour: state.hours, topic: 'restroom', good: false, text: "Couldn't find a restroom in time. So embarrassing. I'm going home." });
+      v.thoughts.push({ hour: state.hours, topic: 'restroom', good: false, text: kind === 'pee' ? "Couldn't hold it any longer... I peed! So embarrassing. I'm going home." : "Couldn't find a restroom in time... I pooped! I'm going home." });
       if (v.thoughts.length > MAX_THOUGHTS) v.thoughts.shift();
     }
     if (v.seen.length === 0) {
@@ -266,10 +276,10 @@ export function hourlyVisitors(ctx: SimContext): void {
         think(state, v, 'weather', false);
       } else think(state, v, 'weather', true, { item: v.items.includes('umbrella') ? 'umbrella' : 'poncho' });
     }
-    const { mess, litter } = dirtAround(v.x, v.y);
+    const { mess, litter, seen } = dirtAround(v.x, v.y);
     if (mess > 0) {
       v.satisfaction -= MESS_GROSS;
-      think(state, v, 'mess', false);
+      think(state, v, 'mess', false, { item: seen === 'pee' ? 'peed' : 'pooped' });
     }
     if (litter >= LITTER_NOTICED) {
       v.satisfaction -= Math.min(MAX_LITTER_GROSS, litter * LITTER_GROSS);
@@ -280,7 +290,7 @@ export function hourlyVisitors(ctx: SimContext): void {
   if (accidents > 0 && state.stats.messDay !== day) {
     state.stats.messDay = day;
     ctx.emit({
-      text: `🤢 A visitor couldn't find a restroom in time and left a mess on the path! ${has('restroom') ? 'Build more restrooms' : 'Build restrooms'}${state.staff.some((m) => m.role === 'janitor') ? '' : ' and hire a janitor'}.`,
+      text: `${firstAccident === 'pee' ? '💦' : '💩'} A visitor couldn't find a restroom in time and ${firstAccident === 'pee' ? 'peed' : 'pooped'} on the path! ${has('restroom') ? 'Build more restrooms' : 'Build restrooms'}${state.staff.some((m) => m.role === 'janitor') ? '' : ' and hire a janitor'}.`,
       kind: 'bad',
     });
   }
@@ -355,13 +365,13 @@ function shop(ctx: SimContext, v: Visitor): void {
   };
   if (state.stormHours > 0 && !isDry(v)) {
     // Kids get ponchos; grown-ups pick either.
-    if (rng.chance(PONCHO_CHANCE)) buy(v.kid || rng.chance(0.5) ? 'poncho' : 'umbrella');
+    if (rng.chance(perStep(PONCHO_CHANCE))) buy(v.kid || rng.chance(0.5) ? 'poncho' : 'umbrella');
     return;
   }
   const extras = v.items.filter((i) => i !== 'poncho' && i !== 'umbrella');
   if (extras.length >= MAX_SOUVENIRS) return;
   const mascotNearby = state.staff.some((m) => m.role === 'mascot' && Math.abs(m.x - v.x) <= 4 && Math.abs(m.y - v.y) <= 4);
-  if (!rng.chance(SOUVENIR_CHANCE * (mascotNearby ? 1.5 : 1))) return;
+  if (!rng.chance(perStep(SOUVENIR_CHANCE * (mascotNearby ? 1.5 : 1)))) return;
   const wants: [ItemKind, number][] = (
     v.kid
       ? [['balloon', 3], ['plush', 2], ['hat', 1]]
@@ -436,7 +446,7 @@ export function stepVisitors(ctx: SimContext): void {
       earn(state, 'food', BUILDING_TYPES.restaurant.salePrice);
       think(state, v, 'food', true, { item: 'meal' });
     } else if (buildingNear(state, v.x, v.y, 'snackstall')) {
-      if (v.thirst >= PECKISH && v.sodaUntil === 0 && rng.chance(SNACK_CHANCE)) {
+      if (v.thirst >= PECKISH && v.sodaUntil === 0 && rng.chance(perStep(SNACK_CHANCE))) {
         v.thirst = Math.max(0, v.thirst - SODA_QUENCHES);
         v.bladder = Math.min(100, v.bladder + 10);
         v.sodaUntil = state.hours + SODA_HOURS;
@@ -445,7 +455,7 @@ export function stepVisitors(ctx: SimContext): void {
         earn(state, 'snacks', BUILDING_TYPES.snackstall.salePrice);
         think(state, v, 'drink', true);
       }
-      if (v.hunger >= PECKISH && !v.snack && rng.chance(SNACK_CHANCE)) {
+      if (v.hunger >= PECKISH && !v.snack && rng.chance(perStep(SNACK_CHANCE))) {
         const snack = v.kid && rng.chance(0.5) ? 'icecream' : SNACKS[rng.int(0, SNACKS.length - 1)];
         v.hunger = Math.max(0, v.hunger - SNACK_FILLS);
         v.bladder = Math.min(100, v.bladder + 10);
