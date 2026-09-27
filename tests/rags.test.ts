@@ -18,6 +18,21 @@ describe('ragtime', () => {
     }
   });
 
+  it('holds about an hour of public-domain ragtime, each piece credited', () => {
+    const minutes = RAGS.reduce((sum, r) => {
+      const notes = decodeRag(r);
+      const last = notes[notes.length - 1];
+      return sum + (last.time + last.dur) / 60;
+    }, 0);
+    expect(minutes).toBeGreaterThan(55);
+    expect(minutes).toBeLessThan(80);
+    expect(new Set(RAGS.map((r) => r.title)).size).toBe(RAGS.length);
+    for (const r of RAGS) {
+      expect(r.composer).toBeTruthy();
+      expect(r.year).toBeLessThan(1929); // US public domain
+    }
+  });
+
   it('The Entertainer opens with its famous D, D-sharp, E, high C', () => {
     const notes = decodeRag(RAGS.find((r) => r.title === 'The Entertainer')!);
     // Top voice: the highest note at each distinct start time.

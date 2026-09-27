@@ -41,8 +41,8 @@ function startGame(state: GameState, slot: SlotId): void {
 
   mountPauseMenu(sim, { save: saveCurrent, mainMenu: toMainMenu, toast: (t) => hud.toast(t) });
   mountTutorial(sim, (t) => hud.toast(t));
-  onSong((title, year) => {
-    if (getSettings().music) hud.toast(`🎹 Now playing: ${title} (Scott Joplin, ${year})`);
+  onSong((title, composer, year) => {
+    if (getSettings().music) hud.toast(`🎹 Now playing: ${title} (${composer}, ${year})`);
   });
   sim.onEvent((e) => {
     const sound = eventSound(e.text, e.kind, e.outcome);

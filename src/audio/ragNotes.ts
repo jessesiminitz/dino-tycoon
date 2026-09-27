@@ -1,4 +1,15 @@
-import { PITCH_OFFSET, RAG_ALPHABET, type Rag } from './rags';
+export interface Rag {
+  title: string;
+  composer: string;
+  year: number;
+  /** Quarter notes per minute. */
+  bpm: number;
+  notes: string;
+}
+
+/** Printable characters safe inside a single-quoted JS string, in value order (see scripts/rags/gen.mjs). */
+export const RAG_ALPHABET = "#$%&()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_abcdefghijklmnopqrstuvwxyz{|}~";
+export const PITCH_OFFSET = 20;
 
 export interface Note {
   time: number;

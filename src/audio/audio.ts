@@ -1,6 +1,5 @@
 import { getSettings, onSettings, type Settings } from '../ui/settings';
-import { RAGS } from './rags';
-import { decodeRag, type Note } from './ragNotes';
+import { decodeRag, type Note, type Rag } from './ragNotes';
 
 /**
  * All sound is synthesised with Web Audio: no audio files to download or license.
@@ -57,7 +56,7 @@ function unlock(): void {
 
     applySettings(getSettings());
     onSettings(applySettings);
-    startMusic();
+    void startMusic();
   }
   if (ctx.state === 'suspended') void ctx.resume();
 }
@@ -203,15 +202,30 @@ function pianoNote(midi: number, start: number, dur: number): void {
 
 const SONG_GAP = 2.5;
 let nowPlaying: { title: string; index: number; note: number } | null = null;
-const songListeners = new Set<(title: string, year: number) => void>();
+type SongListener = (title: string, composer: string, year: number) => void;
+const songListeners = new Set<SongListener>();
 
-/** Called with each rag's title as it starts. */
-export function onSong(fn: (title: string, year: number) => void): () => void {
+/** Called with each piece's title, composer and year as it starts. */
+export function onSong(fn: SongListener): () => void {
   songListeners.add(fn);
   return () => songListeners.delete(fn);
 }
 
-function startMusic(): void {
+/** A fresh random order of the playlist, not starting with `avoid` (so nothing plays twice running). */
+function shuffled(count: number, avoid: number): number[] {
+  const order = Array.from({ length: count }, (_, i) => i);
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  if (order.length > 1 && order[0] === avoid) [order[0], order[1]] = [order[1], order[0]];
+  return order;
+}
+
+async function startMusic(): Promise<void> {
+  if (!ctx) return;
+  // The playlist is about an hour of music: load it separately so it never delays the game starting.
+  const { RAGS } = await import('./rags');
   if (!ctx) return;
   const filter = ctx.createBiquadFilter();
   filter.type = 'lowpass';
@@ -220,20 +234,24 @@ function startMusic(): void {
   filter.connect(musicGain);
   pianoBus = filter;
 
-  // Shuffle the set, then play it round and round.
-  const order = RAGS.map((_, i) => i).sort(() => Math.random() - 0.5);
+  // Shuffle the set, play it through, then reshuffle for the next time round.
+  let order = shuffled(RAGS.length, -1);
   let slot = 0;
   let notes: Note[] = [];
   let i = 0;
   let songStart = 0;
   let pausedAt: number | null = null;
   const begin = (at: number) => {
-    const rag = RAGS[order[slot % order.length]];
+    if (slot >= order.length) {
+      order = shuffled(RAGS.length, order[order.length - 1]);
+      slot = 0;
+    }
+    const rag: Rag = RAGS[order[slot]];
     notes = decodeRag(rag);
     i = 0;
     songStart = at;
-    nowPlaying = { title: rag.title, index: order[slot % order.length], note: 0 };
-    for (const fn of songListeners) fn(rag.title, rag.year);
+    nowPlaying = { title: rag.title, index: order[slot], note: 0 };
+    for (const fn of songListeners) fn(rag.title, rag.composer, rag.year);
   };
   begin(ctx.currentTime + 0.3);
 
