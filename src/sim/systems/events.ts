@@ -141,7 +141,7 @@ export function safetyIssues(ctx: SimContext): string[] {
   const sick = state.dinos.filter((d) => d.sick).length;
   if (sick) issues.push(`${sick} sick animal${sick === 1 ? '' : 's'} untreated`);
   const messes = state.messes.filter((m) => m.kind === 'mess').length;
-  const litter = state.messes.length - messes;
+  const litter = state.messes.filter((m) => m.kind === 'litter').length;
   if (messes >= FILTHY_MESSES || litter >= FILTHY_LITTER) issues.push('filthy paths (litter and messes everywhere)');
   return issues;
 }

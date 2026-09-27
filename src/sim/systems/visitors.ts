@@ -195,6 +195,7 @@ export function hourlyVisitors(ctx: SimContext): void {
   const w = state.map.width;
   const dirt = new Map<number, { mess: number; litter: number }>();
   for (const m of state.messes) {
+    if (m.kind === 'dung') continue; // inside the paddocks, out of visitors' way
     const k = m.y * w + m.x;
     const c = dirt.get(k) ?? { mess: 0, litter: 0 };
     c[m.kind]++;

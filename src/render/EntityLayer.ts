@@ -369,7 +369,17 @@ export class EntityLayer {
     for (const m of this.sim.state.messes) {
       const ox = m.x * TILE + 3 + Math.floor(hash2(m.id, 1, 9) * 10);
       const oy = m.y * TILE + 4 + Math.floor(hash2(m.id, 2, 9) * 9);
-      if (m.kind === 'mess') {
+      if (m.kind === 'dung') {
+        // A little heap (two sizes, picked by id); fresh ones steam.
+        const big = hash2(m.id, 3, 9) > 0.5;
+        g.fillStyle(0x3f2a16, 1).fillEllipse(ox, oy, big ? 7 : 5, big ? 3 : 2);
+        g.fillStyle(0x5a3d20, 1).fillEllipse(ox, oy - 1, big ? 5 : 3, 2);
+        g.fillStyle(0x6e4c2a, 1).fillRect(ox - 1, oy - (big ? 3 : 2), 2, 1);
+        if (this.sim.state.hours - m.hour < 6) {
+          const t = Math.floor(time / 250 + m.id) % 3;
+          g.fillStyle(0xf4ecd2, 0.5).fillRect(ox - 1 + (t === 1 ? 1 : 0), oy - 5 - t, 1, 1);
+        }
+      } else if (m.kind === 'mess') {
         g.fillStyle(0x8a6a2a, 0.85).fillEllipse(ox, oy, 8, 4);
         g.fillStyle(0xb8942f, 0.9).fillEllipse(ox - 1, oy, 4, 2);
         const f = Math.floor(time / 120 + m.id);

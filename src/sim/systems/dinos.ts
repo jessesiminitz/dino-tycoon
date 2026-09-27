@@ -4,6 +4,7 @@ import { SPECIES } from '../data/species';
 import { canStep, findPath, walkableNeighbours } from '../pathfind';
 import { fenceAt, tileEdges } from '../fences';
 import type { SimContext } from './context';
+import type { RegionMap } from '../regions';
 
 /** Movement steps per game-hour. */
 export const STEPS_PER_HOUR = 4;
@@ -19,6 +20,16 @@ const CHASE_LOOKAHEAD = 3;
 const FENCE_SEARCH = 40;
 /** Health lost per hour while sick: about a week from full health to death if untreated. */
 const SICK_HEALTH_LOSS = 0.6;
+/** Hours between droppings for the smallest species; each size step down from that is quicker. */
+const DUNG_HOURS_SMALL = 30;
+const DUNG_HOURS_PER_SIZE = 3;
+/** Droppings dry out and crumble away by themselves after this long. */
+const DUNG_LIFETIME = 72;
+/** Paddocks stop getting dirtier past this many droppings per animal (they're trampled in). */
+const MAX_DUNG_PER_DINO = 4;
+/** Droppings per animal before the paddock bothers them. */
+const DUNG_BOTHERS = 2;
+const DUNG_UNHAPPY = 8;
 
 /** Starving or miserable animals go looking for a way out. */
 export function isRestless(d: Dino): boolean {
@@ -26,6 +37,22 @@ export function isRestless(d: Dino): boolean {
 }
 
 export const dinoLabel = (d: Dino) => `${d.name} the ${SPECIES[d.species].name}`;
+
+/** Droppings lying in each region. */
+export function dungByRegion(state: GameState, regions: RegionMap): Map<number, number> {
+  const out = new Map<number, number>();
+  for (const m of state.messes) {
+    if (m.kind !== 'dung') continue;
+    const r = regions.tileRegion[m.y * state.map.width + m.x];
+    out.set(r, (out.get(r) ?? 0) + 1);
+  }
+  return out;
+}
+
+/** Whether a paddock has enough droppings to bother the animals in it. */
+export function paddockIsFilthy(dung: number, animals: number): boolean {
+  return dung > animals * DUNG_BOTHERS;
+}
 
 function tileIndex(state: GameState, x: number, y: number): number {
   return y * state.map.width + x;
@@ -154,6 +181,20 @@ export function hourlyDinos(ctx: SimContext): void {
     const r = regions.tileRegion[tileIndex(state, d.x, d.y)];
     byRegion.set(r, [...(byRegion.get(r) ?? []), d]);
   }
+
+  // Droppings: old ones crumble away; each animal in a paddock goes now and then.
+  state.messes = state.messes.filter((m) => m.kind !== 'dung' || state.hours - m.hour < DUNG_LIFETIME);
+  const dung = dungByRegion(state, regions);
+  for (const [regionId, group] of byRegion) {
+    if (regions.regions[regionId]?.kind !== 'paddock') continue;
+    for (const d of group) {
+      if ((dung.get(regionId) ?? 0) >= group.length * MAX_DUNG_PER_DINO) break;
+      const every = DUNG_HOURS_SMALL - (SPECIES[d.species].size - 1) * DUNG_HOURS_PER_SIZE;
+      if (!ctx.rng.chance(1 / every)) continue;
+      state.messes.push({ id: state.nextId++, kind: 'dung', x: d.x, y: d.y, hour: state.hours });
+      dung.set(regionId, (dung.get(regionId) ?? 0) + 1);
+    }
+  }
   for (const [regionId, group] of byRegion) {
     const region = regions.regions[regionId];
     const spaceWanted = group.reduce((sum, d) => sum + SPECIES[d.species].space, 0);
@@ -166,6 +207,7 @@ export function hourlyDinos(ctx: SimContext): void {
       h -= Math.min(40, crowding * 40);
       if (sp.social && !group.some((o) => o !== d && o.species === d.species)) h -= 15;
       if (sp.diet === 'herbivore' && group.some((o) => canEat(o, d))) h -= 30;
+      if (region?.kind === 'paddock' && paddockIsFilthy(dung.get(regionId) ?? 0, group.length)) h -= DUNG_UNHAPPY;
       d.happiness = Math.round(Math.max(0, Math.min(100, h)));
     }
   }

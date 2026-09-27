@@ -137,10 +137,10 @@ export interface Review {
   good: boolean;
 }
 
-/** Something on the ground a janitor needs to clean up. */
+/** Something on the ground to clean up: litter and accidents (janitors), dino droppings (workers). */
 export interface Mess {
   id: number;
-  kind: 'litter' | 'mess';
+  kind: 'litter' | 'mess' | 'dung';
   x: number;
   y: number;
   hour: number;

@@ -10,7 +10,8 @@ import { showMenu } from './ui/menu';
 import { mountPauseMenu, offerUpdate, showOutcome } from './ui/overlays';
 import { UiState } from './ui/uiState';
 import { mountTutorial } from './ui/tutorial';
-import { audioDebug, initAudio, playSfx, type Sfx } from './audio/audio';
+import { audioDebug, initAudio, onSong, playSfx, type Sfx } from './audio/audio';
+import { getSettings } from './ui/settings';
 
 /** Saves the running park, if there is one. Set when a park starts. */
 let saveCurrent: () => void = () => {};
@@ -40,6 +41,9 @@ function startGame(state: GameState, slot: SlotId): void {
 
   mountPauseMenu(sim, { save: saveCurrent, mainMenu: toMainMenu, toast: (t) => hud.toast(t) });
   mountTutorial(sim, (t) => hud.toast(t));
+  onSong((title, year) => {
+    if (getSettings().music) hud.toast(`🎹 Now playing: ${title} (Scott Joplin, ${year})`);
+  });
   sim.onEvent((e) => {
     const sound = eventSound(e.text, e.kind, e.outcome);
     if (sound) playSfx(sound);

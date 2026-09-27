@@ -59,6 +59,7 @@ const DINO_FILTERS: Filter<{ d: Dino; concerns: Concern<DinoTag>[] }>[] = [
       ['lonely', '💔 Lonely'],
       ['danger', '⚠️ In danger'],
       ['fence', '🚧 Weak fence'],
+      ['dung', '💩 Dirty paddock'],
     ] as [DinoTag, string][]
   ).map(([tag, label]) => ({ id: tag, label, test: ({ concerns }: { concerns: Concern<DinoTag>[] }) => concerns.some((c) => c.tag === tag) })),
 ];

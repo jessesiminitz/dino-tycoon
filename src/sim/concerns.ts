@@ -6,10 +6,10 @@ import { REFILL_BELOW, REPAIR_BELOW } from './data/staff';
 import { ADVICE, TOPICS, type Topic } from './data/thoughts';
 import { allFenceEdges, fenceHp } from './fences';
 import type { RegionMap } from './regions';
-import { canEat } from './systems/dinos';
+import { canEat, paddockIsFilthy } from './systems/dinos';
 
 /** Filterable reasons a dino (or staff member) is unhappy. */
-export type DinoTag = 'hungry' | 'sick' | 'escaped' | 'crowded' | 'lonely' | 'danger' | 'feeder' | 'fence';
+export type DinoTag = 'hungry' | 'sick' | 'escaped' | 'crowded' | 'lonely' | 'danger' | 'feeder' | 'fence' | 'dung';
 export type StaffTag = 'overworked' | 'idle';
 
 export interface Concern<T extends string> {
@@ -45,6 +45,8 @@ export function dinoConcerns(state: GameState, regions: RegionMap, d: Dino): Con
       out.push({ text: `I'm lonely. I'd love another ${sp.name} to keep me company.`, good: false, tag: 'lonely' });
     const predator = group.find((o) => canEat(o, d));
     if (predator) out.push({ text: `There's a ${SPECIES[predator.species].name} in here with me!`, good: false, tag: 'danger' });
+    const dung = state.messes.filter((m) => m.kind === 'dung' && regions.tileRegion[m.y * w + m.x] === regionId).length;
+    if (paddockIsFilthy(dung, group.length)) out.push({ text: 'Our paddock is full of dung. A worker could tidy it up.', good: false, tag: 'dung' });
     if (region.weakestFence !== 0 && region.weakestFence < sp.fenceNeeded)
       out.push({ text: `${FENCE_TYPES[region.weakestFence].name} fences can't hold me. I need ${FENCE_TYPES[sp.fenceNeeded].name.toLowerCase()} or stronger.`, good: false, tag: 'fence' });
   }
@@ -64,7 +66,11 @@ export function staffConcerns(state: GameState, m: Staff): Concern<StaffTag>[] {
     case 'worker': {
       const fences = allFenceEdges(state).filter((e) => fenceHp(state, e) < REPAIR_BELOW).length;
       const feeders = state.feeders.filter((f) => f.stock < FEEDER_TYPES[f.kind].capacity * REFILL_BELOW).length;
-      return busy(fences + feeders, 8, `${fences} fences to mend and ${feeders} feeders to fill. Too much for us! Hire another worker.`, 'All fences and feeders are in good shape.');
+      const dung = state.messes.filter((x) => x.kind === 'dung').length;
+      // Dung waits for a quiet moment, so it only counts a little toward the workload.
+      const out = busy(fences + feeders + Math.floor(dung / 4), 8, `${fences} fences to mend and ${feeders} feeders to fill. Too much for us! Hire another worker.`, 'All fences and feeders are in good shape.');
+      if (dung > 0) out.push({ text: `${dung} dino dropping${dung === 1 ? '' : 's'} to shovel when there's time.`, good: true });
+      return out;
     }
     case 'guard': {
       const loose = state.dinos.filter((d) => d.escaped).length;
@@ -75,7 +81,7 @@ export function staffConcerns(state: GameState, m: Staff): Concern<StaffTag>[] {
       return busy(patients, 3, `${patients} animals need treatment. Hire another vet!`, 'Everyone is healthy.');
     }
     case 'janitor': {
-      const dirt = state.messes.length;
+      const dirt = state.messes.filter((x) => x.kind !== 'dung').length;
       const messes = state.messes.filter((x) => x.kind === 'mess').length;
       const out = busy(dirt, 10, `${dirt} messes and bits of litter to clean. I can't keep up! Hire another janitor.`, 'The paths are spotless.');
       if (messes > 0 && !state.buildings.some((b) => b.kind === 'restroom'))

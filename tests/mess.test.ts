@@ -242,3 +242,40 @@ it('fresh games start clean', () => {
   expect(s.messes).toEqual([]);
   expect(s.reviews).toEqual([]);
 });
+
+describe('dino droppings', () => {
+  it('dinos leave droppings now and then, which crumble away after a few days', () => {
+    const s = openPark();
+    const sim = new Simulation(s);
+    run(sim, 48);
+    const dung = s.messes.filter((m) => m.kind === 'dung');
+    expect(dung.length).toBeGreaterThan(0);
+    expect(dung.length).toBeLessThan(s.dinos.length * 4); // a trickle, not a flood
+    const first = dung[0].id;
+    run(sim, 80);
+    expect(s.messes.some((m) => m.id === first)).toBe(false);
+  });
+
+  it('workers shovel dung; janitors leave it alone; visitors never notice it', () => {
+    const s = openPark();
+    applyCommand(s, { type: 'hireStaff', role: 'janitor' });
+    s.messes.push({ id: 9100, kind: 'dung', x: 5, y: 6, hour: s.hours });
+    const sim = new Simulation(s);
+    sim.step();
+    expect(s.staff[0].task).toBeNull();
+    applyCommand(s, { type: 'hireStaff', role: 'worker' });
+    for (let i = 0; i < 30 && s.messes.some((m) => m.id === 9100); i++) sim.step();
+    expect(s.messes.some((m) => m.id === 9100)).toBe(false);
+  });
+
+  it('a paddock piled with dung makes its animals unhappy and says so', () => {
+    const s = openPark();
+    const sim = new Simulation(s);
+    run(sim, 1);
+    const before = s.dinos.map((d) => d.happiness);
+    for (let i = 0; i < 12; i++) s.messes.push({ id: 9200 + i, kind: 'dung', x: 3 + (i % 6), y: 3 + Math.floor(i / 6), hour: s.hours });
+    run(sim, 1);
+    expect(s.dinos.every((d, i) => d.happiness < before[i] + 1)).toBe(true);
+    expect(dinoConcerns(s, computeRegions(s), s.dinos[0]).some((c) => c.tag === 'dung')).toBe(true);
+  });
+});

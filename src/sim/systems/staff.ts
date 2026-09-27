@@ -63,6 +63,8 @@ function stillNeeded(state: GameState, t: StaffTask): boolean {
 function candidateTasks(state: GameState, m: Staff): { task: StaffTask; bonus: number }[] {
   const out: { task: StaffTask; bonus: number }[] = [];
   if (m.role === 'worker') {
+    // Shovelling dung is the least urgent job: done when there's nothing more pressing nearby.
+    for (const x of state.messes) if (x.kind === 'dung') out.push({ task: { kind: 'clean', messId: x.id }, bonus: -12 });
     for (const e of allFenceEdges(state)) {
       const hp = fenceHp(state, e);
       if (hp < REPAIR_BELOW) out.push({ task: { kind: 'repair', dir: e.dir, x: e.x, y: e.y }, bonus: hp <= 0 ? 60 : 0 });
@@ -76,7 +78,7 @@ function candidateTasks(state: GameState, m: Staff): { task: StaffTask; bonus: n
     for (const d of state.dinos) if (d.sick || d.health < 60) out.push({ task: { kind: 'treat', dinoId: d.id }, bonus: d.sick ? 20 : 0 });
   } else if (m.role === 'janitor') {
     // Accidents first: they gross visitors out the most.
-    for (const x of state.messes) out.push({ task: { kind: 'clean', messId: x.id }, bonus: x.kind === 'mess' ? 30 : 0 });
+    for (const x of state.messes) if (x.kind !== 'dung') out.push({ task: { kind: 'clean', messId: x.id }, bonus: x.kind === 'mess' ? 30 : 0 });
   }
   return out;
 }
@@ -146,8 +148,11 @@ function complete(ctx: SimContext, m: Staff, t: StaffTask): void {
     case 'clean': {
       const spot = state.messes.find((x) => x.id === t.messId);
       if (!spot) return;
-      // Sweep up everything around the spot while here.
-      state.messes = state.messes.filter((x) => Math.abs(x.x - spot.x) > CLEAN_RADIUS || Math.abs(x.y - spot.y) > CLEAN_RADIUS);
+      // Sweep up everything of the same sort around the spot while here.
+      const dung = spot.kind === 'dung';
+      state.messes = state.messes.filter(
+        (x) => (x.kind === 'dung') !== dung || Math.abs(x.x - spot.x) > CLEAN_RADIUS || Math.abs(x.y - spot.y) > CLEAN_RADIUS,
+      );
       return;
     }
   }
@@ -162,7 +167,7 @@ export function stepStaff(ctx: SimContext): void {
     m.px = m.x;
     m.py = m.y;
 
-    if (m.role === 'guide' || m.role === 'mascot' || (m.role === 'janitor' && !m.task && state.messes.length === 0)) {
+    if (m.role === 'guide' || m.role === 'mascot' || (m.role === 'janitor' && !m.task && !state.messes.some((x) => x.kind !== 'dung'))) {
       // Guides and the mascot stroll the paths among the visitors.
       const here = Math.round(m.y) * w + Math.round(m.x);
       const options = walkableNeighbours(state, here, onWalkway);
@@ -229,7 +234,9 @@ export function describeTask(state: GameState, m: Staff): string {
     case 'treat':
       return d ? `${onSite ? 'Treating' : 'Heading to'} ${d.name}` : 'Heading to a patient';
     case 'clean': {
-      const what = state.messes.find((x) => x.id === t.messId)?.kind === 'mess' ? 'a mess' : 'litter';
+      const kind = state.messes.find((x) => x.id === t.messId)?.kind;
+      if (kind === 'dung') return onSite ? 'Shovelling dino dung' : 'Heading to shovel dino dung';
+      const what = kind === 'mess' ? 'a mess' : 'litter';
       return onSite ? `Cleaning up ${what}` : `Heading to clean up ${what}`;
     }
   }

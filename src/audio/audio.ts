@@ -1,4 +1,6 @@
 import { getSettings, onSettings, type Settings } from '../ui/settings';
+import { RAGS } from './rags';
+import { decodeRag, type Note } from './ragNotes';
 
 /**
  * All sound is synthesised with Web Audio: no audio files to download or license.
@@ -160,47 +162,110 @@ export function setRain(level: number): void {
   rainGain.gain.setTargetAtTime(level * 0.25, ctx.currentTime, 0.8);
 }
 
-// --- Music: a gentle chiptune loop, scheduled a little ahead of time. ---
+// --- Music: Scott Joplin rags (public domain) on a synthesised honky-tonk piano. ---
 
-const BPM = 100;
-const STEP = 60 / BPM / 2; // eighth notes
-/** C – Am – F – G, two bars each. */
-const CHORDS = [
-  [262, 330, 392],
-  [220, 262, 330],
-  [175, 220, 262],
-  [196, 247, 294],
-];
-const PENTATONIC = [523, 587, 659, 784, 880, 1047];
+let pianoBus: AudioNode;
+
+/** One piano note: a bright attack that decays like a struck string, a little out of tune for that saloon sound. */
+function pianoNote(midi: number, start: number, dur: number): void {
+  if (!ctx) return;
+  const f = 440 * 2 ** ((midi - 69) / 12);
+  const bass = midi < 55;
+  const peak = (bass ? 0.13 : 0.16) * (0.9 + Math.random() * 0.2);
+  const ring = Math.min(dur, 1.4);
+  const end = start + ring + 0.12;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, start);
+  g.gain.exponentialRampToValueAtTime(peak, start + 0.006);
+  g.gain.exponentialRampToValueAtTime(peak * 0.35, start + 0.18);
+  g.gain.setValueAtTime(peak * 0.35 * Math.max(0.3, 1 - ring * 0.5), start + ring);
+  g.gain.exponentialRampToValueAtTime(0.0001, end);
+  g.connect(pianoBus);
+  for (const [type, mult, vol] of [
+    ['triangle', 1, 1],
+    ['triangle', 1.0035, 0.6], // honky-tonk detune
+    ['sine', 2, bass ? 0.15 : 0.3],
+  ] as const) {
+    const o = ctx.createOscillator();
+    o.type = type;
+    o.frequency.value = f * mult;
+    const og = ctx.createGain();
+    og.gain.value = vol;
+    o.connect(og).connect(g);
+    o.start(start);
+    o.stop(end + 0.02);
+  }
+}
+
+const SONG_GAP = 2.5;
+let nowPlaying: { title: string; index: number; note: number } | null = null;
+const songListeners = new Set<(title: string, year: number) => void>();
+
+/** Called with each rag's title as it starts. */
+export function onSong(fn: (title: string, year: number) => void): () => void {
+  songListeners.add(fn);
+  return () => songListeners.delete(fn);
+}
 
 function startMusic(): void {
   if (!ctx) return;
-  let step = 0;
-  let next = ctx.currentTime + 0.2;
-  let melody = 2;
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.value = 3200;
+  filter.Q.value = 0.3;
+  filter.connect(musicGain);
+  pianoBus = filter;
+
+  // Shuffle the set, then play it round and round.
+  const order = RAGS.map((_, i) => i).sort(() => Math.random() - 0.5);
+  let slot = 0;
+  let notes: Note[] = [];
+  let i = 0;
+  let songStart = 0;
+  let pausedAt: number | null = null;
+  const begin = (at: number) => {
+    const rag = RAGS[order[slot % order.length]];
+    notes = decodeRag(rag);
+    i = 0;
+    songStart = at;
+    nowPlaying = { title: rag.title, index: order[slot % order.length], note: 0 };
+    for (const fn of songListeners) fn(rag.title, rag.year);
+  };
+  begin(ctx.currentTime + 0.3);
+
   const schedule = () => {
     if (!ctx || ctx.state !== 'running') return;
-    while (next < ctx.currentTime + 0.3) {
-      const bar = Math.floor(step / 8);
-      const chord = CHORDS[Math.floor(bar / 2) % CHORDS.length];
-      const beat = step % 8;
-      // Bass on the beat, arpeggio on the off-beats.
-      if (beat % 2 === 0) tone('triangle', chord[0] / 2, next, STEP * 1.8, 0.3, musicGain);
-      else tone('square', chord[(beat >> 1) % 3], next, STEP * 0.8, 0.05, musicGain);
-      // A wandering pentatonic melody, resting now and then.
-      if (beat % 2 === 0 && Math.random() > 0.3) {
-        melody = Math.max(0, Math.min(PENTATONIC.length - 1, melody + Math.floor(Math.random() * 3) - 1));
-        tone('square', PENTATONIC[melody], next, STEP * 1.6, 0.06, musicGain);
+    const now = ctx.currentTime;
+    // Music switched off: hold our place in the song rather than play silently.
+    if (!getSettings().music) {
+      pausedAt ??= now - songStart;
+      return;
+    }
+    if (pausedAt !== null) {
+      songStart = now + 0.1 - pausedAt;
+      pausedAt = null;
+    }
+    const horizon = now + 0.5;
+    while (i < notes.length && songStart + notes[i].time < horizon) {
+      const n = notes[i++];
+      const at = songStart + n.time + (Math.random() - 0.5) * 0.008; // a human touch
+      if (at >= now) pianoNote(n.midi, at, n.dur);
+    }
+    if (nowPlaying) nowPlaying.note = i;
+    if (i >= notes.length) {
+      const last = notes[notes.length - 1];
+      const done = songStart + (last ? last.time + last.dur : 0);
+      if (now > done - 0.4) {
+        slot++;
+        begin(done + SONG_GAP);
       }
-      next += STEP;
-      step = (step + 1) % (CHORDS.length * 16);
     }
   };
   window.setInterval(schedule, 100);
 }
 
 /** For automated checks: whether audio is running and the current volume levels. */
-export function audioDebug(): { state: string; sfx: number; music: number; rain: number } | null {
+export function audioDebug(): { state: string; sfx: number; music: number; rain: number; song: typeof nowPlaying } | null {
   if (!ctx) return null;
-  return { state: ctx.state, sfx: sfxGain.gain.value, music: musicGain.gain.value, rain: rainGain.gain.value };
+  return { state: ctx.state, sfx: sfxGain.gain.value, music: musicGain.gain.value, rain: rainGain.gain.value, song: nowPlaying };
 }

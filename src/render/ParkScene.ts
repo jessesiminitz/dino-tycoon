@@ -6,7 +6,8 @@ import { describeTask } from '../sim/systems/staff';
 import { digChance, lockedSpecies } from '../sim/systems/fossils';
 import { FENCE_REFUND, FENCE_TYPES } from '../sim/data/fences';
 import { DINO_RESALE, FEEDER_TYPES } from '../sim/data/feeders';
-import { SPECIES } from '../sim/data/species';
+import { SPECIES, type SpeciesId } from '../sim/data/species';
+import { findFenceGaps, gapCost } from '../sim/gaps';
 import { dinoLabel } from '../sim/systems/dinos';
 import { SNACK_NAMES } from '../sim/systems/visitors';
 import { fenceAt, fenceHp, fenceTypeAt } from '../sim/fences';
@@ -264,8 +265,60 @@ export class ParkScene extends Phaser.Scene {
     const x = Math.floor(wx / TILE);
     const y = Math.floor(wy / TILE);
     const r = this.sim.dispatch({ type: 'buyDino', species, x, y });
+    if (!r.ok && this.offerGapFix(species, x, y)) return;
     this.report(r, 'roar');
     if (!r.ok) return;
+    this.afterRelease(species, x, y);
+  }
+
+  /**
+   * The tap was in a fenced box that isn't closed: show the holes in red and
+   * offer to fence (or repair) them and release the dinosaur in one go.
+   */
+  private offerGapFix(species: SpeciesId, x: number, y: number): boolean {
+    const { state } = this.sim;
+    const gaps = findFenceGaps(state, x, y);
+    if (!gaps) return false;
+    playSfx('error');
+    const holes = [...gaps.missing, ...gaps.broken];
+    this.layers.drawGaps(holes);
+    // Bring the gap into view if it's off-screen (or hidden under the info panel).
+    const cam = this.cameras.main;
+    const view = cam.worldView;
+    const gx = holes[0].x * TILE;
+    const gy = holes[0].y * TILE;
+    if (gx < view.x + view.width * 0.15 || gx > view.right - view.width * 0.15 || gy < view.y + view.height * 0.2 || gy > view.bottom - view.height * 0.35) {
+      cam.pan(gx, gy + view.height * 0.1, 400, 'Sine.easeInOut');
+    }
+    const parts = [
+      gaps.missing.length ? `${gaps.missing.length} missing` : '',
+      gaps.broken.length ? `${gaps.broken.length} broken` : '',
+    ].filter(Boolean);
+    const segs = gaps.missing.length + gaps.broken.length === 1 ? 'segment' : 'segments';
+    if (gaps.blocker) {
+      this.hud.showInfo(`This paddock has a gap (${parts.join(' and ')} fence ${segs}, in red) that can't be fenced: ${gaps.blocker.toLowerCase()}`);
+      return true;
+    }
+    const sp = SPECIES[species];
+    const cost = gapCost(gaps, (e) => repairCost(state, e));
+    this.hud.showInfo(`Gap in the fence (${parts.join(', ')}, circled in red). Close it to let your ${sp.name} in.`, {
+      label: `Close gap · ${formatMoney(cost)}`,
+      onClick: () => {
+        if (gaps.missing.length) {
+          const built = this.sim.dispatch({ type: 'buildFences', edges: gaps.missing, fence: gaps.fence });
+          if (!built.ok) return this.report(built);
+        }
+        for (const edge of gaps.broken) this.sim.dispatch({ type: 'repairFence', edge });
+        this.layers.clearGhost();
+        const r = this.sim.dispatch({ type: 'buyDino', species, x, y });
+        this.report(r, 'roar');
+        if (r.ok) this.afterRelease(species, x, y);
+      },
+    });
+    return true;
+  }
+
+  private afterRelease(species: SpeciesId, x: number, y: number): void {
     const sp = SPECIES[species];
     const { regions, tileRegion } = this.sim.regions();
     const weakest = regions[tileRegion[y * this.sim.state.map.width + x]].weakestFence;

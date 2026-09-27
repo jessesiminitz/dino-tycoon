@@ -204,6 +204,21 @@ export class WorldLayers {
     }
   }
 
+  /** Fence gaps: thick red bars, each circled so they stand out at any zoom. */
+  drawGaps(edges: Edge[]): void {
+    const g = this.ghost.clear();
+    for (const edge of edges) {
+      const x = edge.x * TILE;
+      const y = edge.y * TILE;
+      g.fillStyle(0xff4a3a, 0.95);
+      if (edge.dir === 'h') g.fillRect(x, y - 2, TILE, 4);
+      else g.fillRect(x - 2, y, 4, TILE);
+      const cx = edge.dir === 'h' ? x + TILE / 2 : x;
+      const cy = edge.dir === 'h' ? y : y + TILE / 2;
+      g.lineStyle(2, 0xff4a3a, 0.9).strokeCircle(cx, cy, TILE * 0.7);
+    }
+  }
+
   clearGhost(): void {
     this.ghost.clear();
   }

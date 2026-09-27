@@ -10,7 +10,7 @@ import { Simulation } from '../src/sim/Simulation';
 import { STEPS_PER_HOUR } from '../src/sim/systems/dinos';
 import { Terrain } from '../src/sim/terrain';
 import type { GameEvent } from '../src/sim/systems/context';
-import { DINO_TEMPLATES } from '../src/render/dinoArt';
+import { dinoShape } from '../src/render/dinoArt';
 
 /** 20×14 grass world, all owned, gate at (0, 13), with a fenced paddock over tiles [2,10) × [2,8). */
 function parkWithPaddock(): GameState {
@@ -39,17 +39,26 @@ describe('species data', () => {
   it('has 12 species, 6 at the start, and every one has art', () => {
     expect(SPECIES_IDS).toHaveLength(12);
     expect(SPECIES_IDS.filter((id) => SPECIES[id].starter)).toHaveLength(6);
-    for (const id of SPECIES_IDS) expect(DINO_TEMPLATES[SPECIES[id].art.template]).toBeDefined();
+    for (const id of SPECIES_IDS) expect(dinoShape(SPECIES[id]).length).toBeGreaterThan(0);
   });
 
-  it('art templates are rectangular and use known colour codes', () => {
-    for (const rows of Object.values(DINO_TEMPLATES)) {
-      const w = rows[0].length;
-      for (const r of rows) {
-        expect(r.length).toBe(w);
-        expect(r).toMatch(/^[.BDAEW]+$/);
-      }
+  it('each sprite stands on its bottom row and strides between frames', () => {
+    for (const id of SPECIES_IDS) {
+      const a = dinoShape(SPECIES[id], 0);
+      const b = dinoShape(SPECIES[id], 1);
+      expect(a[a.length - 1].some((k) => k), `${id} feet`).toBe(true);
+      const painted = a.flat().filter((k) => k).length;
+      expect(painted, `${id} size`).toBeGreaterThan(60);
+      expect(JSON.stringify(a), `${id} walk frame`).not.toBe(JSON.stringify(b));
     }
+  });
+
+  it('bigger species get bigger sprites', () => {
+    const area = (id: (typeof SPECIES_IDS)[number]) => dinoShape(SPECIES[id]).flat().filter((k) => k).length;
+    expect(area('compsognathus')).toBeLessThan(area('velociraptor'));
+    expect(area('velociraptor')).toBeLessThan(area('allosaurus'));
+    expect(area('allosaurus')).toBeLessThan(area('tyrannosaurus'));
+    expect(area('protoceratops')).toBeLessThan(area('triceratops'));
   });
 });
 

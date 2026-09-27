@@ -9,7 +9,7 @@ export interface StaffType {
 }
 
 export const STAFF_TYPES: Record<StaffRole, StaffType> = {
-  worker: { role: 'worker', name: 'Worker', wage: 60, description: 'Refills feeders that run low and repairs worn or broken fences.' },
+  worker: { role: 'worker', name: 'Worker', wage: 60, description: 'Refills feeders that run low, repairs worn or broken fences, and shovels dino dung.' },
   guard: { role: 'guard', name: 'Guard', wage: 80, description: 'Tracks down escaped dinosaurs and returns them to their paddock.' },
   vet: { role: 'vet', name: 'Vet', wage: 100, description: 'Treats sick and injured dinosaurs before illness spreads.' },
   janitor: { role: 'janitor', name: 'Janitor', wage: 40, description: 'Sweeps up litter and cleans up accidents on the paths, messes first.' },
