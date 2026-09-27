@@ -99,7 +99,11 @@ Headless Chrome against the dev server (`http://localhost:5173`), using `puppete
 
 Scripts that step the sim by hand should use 16 steps per game-hour.
 
-## Ideas not done yet (ask before starting)
+## Next up: `docs/ROADMAP.md`
+
+The owner approved ten fun and engagement features, **to be built in order**: babies, tap-to-interact and photos, park requests, the fossil dig mini-game, lagoon and aviary, attractions, the sticker book, day and night, choice events, and more sound. Each has a design, sim, UI, test and check plan there. Work through the table from the top, one release per feature.
+
+## Other ideas not done yet (ask before starting)
 
 - Milestone M8 from the original plan: an App Store build (Capacitor plus a cloud macOS build). It needs an Apple Developer account.
 - Scenario deadlines are counted in game days, so at 5-minute days they take long in real time (First Steps Bronze is 45 days, about 3¾ h at 1×). Offered to shorten them; no answer yet.
