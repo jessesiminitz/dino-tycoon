@@ -5,7 +5,7 @@ import { decodeRag, type Note, type Rag } from './ragNotes';
  * All sound is synthesised with Web Audio: no audio files to download or license.
  * iOS only allows audio after a user gesture, so the context starts on the first tap.
  */
-export type Sfx = 'click' | 'build' | 'cash' | 'error' | 'roar' | 'alert' | 'chime' | 'fanfare' | 'sad' | 'thunder';
+export type Sfx = 'click' | 'build' | 'cash' | 'error' | 'roar' | 'alert' | 'chime' | 'fanfare' | 'sad' | 'thunder' | 'chirp' | 'snap' | 'shutter';
 
 let ctx: AudioContext | null = null;
 let sfxGain: GainNode;
@@ -135,6 +135,17 @@ export function playSfx(name: Sfx): void {
     case 'error':
       tone('square', 196, t, 0.1, 0.15);
       return tone('square', 147, t + 0.1, 0.16, 0.15);
+    case 'chirp':
+      // A happy little trill.
+      tone('triangle', 880, t, 0.09, 0.14, sfxGain, 1320);
+      return tone('triangle', 1175, t + 0.1, 0.14, 0.12, sfxGain, 1568);
+    case 'snap':
+      // A grumpy chomp.
+      burst(t, 0.12, 0.5, 400, 3);
+      return tone('sawtooth', 140, t, 0.18, 0.14, sfxGain, 70);
+    case 'shutter':
+      burst(t, 0.03, 0.45, 3500, 1.5);
+      return burst(t + 0.07, 0.05, 0.35, 2500, 1.5);
     case 'roar':
       burst(t, 0.7, 0.6, 220, 2);
       return tone('sawtooth', 110, t, 0.7, 0.18, sfxGain, 55);

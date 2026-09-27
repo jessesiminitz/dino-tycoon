@@ -17,7 +17,7 @@ export const MAP_WIDTH = 64;
 export const MAP_HEIGHT = 48;
 export const STARTING_MONEY = 50_000;
 export const START_HOUR = 8;
-export const SAVE_VERSION = 13;
+export const SAVE_VERSION = 14;
 
 export interface Dino {
   id: number;
@@ -45,7 +45,13 @@ export interface Dino {
   homeY: number;
   /** Hatched in the park and not yet grown up (see systems/breeding.ts). */
   baby: boolean;
+  /** Game-hours of the last treat and the last pat that cheered it up (see systems/care.ts). */
+  lastTreatHour: number;
+  lastPatHour: number;
 }
+
+/** Long ago: never treated or patted. */
+export const NEVER = -1_000_000;
 
 /** An egg laid by a happy pair; it hatches where it lies. */
 export interface Egg {
@@ -201,6 +207,8 @@ export interface Stats {
   restroomComplaintDay: number;
   /** Babies hatched in this park. */
   hatched: number;
+  /** Dino photos taken. */
+  photos: number;
   /** Last game day the park was warned about accidents, and about litter. */
   messDay: number;
   litterDay: number;
@@ -294,7 +302,7 @@ export function newGame(seed: number): GameState {
     fossils: {},
     stormHours: 0,
     scenario: { id: 'sandbox', status: 'free', round: 0, roundStart: 1, earned: [] },
-    stats: { bestDayVisitors: 0, escapes: 0, inspectionsPassed: 0, restroomComplaintDay: 0, hatched: 0, messDay: 0, litterDay: 0 },
+    stats: { bestDayVisitors: 0, escapes: 0, inspectionsPassed: 0, restroomComplaintDay: 0, hatched: 0, photos: 0, messDay: 0, litterDay: 0 },
     tutorialStep: null,
     fossilBeds: [],
     decor: [],
@@ -430,6 +438,12 @@ export function migrate(raw: { version?: number } & Record<string, unknown>): Ga
     state.eggs = [];
     state.stats.hatched = 0;
     raw.version = 13;
+  }
+  if (raw.version === 13) {
+    const state = raw as unknown as GameState;
+    for (const d of state.dinos) Object.assign(d, { lastTreatHour: NEVER, lastPatHour: NEVER });
+    state.stats.photos = 0;
+    raw.version = 14;
   }
   return raw.version === SAVE_VERSION ? (raw as unknown as GameState) : null;
 }

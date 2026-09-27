@@ -11,6 +11,7 @@ export const EXPENSE_CATEGORIES = [
   'maintenance',
   'upkeep',
   'fines',
+  'treats',
   'interest',
   'repayments',
 ] as const;
@@ -33,6 +34,7 @@ export const CATEGORY_LABELS: Record<IncomeCategory | ExpenseCategory, string> =
   maintenance: 'Repairs & medicine',
   upkeep: 'Building upkeep',
   fines: 'Fines',
+  treats: 'Dino treats',
   interest: 'Loan interest',
   repayments: 'Loan repayments',
 };

@@ -439,6 +439,20 @@ button {
   opacity: 0.8;
 }
 
+.info-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+.action-btn.small {
+  min-width: var(--tap);
+  padding: 0 6px;
+  font-size: 18px;
+  background: rgba(232, 181, 58, 0.35);
+}
+
 .action-btn:disabled {
   background: #555;
   color: #bbb;
@@ -1865,5 +1879,53 @@ body:not(.in-park) #info {
     gap: 0 12px;
     margin: 4px 0;
     font-size: 13px;
+  }
+}
+
+/* ---------- Photos ---------- */
+
+.photo-card {
+  width: auto;
+  max-width: min(100%, 720px);
+  align-items: center;
+  gap: 6px;
+  padding: 12px;
+}
+
+.photo-img {
+  display: block;
+  max-width: 100%;
+  max-height: calc(100vh - 150px - var(--safe-top) - var(--safe-bottom));
+  object-fit: contain;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  transform: rotate(-1.5deg);
+  -webkit-touch-callout: default; /* allow press-and-hold to save on iOS */
+  user-select: auto;
+}
+
+.photo-tip {
+  margin: 4px 0 0;
+  text-align: center;
+}
+
+.photo-flash {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.photo-flash.go {
+  animation: photo-flash 0.45s ease-out;
+}
+
+@keyframes photo-flash {
+  from {
+    opacity: 0.9;
+  }
+  to {
+    opacity: 0;
   }
 }

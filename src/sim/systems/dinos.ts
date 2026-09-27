@@ -5,6 +5,7 @@ import { canStep, findPath, walkableNeighbours } from '../pathfind';
 import { fenceAt, tileEdges } from '../fences';
 import type { SimContext } from './context';
 import type { RegionMap } from '../regions';
+import { careJoy } from './care';
 
 /** Movement steps per game-hour. */
 export const STEPS_PER_HOUR = 16;
@@ -224,6 +225,7 @@ export function hourlyDinos(ctx: SimContext): void {
       if (sp.social && !group.some((o) => o !== d && o.species === d.species)) h -= 15;
       if (sp.diet === 'herbivore' && group.some((o) => canEat(o, d))) h -= 30;
       if (region?.kind === 'paddock' && paddockIsFilthy(dung.get(regionId) ?? 0, group.length)) h -= DUNG_UNHAPPY;
+      h += careJoy(state, d);
       d.happiness = Math.round(Math.max(0, Math.min(100, h)));
     }
   }

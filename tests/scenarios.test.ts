@@ -149,7 +149,7 @@ function fakeDino(s: GameState) {
   const { x, y } = s.entrance;
   return {
     id: 0, species: 'protoceratops' as const, name: 'Test', x, y, px: x, py: y, path: [],
-    hunger: 0, health: 100, happiness: 100, bornHour: 0, sick: false, escaped: false, homeX: x, homeY: y, baby: false,
+    hunger: 0, health: 100, happiness: 100, bornHour: 0, sick: false, escaped: false, homeX: x, homeY: y, baby: false, lastTreatHour: -1e6, lastPatHour: -1e6,
   };
 }
 

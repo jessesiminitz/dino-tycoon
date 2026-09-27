@@ -8,6 +8,7 @@ import { FEEDER_TYPES, type FeederKind } from '../sim/data/feeders';
 import { SPECIES, SPECIES_IDS, type SpeciesId } from '../sim/data/species';
 import { paintDino, paintEgg } from './dinoArt';
 import { hoursToHatch, WOBBLE_HOURS } from '../sim/systems/breeding';
+import type { CareEffect } from '../sim/systems/care';
 import { TILE } from './tileset';
 import { paintRows } from './pixels';
 import { paintDigSite, paintRestaurant, paintRestroom, paintSnackStall, paintSouvenirShop, paintTrashCan, paintTrough } from './sceneryArt';
@@ -15,6 +16,9 @@ import { paintDigSite, paintRestaurant, paintRestroom, paintSnackStall, paintSou
 const dinoKey = (id: SpeciesId, frame: 0 | 1 = 0, baby = false) => `dino-${id}-${frame}${baby ? '-baby' : ''}`;
 const eggKey = (id: SpeciesId) => `egg-${id}`;
 const feederKey = (kind: FeederKind, full: boolean) => `feeder-${kind}-${full ? 'full' : 'empty'}`;
+/** How long hearts or a "Nope!" stay up, in ms. */
+const EFFECT_MS = 1100;
+const HEART = ['.X.X.', 'XXXXX', '.XXX.', '..X..'];
 /** Sprites stand with their feet this far down the tile. */
 const FOOT_Y = 13;
 
@@ -112,6 +116,8 @@ export class EntityLayer {
   private buildings = new Map<number, Phaser.GameObjects.Image>();
   private staff = new Map<number, Phaser.GameObjects.Image>();
   private eggs = new Map<number, Phaser.GameObjects.Image>();
+  /** Hearts and "Nope!" bubbles over animals that were just treated or patted. */
+  private effects: { dinoId: number; kind: CareEffect; start: number; label?: Phaser.GameObjects.Text }[] = [];
   private markers: Phaser.GameObjects.Graphics;
   /** Litter and messes on the ground, under everyone's feet. */
   private dirt: Phaser.GameObjects.Graphics;
@@ -196,6 +202,16 @@ export class EntityLayer {
     return this.sim.state.buildings.find((b) => b.x === tx && b.y === ty);
   }
 
+  /** Show how an animal reacted to a treat or pat. */
+  careEffect(dinoId: number, kind: CareEffect): void {
+    this.effects.push({ dinoId, kind, start: this.scene.time.now });
+  }
+
+  /** The sprite drawn for a dino (for photos). */
+  dinoSprite(id: number): Phaser.GameObjects.Image | undefined {
+    return this.dinos.get(id);
+  }
+
   /** Where a dino is drawn right now (feet position, world pixels). */
   dinoPosition(d: Dino): { x: number; y: number } {
     const t = this.sim.stepProgress;
@@ -233,6 +249,7 @@ export class EntityLayer {
     const sh = this.shadows.clear();
     sh.fillStyle(0x000000, 0.22);
     this.drawDirt(time);
+    this.drawEffects(g, time);
 
     // Feeders
     const liveFeeders = new Set<number>();
@@ -328,6 +345,13 @@ export class EntityLayer {
     }
     if (this.selection?.kind === 'egg' && !state.eggs.some((e) => e.id === this.selection!.id)) this.selection = null;
 
+    // A happy hop for animals that just got hearts.
+    const hops = new Map<number, number>();
+    for (const e of this.effects) {
+      const t = (time - e.start) / EFFECT_MS;
+      if (e.kind === 'hearts' && t < 0.35) hops.set(e.dinoId, -Math.round(Math.sin((t / 0.35) * Math.PI) * 3));
+    }
+
     // Dinosaurs
     const liveDinos = new Set<number>();
     for (const d of state.dinos) {
@@ -344,7 +368,7 @@ export class EntityLayer {
       const hop = d.baby ? -2 : -1;
       const bob = moving ? (this.sim.stepProgress < 0.5 ? hop : 0) : Math.sin(time / 600 + d.id) > 0.9 ? -1 : 0;
       img.setTexture(dinoKey(d.species, moving && this.sim.stepProgress >= 0.5 ? 1 : 0, d.baby));
-      img.setPosition(Math.round(x), Math.round(y) + bob);
+      img.setPosition(Math.round(x), Math.round(y) + bob + (hops.get(d.id) ?? 0));
       sh.fillEllipse(Math.round(x), Math.round(y) - 1, img.width * 0.7, Math.max(4, img.height * 0.14));
       img.setFlipX(this.facingLeft.get(d.id) ?? false);
       img.setDepth(4 + y / 10000);
@@ -379,6 +403,41 @@ export class EntityLayer {
         if (this.selection?.kind === 'dino' && this.selection.id === id) this.selection = null;
       }
     }
+  }
+
+  /** Rising hearts, or a cross little "Nope!" sign, over animals that were just treated or patted. */
+  private drawEffects(g: Phaser.GameObjects.Graphics, time: number): void {
+    this.effects = this.effects.filter((e) => {
+      const d = this.sim.state.dinos.find((x) => x.id === e.dinoId);
+      const img = this.dinos.get(e.dinoId);
+      const t = (time - e.start) / EFFECT_MS;
+      if (!d || !img || t >= 1) {
+        e.label?.destroy();
+        return false;
+      }
+      const top = img.y - img.height - 2;
+      if (e.kind === 'hearts') {
+        for (let i = 0; i < 3; i++) {
+          const ti = t - i * 0.15;
+          if (ti < 0) continue;
+          const hx = Math.round(img.x + (i - 1) * 6 + Math.sin(ti * 8 + i) * 2);
+          const hy = Math.round(top - ti * 14);
+          g.fillStyle(0xff5a7a, 1 - ti);
+          for (const [row, bits] of HEART.entries()) for (let c = 0; c < bits.length; c++) if (bits[c] === 'X') g.fillRect(hx - 2 + c, hy + row, 1, 1);
+        }
+      } else {
+        if (!e.label) {
+          e.label = this.scene.add
+            .text(0, 0, 'Nope!', { fontFamily: 'Silkscreen, monospace', fontSize: '8px', color: '#ffffff', backgroundColor: '#b3261e', padding: { x: 2, y: 1 } })
+            .setResolution(4)
+            .setOrigin(0.5, 1)
+            .setDepth(9.5);
+        }
+        const shake = t < 0.3 ? Math.round(Math.sin(t * 60)) : 0;
+        e.label.setPosition(Math.round(img.x) + shake, Math.round(top - 2)).setAlpha(t > 0.75 ? (1 - t) * 4 : 1);
+      }
+      return true;
+    });
   }
 
   /** Litter (cups and wrappers scattered by hash) and accident puddles with buzzing flies. */

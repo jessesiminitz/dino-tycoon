@@ -45,7 +45,7 @@
 
     <div id="info" class="info hidden" aria-live="polite">
       <span id="info-text"></span>
-      <button id="info-action" class="action-btn hidden"></button>
+      <span id="info-actions" class="info-actions"><button id="info-action" class="action-btn hidden"></button></span>
     </div>
 
     <div class="toolbar">
@@ -93,6 +93,18 @@
         <div class="species-grid"></div>
       </div>
     </div>
+
+    <div id="photo" class="modal hidden" role="dialog" aria-label="Photo">
+      <div class="modal-card photo-card">
+        <img class="photo-img" alt="" />
+        <p class="note photo-tip">Press and hold the photo to save it, or use the button.</p>
+        <div class="outcome-actions">
+          <button class="action-btn" data-photo="share">📤 Save or share</button>
+          <button class="action-btn secondary" data-photo="close">Close</button>
+        </div>
+      </div>
+    </div>
+    <div id="photo-flash" class="photo-flash"></div>
 
     <div id="people" class="modal hidden" role="dialog" aria-label="People">
       <div class="modal-card people-card">

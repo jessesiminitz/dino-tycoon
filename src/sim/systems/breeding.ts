@@ -1,4 +1,4 @@
-import type { Dino, GameState } from '../GameState';
+import { NEVER, type Dino, type GameState } from '../GameState';
 import { DINO_NAMES, SPECIES } from '../data/species';
 import { pickName } from '../commands';
 import type { RegionMap } from '../regions';
@@ -74,6 +74,8 @@ export function hourlyBreeding(ctx: SimContext): void {
       homeX: egg.x,
       homeY: egg.y,
       baby: true,
+      lastTreatHour: NEVER,
+      lastPatHour: NEVER,
     };
     state.dinos.push(baby);
     state.stats.hatched++;

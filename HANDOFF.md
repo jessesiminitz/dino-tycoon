@@ -46,13 +46,14 @@ End commit messages with the Co-Authored-By / Claude-Session trailers the harnes
 - `src/audio/`: `audio.ts` (sfx, rain, piano synth, shuffled playlist), `ragNotes.ts` (decoder and alphabet), `rags.ts` (generated, lazy-loaded chunk).
 - `src/save/storage.ts`: 3 IndexedDB slots plus a localStorage mirror, and a boot directive (used to return to the park after an update reload).
 
-### Save format: **v13**
+### Save format: **v14**
 
-Always bump `SAVE_VERSION` and add a step to `migrate()` when the state shape changes, then update the version assertions in the tests (`tests/{dinos,island,visitorlife,mess}.test.ts` check `toBe(13)`). Recent steps:
+Always bump `SAVE_VERSION` and add a step to `migrate()` when the state shape changes, then update the version assertions in the tests (`tests/{dinos,island,visitorlife,mess}.test.ts` check `toBe(14)`). Recent steps:
 - v10 added the log.
 - v11 added visitor names, thoughts and thirst, soda and snack fields, plus `messes` and `reviews`.
 - v12 added scenario `round`, `roundStart` and `earned`. Saves that had already won carry on into Silver.
 - v13 added `Dino.baby`, `eggs` and `stats.hatched`.
+- v14 added `Dino.lastTreatHour`, `Dino.lastPatHour` and `stats.photos`, plus the `treats` expense category.
 
 ## Features in place (all deployed)
 
@@ -72,6 +73,12 @@ Always bump `SAVE_VERSION` and add a step to `migrate()` when the state shape ch
   - Babies eat half meals, don't push fences, can't be sold, count as smaller prey, add appeal, and get an "Aww!" from visitors.
   - Sprites are shrunk from each species' own art; eggs are speckled.
   - 👥 Dinos has a 🍼 Babies & eggs filter.
+- **Tap a dino** (`systems/care.ts`, `ui/photo.ts`): the info bar shows 🍖 ✋ 📷 (plus Sell for grown-ups).
+  - 🍖 Treat costs $25 and gives +10 happiness for 6 game-hours, once per hour.
+  - ✋ Pat is free: +4 for 3 hours. Hungry grown-up carnivores snap "Nope!" instead.
+  - Effects are hearts plus a happy hop, or a red "Nope!" sign, with chirp, snap and shutter sounds.
+  - 📷 snapshots the canvas around the dino (without the selection ring), frames it as a polaroid with a caption, and offers `navigator.share` (Save Image on iOS), a download, or press-and-hold saving.
+  - `hud.showInfo` accepts an array of actions (small icon buttons plus one main button).
 - **Placing dinos:** a fence gap is circled in red with a "Close gap · $x" button that fences or repairs it and releases the dino.
 - **Panels:** 👥 People, 🔔 alert log (newest first, filters, unread badge), 🏆 Goals medal track, 📖 Dino Guide.
 - **Scenarios:** First Steps (tutorial), Fossil Fever, Storm Coast, Rex Rising, each with 3 rounds of milestones; plus Sandbox. You can keep playing after winning or losing.

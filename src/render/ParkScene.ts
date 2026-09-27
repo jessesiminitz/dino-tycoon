@@ -19,7 +19,10 @@ import { isLand, Terrain, terrainAt, TERRAIN_NAMES } from '../sim/terrain';
 import { bedAt, RICHNESS_LABEL } from '../sim/fossilBeds';
 import { DECOR_TYPES } from '../sim/data/decor';
 import { isOccupiedPaddock } from '../sim/regions';
-import type { Hud } from '../ui/hud';
+import type { Hud, InfoAction } from '../ui/hud';
+import { framePhoto, showPhoto } from '../ui/photo';
+import { TREAT_COST } from '../sim/systems/care';
+import { calendar } from '../sim/GameState';
 import { formatMoney } from '../ui/hud';
 import type { UiState } from '../ui/uiState';
 import { createTextures, CURSOR_KEY, TILE, TILESET_KEY, tileIndex } from './tileset';
@@ -264,6 +267,50 @@ export class ParkScene extends Phaser.Scene {
     }
   }
 
+  /** Treat or pat a dino, and show how it took it. */
+  private care(id: number, type: 'treatDino' | 'patDino'): void {
+    const r = this.sim.dispatch({ type, id });
+    if (!r.ok) return this.report(r);
+    this.hud.toast(r.message, r.effect === 'snap' ? 'error' : 'ok');
+    if (r.effect) {
+      this.entities.careEffect(id, r.effect);
+      playSfx(r.effect === 'snap' ? 'snap' : 'chirp');
+    }
+    this.showSelection();
+  }
+
+  /**
+   * Snap the patch of park around a dino (without the selection ring), frame
+   * it like an instant-camera print and offer to save it.
+   */
+  private takePhoto(id: number): void {
+    const d = this.sim.state.dinos.find((x) => x.id === id);
+    const img = this.entities.dinoSprite(id);
+    if (!d || !img) return;
+    const cam = this.cameras.main;
+    const canvas = this.game.canvas;
+    const ratio = canvas.width / canvas.clientWidth;
+    // Frame the animal with some of its surroundings: 4:3, at least 200 screen px wide.
+    const spriteW = img.width * cam.zoom;
+    const spriteH = img.height * cam.zoom;
+    const w = Math.min(canvas.clientWidth, Math.max(200, spriteW * 1.8, spriteH * 2.2));
+    const h = Math.min(canvas.clientHeight, w * 0.75);
+    const cx = (img.x - cam.worldView.x) * cam.zoom;
+    const cy = (img.y - img.height / 2 - cam.worldView.y) * cam.zoom;
+    const x = Math.max(0, Math.min(canvas.clientWidth - w, cx - w / 2));
+    const y = Math.max(0, Math.min(canvas.clientHeight - h, cy - h / 2));
+    const selection = this.entities.selection;
+    this.entities.selection = null; // no yellow ring in the picture
+    playSfx('shutter');
+    this.game.renderer.snapshotArea(Math.round(x * ratio), Math.round(y * ratio), Math.round(w * ratio), Math.round(h * ratio), async (shot) => {
+      this.entities.selection = selection;
+      this.sim.dispatch({ type: 'photoDino', id });
+      const { day } = calendar(this.sim.state);
+      const photo = await framePhoto(shot as HTMLImageElement, dinoLabel(d), `Day ${day} · Dino Tycoon`);
+      showPhoto(photo, `${d.name} the ${SPECIES[d.species].name}`);
+    });
+  }
+
   private report(r: { ok: boolean; message: string }, sound: Sfx = 'build'): void {
     this.hud.toast(r.message, r.ok ? 'ok' : 'error');
     playSfx(r.ok ? sound : 'error');
@@ -432,15 +479,27 @@ export class ParkScene extends Phaser.Scene {
       const status = [loose ? 'ESCAPED!' : '', d.sick ? 'SICK' : ''].filter(Boolean).join(' · ');
       const value = Math.floor(sp.price * DINO_RESALE);
       const stats = `Hunger ${Math.round(d.hunger)}% · Health ${Math.round(d.health)}% · Happy ${d.happiness}%`;
+      const fed = state.hours - d.lastTreatHour < 1;
+      const care: InfoAction[] = [
+        {
+          label: '🍖',
+          title: fed ? `${d.name} just had a treat` : `Give ${d.name} a treat (${formatMoney(TREAT_COST)})`,
+          small: true,
+          disabled: d.escaped || fed || state.money < TREAT_COST,
+          onClick: () => this.care(d.id, 'treatDino'),
+        },
+        { label: '✋', title: `Pat ${d.name}`, small: true, disabled: d.escaped, onClick: () => this.care(d.id, 'patDino') },
+        { label: '📷', title: `Take a photo of ${d.name}`, small: true, onClick: () => this.takePhoto(d.id) },
+      ];
       if (d.baby) {
         const days = Math.ceil(hoursToGrow(state, d) / 24);
-        this.hud.showInfo(`${dinoLabel(d)}${status ? ` · ${status}` : ''} · grows up in ${days} day${days === 1 ? '' : 's'} · ${stats}`);
+        this.hud.showInfo(`${dinoLabel(d)}${status ? ` · ${status}` : ''} · grows up in ${days} day${days === 1 ? '' : 's'} · ${stats}`, care);
         return;
       }
-      this.hud.showInfo(`${dinoLabel(d)}${status ? ` · ${status}` : ''} · ${stats}`, {
-        label: `Sell ${formatMoney(value)}`,
-        onClick: () => this.report(this.sim.dispatch({ type: 'sellDino', id: d.id })),
-      });
+      this.hud.showInfo(`${dinoLabel(d)}${status ? ` · ${status}` : ''} · ${stats}`, [
+        ...care,
+        { label: `Sell ${formatMoney(value)}`, onClick: () => this.report(this.sim.dispatch({ type: 'sellDino', id: d.id })) },
+      ]);
     } else if (sel.kind === 'egg') {
       const egg = state.eggs.find((e) => e.id === sel.id);
       if (!egg) {

@@ -1,3 +1,5 @@
+import { patDino, treatDino, type CareEffect } from './systems/care';
+import { NEVER } from './GameState';
 import type { GameState } from './GameState';
 import { FENCE_REFUND, FENCE_TYPES, type FenceTypeId } from './data/fences';
 import { fenceAt, fenceBlocker, fenceHp, fenceTypeAt, setFence, setFenceHp } from './fences';
@@ -44,9 +46,14 @@ export type Command =
   | { type: 'repairFence'; edge: Edge }
   | { type: 'placeDecor'; kind: DecorKind; x: number; y: number }
   | { type: 'removeDecor'; id: number }
-  | { type: 'rename'; kind: 'visitor' | 'dino' | 'staff'; id: number; name: string };
+  | { type: 'rename'; kind: 'visitor' | 'dino' | 'staff'; id: number; name: string }
+  | { type: 'treatDino'; id: number }
+  | { type: 'patDino'; id: number }
+  | { type: 'photoDino'; id: number };
 
-export type CommandResult = { ok: true; message: string; cost: number } | { ok: false; message: string };
+export type CommandResult =
+  | { ok: true; message: string; cost: number; /** How the animal reacted, for the park view. */ effect?: CareEffect }
+  | { ok: false; message: string };
 
 export const MAX_NAME = 20;
 
@@ -197,6 +204,8 @@ export function applyCommand(state: GameState, cmd: Command): CommandResult {
         homeX: cmd.x,
         homeY: cmd.y,
         baby: false,
+        lastTreatHour: NEVER,
+        lastPatHour: NEVER,
       });
       spend(state, 'dinosaurs', sp.price);
       const note = cleared ? ` (cleared ${cleared} path tile${cleared === 1 ? '' : 's'} from inside the paddock)` : '';
@@ -357,6 +366,16 @@ export function applyCommand(state: GameState, cmd: Command): CommandResult {
       state.decor.splice(state.decor.indexOf(d), 1);
       earn(state, 'sales', refund);
       return { ok: true, cost: -refund, message: `Removed ${DECOR_TYPES[d.kind].name.toLowerCase()}` };
+    }
+
+    case 'treatDino':
+      return treatDino(state, cmd.id);
+    case 'patDino':
+      return patDino(state, cmd.id);
+    case 'photoDino': {
+      if (!state.dinos.some((d) => d.id === cmd.id)) return { ok: false, message: 'That dinosaur is gone' };
+      state.stats.photos++;
+      return { ok: true, cost: 0, message: 'Say cheese!' };
     }
 
     case 'rename': {

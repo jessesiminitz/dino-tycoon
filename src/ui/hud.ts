@@ -54,11 +54,16 @@ function $(id: string): HTMLElement {
 export interface InfoAction {
   label: string;
   onClick: () => void;
+  /** A compact icon button, shown before the main action. */
+  small?: boolean;
+  /** Accessible name for icon buttons. */
+  title?: string;
+  disabled?: boolean;
 }
 
 export interface Hud {
   /** Bottom-left panel. Pass null to hide. */
-  showInfo(text: string | null, action?: InfoAction): void;
+  showInfo(text: string | null, action?: InfoAction | InfoAction[]): void;
   /** Show the current tool's usage hint (or hide the panel in Look mode). */
   showHint(): void;
   toast(text: string, kind?: 'ok' | 'error'): void;
@@ -111,6 +116,8 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
   const info = $('info');
   const infoText = $('info-text');
   const infoAction = $('info-action') as HTMLButtonElement;
+  const infoActions = $('info-actions');
+  const smallButtons: HTMLButtonElement[] = [];
   const toasts = $('toasts');
   const fencePicker = $('fence-picker');
   const feederPicker = $('feeder-picker');
@@ -269,7 +276,7 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
     const toolsLeft = Math.min(...groups.map((r) => r.left));
     const toolsTop = Math.min(...groups.map((r) => r.top));
     const beside = toolsLeft - left - GAP;
-    const button = infoAction.classList.contains('hidden') ? 0 : infoAction.getBoundingClientRect().width + 10;
+    const button = infoActions.getBoundingClientRect().width + 10;
     if (beside >= MIN_TEXT_WIDTH + button + 24) {
       info.style.maxWidth = `${Math.min(beside, 460)}px`;
       info.style.bottom = '';
@@ -290,9 +297,30 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
       }
       infoText.textContent = text;
       info.classList.remove('hidden');
-      if (action) {
-        infoAction.textContent = action.label;
-        infoAction.onclick = action.onClick;
+      const actions = action ? (Array.isArray(action) ? action : [action]) : [];
+      const main = actions.find((a) => !a.small);
+      const small = actions.filter((a) => a.small);
+      // Reuse the small buttons (the panel refreshes several times a second; a tap must not land on a replaced node).
+      while (smallButtons.length < small.length) {
+        const b = document.createElement('button');
+        b.className = 'action-btn small';
+        infoActions.insertBefore(b, infoAction);
+        smallButtons.push(b);
+      }
+      smallButtons.forEach((b, i) => {
+        const a = small[i];
+        b.hidden = !a;
+        if (!a) return;
+        if (b.textContent !== a.label) b.textContent = a.label;
+        b.title = a.title ?? '';
+        b.setAttribute('aria-label', a.title ?? a.label);
+        b.disabled = !!a.disabled;
+        b.onclick = a.onClick;
+      });
+      if (main) {
+        if (infoAction.textContent !== main.label) infoAction.textContent = main.label;
+        infoAction.onclick = main.onClick;
+        infoAction.disabled = !!main.disabled;
         infoAction.classList.remove('hidden');
       } else {
         infoAction.onclick = null;
