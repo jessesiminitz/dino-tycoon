@@ -10,7 +10,7 @@
     "preview": "vite preview --host",
     "test": "vitest run --exclude tests/perf.test.ts && vitest run tests/perf.test.ts",
     "typecheck": "tsc --noEmit",
-    "icons": "node scripts/make-icons.mjs",
+    "icons": "npx -y -p puppeteer-core node scripts/make-icons.mjs",
     "bench": "vitest run tests/perf.test.ts --silent=false"
   },
   "dependencies": {
