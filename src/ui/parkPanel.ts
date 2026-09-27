@@ -15,8 +15,8 @@ import {
 import { expectedArrivals, fairPrice, parkAppeal } from '../sim/systems/visitors';
 import { STAFF_ROLES, STAFF_TYPES } from '../sim/data/staff';
 import { dailyWages, describeTask } from '../sim/systems/staff';
-import { SCENARIOS } from '../sim/data/scenarios';
-import { daysLeft, goalProgress } from '../sim/goals';
+import { MEDALS, SCENARIOS } from '../sim/data/scenarios';
+import { daysLeft, describeReward, goalProgress } from '../sim/goals';
 import { formatMoney, type Hud } from './hud';
 import { playSfx } from '../audio/audio';
 
@@ -41,7 +41,7 @@ export function mountParkPanel(sim: Simulation, hud: Hud): { open(tab?: Tab): vo
   const modal = document.getElementById('park')!;
   const body = document.getElementById('park-body')!;
   const tabs = Array.from(modal.querySelectorAll<HTMLButtonElement>('.tab-btn'));
-  const hasGoals = SCENARIOS[sim.state.scenario.id].goals.length > 0;
+  const hasGoals = SCENARIOS[sim.state.scenario.id].rounds.length > 0;
   let tab: Tab = 'overview';
   for (const t of tabs) if (t.dataset.tab === 'goals') t.hidden = !hasGoals;
   let timer: number | undefined;
@@ -183,14 +183,25 @@ export function mountParkPanel(sim: Simulation, hud: Hud): { open(tab?: Tab): vo
     const { state } = sim;
     const sc = SCENARIOS[state.scenario.id];
     const left = daysLeft(state);
+    const done = state.scenario.round;
+    const medal = MEDALS[Math.min(done, MEDALS.length - 1)];
     const status =
       state.scenario.status === 'won'
-        ? '🏆 Complete! Keep building as long as you like.'
+        ? '🏆 All three milestones complete! Keep building as long as you like.'
         : state.scenario.status === 'lost'
           ? 'This scenario has ended; you can keep playing for fun.'
-          : left !== null
-            ? `<b>${left}</b> day${left === 1 ? '' : 's'} left`
-            : '';
+          : `${medal.icon} <b>${medal.name} milestone</b>${left !== null ? ` · <b>${left}</b> day${left === 1 ? '' : 's'} left` : ''}`;
+    // The medal track: done, current, and what's still to come.
+    const track = sc.rounds
+      .map((r, i) => {
+        const m = MEDALS[i];
+        const state_ = i < done ? 'done' : i === done && state.scenario.status === 'playing' ? 'current' : 'todo';
+        // Finished rounds show what was actually paid out; the rest, what's on offer now.
+        const reward = i < done ? (state.scenario.earned[i] ?? []) : describeReward(state, r.reward);
+        return `<li class="medal ${state_}"><span class="medal-icon">${i < done ? m.icon : state_ === 'current' ? m.icon : '🔒'}</span>
+          <span><b>${m.name}</b>${i < done ? ' ✓' : ''}<br><small>${reward.length ? `${i < done ? 'Earned' : 'Reward'}: ${reward.join(', ')}` : i < done ? 'Earned' : 'Reward: bragging rights'}</small></span></li>`;
+      })
+      .join('');
     const rows = goalProgress(state)
       .map((g) => {
         const pct = Math.min(100, (100 * Math.max(0, g.value)) / g.goal.target);
@@ -204,8 +215,9 @@ export function mountParkPanel(sim: Simulation, hud: Hud): { open(tab?: Tab): vo
     return `
       <h3>${sc.name}</h3>
       <p class="note">${sc.blurb}</p>
+      <ol class="medal-track">${track}</ol>
       <p class="note">${status}</p>
-      <ul class="goals">${rows}</ul>`;
+      ${state.scenario.status === 'won' ? '' : `<ul class="goals">${rows}</ul>`}`;
   }
 
   function staffTab(): string {

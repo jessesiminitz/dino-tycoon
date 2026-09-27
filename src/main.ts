@@ -47,7 +47,7 @@ function startGame(state: GameState, slot: SlotId): void {
   sim.onEvent((e) => {
     const sound = eventSound(e.text, e.kind, e.outcome);
     if (sound) playSfx(sound);
-    if (e.outcome) showOutcome(sim, e.outcome, toMainMenu);
+    if (e.outcome) showOutcome(sim, e.outcome, toMainMenu, e.text);
   });
   document.body.classList.add('in-park');
 
@@ -99,8 +99,8 @@ const updateSW = registerSW({
 });
 
 /** Which sound (if any) a park event makes. */
-function eventSound(text: string, kind: string, outcome?: 'won' | 'lost'): Sfx | null {
-  if (outcome) return outcome === 'won' ? 'fanfare' : 'sad';
+function eventSound(text: string, kind: string, outcome?: 'won' | 'lost' | 'milestone'): Sfx | null {
+  if (outcome) return outcome === 'lost' ? 'sad' : 'fanfare';
   if (/^🦴/.test(text)) return 'chime';
   if (/^(⛈️ A storm|🌋)/.test(text)) return 'thunder';
   if (/^(🚨|🚑|🦠|📋 Failed)|smashed through|knocked down|rotted/.test(text)) return 'alert';

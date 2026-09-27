@@ -501,7 +501,6 @@ button {
   }
 
   .info {
-    max-width: calc(100vw - 372px - var(--safe-left) - var(--safe-right));
     font-size: 12px;
   }
 
@@ -1759,5 +1758,82 @@ body:not(.in-park) #info {
 
   .people-card .chip {
     flex-shrink: 0;
+  }
+}
+
+/* ---------- Milestones ---------- */
+
+.medal-track {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 6px;
+  margin: 8px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.medal {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--tint);
+  border: 2px solid var(--panel-edge);
+  border-radius: 4px;
+  opacity: 0.65;
+}
+
+.medal.current {
+  border-color: var(--accent-ink);
+  opacity: 1;
+}
+
+.medal.done {
+  border-color: var(--good);
+  opacity: 1;
+}
+
+.medal-icon {
+  font-size: 22px;
+}
+
+.medal small {
+  font-size: 11px;
+}
+
+.reward {
+  padding: 6px 10px;
+  font-weight: bold;
+  color: var(--accent-ink);
+  background: rgba(232, 181, 58, 0.25);
+  border-radius: 4px;
+}
+
+/* Milestone popup on short phones: tighter, and the next goals in two columns. */
+@media (max-height: 480px) {
+  .outcome-body h2 {
+    font-size: 18px;
+    margin: 0 0 4px;
+  }
+
+  .outcome-body h3 {
+    margin: 6px 0 2px;
+    font-size: 14px;
+  }
+
+  .outcome-body p {
+    margin: 4px 0;
+  }
+
+  .outcome-body .reward {
+    padding: 4px 8px;
+  }
+
+  .outcome-goals {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 12px;
+    margin: 4px 0;
+    font-size: 13px;
   }
 }

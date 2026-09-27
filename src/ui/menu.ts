@@ -104,11 +104,12 @@ export function showMenu(handlers: MenuHandlers): void {
         <h2>Choose a scenario</h2>
         <div class="scenario-grid">${SCENARIO_IDS.map((id) => {
           const sc = SCENARIOS[id];
-          const goals = sc.goals.map((g) => `<li>${goalLabel(g)}</li>`).join('');
+          const first = sc.rounds[0];
+          const goals = first ? first.goals.map((g) => `<li>${goalLabel(g)}</li>`).join('') : '';
           return `<button class="scenario-card" data-scenario="${id}">
             <span class="scenario-head"><b>${sc.name}</b><span class="stars">${stars(sc.difficulty)}</span></span>
             <span class="note">${sc.blurb}</span>
-            ${goals ? `<ul>${goals}</ul><span class="note">Within ${sc.days} days · start with ${money.format(sc.startMoney)}</span>` : `<span class="note">Start with ${money.format(sc.startMoney)}</span>`}
+            ${goals ? `<ul>${goals}</ul><span class="note">🥉 Bronze within ${first.days} days, then 🥈 Silver and 🥇 Gold · start with ${money.format(sc.startMoney)}</span>` : `<span class="note">Start with ${money.format(sc.startMoney)}</span>`}
             ${sc.tutorial ? '<span class="tag">Includes a tutorial</span>' : ''}
           </button>`;
         }).join('')}</div>

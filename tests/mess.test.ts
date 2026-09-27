@@ -225,7 +225,7 @@ describe('people', () => {
       for (const k of ['snack', 'sodaUntil', 'thirst', 'name', 'thoughts']) delete v[k];
     }
     const m = migrate(raw)!;
-    expect(m.version).toBe(11);
+    expect(m.version).toBe(12);
     expect(m.messes).toEqual([]);
     expect(m.visitors.length).toBeGreaterThan(0);
     for (const v of m.visitors) {

@@ -217,6 +217,36 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
   };
   ui.onChange(renderTools);
 
+  /**
+   * The info panel sits bottom-left, beside the toolbar when there's room.
+   * The toolbar's width depends on the phone and the tool (pickers stack above
+   * it), so measure it: when the space beside it is too narrow to read, lift
+   * the panel above the whole toolbar stack instead.
+   */
+  const toolbar = document.querySelector<HTMLElement>('.toolbar')!;
+  /** Narrowest comfortable column for the text itself (the action button needs room on top of this). */
+  const MIN_TEXT_WIDTH = 240;
+  const GAP = 8;
+  function placeInfo(): void {
+    if (info.classList.contains('hidden')) return;
+    const groups = [...toolbar.querySelectorAll<HTMLElement>('.hud-group:not(.hidden)')].map((g) => g.getBoundingClientRect());
+    if (groups.length === 0) return;
+    const left = info.getBoundingClientRect().left;
+    const toolsLeft = Math.min(...groups.map((r) => r.left));
+    const toolsTop = Math.min(...groups.map((r) => r.top));
+    const beside = toolsLeft - left - GAP;
+    const button = infoAction.classList.contains('hidden') ? 0 : infoAction.getBoundingClientRect().width + 10;
+    if (beside >= MIN_TEXT_WIDTH + button + 24) {
+      info.style.maxWidth = `${Math.min(beside, 460)}px`;
+      info.style.bottom = '';
+    } else {
+      info.style.maxWidth = `${Math.min(window.innerWidth - left * 2, 560)}px`;
+      info.style.bottom = `${window.innerHeight - toolsTop + GAP}px`;
+    }
+  }
+  ui.onChange(() => requestAnimationFrame(placeInfo));
+  window.addEventListener('resize', () => requestAnimationFrame(placeInfo));
+
   // --- info panel & toasts ---
   const hud: Hud = {
     showInfo(text, action) {
@@ -234,6 +264,7 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
         infoAction.onclick = null;
         infoAction.classList.add('hidden');
       }
+      placeInfo();
     },
     showHint() {
       hud.showInfo(modeHint(ui));
@@ -264,7 +295,7 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
   const parkPanel = mountParkPanel(sim, hud);
   $('btn-park').addEventListener('click', () => parkPanel.open());
   const goalsBtn = $('btn-goals');
-  goalsBtn.hidden = SCENARIOS[sim.state.scenario.id].goals.length === 0;
+  goalsBtn.hidden = SCENARIOS[sim.state.scenario.id].rounds.length === 0;
   goalsBtn.addEventListener('click', () => parkPanel.open('goals'));
   mountLog(sim);
   mountPeople(sim, ui);

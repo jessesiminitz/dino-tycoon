@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { startScenario, type GameState } from '../src/sim/GameState';
+import { migrate, startScenario, type GameState } from '../src/sim/GameState';
 import { BANKRUPT_BELOW, SCENARIO_IDS, SCENARIOS } from '../src/sim/data/scenarios';
 import { SPECIES_IDS, STARTER_SPECIES } from '../src/sim/data/species';
-import { daysLeft, goalProgress } from '../src/sim/goals';
+import { daysLeft, describeReward, goalProgress } from '../src/sim/goals';
 import { Simulation } from '../src/sim/Simulation';
 import type { GameEvent } from '../src/sim/systems/context';
 import { STEPS_PER_HOUR } from '../src/sim/systems/dinos';
@@ -24,7 +24,9 @@ describe('scenarios', () => {
       const a = startScenario(id, 1);
       const b = startScenario(id, 2);
       expect(a.money).toBe(sc.startMoney);
-      expect(a.scenario.status).toBe(sc.goals.length ? 'playing' : 'free');
+      expect(a.scenario.status).toBe(sc.rounds.length ? 'playing' : 'free');
+      expect(a.scenario.round).toBe(0);
+      if (sc.rounds.length) expect(sc.rounds).toHaveLength(3);
       // Fixed-seed scenarios give everyone the same island.
       if (sc.seed !== null) expect(a.map.tiles).toEqual(b.map.tiles);
       expect(a.tutorialStep).toBe(sc.tutorial ? 0 : null);
@@ -43,16 +45,60 @@ describe('scenarios', () => {
     expect(daysLeft(s)).toBe(45);
   });
 
-  it('is won as soon as every goal is met', () => {
+  it('meeting the goals earns a medal and a reward, then raises the bar', () => {
     const s = startScenario('first-steps', 1);
     const sim = new Simulation(s);
     const events = watch(sim);
     s.stats.bestDayVisitors = 50;
     s.reputation = 60;
     s.dinos = Array.from({ length: 4 }, (_, i) => ({ ...fakeDino(s), id: 100 + i }));
+    const money = s.money;
     runHours(sim, 1);
+    expect(s.scenario).toMatchObject({ status: 'playing', round: 1 });
+    expect(s.scenario.earned).toEqual([['Pachycephalosaurus unlocked', '$5,000 prize']]);
+    expect(s.unlockedSpecies).toContain('pachycephalosaurus');
+    expect(s.money).toBeGreaterThanOrEqual(money + 5_000 - 500); // prize (less any running costs)
+    const milestone = events.find((e) => e.outcome === 'milestone')!;
+    expect(milestone.text).toMatch(/Bronze milestone.*Pachycephalosaurus unlocked, \$5,000 prize/);
+    // Silver asks for more, with a fresh deadline.
+    expect(goalProgress(s).map((g) => g.label)).toContain('Have 8 dinosaurs');
+    expect(goalProgress(s).some((g) => !g.done)).toBe(true);
+    expect(daysLeft(s)).toBe(60);
+  });
+
+  it('is won after all three rounds, and play carries on', () => {
+    const s = startScenario('first-steps', 1);
+    const sim = new Simulation(s);
+    const events = watch(sim);
+    s.stats.bestDayVisitors = 500;
+    s.reputation = 90;
+    s.money = 1_000_000;
+    const species = ['protoceratops', 'parasaurolophus', 'stegosaurus', 'triceratops', 'compsognathus', 'dilophosaurus'] as const;
+    s.dinos = Array.from({ length: 12 }, (_, i) => ({ ...fakeDino(s), id: 100 + i, species: species[i % 6] }));
+    runHours(sim, 3);
+    expect(s.scenario).toMatchObject({ status: 'won', round: 3 });
+    expect(events.filter((e) => e.outcome === 'milestone')).toHaveLength(2);
+    expect(events.some((e) => e.outcome === 'won' && /all three milestones/.test(e.text))).toBe(true);
+    expect(s.unlockedSpecies).toEqual(expect.arrayContaining(['pachycephalosaurus', 'ankylosaurus', 'velociraptor']));
+    runHours(sim, 24); // nothing more happens, but the park keeps running
     expect(s.scenario.status).toBe('won');
-    expect(events.some((e) => e.outcome === 'won')).toBe(true);
+  });
+
+  it('a species you already have is paid out in cash instead', () => {
+    const s = startScenario('first-steps', 1);
+    s.unlockedSpecies.push('pachycephalosaurus');
+    expect(describeReward(s, SCENARIOS['first-steps'].rounds[0].reward)).toEqual([`$${(5_000 + 4_000).toLocaleString('en-US')} prize`]);
+  });
+
+  it('old saves that already won carry on into the Silver round', () => {
+    const s = startScenario('first-steps', 1);
+    s.hours = 24 * 20;
+    const raw = JSON.parse(JSON.stringify(s));
+    raw.version = 11;
+    raw.scenario = { id: 'first-steps', status: 'won' };
+    const m = migrate(raw)!;
+    expect(m.scenario).toMatchObject({ status: 'playing', round: 1, roundStart: 21 });
+    expect(daysLeft(m)).toBe(60);
   });
 
   it('is lost when the deadline passes', () => {

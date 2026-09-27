@@ -17,7 +17,7 @@ export const MAP_WIDTH = 64;
 export const MAP_HEIGHT = 48;
 export const STARTING_MONEY = 50_000;
 export const START_HOUR = 8;
-export const SAVE_VERSION = 11;
+export const SAVE_VERSION = 12;
 
 export interface Dino {
   id: number;
@@ -167,8 +167,14 @@ export const MAX_LOG = 300;
 
 export interface ScenarioState {
   id: ScenarioId;
-  /** 'free' = no goals (sandbox, or carrying on after a scenario ended). */
+  /** 'free' = no goals (sandbox); 'won' = all three rounds done; either way play carries on. */
   status: 'playing' | 'won' | 'lost' | 'free';
+  /** Rounds of milestones completed so far (0–3), which is also the index of the current round. */
+  round: number;
+  /** Game day the current round began (its deadline counts from here). */
+  roundStart: number;
+  /** What each finished round actually paid out, in words. */
+  earned: string[][];
 }
 
 export interface Stats {
@@ -267,7 +273,7 @@ export function newGame(seed: number): GameState {
     staff: [],
     fossils: {},
     stormHours: 0,
-    scenario: { id: 'sandbox', status: 'free' },
+    scenario: { id: 'sandbox', status: 'free', round: 0, roundStart: 1, earned: [] },
     stats: { bestDayVisitors: 0, escapes: 0, inspectionsPassed: 0, restroomComplaintDay: 0, messDay: 0, litterDay: 0 },
     tutorialStep: null,
     fossilBeds: [],
@@ -295,7 +301,7 @@ export function startScenario(id: ScenarioId, randomSeed: number): GameState {
   const state = newGame(sc.seed ?? randomSeed);
   state.money = sc.startMoney;
   if (sc.unlocked) state.unlockedSpecies = [...sc.unlocked];
-  state.scenario = { id, status: sc.goals.length > 0 ? 'playing' : 'free' };
+  state.scenario = { id, status: sc.rounds.length > 0 ? 'playing' : 'free', round: 0, roundStart: 1, earned: [] };
   state.tutorialStep = sc.tutorial ? 0 : null;
   return state;
 }
@@ -388,6 +394,14 @@ export function migrate(raw: { version?: number } & Record<string, unknown>): Ga
     }
     Object.assign(state.stats, { messDay: 0, litterDay: 0 });
     Object.assign(raw, { version: 11, messes: [], reviews: [] });
+  }
+  if (raw.version === 11) {
+    // Scenarios gained Silver and Gold rounds: parks that already won carry on into Silver.
+    const state = raw as unknown as GameState;
+    const sc = state.scenario as ScenarioState;
+    const won = sc.status === 'won';
+    Object.assign(sc, { status: won ? 'playing' : sc.status, round: won ? 1 : 0, roundStart: won ? calendar(state).day : 1, earned: won ? [[]] : [] });
+    raw.version = 12;
   }
   return raw.version === SAVE_VERSION ? (raw as unknown as GameState) : null;
 }

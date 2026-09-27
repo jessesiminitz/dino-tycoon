@@ -1,7 +1,7 @@
 import type { Simulation, Speed } from '../sim/Simulation';
-import { SCENARIOS } from '../sim/data/scenarios';
+import { MEDALS, SCENARIOS } from '../sim/data/scenarios';
 import { calendar } from '../sim/GameState';
-import { goalProgress } from '../sim/goals';
+import { daysLeft, goalProgress } from '../sim/goals';
 import { renderSettings } from './settings';
 
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
@@ -64,23 +64,42 @@ export function mountPauseMenu(sim: Simulation, handlers: PauseHandlers): void {
 }
 
 /** Scenario won or lost: a summary with the choice to keep playing or go back to the menu. */
-export function showOutcome(sim: Simulation, outcome: 'won' | 'lost', mainMenu: () => void): void {
+export function showOutcome(sim: Simulation, outcome: 'won' | 'lost' | 'milestone', mainMenu: () => void, text = ''): void {
   const modal = $('outcome');
   const { state } = sim;
   const sc = SCENARIOS[state.scenario.id];
-  const goals = goalProgress(state)
-    .map((g) => `<li class="${g.done ? 'done' : ''}">${g.done ? '✅' : '❌'} ${g.label}</li>`)
-    .join('');
-  modal.querySelector('.outcome-body')!.innerHTML = `
-    <h2>${outcome === 'won' ? '🏆 Scenario complete!' : 'Scenario over'}</h2>
-    <p>${outcome === 'won' ? `You beat <b>${sc.name}</b> on day ${calendar(state).day}.` : `<b>${sc.name}</b> has ended.`}</p>
-    <ul class="outcome-goals">${goals}</ul>
-    <p class="note">${state.dinos.length} dinosaurs · reputation ${Math.round(state.reputation)} ·
-      best day ${state.stats.bestDayVisitors} visitors · ${money.format(state.money)} in the bank</p>
-    <div class="outcome-actions">
-      <button class="action-btn" data-outcome="keep">Keep playing</button>
-      <button class="action-btn secondary" data-outcome="menu">Main menu</button>
-    </div>`;
+  const reward = /Reward: (.*)\.$/.exec(text)?.[1];
+  const listGoals = () =>
+    goalProgress(state)
+      .map((g) => `<li class="${g.done ? 'done' : ''}">${g.done ? '✅' : outcome === 'lost' ? '❌' : '⬜'} ${g.label}</li>`)
+      .join('');
+  let html: string;
+  if (outcome === 'milestone') {
+    // A round done: celebrate, show the reward, and what the next (harder) round asks for.
+    const earned = MEDALS[state.scenario.round - 1];
+    const next = MEDALS[state.scenario.round];
+    const left = daysLeft(state);
+    html = `
+      <h2>${earned.icon} ${earned.name} milestone!</h2>
+      <p>You reached the ${earned.name.toLowerCase()} milestone in <b>${sc.name}</b> on day ${calendar(state).day}.</p>
+      ${reward ? `<p class="reward">🎁 ${reward}</p>` : ''}
+      <h3>Next up: ${next.icon} ${next.name}${left !== null ? ` · ${left} days` : ''}</h3>
+      <ul class="outcome-goals">${listGoals()}</ul>
+      <div class="outcome-actions"><button class="action-btn" data-outcome="keep">Let's go!</button></div>`;
+  } else {
+    html = `
+      <h2>${outcome === 'won' ? '🏆 Scenario complete!' : 'Scenario over'}</h2>
+      <p>${outcome === 'won' ? `You earned all three medals in <b>${sc.name}</b> by day ${calendar(state).day}. 🥉🥈🥇` : `<b>${sc.name}</b> has ended.`}</p>
+      ${outcome === 'won' && reward ? `<p class="reward">🎁 ${reward}</p>` : ''}
+      ${outcome === 'lost' ? `<ul class="outcome-goals">${listGoals()}</ul>` : ''}
+      <p class="note">${state.dinos.length} dinosaurs · reputation ${Math.round(state.reputation)} ·
+        best day ${state.stats.bestDayVisitors} visitors · ${money.format(state.money)} in the bank</p>
+      <div class="outcome-actions">
+        <button class="action-btn" data-outcome="keep">Keep playing</button>
+        <button class="action-btn secondary" data-outcome="menu">Main menu</button>
+      </div>`;
+  }
+  modal.querySelector('.outcome-body')!.innerHTML = html;
   const resume = sim.speed || 1;
   sim.setSpeed(0);
   modal.classList.remove('hidden');
