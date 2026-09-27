@@ -64,7 +64,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
     id: 'protoceratops', name: 'Protoceratops', diet: 'herbivore', price: 3000, size: 2,
     hungerRate: 2, meal: 10, fenceNeeded: 1, space: 12, appeal: 2, pace: 2, social: true, starter: true,
     period: 'Late Cretaceous', lengthM: 1.8,
-    fact: 'A sheep-sized plant eater from the Gobi Desert. One famous fossil shows it locked in combat with a Velociraptor.',
+    fact: 'A sheep-sized plant eater from the Gobi Desert, with a bony neck frill and a parrot-like beak.',
     weight: 'about 80 kg',
     discovered: 'Named in 1923 from fossils found in Mongolia’s Gobi Desert.',
     facts: [

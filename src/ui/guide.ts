@@ -51,13 +51,13 @@ export function mountGuide(sim: Simulation): { open(species?: SpeciesId): void }
         <span class="diet ${sp.diet}">${sp.diet === 'carnivore' ? '🥩 Carnivore' : '🌿 Herbivore'}</span>
         · ${sp.period}
       </p>
+      <ul class="guide-facts">${[sp.fact, ...sp.facts].map((f) => `<li>${f}</li>`).join('')}</ul>
       <dl class="guide-stats">
         <dt>Length</dt><dd>${sp.lengthM} m</dd>
         <dt>Weight</dt><dd>${sp.weight}</dd>
         <dt>Discovered</dt><dd>${sp.discovered}</dd>
         <dt>In the park</dt><dd>${FENCE_TYPES[sp.fenceNeeded].name} fences or stronger · ${sp.space} tiles of space${sp.social ? ' · likes company' : ''}</dd>
       </dl>
-      <ul class="guide-facts">${[sp.fact, ...sp.facts].map((f) => `<li>${f}</li>`).join('')}</ul>
       ${status}`;
     detail.scrollTop = 0;
   }

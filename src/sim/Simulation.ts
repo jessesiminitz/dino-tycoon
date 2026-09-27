@@ -12,8 +12,8 @@ import { hourlyEvents } from './systems/events';
 import { hourlyFossils } from './systems/fossils';
 import { hourlyScenario } from './goals';
 
-/** Real-time milliseconds per game-hour at 1× speed. */
-export const MS_PER_HOUR = 1000;
+/** Real-time milliseconds per game-hour at 1× speed: a game day takes a minute. */
+export const MS_PER_HOUR = 2500;
 /** Real-time milliseconds per movement step at 1× speed. */
 export const MS_PER_STEP = MS_PER_HOUR / STEPS_PER_HOUR;
 

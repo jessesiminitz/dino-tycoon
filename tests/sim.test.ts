@@ -55,11 +55,13 @@ describe('generateIsland', () => {
 describe('Simulation clock', () => {
   it('advances one game-hour per MS_PER_HOUR at 1× and scales with speed', () => {
     const sim = new Simulation(newGame(1));
-    for (let i = 0; i < 10; i++) sim.advance(MS_PER_HOUR / 5);
+    // Frame-sized chunks (the sim ignores any single gap longer than 250 ms).
+    const frame = MS_PER_HOUR / 25;
+    for (let i = 0; i < 50; i++) sim.advance(frame);
     expect(sim.state.hours).toBe(2);
 
     sim.setSpeed(4);
-    for (let i = 0; i < 10; i++) sim.advance(MS_PER_HOUR / 5);
+    for (let i = 0; i < 50; i++) sim.advance(frame);
     expect(sim.state.hours).toBe(10);
 
     sim.setSpeed(0);
