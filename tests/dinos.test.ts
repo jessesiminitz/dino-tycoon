@@ -200,7 +200,7 @@ describe('determinism and saves', () => {
     } = current;
     const v2 = JSON.parse(JSON.stringify({ ...rest, version: 2 }));
     const migrated = migrate(v2)!;
-    expect(migrated.version).toBe(9);
+    expect(migrated.version).toBe(10);
     expect(migrated.fossilBeds.length).toBeGreaterThan(0);
     expect(migrated.scenario).toEqual({ id: 'sandbox', status: 'free' });
     expect(migrated.tutorialStep).toBeNull();

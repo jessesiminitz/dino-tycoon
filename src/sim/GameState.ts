@@ -15,7 +15,7 @@ export const MAP_WIDTH = 64;
 export const MAP_HEIGHT = 48;
 export const STARTING_MONEY = 50_000;
 export const START_HOUR = 8;
-export const SAVE_VERSION = 9;
+export const SAVE_VERSION = 10;
 
 export interface Dino {
   id: number;
@@ -113,6 +113,16 @@ export interface Decor {
   y: number;
 }
 
+export interface LogEntry {
+  /** Game-hour it happened. */
+  hour: number;
+  text: string;
+  kind: 'info' | 'good' | 'bad';
+}
+
+/** Park log entries kept in the save (oldest dropped first). */
+export const MAX_LOG = 300;
+
 export interface ScenarioState {
   id: ScenarioId;
   /** 'free' = no goals (sandbox, or carrying on after a scenario ended). */
@@ -173,6 +183,8 @@ export interface GameState {
   decor: Decor[];
   /** Hours the volcano stays visibly active after a rumble. */
   volcanoActivity: number;
+  /** Every park alert, oldest first. */
+  log: LogEntry[];
   /** Next id for dinos, feeders and other entities. */
   nextId: number;
 }
@@ -212,6 +224,7 @@ export function newGame(seed: number): GameState {
     fossilBeds: [],
     decor: [],
     volcanoActivity: 0,
+    log: [],
     nextId: 1,
   };
   state.fossilBeds = bedsFor(state);
@@ -307,6 +320,9 @@ export function migrate(raw: { version?: number } & Record<string, unknown>): Ga
       }
     }
     raw.version = 9;
+  }
+  if (raw.version === 9) {
+    Object.assign(raw, { version: 10, log: [] });
   }
   return raw.version === SAVE_VERSION ? (raw as unknown as GameState) : null;
 }

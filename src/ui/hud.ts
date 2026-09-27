@@ -7,6 +7,7 @@ import { BUILDING_TYPES, PATH_COST, type BuildingKind } from '../sim/data/econom
 import { mountCatalog } from './catalog';
 import { mountParkPanel } from './parkPanel';
 import { mountGuide } from './guide';
+import { mountLog } from './log';
 import { SCENARIOS } from '../sim/data/scenarios';
 import { DECOR_KINDS, DECOR_TYPES } from '../sim/data/decor';
 import type { Mode, UiState } from './uiState';
@@ -241,7 +242,9 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
       el.className = `toast ${kind}`;
       el.textContent = text;
       toasts.appendChild(el);
-      while (toasts.children.length > MAX_TOASTS) toasts.firstElementChild!.remove();
+      // Keep the newest few (the update banner, if showing, stays at the top of the column).
+      const shown = toasts.querySelectorAll('.toast');
+      for (let i = 0; i < shown.length - MAX_TOASTS; i++) shown[i].remove();
       window.setTimeout(() => el.remove(), TOAST_MS);
     },
   };
@@ -262,6 +265,7 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
   const goalsBtn = $('btn-goals');
   goalsBtn.hidden = SCENARIOS[sim.state.scenario.id].goals.length === 0;
   goalsBtn.addEventListener('click', () => parkPanel.open('goals'));
+  mountLog(sim);
   const guide = mountGuide(sim);
   $('btn-guide').addEventListener('click', () => guide.open());
 

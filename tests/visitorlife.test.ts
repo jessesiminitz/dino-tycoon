@@ -155,10 +155,25 @@ describe('saves', () => {
       v.boughtSouvenir = true;
     }
     const m = migrate(old)!;
-    expect(m.version).toBe(9);
+    expect(m.version).toBe(10);
     expect(m.visitors[0].items).toEqual(['plush']);
     expect(m.visitors[0].bladder).toBe(0);
     expect(m.finance.month.income.snacks).toBe(0);
   });
 });
 
+
+describe('park log', () => {
+  it('records every event, capped, and survives a v9 migration', async () => {
+    const { Simulation } = await import('../src/sim/Simulation');
+    const { newGame, migrate, MAX_LOG } = await import('../src/sim/GameState');
+    const sim = new Simulation(newGame(7));
+    for (let h = 0; h < 24 * 20; h++) sim.advance(2500);
+    expect(sim.state.log.length).toBeGreaterThan(0);
+    expect(sim.state.log.length).toBeLessThanOrEqual(MAX_LOG);
+    const old = JSON.parse(JSON.stringify(newGame(3)));
+    old.version = 9;
+    delete old.log;
+    expect(migrate(old)!.log).toEqual([]);
+  });
+});

@@ -84,7 +84,7 @@ describe('fossil beds', () => {
     delete old.decor;
     delete old.volcanoActivity;
     const m = migrate(old)!;
-    expect(m.version).toBe(9);
+    expect(m.version).toBe(10);
     expect(m.decor).toEqual([]);
     expect(bedAt(m.fossilBeds, spot % w, Math.floor(spot / w))).toBeDefined();
   });

@@ -258,19 +258,18 @@ button {
 }
 
 .update-banner {
-  position: fixed;
-  z-index: 8;
-  top: calc(var(--safe-top) + 58px);
-  left: 50%;
-  transform: translateX(-50%);
+  /* Sits at the top of the alert column so it never covers other alerts. */
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 4px 4px 4px 14px;
-  white-space: nowrap;
+  gap: 10px;
+  max-width: min(60vw, 420px);
+  padding: 4px 4px 4px 10px;
+  font-size: 12px;
   background: var(--panel);
   border: 2px solid var(--accent);
-  border-radius: 4px;
+  border-radius: 2px;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.25);
+  pointer-events: auto;
 }
 
 .update-banner.hidden {
@@ -1260,6 +1259,37 @@ body:not(.in-park) #info {
   width: min(100%, 420px);
   padding: 14px;
   text-align: center;
+  /* Short landscape phones: scroll inside the card instead of spilling off screen. */
+  max-height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+}
+
+.pause-card .menu-btn {
+  flex-shrink: 0;
+}
+
+@media (max-height: 480px) {
+  .pause-card {
+    gap: 6px;
+    padding: 10px 14px;
+  }
+
+  .pause-card h2 {
+    font-size: 16px;
+  }
+
+  .pause-card .menu-btn {
+    min-height: 40px;
+    padding: 4px 12px;
+    font-size: 14px;
+  }
+
+  .pause-card .setting {
+    min-height: 36px;
+  }
 }
 
 .pause-card h2,
@@ -1365,4 +1395,85 @@ body:not(.in-park) #info {
   50% {
     box-shadow: 0 0 0 5px rgba(242, 193, 78, 0.35);
   }
+}
+
+/* ---------- Park log ---------- */
+
+.hud-btn {
+  position: relative;
+}
+
+.badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  font-size: 11px;
+  line-height: 18px;
+  color: #fff;
+  text-align: center;
+  background: var(--bad);
+  border-radius: 9px;
+}
+
+.badge.hidden {
+  display: none;
+}
+
+.log-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 14px 0;
+}
+
+.chip {
+  min-height: 34px;
+  padding: 0 12px;
+  font-size: 13px;
+  background: var(--panel);
+  border: 2px solid;
+  border-color: var(--bevel);
+  border-radius: 2px;
+}
+
+.chip.active {
+  border-color: var(--bevel-in);
+  background: rgba(232, 181, 58, 0.35);
+}
+
+.log-list {
+  margin: 0;
+  list-style: none;
+  flex: 1;
+  min-height: 0;
+}
+
+.log-entry {
+  display: grid;
+  grid-template-columns: 7.5em 1fr;
+  gap: 8px;
+  padding: 6px 8px;
+  border-left: 4px solid var(--muted);
+  border-bottom: 1px solid rgba(60, 45, 20, 0.12);
+}
+
+.log-entry.bad {
+  border-left-color: var(--bad);
+}
+
+.log-entry.good {
+  border-left-color: var(--good);
+}
+
+.log-entry.report {
+  border-left-color: #2a78d6;
+}
+
+.log-when {
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
 }

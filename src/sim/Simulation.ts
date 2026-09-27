@@ -1,4 +1,4 @@
-import type { GameState } from './GameState';
+import { MAX_LOG, type GameState } from './GameState';
 import { applyCommand, type Command, type CommandResult } from './commands';
 import { computeRegions, type RegionMap } from './regions';
 import { Rng } from './rng';
@@ -128,6 +128,9 @@ export class Simulation {
   }
 
   private emitEvent(e: GameEvent): void {
+    const log = this.state.log;
+    log.push({ hour: this.state.hours, text: e.text, kind: e.kind });
+    if (log.length > MAX_LOG) log.splice(0, log.length - MAX_LOG);
     for (const fn of this.eventListeners) fn(e);
   }
 }
