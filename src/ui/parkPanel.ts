@@ -22,8 +22,8 @@ import { playSfx } from '../audio/audio';
 
 type Tab = 'goals' | 'overview' | 'staff' | 'finances' | 'bank';
 
-/** Validated against the panel surface (#1c2620) with the dataviz palette checker. */
-const BAR_COLOR = '#c98500';
+/** Validated against the beige panel surface with the dataviz palette checker (all checks pass). */
+const BAR_COLOR = '#2a78d6';
 const REFRESH_MS = 1000;
 
 export function reputationLabel(r: number): string {
@@ -91,7 +91,7 @@ export function mountParkPanel(sim: Simulation, hud: Hud): { open(tab?: Tab): vo
         <p class="note">Weather: <b>${state.stormHours > 0 ? `⛈️ storm (about ${state.stormHours}h left)` : '🌤️ clear'}</b> ·
           Species unlocked: <b>${state.unlockedSpecies.length}/12</b>${state.buildings.some((b) => b.kind === 'digsite') ? '' : ' (build a dig site to find more)'}</p>
         <p class="note">Daily costs: wages <b>${formatMoney(dailyWages(state))}</b> · building upkeep <b>${formatMoney(upkeep)}</b> · Debt: <b>${formatMoney(totalDebt(state))}</b></p>
-        <p class="note">Tips: build paths from the gate past your paddocks so visitors can see the dinos. A restaurant keeps them happy; a gift shop earns extra.</p>
+        <p class="note">Tips: build paths from the gate past your paddocks so visitors can see the dinos. Restaurants and restrooms keep them happy; snack stalls and souvenir shops earn extra; gardens cheer them up.</p>
       </section>
       <p class="note version">Version ${__APP_VERSION__} · ${__BUILD_DATE__}</p>`;
   }
@@ -144,7 +144,8 @@ export function mountParkPanel(sim: Simulation, hud: Hud): { open(tab?: Tab): vo
             ? `M${x},${zeroY} V${zeroY - h + r} Q${x},${zeroY - h} ${x + r},${zeroY - h} H${x + barW - r} Q${x + barW},${zeroY - h} ${x + barW},${zeroY - h + r} V${zeroY} Z`
             : `M${x},${zeroY} V${zeroY + h - r} Q${x},${zeroY + h} ${x + r},${zeroY + h} H${x + barW - r} Q${x + barW},${zeroY + h} ${x + barW},${zeroY + h - r} V${zeroY} Z`;
         const tip = `${p.label}${p.partial ? ' (so far)' : ''}: ${formatMoney(p.value)}`;
-        const labelY = p.value >= 0 ? zeroY - h - 5 : zeroY + h + 12;
+        // Label above the bar top, or for a loss just above the zero line (clear of the month labels).
+        const labelY = p.value >= 0 ? zeroY - h - 5 : zeroY - 5;
         const showLabel = i === points.length - 1 || i === points.length - 2;
         return `<g class="bar" data-tip="${esc(tip)}" tabindex="0">
             <rect x="${cx - slot / 2}" y="${top - 10}" width="${slot}" height="${H - top}" fill="transparent"/>

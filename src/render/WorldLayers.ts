@@ -10,8 +10,16 @@ import { TILE } from './tileset';
 const PADDOCK_TINTS = [0xf2c14e, 0x6ec6ff, 0xff8fb1, 0xb28dff, 0x7ee0b5, 0xffa257];
 const FOR_SALE = 0xff9f43;
 
-/** Rail thickness in world pixels per fence type. */
-const RAIL_WIDTH: Record<FenceTypeId, number> = { 1: 2, 2: 2, 3: 1, 4: 4 };
+/** How tall each fence type stands, in world pixels. */
+const FENCE_H: Record<FenceTypeId, number> = { 1: 8, 2: 9, 3: 9, 4: 10 };
+
+/** Mixes a 0xRRGGBB colour toward white (amount > 0) or black (< 0). */
+function lighten(color: number, amount: number): number {
+  const target = amount > 0 ? 255 : 0;
+  const a = Math.abs(amount);
+  const ch = (shift: number) => Math.round(((color >> shift) & 255) * (1 - a) + target * a);
+  return (ch(16) << 16) | (ch(8) << 8) | ch(0);
+}
 
 export type GhostStyle = 'build' | 'blocked' | 'remove' | 'none';
 const GHOST_COLORS: Record<GhostStyle, number> = {
@@ -25,7 +33,8 @@ const GHOST_COLORS: Record<GhostStyle, number> = {
 export class WorldLayers {
   private paths: Phaser.GameObjects.Graphics;
   private overlay: Phaser.GameObjects.Graphics;
-  private fences: Phaser.GameObjects.Graphics;
+  /** One graphics layer per row of the map, depth-sorted with dinos and people. */
+  private fenceRows: Phaser.GameObjects.Graphics[] = [];
   private gate: Phaser.GameObjects.Graphics;
   private ghost: Phaser.GameObjects.Graphics;
   private labels: Phaser.GameObjects.Text[] = [];
@@ -36,7 +45,10 @@ export class WorldLayers {
   ) {
     this.paths = scene.add.graphics().setDepth(0.5);
     this.overlay = scene.add.graphics().setDepth(1);
-    this.fences = scene.add.graphics().setDepth(2);
+    for (let y = 0; y <= sim.state.map.height; y++) {
+      // A fence along row edge y stands at world y*TILE: things further north are behind it.
+      this.fenceRows.push(scene.add.graphics().setDepth(4 + (y * TILE) / 10000 - 0.00001));
+    }
     this.gate = scene.add.graphics().setDepth(3);
     this.ghost = scene.add.graphics().setDepth(5);
     this.drawGate();
@@ -122,20 +134,21 @@ export class WorldLayers {
   }
 
   drawFences(): void {
-    const g = this.fences.clear();
+    for (const g of this.fenceRows) g.clear();
     const { state } = this.sim;
     const { width, height } = state.map;
     for (let y = 0; y <= height; y++)
       for (let x = 0; x < width; x++) {
         const i = y * width + x;
         const f = state.hFences[i] as FenceTypeId | 0;
-        if (f) this.drawSegment(g, { dir: 'h', x, y }, f, state.hFenceHp[i]);
+        if (f) this.drawSegment(this.fenceRows[y], { dir: 'h', x, y }, f, state.hFenceHp[i]);
       }
     for (let y = 0; y < height; y++)
       for (let x = 0; x <= width; x++) {
         const i = y * (width + 1) + x;
         const f = state.vFences[i] as FenceTypeId | 0;
-        if (f) this.drawSegment(g, { dir: 'v', x, y }, f, state.vFenceHp[i]);
+        // A north–south segment is sorted by its southern (front) end.
+        if (f) this.drawSegment(this.fenceRows[y + 1], { dir: 'v', x, y }, f, state.vFenceHp[i]);
       }
   }
 
@@ -191,61 +204,93 @@ export class WorldLayers {
     this.ghost.clear();
   }
 
-  /** One fence segment. Worn fences (< 50%) show gaps; broken ones are posts and rubble. */
+  /**
+   * One fence segment, drawn standing up in 3/4 view: posts rise FENCE_H pixels
+   * above the ground line. East–west runs show their face; north–south runs are
+   * seen end-on as a narrow band. Worn fences (< 50%) have gaps; broken ones
+   * are fallen posts and rubble.
+   */
   private drawSegment(g: Phaser.GameObjects.Graphics, e: Edge, f: FenceTypeId, hp: number): void {
     const t = FENCE_TYPES[f];
-    const w = RAIL_WIDTH[f];
-    const half = Math.floor(w / 2);
-    const x = e.x * TILE;
-    const y = e.y * TILE;
-    const [x2, y2] = e.dir === 'h' ? [x + TILE, y] : [x, y + TILE];
-    const p = f === 4 ? 4 : 3;
+    const H = FENCE_H[f];
+    const x0 = e.x * TILE;
+    const y0 = e.y * TILE;
+    const horizontal = e.dir === 'h';
+    const [x1, y1] = horizontal ? [x0 + TILE, y0] : [x0, y0 + TILE];
+    const light = lighten(t.rail, 0.25);
+    const dark = lighten(t.rail, -0.3);
+
+    const post = (px: number, py: number, h = H) => {
+      g.fillStyle(0x1b1b14, 1).fillRect(px - 2, py - h - 1, 4, h + 2);
+      g.fillStyle(t.post, 1).fillRect(px - 1, py - h, 2, h);
+      g.fillStyle(lighten(t.post, 0.3), 1).fillRect(px - 1, py - h, 1, h);
+    };
 
     if (hp <= 0) {
-      // Broken: leaning posts, a scatter of rubble and a red warning dash.
-      g.fillStyle(t.post, 1);
-      g.fillRect(x - 1, y - 1, 2, 2);
-      g.fillRect(x2 - 1, y2 - 1, 2, 2);
+      // Broken: stumps, fallen rails and a red warning dash.
+      post(x0, y0, 3);
+      post(x1, y1, 3);
       g.fillStyle(t.rail, 0.9);
-      const [ax, ay] = e.dir === 'h' ? [x + 3, y + 2] : [x + 2, y + 3];
-      const [bx, by] = e.dir === 'h' ? [x + 10, y - 3] : [x - 3, y + 10];
-      g.fillRect(ax, ay, 2, 1);
-      g.fillRect(bx, by, 2, 1);
+      if (horizontal) g.fillRect(x0 + 3, y0 + 1, 8, 2);
+      else g.fillRect(x0 + 2, y0 + 5, 2, 6);
       g.fillStyle(0xff5a4a, 0.9);
-      if (e.dir === 'h') g.fillRect(x + 6, y, 4, 1);
-      else g.fillRect(x, y + 6, 1, 4);
+      if (horizontal) g.fillRect(x0 + 5, y0 - 1, 6, 1);
+      else g.fillRect(x0 - 1, y0 + 5, 1, 6);
       return;
     }
 
-    if (f === 3) {
-      // Electric: a faint glow behind a thin live wire.
-      g.fillStyle(t.rail, 0.25);
-      if (e.dir === 'h') g.fillRect(x, y - 2, TILE, 4);
-      else g.fillRect(x - 2, y, 4, TILE);
-    }
-    g.fillStyle(t.rail, hp < 50 ? 0.75 : 1);
-    if (hp < 50) {
-      // Worn: the rail has gaps.
-      const gap = hp < 25 ? 6 : 3;
-      const seg = (TILE - gap) / 2;
-      if (e.dir === 'h') {
-        g.fillRect(x, y - half, seg, w);
-        g.fillRect(x + seg + gap, y - half, seg, w);
+    const gap = hp < 25 ? 6 : hp < 50 ? 3 : 0;
+    /** Fill a horizontal band of the segment, leaving a worn gap in the middle. */
+    const band = (top: number, h: number, color: number, alpha = 1) => {
+      g.fillStyle(color, alpha);
+      if (horizontal) {
+        if (!gap) g.fillRect(x0, y0 - top, TILE, h);
+        else {
+          const seg = (TILE - gap) / 2;
+          g.fillRect(x0, y0 - top, seg, h);
+          g.fillRect(x0 + seg + gap, y0 - top, seg, h);
+        }
       } else {
-        g.fillRect(x - half, y, w, seg);
-        g.fillRect(x - half, y + seg + gap, w, seg);
+        // End-on: the same band runs down the length of the edge, shifted up by its height.
+        const len = gap ? (TILE - gap) / 2 : TILE;
+        g.fillRect(x0 - 1, y0 - top, 2, len + h - 1);
+        if (gap) g.fillRect(x0 - 1, y0 - top + len + gap, 2, len + h - 1);
       }
-    } else if (e.dir === 'h') g.fillRect(x, y - half, TILE, w);
-    else g.fillRect(x - half, y, w, TILE);
+    };
 
-    // Posts at both ends (shared posts simply overdraw).
-    g.fillStyle(t.post, 1);
-    g.fillRect(x - Math.floor(p / 2), y - Math.floor(p / 2), p, p);
-    g.fillRect(x2 - Math.floor(p / 2), y2 - Math.floor(p / 2), p, p);
-    if (f === 1) {
-      // Wooden fences get a mid post.
-      const [mx, my] = e.dir === 'h' ? [x + TILE / 2, y] : [x, y + TILE / 2];
-      g.fillRect(mx - 1, my - 1, 2, 2);
+    switch (f) {
+      case 1: // Wooden: two plank rails
+        band(H - 1, 2, t.rail);
+        band(H - 2, 1, light);
+        band(4, 2, t.rail);
+        band(5, 1, light);
+        break;
+      case 2: // Steel: chain-link mesh between top and bottom rails
+        if (horizontal) {
+          for (let x = 0; x < TILE; x += 2)
+            for (let y = 1; y < H; y += 2) if (!gap || x < (TILE - gap) / 2 || x >= (TILE + gap) / 2) g.fillStyle(t.rail, 0.55).fillRect(x0 + x + (y % 4 === 1 ? 0 : 1), y0 - y, 1, 1);
+        } else band(H - 1, H - 1, t.rail, 0.45);
+        band(H, 1, light);
+        band(1, 1, dark);
+        break;
+      case 3: // Electric: three live wires with a faint glow
+        band(H - 1, H - 1, t.rail, 0.12);
+        for (const h of [H - 1, Math.round(H / 2), 2]) band(h, 1, t.rail);
+        break;
+      case 4: // Concrete: a solid block wall with a lit top edge
+        band(H, H, t.rail);
+        band(H, 1, light);
+        band(1, 1, dark);
+        if (horizontal && !gap) {
+          g.fillStyle(dark, 0.6).fillRect(x0 + 7, y0 - H + 1, 1, H - 2); // block joint
+          g.fillStyle(dark, 0.6).fillRect(x0, y0 - Math.round(H / 2), TILE, 1);
+        }
+        break;
+    }
+    if (f !== 4) {
+      post(x0, y0);
+      post(x1, y1);
+      if (f === 1 && !gap) post(horizontal ? x0 + TILE / 2 : x0, horizontal ? y0 : y0 + TILE / 2, H - 1);
     }
   }
 

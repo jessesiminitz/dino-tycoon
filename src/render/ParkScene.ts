@@ -103,7 +103,7 @@ export class ParkScene extends Phaser.Scene {
     const worldW = map.width * TILE;
     const worldH = map.height * TILE;
     const cam = this.cameras.main;
-    cam.setBackgroundColor('#1f4e79');
+    cam.setBackgroundColor('#1e5a96');
     cam.setRoundPixels(true);
     // Start zoomed in on the gate, where the player's land is.
     cam.setZoom(Phaser.Math.Clamp(Math.floor(Math.min(cam.width / worldW, cam.height / worldH) * 3), 2, MAX_ZOOM));

@@ -56,7 +56,7 @@ export interface Species {
   fossilsNeeded: number;
   /** Relative chance a dig turns up this species (rarer = lower). */
   fossilWeight: number;
-  art: { template: BodyTemplate; body: string; dark: string; accent: string };
+  art: { template: BodyTemplate; body: string; dark: string; accent: string; pattern?: 'stripes' | 'spots' };
 }
 
 export const SPECIES: Record<SpeciesId, Species> = {
@@ -88,7 +88,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
       'It could walk on two legs or four.',
     ],
     fossilsNeeded: 0, fossilWeight: 0,
-    art: { template: 'hadro', body: '#6f9e7a', dark: '#3f6b4a', accent: '#d9713f' },
+    art: { template: 'hadro', body: '#6f9e7a', dark: '#3f6b4a', accent: '#d9713f', pattern: 'spots' },
   },
   stegosaurus: {
     id: 'stegosaurus', name: 'Stegosaurus', diet: 'herbivore', price: 9000, size: 3,
@@ -103,7 +103,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
       'The name “thagomizer” for its tail spikes began as a joke in a 1982 cartoon, and scientists adopted it.',
     ],
     fossilsNeeded: 0, fossilWeight: 0,
-    art: { template: 'stego', body: '#8fa05a', dark: '#56662f', accent: '#c9573b' },
+    art: { template: 'stego', body: '#8fa05a', dark: '#56662f', accent: '#c9573b', pattern: 'spots' },
   },
   triceratops: {
     id: 'triceratops', name: 'Triceratops', diet: 'herbivore', price: 12000, size: 3,
@@ -133,7 +133,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
       'It had long hind legs and a long tail for balance, built for speed.',
     ],
     fossilsNeeded: 0, fossilWeight: 0,
-    art: { template: 'raptor', body: '#9bbf5a', dark: '#5f7f2a', accent: '#e0c050' },
+    art: { template: 'raptor', body: '#9bbf5a', dark: '#5f7f2a', accent: '#e0c050', pattern: 'spots' },
   },
   dilophosaurus: {
     id: 'dilophosaurus', name: 'Dilophosaurus', diet: 'carnivore', price: 7000, size: 2,
@@ -148,7 +148,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
       'Its twin head crests were thin and fragile, probably for display.',
     ],
     fossilsNeeded: 0, fossilWeight: 0,
-    art: { template: 'raptor', body: '#b8a14a', dark: '#7a6a2a', accent: '#d9573b' },
+    art: { template: 'raptor', body: '#b8a14a', dark: '#7a6a2a', accent: '#d9573b', pattern: 'stripes' },
   },
   pachycephalosaurus: {
     id: 'pachycephalosaurus', name: 'Pachycephalosaurus', diet: 'herbivore', price: 8000, size: 2,
@@ -193,7 +193,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
       'The raptors in the movies were modelled on a larger relative, Deinonychus.',
     ],
     fossilsNeeded: 5, fossilWeight: 18,
-    art: { template: 'raptor', body: '#8c6a4a', dark: '#5a4028', accent: '#3f7fb0' },
+    art: { template: 'raptor', body: '#8c6a4a', dark: '#5a4028', accent: '#3f7fb0', pattern: 'stripes' },
   },
   allosaurus: {
     id: 'allosaurus', name: 'Allosaurus', diet: 'carnivore', price: 22000, size: 4,
@@ -208,7 +208,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
       'It is one of the most common large predators in the rocks of the Late Jurassic.',
     ],
     fossilsNeeded: 6, fossilWeight: 12,
-    art: { template: 'theropod', body: '#a8703f', dark: '#6b4424', accent: '#d9b060' },
+    art: { template: 'theropod', body: '#a8703f', dark: '#6b4424', accent: '#d9b060', pattern: 'stripes' },
   },
   brachiosaurus: {
     id: 'brachiosaurus', name: 'Brachiosaurus', diet: 'herbivore', price: 30000, size: 5,
@@ -238,7 +238,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
       'It had some of the largest teeth of any meat-eating dinosaur, up to about 30 cm long including the root.',
     ],
     fossilsNeeded: 12, fossilWeight: 6,
-    art: { template: 'theropod', body: '#6b7a4a', dark: '#40492a', accent: '#c9573b' },
+    art: { template: 'theropod', body: '#6b7a4a', dark: '#40492a', accent: '#c9573b', pattern: 'stripes' },
   },
 };
 

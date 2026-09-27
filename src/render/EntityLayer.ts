@@ -9,6 +9,7 @@ import { SPECIES, SPECIES_IDS, type SpeciesId } from '../sim/data/species';
 import { paintDino } from './dinoArt';
 import { TILE } from './tileset';
 import { paintRows } from './pixels';
+import { paintDigSite, paintRestaurant, paintRestroom, paintSnackStall, paintSouvenirShop, paintTrough } from './sceneryArt';
 
 const dinoKey = (id: SpeciesId, frame: 0 | 1 = 0) => `dino-${id}-${frame}`;
 const feederKey = (kind: FeederKind, full: boolean) => `feeder-${kind}-${full ? 'full' : 'empty'}`;
@@ -78,106 +79,23 @@ function paintStaff(role: StaffRole, frame: 0 | 1): HTMLCanvasElement {
 }
 
 function paintBuilding(kind: BuildingKind): HTMLCanvasElement {
-  if (kind === 'snackstall') {
-    // A striped umbrella over an ice-cream cart.
-    return paintRows(
-      [
-        '....RWRWRWRW....',
-        '...RWRWRWRWRW...',
-        '..RWRWRWRWRWRW..',
-        '.......PP.......',
-        '.......PP.......',
-        '..CCCCCCCCCCCC..',
-        '..cyyccppccyyc..',
-        '..cccccccccccc..',
-        '..K..........K..',
-      ],
-      { R: '#f28fb1', W: '#f4ecd2', P: '#8f8f96', C: '#f4ecd2', c: '#e8a0b8', y: '#f2d24e', p: '#b07a3f', K: '#3b3b3b' },
-    );
+  switch (kind) {
+    case 'restaurant':
+      return paintRestaurant();
+    case 'snackstall':
+      return paintSnackStall();
+    case 'giftshop':
+      return paintSouvenirShop();
+    case 'restroom':
+      return paintRestroom();
+    case 'digsite':
+      return paintDigSite();
   }
-  if (kind === 'restroom') {
-    return paintRows(
-      [
-        '..SSSSSSSSSSSS..',
-        '.SSSSSSSSSSSSSS.',
-        '..WWWWWWWWWWWW..',
-        '..WbWWWWWWWWgW..',
-        '..WbWWDDDDWWgW..',
-        '..WWWWDDDDWWWW..',
-        '..WWWWDDDDWWWW..',
-        '..WWWWDDDDWWWW..',
-      ],
-      { S: '#3f8f9a', W: '#e8f0ec', D: '#5a6b7a', b: '#3f7fb0', g: '#e05a8f' },
-    );
-  }
-  if (kind === 'digsite') {
-    // Canvas tent, a spoil heap, a pickaxe and a partly dug-out bone.
-    return paintRows(
-      [
-        '......T.........',
-        '.....TTT........',
-        '....TTtTT.......',
-        '...TTTtTTT..H...',
-        '..TTTTtTTTT.H...',
-        '.TTTTTdTTTTTHHH.',
-        '......dddd......',
-        '..MMM.dBBBd.MM..',
-        '.MMMMMdddddMMMM.',
-      ],
-      { T: '#d9c7a3', t: '#a88a6a', d: '#5a3b1f', B: '#f4ecd2', M: '#8a6a3e', H: '#8f8f96' },
-    );
-  }
-  // Awning stripes alternate A/a; walls W; window G; door D; sign S/s.
-  const rows = [
-    '......SSSS......',
-    '......SssS......',
-    '..AaAaAaAaAaAa..',
-    '.AaAaAaAaAaAaAa.',
-    '.WWWWWWWWWWWWWW.',
-    '.WGGGWWWWWWGGGW.',
-    '.WGGGWWDDWWGGGW.',
-    '.WGGGWWDDWWGGGW.',
-    '.WWWWWWDDWWWWWW.',
-    '.WWWWWWDDWWWWWW.',
-  ];
-  const restaurant = kind === 'restaurant';
-  return paintRows(rows, {
-    A: restaurant ? '#d9454d' : '#3f7fb0',
-    a: '#f4ecd2',
-    W: restaurant ? '#b07a3f' : '#a88a6a',
-    G: '#8fd3ea',
-    D: '#5a3b1f',
-    S: restaurant ? '#f2c14e' : '#6fb34f',
-    s: restaurant ? '#d9454d' : '#2f6b3a',
-  });
 }
 
-/** Paints feeder troughs: a wooden box, plus greens or meat when stocked. */
+/** Feeding troughs, full and empty. */
 function paintFeeder(kind: FeederKind, full: boolean): HTMLCanvasElement {
-  const c = document.createElement('canvas');
-  c.width = TILE;
-  c.height = TILE;
-  const ctx = c.getContext('2d')!;
-  const px = (x: number, y: number, w: number, h: number, color: string) => {
-    ctx.fillStyle = color;
-    ctx.fillRect(x, y, w, h);
-  };
-  px(1, 7, 14, 7, '#1b1b14');
-  px(2, 8, 12, 5, '#8a5a2b');
-  px(2, 8, 12, 1, '#b07a3f');
-  px(3, 12, 2, 3, '#1b1b14');
-  px(11, 12, 2, 3, '#1b1b14');
-  if (full && kind === 'plants') {
-    for (const [x, y, col] of [[3, 5, '#4e8a33'], [5, 4, '#73b44f'], [7, 5, '#86c25c'], [9, 4, '#4e8a33'], [11, 5, '#73b44f'], [4, 6, '#86c25c'], [8, 6, '#4e8a33'], [12, 6, '#86c25c']] as const) {
-      px(x, y, 2, 3, col);
-    }
-  } else if (full) {
-    px(3, 5, 4, 3, '#b8323a');
-    px(8, 4, 5, 4, '#d9454d');
-    px(9, 5, 2, 1, '#f4ecd2'); // bone
-    px(4, 6, 2, 1, '#f4ecd2');
-  }
-  return c;
+  return paintTrough(kind, full);
 }
 
 /** Dinosaur and feeder sprites, kept in sync with the simulation every frame. */
@@ -189,6 +107,8 @@ export class EntityLayer {
   private buildings = new Map<number, Phaser.GameObjects.Image>();
   private staff = new Map<number, Phaser.GameObjects.Image>();
   private markers: Phaser.GameObjects.Graphics;
+  /** Soft ground shadows, under everything that stands. */
+  private shadows: Phaser.GameObjects.Graphics;
   selection: Selection = null;
 
   constructor(
@@ -212,6 +132,7 @@ export class EntityLayer {
     }
     for (const kind of Object.keys(BUILDING_TYPES) as BuildingKind[]) scene.textures.addCanvas(buildingKey(kind), paintBuilding(kind));
     this.markers = scene.add.graphics().setDepth(9);
+    this.shadows = scene.add.graphics().setDepth(3.9);
   }
 
   /** Where a visitor is drawn (feet), nudged per person so crowds don't stack. */
@@ -299,6 +220,8 @@ export class EntityLayer {
   update(time: number): void {
     const { state } = this.sim;
     const g = this.markers.clear();
+    const sh = this.shadows.clear();
+    sh.fillStyle(0x000000, 0.22);
 
     // Feeders
     const liveFeeders = new Set<number>();
@@ -306,7 +229,8 @@ export class EntityLayer {
       liveFeeders.add(f.id);
       let img = this.feeders.get(f.id);
       if (!img) {
-        img = this.scene.add.image(f.x * TILE, f.y * TILE, feederKey(f.kind, true)).setOrigin(0).setDepth(3);
+        const base = (f.y + 1) * TILE;
+        img = this.scene.add.image(f.x * TILE + TILE / 2, base, feederKey(f.kind, true)).setOrigin(0.5, 1).setDepth(4 + base / 10000);
         this.feeders.set(f.id, img);
       }
       img.setTexture(feederKey(f.kind, f.stock > 0));
@@ -343,6 +267,7 @@ export class EntityLayer {
       const vx = Math.round(x);
       const vy = Math.round(y) + (moving && !stride ? -1 : 0);
       img.setPosition(vx, vy);
+      sh.fillEllipse(vx, Math.round(y) - 1, 7, 3);
       this.drawCarried(g, v, vx, vy, img.height);
       img.setDepth(4 + y / 10000);
       if (this.selection?.kind === 'visitor' && this.selection.id === v.id) {
@@ -361,6 +286,7 @@ export class EntityLayer {
       img.setTexture(staffKey(m.role, walking && Math.floor(time / 150) % 2 === 1 ? 1 : 0));
       img.setPosition(Math.round(x), Math.round(y) + (working && Math.floor(time / 180) % 2 === 0 ? -1 : 0));
       img.setDepth(4 + y / 10000);
+      sh.fillEllipse(Math.round(x), Math.round(y) - 1, 8, 3);
       if (working) {
         // Busy sparks above the head.
         g.fillStyle(0xf2c14e, 1).fillRect(Math.round(x) + (Math.floor(time / 240) % 2 === 0 ? -3 : 2), Math.round(y) - 14, 1, 1);
@@ -387,6 +313,7 @@ export class EntityLayer {
       const bob = moving ? (this.sim.stepProgress < 0.5 ? -1 : 0) : Math.sin(time / 600 + d.id) > 0.9 ? -1 : 0;
       img.setTexture(dinoKey(d.species, moving && this.sim.stepProgress >= 0.5 ? 1 : 0));
       img.setPosition(Math.round(x), Math.round(y) + bob);
+      sh.fillEllipse(Math.round(x), Math.round(y) - 1, img.width * 0.7, Math.max(4, img.height * 0.14));
       img.setFlipX(this.facingLeft.get(d.id) ?? false);
       img.setDepth(4 + y / 10000);
 

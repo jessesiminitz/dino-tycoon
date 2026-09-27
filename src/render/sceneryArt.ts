@@ -239,3 +239,142 @@ export function paintBench(): HTMLCanvasElement {
 
 /** Tree kinds used on forest tiles, picked per tile. */
 export const FOREST_TREES = [paintConifer, paintBroadleaf, paintCycad, paintTreeFern, paintGiant] as const;
+
+// --- Buildings, drawn in 3/4 view: a sloped roof you can see the top of, over a front wall. ---
+
+type Px = Plot;
+
+/** A pitched roof (top face visible) over a front wall with a door. */
+function house(px: Px, w: number, roof: [string, string], wall: [string, string], roofRows = 8, wallRows = 13): { wallTop: number; bottom: number } {
+  const roofTop = 2;
+  for (let y = 0; y < roofRows; y++)
+    for (let x = 1 + Math.max(0, 2 - y); x < w - 1 - Math.max(0, 2 - y); x++) {
+      // Tiles: alternate shades by row, darker at the front edge.
+      px(x, roofTop + y, y === roofRows - 1 ? roof[1] : (y + (x >> 1)) % 3 === 0 ? roof[1] : roof[0]);
+    }
+  const wallTop = roofTop + roofRows;
+  const bottom = wallTop + wallRows - 1;
+  for (let y = wallTop; y <= bottom; y++) for (let x = 2; x < w - 2; x++) px(x, y, x < 4 ? wall[0] : wall[x > w - 5 ? 1 : 0]);
+  return { wallTop, bottom };
+}
+
+function windowAt(px: Px, x: number, y: number, w = 4, h = 4): void {
+  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) px(x + i, y + j, j === 0 || i === 0 ? '#5a8fb0' : '#8fd3ea');
+  px(x + w - 1, y, '#e8f6fb');
+}
+
+function doorAt(px: Px, x: number, y: number, bottom: number, color = '#6b4a2a'): void {
+  for (let j = y; j <= bottom; j++) for (let i = 0; i < 4; i++) px(x + i, j, i === 0 ? '#4a3018' : color);
+  px(x + 3, Math.round((y + bottom) / 2), '#f2c14e'); // handle
+}
+
+export function paintRestaurant(): HTMLCanvasElement {
+  const w = 24;
+  return paintSprite(w, 28, (px) => {
+    const { wallTop, bottom } = house(px, w, ['#c8483a', '#8f2f24'], ['#f4ecd2', '#d9ccaa']);
+    windowAt(px, 4, wallTop + 3);
+    windowAt(px, w - 8, wallTop + 3);
+    doorAt(px, 10, wallTop + 5, bottom);
+    // Striped awning over the door and a sign with a fork and knife.
+    for (let x = 8; x < 16; x++) px(x, wallTop + 3, x % 2 ? '#d9454d' : '#f4ecd2');
+    for (let x = 8; x < 16; x++) px(x, wallTop + 4, x % 2 ? '#8f2f24' : '#d9ccaa');
+    for (let x = 8; x < 16; x++) px(x, 1, '#f2c14e');
+    px(10, 0, '#f2c14e');
+    px(13, 0, '#f2c14e');
+    px(10, 1, '#5a4028');
+    px(13, 1, '#5a4028');
+  });
+}
+
+export function paintSouvenirShop(): HTMLCanvasElement {
+  const w = 24;
+  return paintSprite(w, 28, (px) => {
+    const { wallTop, bottom } = house(px, w, ['#3f7fb0', '#2a5a80'], ['#f4ecd2', '#d9ccaa']);
+    // A big shop window with a plush dino and a balloon on display.
+    for (let j = 0; j < 7; j++) for (let i = 0; i < 9; i++) px(4 + i, wallTop + 2 + j, j === 0 || i === 0 ? '#5a8fb0' : '#bfe6f2');
+    for (const [dx, dy] of [[2, 4], [3, 4], [4, 4], [3, 3], [4, 3], [5, 3], [2, 5], [4, 5]]) px(4 + dx, wallTop + 2 + dy, '#5fb84a');
+    px(10, wallTop + 3, '#e05a4f');
+    px(10, wallTop + 4, '#e05a4f');
+    doorAt(px, w - 9, wallTop + 4, bottom, '#2a5a80');
+    for (let x = 5; x < w - 5; x++) px(x, 1, x % 3 ? '#6fb34f' : '#2f6b2a'); // sign
+  });
+}
+
+export function paintRestroom(): HTMLCanvasElement {
+  const w = 22;
+  return paintSprite(w, 26, (px) => {
+    const { wallTop, bottom } = house(px, w, ['#3f8f9a', '#2a646c'], ['#e8f0ec', '#c9d6d0'], 7, 12);
+    doorAt(px, 4, wallTop + 4, bottom, '#5a6b7a');
+    doorAt(px, w - 8, wallTop + 4, bottom, '#5a6b7a');
+    // Figure signs above the doors.
+    for (const [x, c] of [[5, '#3f7fb0'], [w - 7, '#e05a8f']] as const) {
+      px(x + 1, wallTop + 1, c);
+      px(x, wallTop + 2, c);
+      px(x + 1, wallTop + 2, c);
+      px(x + 2, wallTop + 2, c);
+    }
+  });
+}
+
+export function paintSnackStall(): HTMLCanvasElement {
+  return paintSprite(22, 26, (px) => {
+    // Striped umbrella dome.
+    for (let y = 1; y < 9; y++) {
+      const half = Math.min(10, 2 + y * 1.6);
+      for (let x = Math.round(11 - half); x <= Math.round(11 + half); x++) px(x, y, Math.floor((x - 11) / 3 + 10) % 2 ? '#f28fb1' : '#f4ecd2');
+    }
+    for (let y = 9; y < 14; y++) px(11, y, '#8f8f96');
+    // The cart: counter, front panel with an ice-cream cone, wheels.
+    for (let x = 3; x < 19; x++) px(x, 14, '#f4ecd2');
+    for (let y = 15; y < 21; y++) for (let x = 3; x < 19; x++) px(x, y, x < 5 ? '#f2b8cc' : '#e8a0b8');
+    px(10, 16, '#f4ecd2');
+    px(11, 16, '#ff9fb8');
+    px(12, 16, '#f4ecd2');
+    for (let y = 17; y < 20; y++) px(11, y, '#d9a45a');
+    for (const x of [5, 16]) {
+      px(x, 21, '#3b3b3b');
+      px(x + 1, 21, '#3b3b3b');
+      px(x, 22, '#3b3b3b');
+      px(x + 1, 22, '#3b3b3b');
+    }
+  });
+}
+
+export function paintDigSite(): HTMLCanvasElement {
+  return paintSprite(26, 24, (px) => {
+    // Canvas tent.
+    for (let y = 2; y < 16; y++) {
+      const half = (y - 2) * 0.75;
+      for (let x = Math.round(9 - half); x <= Math.round(9 + half); x++) px(x, y, x < 9 ? '#e8d9b5' : '#c9b48a');
+    }
+    for (let y = 9; y < 16; y++) px(9, y, '#5a4028'); // doorway
+    // Spoil heap with bones, a pick and a shovel.
+    for (let y = 13; y < 20; y++)
+      for (let x = 13; x < 24; x++) if (((x - 18.5) / 5.5) ** 2 + ((y - 19) / 5) ** 2 < 1) px(x, y, y < 16 ? '#a07a4a' : '#8a6a3e');
+    for (let x = 15; x < 19; x++) px(x, 17, '#f4ecd2');
+    px(14, 16, '#f4ecd2');
+    px(19, 18, '#f4ecd2');
+    for (let i = 0; i < 7; i++) px(20 - i * 0.6, 8 + i, '#8a5a2b'); // pick handle
+    px(19, 8, '#8f8f96');
+    px(21, 8, '#8f8f96');
+    px(20, 7, '#8f8f96');
+  });
+}
+
+/** Feeding trough seen in 3/4: a wooden box whose top shows greens or meat. */
+export function paintTrough(kind: 'plants' | 'meat', full: boolean): HTMLCanvasElement {
+  return paintSprite(20, 14, (px) => {
+    for (let x = 2; x < 18; x++) {
+      px(x, 5, '#b07a3f'); // back rim
+      for (let y = 9; y < 12; y++) px(x, y, y === 9 ? '#9c6b3c' : '#7a5028'); // front face
+    }
+    for (let y = 6; y < 9; y++)
+      for (let x = 2; x < 18; x++) {
+        const edge = x === 2 || x === 17;
+        const h = hash2(x, y, kind === 'plants' ? 3 : 4);
+        px(x, y, edge ? '#8a5a2b' : !full ? '#4a3018' : kind === 'plants' ? (h > 0.5 ? '#6fb34f' : '#4e8a33') : h > 0.7 ? '#f4ecd2' : h > 0.35 ? '#d9454d' : '#a8323a');
+      }
+    if (full && kind === 'plants') for (const x of [5, 9, 13]) px(x, 4, '#86c25c');
+    for (const x of [3, 16]) px(x, 12, '#4a3018');
+  });
+}

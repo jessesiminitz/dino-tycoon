@@ -44,6 +44,8 @@ export class SceneryLayer {
   /** Natural trees and palms by tile index. */
   private trees = new Map<number, Phaser.GameObjects.Image>();
   private decor = new Map<number, Phaser.GameObjects.Image>();
+  /** Trees currently see-through because an animal stands behind them. */
+  private faded = new Set<number>();
   private fx: Phaser.GameObjects.Graphics;
   private volcanoGlow: Phaser.GameObjects.Graphics;
   private volcanoBase = 0;
@@ -181,8 +183,29 @@ export class SceneryLayer {
     }
   }
 
-  /** Volcano smoke and glow, fountain sparkle. */
+  /**
+   * Trees just in front of (south of) a dinosaur turn see-through, so animals
+   * are never lost behind the forest.
+   */
+  private fadeTreesInFront(): void {
+    const { state } = this.sim;
+    const w = state.map.width;
+    const now = new Set<number>();
+    for (const d of state.dinos) {
+      for (let dy = 0; dy <= 2; dy++)
+        for (let dx = -1; dx <= 1; dx++) {
+          const i = (d.y + dy) * w + d.x + dx;
+          if (this.trees.has(i)) now.add(i);
+        }
+    }
+    for (const i of this.faded) if (!now.has(i)) this.trees.get(i)?.setAlpha(1);
+    for (const i of now) if (!this.faded.has(i)) this.trees.get(i)?.setAlpha(0.35);
+    this.faded = now;
+  }
+
+  /** Volcano smoke and glow, fountain sparkle, see-through trees. */
   update(time: number): void {
+    this.fadeTreesInFront();
     const g = this.fx.clear();
     const glow = this.volcanoGlow.clear();
     const { state } = this.sim;

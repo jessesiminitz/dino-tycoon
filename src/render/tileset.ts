@@ -30,20 +30,20 @@ function speckle(
 // Swap for a hand-drawn tileset later by loading an image under TILESET_KEY.
 const PAINTERS: Record<Terrain, Painter> = {
   [Terrain.DeepWater]: (px, r) => {
-    fill(px, '#1f4e79');
-    speckle(px, r, ['#2a6496', '#3b7bb3'], 0.05);
+    fill(px, '#1e5a96');
+    speckle(px, r, ['#2a6aa8', '#3b7fc0'], 0.06);
   },
   [Terrain.Shallows]: (px, r) => {
-    fill(px, '#3a8fb7');
-    speckle(px, r, ['#5bb3d6', '#8fd3ea'], 0.07);
+    fill(px, '#3e9ad0');
+    speckle(px, r, ['#5bb8e0', '#9adcf0'], 0.08);
   },
   [Terrain.Sand]: (px, r) => {
-    fill(px, '#e8d18b');
-    speckle(px, r, ['#d4ba6c', '#f5e3a8'], 0.18);
+    fill(px, '#ecd08a');
+    speckle(px, r, ['#d9b86a', '#f7e4ac'], 0.2);
   },
   [Terrain.Grass]: (px, r) => {
-    fill(px, '#5f9e3f');
-    speckle(px, r, ['#4e8a33', '#73b44f', '#86c25c'], 0.22);
+    fill(px, '#66a642');
+    speckle(px, r, ['#57963a', '#78b850', '#8cc75e'], 0.24);
     // Now and then a few wildflowers.
     if (r(77, 7) < 0.35) {
       const colors = ['#f4ecd2', '#f2d24e', '#ff9fb8'];

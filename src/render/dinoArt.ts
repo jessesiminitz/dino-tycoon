@@ -1,3 +1,4 @@
+import { hash2 } from '../sim/rng';
 import type { BodyTemplate, Species } from '../sim/data/species';
 
 /**
@@ -201,35 +202,73 @@ function strideRows(rows: string[]): string[] {
 }
 
 /**
- * Paints a species sprite (facing right) onto a new canvas, 1 canvas pixel per
- * art pixel. Frame 1 is the mid-stride walk frame. Bodies get a highlight along
- * the top and a shadow along the bottom so they read as solid shapes.
+ * Scale2x (EPX): doubles a pixel-art grid while rounding off diagonal steps,
+ * so the upscaled sprite has smooth outlines instead of chunky staircases.
+ */
+function scale2x(rows: string[]): string[] {
+  const h = rows.length;
+  const w = rows[0].length;
+  const at = (x: number, y: number) => (y >= 0 && y < h && x >= 0 && x < w ? rows[y][x] : '.');
+  const out: string[][] = Array.from({ length: h * 2 }, () => new Array(w * 2).fill('.'));
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      const p = at(x, y);
+      const a = at(x, y - 1);
+      const b = at(x + 1, y);
+      const c = at(x - 1, y);
+      const d = at(x, y + 1);
+      out[y * 2][x * 2] = c === a && c !== d && a !== b ? a : p;
+      out[y * 2][x * 2 + 1] = a === b && a !== c && b !== d ? b : p;
+      out[y * 2 + 1][x * 2] = d === c && d !== b && c !== a ? c : p;
+      out[y * 2 + 1][x * 2 + 1] = b === d && b !== a && d !== c ? d : p;
+    }
+  return out.map((r) => r.join(''));
+}
+
+/**
+ * Paints a species sprite (facing right) at double resolution: the template is
+ * smoothed with Scale2x, then shaded with light from the upper left (a bright
+ * rim along the top, shadow along the bottom and right), given the species'
+ * stripes or spots, an eye glint and a dark outline. Frame 1 is mid-stride.
  */
 export function paintDino(species: Species, frame: 0 | 1 = 0): HTMLCanvasElement {
   const base = TEMPLATES[species.art.template];
-  const rows = frame === 1 ? strideRows(base) : base;
-  const { width, height } = templateSize(species.art.template);
-  const { body, dark, accent } = species.art;
+  const rows = scale2x(frame === 1 ? strideRows(base) : base);
+  const height = rows.length;
+  const width = rows[0].length;
+  const { body, dark, accent, pattern } = species.art;
   const colors: Record<string, string> = { B: body, D: dark, A: accent, E: '#101010', W: '#f4ecd2' };
-  const light: Record<string, string> = { B: tint(body, 0.22), A: tint(accent, 0.2), D: tint(dark, 0.1) };
-  const shade: Record<string, string> = { B: tint(body, -0.18), A: tint(accent, -0.18) };
+  const light: Record<string, string> = { B: tint(body, 0.28), A: tint(accent, 0.25), D: tint(dark, 0.12) };
+  const soft: Record<string, string> = { B: tint(body, 0.12), A: tint(accent, 0.1) };
+  const shade: Record<string, string> = { B: tint(body, -0.22), A: tint(accent, -0.2), D: tint(dark, -0.15) };
   const at = (x: number, y: number) => (y >= 0 && y < height ? (rows[y][x] ?? '.') : '.');
+  const patternAt = (x: number, y: number) => {
+    if (pattern === 'stripes') return Math.floor((x + y * 0.4) / 3) % 2 === 0 && y < height * 0.6;
+    if (pattern === 'spots') return hash2(Math.floor(x / 3), Math.floor(y / 3), 71) < 0.18;
+    return false;
+  };
 
+  // One pixel of margin all round for the outline.
   const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
+  canvas.width = width + 2;
+  canvas.height = height + 2;
   const ctx = canvas.getContext('2d')!;
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
+  for (let y = -1; y <= height; y++) {
+    for (let x = -1; x <= width; x++) {
       const c = at(x, y);
       if (c !== '.') {
-        if (at(x, y - 1) === '.' && light[c]) ctx.fillStyle = light[c];
-        else if (at(x, y + 1) === '.' && shade[c]) ctx.fillStyle = shade[c];
-        else ctx.fillStyle = colors[c] ?? body;
+        let color = colors[c] ?? body;
+        if (c === 'B' && patternAt(x, y)) color = shade.B;
+        if (at(x, y - 1) === '.' && light[c]) color = light[c];
+        else if (at(x, y - 2) === '.' && soft[c]) color = soft[c];
+        else if ((at(x, y + 1) === '.' || at(x + 1, y) === '.') && shade[c]) color = shade[c];
+        // Glint in the eye.
+        if (c === 'E' && at(x - 1, y) !== 'E' && at(x, y - 1) !== 'E') color = '#f4ecd2';
+        ctx.fillStyle = color;
       } else if ([at(x - 1, y), at(x + 1, y), at(x, y - 1), at(x, y + 1)].some((n) => n !== '.')) {
         ctx.fillStyle = OUTLINE;
       } else continue;
-      ctx.fillRect(x, y, 1, 1);
+      ctx.fillRect(x + 1, y + 1, 1, 1);
     }
   }
   return canvas;
