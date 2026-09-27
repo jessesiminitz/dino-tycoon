@@ -44,6 +44,7 @@ function openPark(): GameState {
   expect(applyCommand(s, { type: 'buildPaths', tiles }).ok).toBe(true);
   expect(applyCommand(s, { type: 'placeBuilding', kind: 'restaurant', x: 5, y: 10 }).ok).toBe(true);
   expect(applyCommand(s, { type: 'placeBuilding', kind: 'giftshop', x: 7, y: 10 }).ok).toBe(true);
+  expect(applyCommand(s, { type: 'placeBuilding', kind: 'restroom', x: 9, y: 10 }).ok).toBe(true);
   return s;
 }
 
@@ -179,7 +180,7 @@ describe('books', () => {
     runHours(sim, 16);
     expect(calendar(s).hour).toBe(0);
     expect(s.finance.today.visitors).toBe(0);
-    const upkeep = BUILDING_TYPES.restaurant.upkeep + BUILDING_TYPES.giftshop.upkeep;
+    const upkeep = BUILDING_TYPES.restaurant.upkeep + BUILDING_TYPES.giftshop.upkeep + BUILDING_TYPES.restroom.upkeep;
     expect(s.finance.month.expenses.upkeep).toBe(upkeep);
     expect(events.some((e) => /^Day 1: \d+ visitors/.test(e.text))).toBe(true);
   });

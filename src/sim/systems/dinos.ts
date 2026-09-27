@@ -37,7 +37,7 @@ function feederFor(state: GameState, i: number, d: Dino): Feeder | undefined {
   return state.feeders.find((f) => f.y * w + f.x === i && f.stock > 0 && FEEDER_TYPES[f.kind].diet === diet);
 }
 
-function canEat(hunter: Dino, prey: Dino): boolean {
+export function canEat(hunter: Dino, prey: Dino): boolean {
   const h = SPECIES[hunter.species];
   const p = SPECIES[prey.species];
   return h.diet === 'carnivore' && p.diet === 'herbivore' && p.size <= h.size;

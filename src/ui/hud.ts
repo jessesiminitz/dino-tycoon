@@ -8,6 +8,7 @@ import { mountCatalog } from './catalog';
 import { mountParkPanel } from './parkPanel';
 import { mountGuide } from './guide';
 import { mountLog } from './log';
+import { mountPeople } from './people';
 import { SCENARIOS } from '../sim/data/scenarios';
 import { DECOR_KINDS, DECOR_TYPES } from '../sim/data/decor';
 import type { Mode, UiState } from './uiState';
@@ -134,7 +135,7 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
     const { day, hour } = calendar(state);
     clockEl.textContent = `Day ${day} · ${String(hour).padStart(2, '0')}:00`;
     dinosEl.textContent = `${state.dinos.length} dino${state.dinos.length === 1 ? '' : 's'}`;
-    guestsEl.textContent = `${state.visitors.length} guest${state.visitors.length === 1 ? '' : 's'}`;
+    guestsEl.textContent = String(state.visitors.length);
     moneyEl.classList.toggle('negative', state.money < 0);
     for (const b of speedButtons) b.classList.toggle('active', Number(b.dataset.speed) === sim.speed);
   };
@@ -161,7 +162,7 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
   }
   for (const kind of Object.keys(BUILDING_TYPES) as BuildingKind[]) {
     const t = BUILDING_TYPES[kind];
-    const swatch = { restaurant: '#d9454d', snackstall: '#f28fb1', giftshop: '#3f7fb0', restroom: '#6ec6ff', digsite: '#d9c7a3' }[kind];
+    const swatch = { restaurant: '#d9454d', snackstall: '#f28fb1', giftshop: '#3f7fb0', restroom: '#6ec6ff', trashcan: '#4f8f5a', digsite: '#d9c7a3' }[kind];
     const b = pickButton(swatch, t.name, formatMoney(t.cost));
     b.dataset.building = kind;
     b.addEventListener('click', () => ui.setBuildingKind(kind));
@@ -266,6 +267,7 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
   goalsBtn.hidden = SCENARIOS[sim.state.scenario.id].goals.length === 0;
   goalsBtn.addEventListener('click', () => parkPanel.open('goals'));
   mountLog(sim);
+  mountPeople(sim, ui);
   const guide = mountGuide(sim);
   $('btn-guide').addEventListener('click', () => guide.open());
 

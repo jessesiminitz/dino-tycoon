@@ -19,6 +19,9 @@ export const EVENT_CHANCES = {
 export const INSPECTION_AWARD = 2000;
 export const FINE_PER_ISSUE = 1000;
 const MAX_FINE = 5000;
+/** Dirt that fails an inspection. */
+const FILTHY_MESSES = 3;
+const FILTHY_LITTER = 20;
 
 const usd = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`;
 
@@ -137,6 +140,9 @@ export function safetyIssues(ctx: SimContext): string[] {
   }
   const sick = state.dinos.filter((d) => d.sick).length;
   if (sick) issues.push(`${sick} sick animal${sick === 1 ? '' : 's'} untreated`);
+  const messes = state.messes.filter((m) => m.kind === 'mess').length;
+  const litter = state.messes.length - messes;
+  if (messes >= FILTHY_MESSES || litter >= FILTHY_LITTER) issues.push('filthy paths (litter and messes everywhere)');
   return issues;
 }
 

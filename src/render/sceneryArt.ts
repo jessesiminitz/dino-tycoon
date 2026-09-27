@@ -316,6 +316,16 @@ export function paintRestroom(): HTMLCanvasElement {
   });
 }
 
+/** A green park bin with a lid and a recycling stripe. */
+export function paintTrashCan(): HTMLCanvasElement {
+  return paintSprite(12, 16, (px) => {
+    for (let x = 2; x < 10; x++) px(x, 3, '#2f6b3a'); // lid
+    for (let x = 4; x < 8; x++) px(x, 2, '#2f6b3a');
+    for (let y = 4; y < 14; y++)
+      for (let x = 3; x < 9; x++) px(x, y, x === 3 ? '#6fb87a' : y === 7 || y === 8 ? '#f4ecd2' : '#4f9a5c');
+  });
+}
+
 export function paintSnackStall(): HTMLCanvasElement {
   return paintSprite(22, 26, (px) => {
     // Striped umbrella dome.

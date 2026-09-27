@@ -43,9 +43,12 @@ export type Command =
   | { type: 'fireStaff'; id: number }
   | { type: 'repairFence'; edge: Edge }
   | { type: 'placeDecor'; kind: DecorKind; x: number; y: number }
-  | { type: 'removeDecor'; id: number };
+  | { type: 'removeDecor'; id: number }
+  | { type: 'rename'; kind: 'visitor' | 'dino' | 'staff'; id: number; name: string };
 
 export type CommandResult = { ok: true; message: string; cost: number } | { ok: false; message: string };
+
+export const MAX_NAME = 20;
 
 const usd = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`;
 
@@ -352,6 +355,17 @@ export function applyCommand(state: GameState, cmd: Command): CommandResult {
       state.decor.splice(state.decor.indexOf(d), 1);
       earn(state, 'sales', refund);
       return { ok: true, cost: -refund, message: `Removed ${DECOR_TYPES[d.kind].name.toLowerCase()}` };
+    }
+
+    case 'rename': {
+      const name = cmd.name.replace(/\s+/g, ' ').trim().slice(0, MAX_NAME);
+      if (!name) return { ok: false, message: 'Names can’t be blank' };
+      const list = cmd.kind === 'visitor' ? state.visitors : cmd.kind === 'dino' ? state.dinos : state.staff;
+      const who = (list as { id: number; name: string }[]).find((e) => e.id === cmd.id);
+      if (!who) return { ok: false, message: 'They’re no longer in the park' };
+      const old = who.name;
+      who.name = name;
+      return { ok: true, cost: 0, message: `${old} is now called ${name}` };
     }
 
     case 'repairFence': {

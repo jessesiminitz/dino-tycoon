@@ -1,7 +1,7 @@
 import type { GameState, Staff, StaffTask } from '../GameState';
 import { refillCost, repairCost } from '../commands';
 import { FEEDER_TYPES } from '../data/feeders';
-import { MEDICINE_COST, REFILL_BELOW, REPAIR_BELOW, STAFF_SPEED, STAFF_TYPES, WORK_STEPS } from '../data/staff';
+import { CLEAN_RADIUS, MEDICINE_COST, REFILL_BELOW, REPAIR_BELOW, STAFF_SPEED, STAFF_TYPES, WORK_STEPS } from '../data/staff';
 import { spend } from '../finance';
 import { allFenceEdges, fenceHp, fenceTypeAt, setFenceHp } from '../fences';
 import type { Edge } from '../grid';
@@ -11,7 +11,13 @@ import type { SimContext } from './context';
 import { dinoLabel } from './dinos';
 
 const taskKey = (t: StaffTask) =>
-  t.kind === 'repair' ? `repair:${t.dir}${t.x},${t.y}` : t.kind === 'refill' ? `refill:${t.feederId}` : `${t.kind}:${t.dinoId}`;
+  t.kind === 'repair'
+    ? `repair:${t.dir}${t.x},${t.y}`
+    : t.kind === 'refill'
+      ? `refill:${t.feederId}`
+      : t.kind === 'clean'
+        ? `clean:${t.messId}`
+        : `${t.kind}:${t.dinoId}`;
 
 const taskEdge = (t: Extract<StaffTask, { kind: 'repair' }>): Edge => ({ dir: t.dir, x: t.x, y: t.y });
 
@@ -29,6 +35,10 @@ function taskSpot(state: GameState, t: StaffTask): { x: number; y: number } | nu
       const d = state.dinos.find((d) => d.id === t.dinoId);
       return d ? { x: d.x, y: d.y } : null;
     }
+    case 'clean': {
+      const m = state.messes.find((m) => m.id === t.messId);
+      return m ? { x: m.x, y: m.y } : null;
+    }
   }
 }
 
@@ -44,6 +54,8 @@ function stillNeeded(state: GameState, t: StaffTask): boolean {
       return state.dinos.some((d) => d.id === t.dinoId && d.escaped);
     case 'treat':
       return state.dinos.some((d) => d.id === t.dinoId && (d.sick || d.health < 60));
+    case 'clean':
+      return state.messes.some((m) => m.id === t.messId);
   }
 }
 
@@ -62,6 +74,9 @@ function candidateTasks(state: GameState, m: Staff): { task: StaffTask; bonus: n
     for (const d of state.dinos) if (d.escaped) out.push({ task: { kind: 'recapture', dinoId: d.id }, bonus: 0 });
   } else if (m.role === 'vet') {
     for (const d of state.dinos) if (d.sick || d.health < 60) out.push({ task: { kind: 'treat', dinoId: d.id }, bonus: d.sick ? 20 : 0 });
+  } else if (m.role === 'janitor') {
+    // Accidents first: they gross visitors out the most.
+    for (const x of state.messes) out.push({ task: { kind: 'clean', messId: x.id }, bonus: x.kind === 'mess' ? 30 : 0 });
   }
   return out;
 }
@@ -128,6 +143,13 @@ function complete(ctx: SimContext, m: Staff, t: StaffTask): void {
       if (wasSick) ctx.emit({ text: `${m.name} cured ${dinoLabel(d)}`, kind: 'good' });
       return;
     }
+    case 'clean': {
+      const spot = state.messes.find((x) => x.id === t.messId);
+      if (!spot) return;
+      // Sweep up everything around the spot while here.
+      state.messes = state.messes.filter((x) => Math.abs(x.x - spot.x) > CLEAN_RADIUS || Math.abs(x.y - spot.y) > CLEAN_RADIUS);
+      return;
+    }
   }
 }
 
@@ -140,7 +162,7 @@ export function stepStaff(ctx: SimContext): void {
     m.px = m.x;
     m.py = m.y;
 
-    if (m.role === 'guide' || m.role === 'mascot') {
+    if (m.role === 'guide' || m.role === 'mascot' || (m.role === 'janitor' && !m.task && state.messes.length === 0)) {
       // Guides and the mascot stroll the paths among the visitors.
       const here = Math.round(m.y) * w + Math.round(m.x);
       const options = walkableNeighbours(state, here, onWalkway);
@@ -193,7 +215,7 @@ export function describeTask(state: GameState, m: Staff): string {
   if (m.role === 'guide') return 'Showing visitors around';
   if (m.role === 'mascot') return 'Waving at visitors';
   const t = m.task;
-  if (!t) return 'Waiting for work';
+  if (!t) return m.role === 'janitor' ? 'Sweeping the paths' : 'Waiting for work';
   const spot = taskSpot(state, t);
   const onSite = spot ? Math.hypot(spot.x - m.x, spot.y - m.y) <= 0.5 : false;
   const d = t.kind === 'recapture' || t.kind === 'treat' ? state.dinos.find((d) => d.id === t.dinoId) : undefined;
@@ -206,6 +228,10 @@ export function describeTask(state: GameState, m: Staff): string {
       return d ? `${onSite ? 'Calming' : 'Tracking'} ${d.name}` : 'Tracking an escaped dinosaur';
     case 'treat':
       return d ? `${onSite ? 'Treating' : 'Heading to'} ${d.name}` : 'Heading to a patient';
+    case 'clean': {
+      const what = state.messes.find((x) => x.id === t.messId)?.kind === 'mess' ? 'a mess' : 'litter';
+      return onSite ? `Cleaning up ${what}` : `Heading to clean up ${what}`;
+    }
   }
 }
 

@@ -28,7 +28,7 @@
         <span id="hud-money" class="hud-stat">$0</span>
         <span id="hud-clock" class="hud-stat">Day 1 · 08:00</span>
         <span id="hud-dinos" class="hud-stat">0 dinos</span>
-        <span id="hud-guests" class="hud-stat">0 guests</span>
+        <button id="btn-people" class="hud-btn" aria-label="People">👥<span>People</span><b id="hud-guests" class="hud-count">0</b></button>
         <button id="btn-park" class="hud-btn" aria-label="Park report">📊<span>Park</span></button>
         <button id="btn-guide" class="hud-btn" aria-label="Dino Guide">📖<span>Guide</span></button>
         <button id="btn-goals" class="hud-btn" aria-label="Goals">🏆<span>Goals</span></button>
@@ -91,6 +91,14 @@
           <button class="modal-close" aria-label="Close">✕</button>
         </header>
         <div class="species-grid"></div>
+      </div>
+    </div>
+
+    <div id="people" class="modal hidden" role="dialog" aria-label="People">
+      <div class="modal-card people-card">
+        <header class="modal-head"><nav class="tabs" role="tablist"></nav><button class="modal-close" aria-label="Close">✕</button></header>
+        <div class="log-filters" role="group" aria-label="Filter"></div>
+        <div class="panel-body people-body"></div>
       </div>
     </div>
 

@@ -9,7 +9,7 @@ import { SPECIES, SPECIES_IDS, type SpeciesId } from '../sim/data/species';
 import { paintDino } from './dinoArt';
 import { TILE } from './tileset';
 import { paintRows } from './pixels';
-import { paintDigSite, paintRestaurant, paintRestroom, paintSnackStall, paintSouvenirShop, paintTrough } from './sceneryArt';
+import { paintDigSite, paintRestaurant, paintRestroom, paintSnackStall, paintSouvenirShop, paintTrashCan, paintTrough } from './sceneryArt';
 
 const dinoKey = (id: SpeciesId, frame: 0 | 1 = 0) => `dino-${id}-${frame}`;
 const feederKey = (kind: FeederKind, full: boolean) => `feeder-${kind}-${full ? 'full' : 'empty'}`;
@@ -24,6 +24,7 @@ const UNIFORMS: Record<StaffRole, { U: string; C: string; L: string }> = {
   worker: { U: '#e8892f', C: '#f2d24e', L: '#5a4a3a' },
   guard: { U: '#2f4a7a', C: '#1b2a45', L: '#1b2a45' },
   vet: { U: '#f4f4f0', C: '#d9454d', L: '#6b7a8a' },
+  janitor: { U: '#6fa8c8', C: '#3a6a8a', L: '#3a4a5a' },
   guide: { U: '#4fae5a', C: '#c9a36b', L: '#6b5238' },
   mascot: { U: '#5fb84a', C: '#5fb84a', L: '#5fb84a' }, // painted separately as a dino costume
 };
@@ -88,6 +89,8 @@ function paintBuilding(kind: BuildingKind): HTMLCanvasElement {
       return paintSouvenirShop();
     case 'restroom':
       return paintRestroom();
+    case 'trashcan':
+      return paintTrashCan();
     case 'digsite':
       return paintDigSite();
   }
@@ -107,6 +110,8 @@ export class EntityLayer {
   private buildings = new Map<number, Phaser.GameObjects.Image>();
   private staff = new Map<number, Phaser.GameObjects.Image>();
   private markers: Phaser.GameObjects.Graphics;
+  /** Litter and messes on the ground, under everyone's feet. */
+  private dirt: Phaser.GameObjects.Graphics;
   /** Soft ground shadows, under everything that stands. */
   private shadows: Phaser.GameObjects.Graphics;
   selection: Selection = null;
@@ -133,6 +138,7 @@ export class EntityLayer {
     for (const kind of Object.keys(BUILDING_TYPES) as BuildingKind[]) scene.textures.addCanvas(buildingKey(kind), paintBuilding(kind));
     this.markers = scene.add.graphics().setDepth(9);
     this.shadows = scene.add.graphics().setDepth(3.9);
+    this.dirt = scene.add.graphics().setDepth(3.85);
   }
 
   /** Where a visitor is drawn (feet), nudged per person so crowds don't stack. */
@@ -222,6 +228,7 @@ export class EntityLayer {
     const g = this.markers.clear();
     const sh = this.shadows.clear();
     sh.fillStyle(0x000000, 0.22);
+    this.drawDirt(time);
 
     // Feeders
     const liveFeeders = new Set<number>();
@@ -287,6 +294,13 @@ export class EntityLayer {
       img.setPosition(Math.round(x), Math.round(y) + (working && Math.floor(time / 180) % 2 === 0 ? -1 : 0));
       img.setDepth(4 + y / 10000);
       sh.fillEllipse(Math.round(x), Math.round(y) - 1, 8, 3);
+      if (m.role === 'janitor') {
+        // Broom: handle up past the shoulder, bristles at the feet (they sweep while working).
+        const bx = Math.round(x) + 4 + (working && Math.floor(time / 160) % 2 === 0 ? 1 : 0);
+        const by = Math.round(y);
+        g.lineStyle(1, 0x8a5a2a, 1).lineBetween(bx - 1, by - 10, bx, by - 2);
+        g.fillStyle(0xd9b060, 1).fillRect(bx - 1, by - 2, 3, 2);
+      }
       if (working) {
         // Busy sparks above the head.
         g.fillStyle(0xf2c14e, 1).fillRect(Math.round(x) + (Math.floor(time / 240) % 2 === 0 ? -3 : 2), Math.round(y) - 14, 1, 1);
@@ -349,9 +363,48 @@ export class EntityLayer {
     }
   }
 
-  /** What a visitor has bought: a cap on the head, a balloon on a string, a plush or ice cream in hand. */
+  /** Litter (cups and wrappers scattered by hash) and accident puddles with buzzing flies. */
+  private drawDirt(time: number): void {
+    const g = this.dirt.clear();
+    for (const m of this.sim.state.messes) {
+      const ox = m.x * TILE + 3 + Math.floor(hash2(m.id, 1, 9) * 10);
+      const oy = m.y * TILE + 4 + Math.floor(hash2(m.id, 2, 9) * 9);
+      if (m.kind === 'mess') {
+        g.fillStyle(0x8a6a2a, 0.85).fillEllipse(ox, oy, 8, 4);
+        g.fillStyle(0xb8942f, 0.9).fillEllipse(ox - 1, oy, 4, 2);
+        const f = Math.floor(time / 120 + m.id);
+        g.fillStyle(0x101010, 1).fillRect(ox - 2 + (f % 3), oy - 5 - (f % 2), 1, 1).fillRect(ox + 2 - (f % 2), oy - 7 + (f % 3), 1, 1);
+      } else {
+        const kind = m.id % 3;
+        if (kind === 0) {
+          g.fillStyle(0xe05a4f, 1).fillRect(ox, oy, 2, 3); // soda cup on its side
+          g.fillStyle(0xf4ecd2, 1).fillRect(ox + 2, oy, 1, 3);
+        } else if (kind === 1) {
+          g.fillStyle(0xf4ecd2, 1).fillRect(ox, oy, 3, 2); // wrapper
+          g.fillStyle(0xf2c14e, 1).fillRect(ox + 1, oy, 1, 1);
+        } else {
+          g.fillStyle(0xd9a45a, 1).fillRect(ox, oy, 2, 2); // popcorn box
+          g.fillStyle(0xe05a4f, 1).fillRect(ox, oy + 1, 2, 1);
+        }
+      }
+    }
+  }
+
+  /** What a visitor is carrying: cap, balloon, plush, umbrella, and whatever they're eating and drinking. */
   private drawCarried(g: Phaser.GameObjects.Graphics, v: Visitor, x: number, y: number, h: number): void {
     const top = y - h + 1;
+    const { state } = this.sim;
+    if (v.items.includes('umbrella')) {
+      if (state.stormHours > 0) {
+        // Open over their head.
+        const c = BALLOONS[(v.id + 1) % BALLOONS.length];
+        g.lineStyle(1, 0x3b3b3b, 1).lineBetween(x + 1, top - 3, x + 1, y - 7);
+        g.fillStyle(c, 1).fillRect(x - 4, top - 5, 11, 2).fillRect(x - 2, top - 6, 7, 1);
+        g.fillStyle(0xffffff, 0.35).fillRect(x - 1, top - 6, 2, 1);
+      } else {
+        g.lineStyle(1, 0x3b3b3b, 1).lineBetween(x - 4, y - 7, x - 5, y - 1); // furled, hanging from the hand
+      }
+    }
     if (v.items.includes('hat')) {
       g.fillStyle(0x3f8f3a, 1).fillRect(x - 3, top, 6, 2);
       g.fillStyle(0x2f6b2a, 1).fillRect(x, top + 1, 4, 1); // brim
@@ -365,9 +418,23 @@ export class EntityLayer {
       g.fillStyle(0x5fb84a, 1).fillRect(x - 5, y - 6, 3, 3);
       g.fillStyle(0x101010, 1).fillRect(x - 4, y - 6, 1, 1);
     }
-    if (this.sim.state.hours < v.snackUntil) {
+    if (v.snack === 'icecream') {
       g.fillStyle(0xd9a45a, 1).fillRect(x + 3, y - 6, 2, 3); // cone
       g.fillStyle(v.id % 2 ? 0xf28fb1 : 0xf4ecd2, 1).fillRect(x + 2, y - 8, 4, 2); // scoop
+    } else if (v.snack === 'popcorn') {
+      g.fillStyle(0xf4ecd2, 1).fillRect(x + 2, y - 8, 4, 2); // popped kernels
+      g.fillStyle(0xe05a4f, 1).fillRect(x + 2, y - 6, 4, 3); // striped box
+      g.fillStyle(0xf4ecd2, 1).fillRect(x + 3, y - 6, 1, 3);
+    } else if (v.snack === 'hotdog') {
+      g.fillStyle(0xe0b070, 1).fillRect(x + 2, y - 6, 5, 2); // bun
+      g.fillStyle(0xb8453a, 1).fillRect(x + 1, y - 7, 7, 1); // sausage
+      g.fillStyle(0xf2d24e, 1).fillRect(x + 3, y - 7, 2, 1); // mustard
+    }
+    if (v.sodaUntil > 0) {
+      const sx = v.items.includes('plush') ? x - 7 : x - 5;
+      g.fillStyle(0xf4ecd2, 1).fillRect(sx + 1, y - 10, 1, 2); // straw
+      g.fillStyle(0xe05a4f, 1).fillRect(sx, y - 8, 3, 4); // cup
+      g.fillStyle(0xf4ecd2, 1).fillRect(sx, y - 6, 3, 1);
     }
   }
 

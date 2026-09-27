@@ -8,6 +8,7 @@ import { FENCE_REFUND, FENCE_TYPES } from '../sim/data/fences';
 import { DINO_RESALE, FEEDER_TYPES } from '../sim/data/feeders';
 import { SPECIES } from '../sim/data/species';
 import { dinoLabel } from '../sim/systems/dinos';
+import { SNACK_NAMES } from '../sim/systems/visitors';
 import { fenceAt, fenceHp, fenceTypeAt } from '../sim/fences';
 import { pathEdges, tileLine, type Edge } from '../sim/grid';
 import { BUILDING_TYPES, PATH_COST, PATH_REFUND, SOUVENIRS } from '../sim/data/economy';
@@ -179,6 +180,29 @@ export class ParkScene extends Phaser.Scene {
     }
     if (mode !== 'land') this.selectedParcel = null;
     this.redrawWorld();
+    if (this.ui.focusTarget) {
+      const target = this.ui.focusTarget;
+      this.ui.focusTarget = null;
+      this.focusOn(target);
+    }
+  }
+
+  /** Glide the camera to someone and select them (from the People panel's 📍 button). */
+  private focusOn(target: { kind: 'visitor' | 'dino' | 'staff'; id: number }): void {
+    const { state } = this.sim;
+    const find = <T extends { id: number }>(list: T[]) => list.find((e) => e.id === target.id);
+    const v = target.kind === 'visitor' ? find(state.visitors) : undefined;
+    const d = target.kind === 'dino' ? find(state.dinos) : undefined;
+    const m = target.kind === 'staff' ? find(state.staff) : undefined;
+    const pos = v ? this.entities.visitorPosition(v) : d ? this.entities.dinoPosition(d) : m ? this.entities.staffPosition(m) : null;
+    if (!pos) return;
+    const cam = this.cameras.main;
+    if (cam.zoom < 2) cam.setZoom(2);
+    cam.pan(pos.x, pos.y - 8, 450, 'Sine.easeInOut');
+    this.selectFence(null);
+    this.cursor.setVisible(false);
+    this.entities.selection = { kind: target.kind, id: target.id };
+    this.showSelection();
   }
 
   // --- taps ---
@@ -362,11 +386,17 @@ export class ParkScene extends Phaser.Scene {
         return;
       }
       const mood = v.satisfaction >= 70 ? 'Loving it' : v.satisfaction >= 50 ? 'Enjoying it' : v.satisfaction >= 30 ? 'Bored' : 'Unhappy';
-      const carrying = [...v.items.map((i) => SOUVENIRS[i].name), ...(state.hours < v.snackUntil ? ['an ice cream'] : [])];
-      const needs = [v.bladder >= 70 ? 'needs a restroom' : '', v.hunger >= 60 ? 'hungry' : ''].filter(Boolean);
+      const carrying = [
+        ...v.items.map((i) => SOUVENIRS[i].name),
+        ...(v.snack ? [SNACK_NAMES[v.snack]] : []),
+        ...(v.sodaUntil > 0 ? ['a soda'] : []),
+      ];
+      const needs = [v.bladder >= 70 ? 'needs a restroom' : '', v.hunger >= 60 ? 'hungry' : '', v.thirst >= 60 ? 'thirsty' : ''].filter(Boolean);
+      const thought = v.thoughts[v.thoughts.length - 1];
       this.hud.showInfo(
         [
-          `${v.kid ? 'Young visitor' : 'Visitor'} · ${mood} (${Math.round(v.satisfaction)}%)`,
+          `${v.name}${v.kid ? ' (kid)' : ''} · ${mood} (${Math.round(v.satisfaction)}%)`,
+          thought ? `“${thought.text}”` : '',
           `seen ${v.seen.length} dino${v.seen.length === 1 ? '' : 's'}`,
           carrying.length ? `carrying ${carrying.join(', ')}` : '',
           needs.join(', '),
@@ -389,6 +419,10 @@ export class ParkScene extends Phaser.Scene {
         this.hud.showInfo(`${t.name} · ${chance}% chance of a find each night · ${note} · upkeep ${formatMoney(t.upkeep)}/day`);
         return;
       }
+      if (b.kind === 'trashcan') {
+        this.hud.showInfo(`${t.name} · visitors within 3 tiles bin their rubbish instead of dropping it · upkeep ${formatMoney(t.upkeep)}/day`);
+        return;
+      }
       if (b.kind === 'restroom') {
         const waiting = state.visitors.filter((v) => v.bladder >= 70).length;
         this.hud.showInfo(`${t.name} · free for visitors · ${waiting} visitor${waiting === 1 ? '' : 's'} looking for one right now · upkeep ${formatMoney(t.upkeep)}/day`);
@@ -396,7 +430,7 @@ export class ParkScene extends Phaser.Scene {
       }
       const income = state.finance.today.income;
       const sold = b.kind === 'restaurant' ? income.food : b.kind === 'snackstall' ? income.snacks : income.souvenirs;
-      const what = b.kind === 'giftshop' ? 'plushes, caps, balloons and ponchos' : `snacks at ${formatMoney(t.salePrice)}`;
+      const what = b.kind === 'giftshop' ? 'plushes, caps, balloons, ponchos and umbrellas' : `snacks and sodas at ${formatMoney(t.salePrice)}`;
       this.hud.showInfo(
         `${t.name} · ${b.kind === 'restaurant' ? `meals at ${formatMoney(t.salePrice)}` : what} · takings today ${formatMoney(sold)} · upkeep ${formatMoney(t.upkeep)}/day`,
       );

@@ -10,12 +10,14 @@ import { SCENARIOS, type ScenarioId } from './data/scenarios';
 import type { DecorKind } from './data/decor';
 import { generateFossilBeds, type FossilBed } from './fossilBeds';
 import { isParcelOwned, PARCEL } from './land';
+import { visitorName, type Topic } from './data/thoughts';
+import { hash2 } from './rng';
 
 export const MAP_WIDTH = 64;
 export const MAP_HEIGHT = 48;
 export const STARTING_MONEY = 50_000;
 export const START_HOUR = 8;
-export const SAVE_VERSION = 10;
+export const SAVE_VERSION = 11;
 
 export interface Dino {
   id: number;
@@ -47,7 +49,8 @@ export type StaffTask =
   | { kind: 'refill'; feederId: number }
   | { kind: 'repair'; dir: 'h' | 'v'; x: number; y: number }
   | { kind: 'recapture'; dinoId: number }
-  | { kind: 'treat'; dinoId: number };
+  | { kind: 'treat'; dinoId: number }
+  | { kind: 'clean'; messId: number };
 
 export interface Staff {
   id: number;
@@ -97,14 +100,53 @@ export interface Visitor {
   leaveHour: number;
   /** Souvenirs bought, shown on the sprite. */
   items: ItemKind[];
-  /** Holding a snack (ice cream cone) until this game-hour. */
+  /** What they're eating, and until which game-hour. */
+  snack: SnackKind | null;
   snackUntil: number;
+  /** Carrying a soda until this game-hour. */
+  sodaUntil: number;
+  /** 0 = fine … 100 = parched. */
+  thirst: number;
+  name: string;
+  /** Recent thoughts, oldest first. */
+  thoughts: Thought[];
   /** 0 = fine … 100 = desperate for a restroom. */
   bladder: number;
   kid: boolean;
   /** Sprite variant. */
   look: number;
 }
+
+export type SnackKind = 'icecream' | 'popcorn' | 'hotdog';
+
+export interface Thought {
+  hour: number;
+  topic: Topic;
+  good: boolean;
+  text: string;
+}
+
+/** A departed visitor's verdict. */
+export interface Review {
+  hour: number;
+  name: string;
+  /** 1–5. */
+  stars: number;
+  text: string;
+  topic: Topic | null;
+  good: boolean;
+}
+
+/** Something on the ground a janitor needs to clean up. */
+export interface Mess {
+  id: number;
+  kind: 'litter' | 'mess';
+  x: number;
+  y: number;
+  hour: number;
+}
+
+export const MAX_REVIEWS = 60;
 
 export interface Decor {
   id: number;
@@ -135,6 +177,9 @@ export interface Stats {
   inspectionsPassed: number;
   /** Last game day visitors complained about the lack of restrooms (at most once a day). */
   restroomComplaintDay: number;
+  /** Last game day the park was warned about accidents, and about litter. */
+  messDay: number;
+  litterDay: number;
 }
 
 /** Single serializable state tree. Everything the game needs to resume lives here. */
@@ -185,6 +230,10 @@ export interface GameState {
   volcanoActivity: number;
   /** Every park alert, oldest first. */
   log: LogEntry[];
+  /** Litter and accidents waiting for a janitor. */
+  messes: Mess[];
+  /** What departed visitors said, oldest first. */
+  reviews: Review[];
   /** Next id for dinos, feeders and other entities. */
   nextId: number;
 }
@@ -219,12 +268,14 @@ export function newGame(seed: number): GameState {
     fossils: {},
     stormHours: 0,
     scenario: { id: 'sandbox', status: 'free' },
-    stats: { bestDayVisitors: 0, escapes: 0, inspectionsPassed: 0, restroomComplaintDay: 0 },
+    stats: { bestDayVisitors: 0, escapes: 0, inspectionsPassed: 0, restroomComplaintDay: 0, messDay: 0, litterDay: 0 },
     tutorialStep: null,
     fossilBeds: [],
     decor: [],
     volcanoActivity: 0,
     log: [],
+    messes: [],
+    reviews: [],
     nextId: 1,
   };
   state.fossilBeds = bedsFor(state);
@@ -323,6 +374,20 @@ export function migrate(raw: { version?: number } & Record<string, unknown>): Ga
   }
   if (raw.version === 9) {
     Object.assign(raw, { version: 10, log: [] });
+  }
+  if (raw.version === 10) {
+    const state = raw as unknown as GameState;
+    for (const v of state.visitors) {
+      Object.assign(v, {
+        snack: v.snackUntil > state.hours ? 'icecream' : null,
+        sodaUntil: 0,
+        thirst: 0,
+        name: visitorName(v.id, hash2(v.id, 3, 11)),
+        thoughts: [],
+      });
+    }
+    Object.assign(state.stats, { messDay: 0, litterDay: 0 });
+    Object.assign(raw, { version: 11, messes: [], reviews: [] });
   }
   return raw.version === SAVE_VERSION ? (raw as unknown as GameState) : null;
 }

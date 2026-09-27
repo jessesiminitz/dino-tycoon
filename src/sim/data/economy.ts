@@ -1,4 +1,4 @@
-export type BuildingKind = 'restaurant' | 'snackstall' | 'giftshop' | 'restroom' | 'digsite';
+export type BuildingKind = 'restaurant' | 'snackstall' | 'giftshop' | 'restroom' | 'trashcan' | 'digsite';
 
 export interface BuildingType {
   kind: BuildingKind;
@@ -20,15 +20,19 @@ export const BUILDING_TYPES: Record<BuildingKind, BuildingType> = {
   },
   snackstall: {
     kind: 'snackstall', name: 'Snack stall', cost: 1200, upkeep: 15, salePrice: 4, needsPath: true,
-    description: 'Ice cream and popcorn. Peckish visitors grab a snack as they pass.',
+    description: 'Ice cream, popcorn, hot dogs and sodas. Peckish or thirsty visitors grab one as they pass.',
   },
   giftshop: {
     kind: 'giftshop', name: 'Souvenir shop', cost: 2000, upkeep: 25, salePrice: 0, needsPath: true,
-    description: 'Sells dino plushes, caps, balloons and rain ponchos (a hit in storms).',
+    description: 'Sells dino plushes, caps, balloons, and ponchos and umbrellas (a hit in storms).',
   },
   restroom: {
     kind: 'restroom', name: 'Restrooms', cost: 1500, upkeep: 20, salePrice: 0, needsPath: true,
     description: 'Visitors need the bathroom, especially after eating. Unhappy without one nearby.',
+  },
+  trashcan: {
+    kind: 'trashcan', name: 'Trash can', cost: 100, upkeep: 2, salePrice: 0, needsPath: true,
+    description: 'Visitors nearby bin their cups and wrappers instead of dropping them on the path.',
   },
   digsite: {
     kind: 'digsite', name: 'Dig site', cost: 2500, upkeep: 150, salePrice: 0, needsPath: false,
@@ -61,13 +65,14 @@ export const LOAN_TERM_MONTHS = 12;
 export const MAX_VISITORS = 150;
 
 /** Souvenirs visitors buy and carry around (and you can see on them). */
-export type ItemKind = 'plush' | 'hat' | 'balloon' | 'poncho';
+export type ItemKind = 'plush' | 'hat' | 'balloon' | 'poncho' | 'umbrella';
 
 export const SOUVENIRS: Record<ItemKind, { name: string; price: number }> = {
   plush: { name: 'dino plush', price: 14 },
   hat: { name: 'dino cap', price: 9 },
   balloon: { name: 'balloon', price: 5 },
   poncho: { name: 'rain poncho', price: 7 },
+  umbrella: { name: 'umbrella', price: 10 },
 };
 
 /** Nightly chance a dig site on an ordinary fossil bed turns up a fossil. */

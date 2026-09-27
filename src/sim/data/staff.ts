@@ -1,4 +1,4 @@
-export type StaffRole = 'worker' | 'guard' | 'vet' | 'guide' | 'mascot';
+export type StaffRole = 'worker' | 'guard' | 'vet' | 'janitor' | 'guide' | 'mascot';
 
 export interface StaffType {
   role: StaffRole;
@@ -12,6 +12,7 @@ export const STAFF_TYPES: Record<StaffRole, StaffType> = {
   worker: { role: 'worker', name: 'Worker', wage: 60, description: 'Refills feeders that run low and repairs worn or broken fences.' },
   guard: { role: 'guard', name: 'Guard', wage: 80, description: 'Tracks down escaped dinosaurs and returns them to their paddock.' },
   vet: { role: 'vet', name: 'Vet', wage: 100, description: 'Treats sick and injured dinosaurs before illness spreads.' },
+  janitor: { role: 'janitor', name: 'Janitor', wage: 40, description: 'Sweeps up litter and cleans up accidents on the paths, messes first.' },
   guide: { role: 'guide', name: 'Tour guide', wage: 50, description: 'Walks the paths telling visitors about the dinosaurs, keeping them happier.' },
   mascot: {
     role: 'mascot',
@@ -26,7 +27,9 @@ export const STAFF_ROLES = Object.keys(STAFF_TYPES) as StaffRole[];
 /** Tiles a staff member covers per movement step (they drive a park buggy). */
 export const STAFF_SPEED = 2;
 /** Movement steps each job takes once on site. */
-export const WORK_STEPS = { refill: 2, repair: 4, recapture: 4, treat: 4 } as const;
+export const WORK_STEPS = { refill: 2, repair: 4, recapture: 4, treat: 4, clean: 1 } as const;
+/** Janitors clean everything within this many tiles (Chebyshev) of where they stop. */
+export const CLEAN_RADIUS = 1;
 
 /** Workers refill feeders below this fraction of capacity. */
 export const REFILL_BELOW = 0.4;
