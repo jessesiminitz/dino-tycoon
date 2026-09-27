@@ -12,7 +12,9 @@ import { fenceAt, fenceHp, fenceTypeAt } from '../sim/fences';
 import { pathEdges, tileLine, type Edge } from '../sim/grid';
 import { BUILDING_TYPES, PATH_COST, PATH_REFUND, SOUVENIRS } from '../sim/data/economy';
 import { isTileOwned, parcelBuyBlocker, parcelLandTiles, parcelOf, parcelPrice, type Point } from '../sim/land';
-import { isLand, terrainAt, TERRAIN_NAMES } from '../sim/terrain';
+import { isLand, Terrain, terrainAt, TERRAIN_NAMES } from '../sim/terrain';
+import { bedAt, RICHNESS_LABEL } from '../sim/fossilBeds';
+import { DECOR_TYPES } from '../sim/data/decor';
 import { isOccupiedPaddock } from '../sim/regions';
 import type { Hud } from '../ui/hud';
 import { formatMoney } from '../ui/hud';
@@ -22,6 +24,7 @@ import { MAX_ZOOM, TouchController } from './input/TouchController';
 import { WorldLayers } from './WorldLayers';
 import { EntityLayer } from './EntityLayer';
 import { TerrainFx } from './TerrainFx';
+import { SceneryLayer } from './SceneryLayer';
 import { playSfx, type Sfx } from '../audio/audio';
 
 /** How often (ms) the info panel refreshes while a dino or feeder is selected. */
@@ -55,6 +58,7 @@ export class ParkScene extends Phaser.Scene {
   private layers!: WorldLayers;
   private entities!: EntityLayer;
   private terrainFx!: TerrainFx;
+  private scenery!: SceneryLayer;
   private infoRefreshAt = 0;
   private boundsZoom = 0;
   private drawnHour = -1;
@@ -90,6 +94,7 @@ export class ParkScene extends Phaser.Scene {
     if (!tileset) throw new Error('Tileset failed to load');
     tilemap.createLayer(0, tileset, 0, 0);
     this.terrainFx = new TerrainFx(this, map);
+    this.scenery = new SceneryLayer(this, this.sim);
 
     this.layers = new WorldLayers(this, this.sim);
     this.entities = new EntityLayer(this, this.sim);
@@ -113,6 +118,11 @@ export class ParkScene extends Phaser.Scene {
     this.touch.on('drawend', () => this.onDrawEnd());
     this.touch.on('drawcancel', () => this.cancelDrag());
 
+    // The ground shakes when the volcano rumbles.
+    const offEvents = this.sim.onEvent((e) => {
+      if (/^🌋/.test(e.text)) this.cameras.main.shake(600, 0.006);
+    });
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, offEvents);
     const unsubscribe = this.ui.onChange(() => this.onModeChange());
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, unsubscribe);
     this.onModeChange();
@@ -130,6 +140,7 @@ export class ParkScene extends Phaser.Scene {
     }
     this.entities.update(time);
     this.terrainFx.update(time);
+    this.scenery.update(time);
     if ((this.entities.selection || this.selectedFence) && time >= this.infoRefreshAt) {
       this.infoRefreshAt = time + INFO_REFRESH_MS;
       this.showSelection();
@@ -153,6 +164,7 @@ export class ParkScene extends Phaser.Scene {
     this.drawnRevision = this.sim.worldRevision;
     this.layers.drawFences();
     this.layers.drawPaths();
+    this.scenery?.refresh();
     this.layers.drawOverlay(this.ui.mode === 'land', this.selectedParcel);
   }
 
@@ -190,9 +202,14 @@ export class ParkScene extends Phaser.Scene {
         const building = this.entities.buildingAt(tx, ty);
         if (building) return this.report(this.sim.dispatch({ type: 'removeBuilding', id: building.id }));
         const feeder = this.entities.feederAt(tx, ty);
-        if (feeder) this.report(this.sim.dispatch({ type: 'removeFeeder', id: feeder.id }));
+        if (feeder) return this.report(this.sim.dispatch({ type: 'removeFeeder', id: feeder.id }));
+        const decor = this.sim.state.decor.find((d) => d.x === tx && d.y === ty);
+        if (decor) this.report(this.sim.dispatch({ type: 'removeDecor', id: decor.id }));
         return;
       }
+      case 'decor':
+        this.report(this.sim.dispatch({ type: 'placeDecor', kind: this.ui.decorKind, x: Math.floor(wx / TILE), y: Math.floor(wy / TILE) }));
+        return;
       case 'path':
         return this.commitTiles([Math.floor(wy / TILE) * this.sim.state.map.width + Math.floor(wx / TILE)]);
       case 'building':
@@ -409,6 +426,11 @@ export class ParkScene extends Phaser.Scene {
     this.cursor.setPosition(tx * TILE, ty * TILE).setVisible(true);
 
     const parts = [TERRAIN_NAMES[t]];
+    const bed = bedAt(this.sim.state.fossilBeds, tx, ty);
+    if (bed) parts.push(`fossil bed (${RICHNESS_LABEL[bed.richness]}${bed.richness === 3 ? ': rare species more likely' : ''})`);
+    const decor = this.sim.state.decor.find((d) => d.x === tx && d.y === ty);
+    if (decor) parts.push(`${DECOR_TYPES[decor.kind].name}: cheers up visitors nearby`);
+    if (t === Terrain.Volcano) parts.push(this.sim.state.volcanoActivity > 0 ? 'rumbling!' : 'smoking quietly');
     if (isLand(t)) {
       const { regions, tileRegion } = this.sim.regions();
       const region = regions[tileRegion[ty * this.sim.state.map.width + tx]];

@@ -1,8 +1,8 @@
 import { calendar, type GameState } from '../GameState';
-import { DIG_FIND_CHANCE, MUSEUM_PRICE, ROCK_DIG_BONUS } from '../data/economy';
+import { DIG_FIND_CHANCE, MUSEUM_PRICE } from '../data/economy';
+import { bedAt } from '../fossilBeds';
 import { SPECIES, SPECIES_IDS, type SpeciesId } from '../data/species';
 import { earn } from '../finance';
-import { Terrain } from '../terrain';
 import type { SimContext } from './context';
 
 /** "a" or "an", by the sound of the next word's first letter (good enough for species names). */
@@ -14,10 +14,15 @@ export function lockedSpecies(state: GameState): SpeciesId[] {
   return SPECIES_IDS.filter((id) => !state.unlockedSpecies.includes(id));
 }
 
-/** Nightly chance of a find at a dig site: better on rocky ground. */
+/** How much each bed richness multiplies the nightly find chance. */
+const RICHNESS_BONUS = { 1: 1, 2: 1.3, 3: 1.6 } as const;
+/** Rich beds make rare species (low fossil weight) this many times likelier. */
+const RICH_RARE_BOOST = 3;
+
+/** Nightly chance of a find at a dig site: only on a fossil bed, better on richer ones. */
 export function digChance(state: GameState, x: number, y: number): number {
-  const rocky = state.map.tiles[y * state.map.width + x] === Terrain.Rock;
-  return Math.min(0.9, DIG_FIND_CHANCE * (rocky ? ROCK_DIG_BONUS : 1));
+  const bed = bedAt(state.fossilBeds, x, y);
+  return bed ? Math.min(0.9, DIG_FIND_CHANCE * RICHNESS_BONUS[bed.richness]) : 0;
 }
 
 /** At midnight each dig site may find a fossil; enough fragments of a species unlock it. */
@@ -33,10 +38,12 @@ export function hourlyFossils(ctx: SimContext): void {
       ctx.emit({ text: `🦴 The dig crew sold a fossil to a museum for $${MUSEUM_PRICE}`, kind: 'good' });
       continue;
     }
-    // Rarer species turn up less often.
-    const total = locked.reduce((s, id) => s + SPECIES[id].fossilWeight, 0);
+    // Rarer species turn up less often, except that rich beds favour them.
+    const rich = bedAt(state.fossilBeds, site.x, site.y)?.richness === 3;
+    const weight = (id: SpeciesId) => SPECIES[id].fossilWeight * (rich && SPECIES[id].fossilWeight < 15 ? RICH_RARE_BOOST : 1);
+    const total = locked.reduce((s, id) => s + weight(id), 0);
     let roll = rng.next() * total;
-    const found = locked.find((id) => (roll -= SPECIES[id].fossilWeight) < 0) ?? locked[locked.length - 1];
+    const found = locked.find((id) => (roll -= weight(id)) < 0) ?? locked[locked.length - 1];
     const sp = SPECIES[found];
     const have = (state.fossils[found] ?? 0) + 1;
     state.fossils[found] = have;

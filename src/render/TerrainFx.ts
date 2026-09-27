@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { hash2 } from '../sim/rng';
-import { isLand, type TerrainMap } from '../sim/terrain';
+import { isLand, isWater, Terrain, type TerrainMap } from '../sim/terrain';
 import { TILE } from './tileset';
 
 const SPARKLES = 40;
@@ -22,8 +22,8 @@ export class TerrainFx {
 
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
-        if (land(x, y)) continue;
-        this.water.push(y * width + x);
+        if (!isWater(tiles[y * width + x])) continue;
+        if (tiles[y * width + x] !== Terrain.Pond) this.water.push(y * width + x);
         const ox = x * TILE;
         const oy = y * TILE;
         // A broken line of foam along each side that touches land.

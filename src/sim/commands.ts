@@ -2,6 +2,8 @@ import type { GameState } from './GameState';
 import { FENCE_REFUND, FENCE_TYPES, type FenceTypeId } from './data/fences';
 import { fenceAt, fenceBlocker, fenceHp, fenceTypeAt, setFence, setFenceHp } from './fences';
 import { REPAIR_COST_FRACTION, STAFF_NAMES, STAFF_TYPES, type StaffRole } from './data/staff';
+import { DECOR_REFUND, DECOR_TYPES, type DecorKind } from './data/decor';
+import { bedAt } from './fossilBeds';
 import { edgeKey, type Edge } from './grid';
 import { isTileOwned, parcelBuyBlocker, parcelGrid, parcelPrice } from './land';
 import { DINO_NAMES, SPECIES, type SpeciesId } from './data/species';
@@ -39,7 +41,9 @@ export type Command =
   | { type: 'repayLoan'; id: number }
   | { type: 'hireStaff'; role: StaffRole }
   | { type: 'fireStaff'; id: number }
-  | { type: 'repairFence'; edge: Edge };
+  | { type: 'repairFence'; edge: Edge }
+  | { type: 'placeDecor'; kind: DecorKind; x: number; y: number }
+  | { type: 'removeDecor'; id: number };
 
 export type CommandResult = { ok: true; message: string; cost: number } | { ok: false; message: string };
 
@@ -258,6 +262,9 @@ export function applyCommand(state: GameState, cmd: Command): CommandResult {
       if (isOccupiedPaddock(state, { regions, tileRegion }, i)) {
         return { ok: false, message: "Buildings can't go inside a paddock with animals or feeders" };
       }
+      if (cmd.kind === 'digsite' && !bedAt(state.fossilBeds, cmd.x, cmd.y)) {
+        return { ok: false, message: 'Dig sites must go on a fossil bed (look for the bone-strewn ground)' };
+      }
       if (type.needsPath && !touchesWalkway(state, cmd.x, cmd.y)) {
         return { ok: false, message: 'Must be next to a path so visitors can reach it' };
       }
@@ -315,6 +322,26 @@ export function applyCommand(state: GameState, cmd: Command): CommandResult {
       if (!member) return { ok: false, message: 'No such staff member' };
       state.staff.splice(state.staff.indexOf(member), 1);
       return { ok: true, cost: 0, message: `${member.name} has left the park` };
+    }
+
+    case 'placeDecor': {
+      const type = DECOR_TYPES[cmd.kind];
+      const blocker = tileBlocker(state, cmd.x, cmd.y) ?? tileOccupant(state, cmd.x, cmd.y);
+      if (blocker) return { ok: false, message: blocker };
+      if (state.paths[cmd.y * state.map.width + cmd.x]) return { ok: false, message: 'Put gardens beside paths, not on them' };
+      if (type.cost > state.money) return { ok: false, message: `Not enough money: need ${usd(type.cost)}` };
+      state.decor.push({ id: state.nextId++, kind: cmd.kind, x: cmd.x, y: cmd.y });
+      spend(state, 'construction', type.cost);
+      return { ok: true, cost: type.cost, message: `Added a ${type.name.toLowerCase()} for ${usd(type.cost)}` };
+    }
+
+    case 'removeDecor': {
+      const d = state.decor.find((d) => d.id === cmd.id);
+      if (!d) return { ok: false, message: 'Nothing there' };
+      const refund = Math.floor(DECOR_TYPES[d.kind].cost * DECOR_REFUND);
+      state.decor.splice(state.decor.indexOf(d), 1);
+      earn(state, 'sales', refund);
+      return { ok: true, cost: -refund, message: `Removed ${DECOR_TYPES[d.kind].name.toLowerCase()}` };
     }
 
     case 'repairFence': {

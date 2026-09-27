@@ -8,6 +8,7 @@ import { FEEDER_TYPES, type FeederKind } from '../sim/data/feeders';
 import { SPECIES, SPECIES_IDS, type SpeciesId } from '../sim/data/species';
 import { paintDino } from './dinoArt';
 import { TILE } from './tileset';
+import { paintRows } from './pixels';
 
 const dinoKey = (id: SpeciesId, frame: 0 | 1 = 0) => `dino-${id}-${frame}`;
 const feederKey = (kind: FeederKind, full: boolean) => `feeder-${kind}-${full ? 'full' : 'empty'}`;
@@ -36,25 +37,6 @@ const SHIRTS = ['#e05a4f', '#4f8fe0', '#f2c14e', '#9b6be0', '#4fc08d', '#f28fb1'
 const HAIR = ['#3a2a1a', '#7a4a2a', '#d9b060', '#1b1b1b'];
 const SKIN = ['#f1c7a0', '#c98b5f', '#8a5a3a'];
 
-/** Pixel canvas from rows of palette keys, with an automatic dark outline. */
-function paintRows(rows: string[], colors: Record<string, string>): HTMLCanvasElement {
-  const w = rows[0].length + 2;
-  const h = rows.length + 2;
-  const at = (x: number, y: number) => rows[y - 1]?.[x - 1] ?? '.';
-  const c = document.createElement('canvas');
-  c.width = w;
-  c.height = h;
-  const ctx = c.getContext('2d')!;
-  for (let y = 0; y < h; y++)
-    for (let x = 0; x < w; x++) {
-      const k = at(x, y);
-      if (k !== '.') ctx.fillStyle = colors[k];
-      else if ([at(x - 1, y), at(x + 1, y), at(x, y - 1), at(x, y + 1)].some((n) => n !== '.')) ctx.fillStyle = '#1b1b14';
-      else continue;
-      ctx.fillRect(x, y, 1, 1);
-    }
-  return c;
-}
 
 /** Person legs: standing, and mid-stride. */
 const LEGS: Record<0 | 1, string[]> = { 0: ['.L.L.', '.L.L.'], 1: ['.L.L.', 'L...L'] };

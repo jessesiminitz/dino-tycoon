@@ -12,6 +12,7 @@ import { SCENARIOS } from '../data/scenarios';
 export const EVENT_CHANCES = {
   storm: 1 / (24 * 12),
   outbreak: 1 / (24 * 25),
+  rumble: 1 / (24 * 30),
   schoolTrip: 1 / (11 * 8), // per open hour: roughly every 8 days
   inspection: 1 / (11 * 15), // per open hour: roughly every 15 days
 };
@@ -33,6 +34,8 @@ export function hourlyEvents(ctx: SimContext): void {
     if (state.stormHours === 0) ctx.emit({ text: '🌤️ The storm has passed', kind: 'info' });
   } else if (rng.chance(EVENT_CHANCES.storm * (SCENARIOS[state.scenario.id].stormRate ?? 1))) startStorm(ctx);
 
+  if (state.volcanoActivity > 0) state.volcanoActivity--;
+  else if (state.map.volcano && rng.chance(EVENT_CHANCES.rumble)) volcanoRumble(ctx);
   if (state.dinos.length >= 2 && rng.chance(EVENT_CHANCES.outbreak)) outbreak(ctx);
   if (open && state.paths.some((p) => p === 1) && rng.chance(EVENT_CHANCES.schoolTrip)) schoolTrip(ctx);
   if (open && state.dinos.length > 0 && rng.chance(EVENT_CHANCES.inspection)) inspection(ctx);
@@ -67,6 +70,30 @@ export function stormHour(ctx: SimContext): void {
     ctx.invalidateWorld();
     ctx.emit({ text: `⛈️ The storm knocked down ${broken} fence segment${broken === 1 ? '' : 's'}!`, kind: 'bad' });
   }
+}
+
+/** Tiles around the volcano whose fences a rumble shakes. */
+export const RUMBLE_RADIUS = 12;
+
+/** The volcano smokes and shakes: fences near it take damage (strong ones less). */
+export function volcanoRumble(ctx: SimContext): void {
+  const { state, rng } = ctx;
+  const v = state.map.volcano;
+  if (!v) return;
+  state.volcanoActivity = 4;
+  let broken = 0;
+  for (const e of allFenceEdges(state)) {
+    const type = fenceAt(state, e);
+    if (!type || Math.max(Math.abs(e.x - v.x), Math.abs(e.y - v.y)) > RUMBLE_RADIUS) continue;
+    const next = fenceHp(state, e) - rng.int(10, 25) * (1.5 / FENCE_TYPES[type].strength);
+    setFenceHp(state, e, next);
+    if (next <= 0) broken++;
+  }
+  if (broken > 0) ctx.invalidateWorld();
+  ctx.emit({
+    text: `🌋 The volcano rumbles!${broken ? ` ${broken} nearby fence segment${broken === 1 ? '' : 's'} came down.` : ' Nearby fences were shaken.'}`,
+    kind: 'bad',
+  });
 }
 
 export function outbreak(ctx: SimContext): void {

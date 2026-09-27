@@ -10,6 +10,7 @@ import {
   type ItemKind,
 } from '../data/economy';
 import { SPECIES } from '../data/species';
+import { DECOR_RADIUS, DECOR_TYPES, MAX_DECOR_CHARM } from '../data/decor';
 import { earn } from '../finance';
 import { canStep, findPath, walkableNeighbours } from '../pathfind';
 import { onWalkway } from '../paths';
@@ -59,7 +60,18 @@ export function parkAppeal(state: GameState, regions: RegionMap): number {
     appeal += SPECIES[d.species].appeal * (0.5 + d.happiness / 200);
     species.add(d.species);
   }
-  return appeal + species.size * 3;
+  // Gardens make the whole park more inviting, a little.
+  const charm = state.decor.reduce((sum, d) => sum + DECOR_TYPES[d.kind].charm, 0);
+  return appeal + species.size * 3 + Math.min(8, charm * 0.15);
+}
+
+/** Mood lift per hour from gardens around a spot. */
+export function sceneryCharm(state: GameState, x: number, y: number): number {
+  let charm = 0;
+  for (const d of state.decor) {
+    if (Math.abs(d.x - x) <= DECOR_RADIUS && Math.abs(d.y - y) <= DECOR_RADIUS) charm += DECOR_TYPES[d.kind].charm;
+  }
+  return Math.min(MAX_DECOR_CHARM, charm);
 }
 
 /** The ticket price visitors consider fair for what's on show. */
@@ -99,6 +111,7 @@ export function hourlyVisitors(ctx: SimContext): void {
     if (near('guide', v, GUIDE_RADIUS)) v.satisfaction += 3;
     // Meeting the mascot is a highlight, especially for kids.
     if (near('mascot', v, MASCOT_RADIUS)) v.satisfaction += v.kid ? 8 : 4;
+    v.satisfaction += sceneryCharm(state, v.x, v.y);
     v.hunger = Math.min(100, v.hunger + 8);
     v.bladder = Math.min(100, v.bladder + BLADDER_PER_HOUR);
     if (v.hunger >= 90) v.satisfaction -= 3;

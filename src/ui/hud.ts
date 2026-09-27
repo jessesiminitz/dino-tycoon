@@ -8,6 +8,7 @@ import { mountCatalog } from './catalog';
 import { mountParkPanel } from './parkPanel';
 import { mountGuide } from './guide';
 import { SCENARIOS } from '../sim/data/scenarios';
+import { DECOR_KINDS, DECOR_TYPES } from '../sim/data/decor';
 import type { Mode, UiState } from './uiState';
 import type { GameEvent } from '../sim/systems/context';
 
@@ -77,9 +78,13 @@ function modeHint(ui: UiState): string | null {
       return ui.pathErase
         ? 'Drag over paths to remove them'
         : `Drag to lay a path (${formatMoney(PATH_COST)} a tile) · connect it to the gate`;
+    case 'decor': {
+      const t = DECOR_TYPES[ui.decorKind];
+      return `Tap your land to add a ${t.name.toLowerCase()} (${formatMoney(t.cost)}${t.upkeep ? `, ${formatMoney(t.upkeep)}/day` : ''}). Visitors nearby are happier`;
+    }
     case 'building': {
       const t = BUILDING_TYPES[ui.buildingKind];
-      const where = t.needsPath ? 'a spot next to a path' : 'your land outside paddocks (rocky ground digs faster)';
+      const where = t.needsPath ? 'a spot next to a path' : 'a fossil bed on your land (the bone-strewn ground)';
       return `Tap ${where} to build a ${t.name.toLowerCase()} (${formatMoney(t.cost)}, ${formatMoney(t.upkeep)}/day)`;
     }
     case 'place-dino': {
@@ -109,6 +114,7 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
   const feederPicker = $('feeder-picker');
   const buildingPicker = $('building-picker');
   const pathPicker = $('path-picker');
+  const decorPicker = $('decor-picker');
   const guestsEl = $('hud-guests');
   const speedButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('.speed-btn'));
   const toolButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('.tool-btn[data-mode]'));
@@ -160,6 +166,14 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
     b.addEventListener('click', () => ui.setBuildingKind(kind));
     buildingPicker.appendChild(b);
   }
+  for (const kind of DECOR_KINDS) {
+    const t = DECOR_TYPES[kind];
+    const swatch = { tree: '#4f9a3a', palm: '#86c25c', flowers: '#ff9fb8', fountain: '#8fd3ea', bench: '#9c6b3c' }[kind];
+    const b = pickButton(swatch, t.name.replace(' tree', ''), formatMoney(t.cost));
+    b.dataset.decor = kind;
+    b.addEventListener('click', () => ui.setDecorKind(kind));
+    decorPicker.appendChild(b);
+  }
   for (const erase of [false, true]) {
     const b = pickButton(erase ? '#ff7a6b' : '#cdb58a', erase ? 'Erase' : 'Path', erase ? 'refund 25%' : `$${PATH_COST}/tile`);
     b.dataset.erase = String(erase);
@@ -182,6 +196,9 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
     feederPicker.classList.toggle('hidden', ui.mode !== 'feeder');
     buildingPicker.classList.toggle('hidden', ui.mode !== 'building');
     pathPicker.classList.toggle('hidden', ui.mode !== 'path');
+    decorPicker.classList.toggle('hidden', ui.mode !== 'decor');
+    for (const b of decorPicker.querySelectorAll<HTMLButtonElement>('.pick-btn'))
+      b.classList.toggle('active', b.dataset.decor === ui.decorKind);
     for (const b of buildingPicker.querySelectorAll<HTMLButtonElement>('.pick-btn'))
       b.classList.toggle('active', b.dataset.building === ui.buildingKind);
     for (const b of pathPicker.querySelectorAll<HTMLButtonElement>('.pick-btn'))

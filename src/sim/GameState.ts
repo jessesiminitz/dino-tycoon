@@ -7,12 +7,15 @@ import { DEFAULT_TICKET_PRICE, type BuildingKind, type ItemKind } from './data/e
 import { newFinance, normalizeFinance, type Finance } from './finance';
 import type { StaffRole } from './data/staff';
 import { SCENARIOS, type ScenarioId } from './data/scenarios';
+import type { DecorKind } from './data/decor';
+import { generateFossilBeds, type FossilBed } from './fossilBeds';
+import { isParcelOwned, PARCEL } from './land';
 
 export const MAP_WIDTH = 64;
 export const MAP_HEIGHT = 48;
 export const STARTING_MONEY = 50_000;
 export const START_HOUR = 8;
-export const SAVE_VERSION = 8;
+export const SAVE_VERSION = 9;
 
 export interface Dino {
   id: number;
@@ -103,6 +106,13 @@ export interface Visitor {
   look: number;
 }
 
+export interface Decor {
+  id: number;
+  kind: DecorKind;
+  x: number;
+  y: number;
+}
+
 export interface ScenarioState {
   id: ScenarioId;
   /** 'free' = no goals (sandbox, or carrying on after a scenario ended). */
@@ -158,6 +168,11 @@ export interface GameState {
   stats: Stats;
   /** Current tutorial step, or null when there's no tutorial (or it's finished). */
   tutorialStep: number | null;
+  fossilBeds: FossilBed[];
+  /** Gardens: trees, flower beds, fountains and benches the player placed. */
+  decor: Decor[];
+  /** Hours the volcano stays visibly active after a rumble. */
+  volcanoActivity: number;
   /** Next id for dinos, feeders and other entities. */
   nextId: number;
 }
@@ -165,7 +180,7 @@ export interface GameState {
 export function newGame(seed: number): GameState {
   const map = generateIsland(MAP_WIDTH, MAP_HEIGHT, seed);
   const entrance = findEntrance(map);
-  return {
+  const state: GameState = {
     version: SAVE_VERSION,
     seed,
     rngState: seed,
@@ -194,8 +209,20 @@ export function newGame(seed: number): GameState {
     scenario: { id: 'sandbox', status: 'free' },
     stats: { bestDayVisitors: 0, escapes: 0, inspectionsPassed: 0, restroomComplaintDay: 0 },
     tutorialStep: null,
+    fossilBeds: [],
+    decor: [],
+    volcanoActivity: 0,
     nextId: 1,
   };
+  state.fossilBeds = bedsFor(state);
+  return state;
+}
+
+/** Fossil beds for a park's island, one of them on its starting land. */
+function bedsFor(state: GameState): FossilBed[] {
+  return generateFossilBeds(state.map, state.seed, state.entrance, (x, y) =>
+    isParcelOwned(state, Math.floor(x / PARCEL), Math.floor(y / PARCEL)),
+  );
 }
 
 /** A fresh park set up for a scenario: its island, budget, unlocked species and tutorial. */
@@ -267,6 +294,19 @@ export function migrate(raw: { version?: number } & Record<string, unknown>): Ga
     (raw.stats as Stats).restroomComplaintDay = 0;
     raw.version = 8;
     normalizeFinance(raw.finance as Finance);
+  }
+  if (raw.version === 8) {
+    const state = raw as unknown as GameState;
+    state.decor = [];
+    state.volcanoActivity = 0;
+    state.fossilBeds = bedsFor(state);
+    // Dig sites built before fossil beds existed keep working: each gets a small bed of its own.
+    for (const b of state.buildings) {
+      if (b.kind === 'digsite' && !state.fossilBeds.some((f) => Math.max(Math.abs(f.x - b.x), Math.abs(f.y - b.y)) <= f.radius)) {
+        state.fossilBeds.push({ x: b.x, y: b.y, radius: 1, richness: 1 });
+      }
+    }
+    raw.version = 9;
   }
   return raw.version === SAVE_VERSION ? (raw as unknown as GameState) : null;
 }

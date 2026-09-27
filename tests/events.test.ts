@@ -46,6 +46,8 @@ function park(fence: 1 | 2 | 3 | 4 = 4): GameState {
   for (let y = 9; y <= 13; y++) tiles.push(y * W);
   for (let x = 1; x <= 14; x++) tiles.push(9 * W + x);
   applyCommand(s, { type: 'buildPaths', tiles });
+  // One ordinary fossil bed east of the paddock (covers x 14–18, y 1–5).
+  s.fossilBeds = [{ x: 16, y: 3, radius: 2, richness: 1 }];
   s.money = 1_000_000;
   return s;
 }
@@ -95,17 +97,23 @@ describe('species data for the Dino Guide', () => {
 });
 
 describe('fossil digs', () => {
-  it('dig sites need no path, but must be on your land outside occupied paddocks', () => {
+  it('dig sites need no path, but must be on a fossil bed', () => {
     const s = park();
     expect(applyCommand(s, { type: 'placeBuilding', kind: 'digsite', x: 16, y: 3 }).ok).toBe(true);
+    expect(applyCommand(s, { type: 'placeBuilding', kind: 'digsite', x: 18, y: 11 }).message).toMatch(/fossil bed/);
+    s.fossilBeds.push({ x: 5, y: 5, radius: 1, richness: 1 });
     applyCommand(s, { type: 'placeFeeder', kind: 'plants', x: 3, y: 3 });
     expect(applyCommand(s, { type: 'placeBuilding', kind: 'digsite', x: 5, y: 5 }).message).toMatch(/paddock/);
   });
 
-  it('rocky ground digs faster', () => {
+  it('richer beds dig faster, and nowhere else digs at all', () => {
     const s = park();
-    s.map.tiles[3 * W + 16] = Terrain.Rock;
-    expect(digChance(s, 16, 3)).toBeGreaterThan(digChance(s, 17, 3));
+    s.fossilBeds = [
+      { x: 16, y: 3, radius: 1, richness: 1 },
+      { x: 16, y: 10, radius: 1, richness: 3 },
+    ];
+    expect(digChance(s, 16, 10)).toBeGreaterThan(digChance(s, 16, 3));
+    expect(digChance(s, 12, 12)).toBe(0);
   });
 
   it('finds accumulate and unlock a species', () => {
@@ -126,6 +134,7 @@ describe('fossil digs', () => {
 
   it('common species turn up more often than rare ones', () => {
     const s = park();
+    s.fossilBeds = [{ x: 15, y: 3, radius: 3, richness: 1 }];
     for (let x = 12; x < 18; x++) applyCommand(s, { type: 'placeBuilding', kind: 'digsite', x, y: 3 });
     const c = ctxFor(s, 99);
     atMidnight(s);
@@ -138,6 +147,31 @@ describe('fossil digs', () => {
       s.fossils = {};
     }
     expect(counts.pachycephalosaurus).toBeGreaterThan(counts.tyrannosaurus * 2);
+  });
+
+  it('rich beds turn up rare species far more often', () => {
+    const rareShare = (richness: 1 | 3) => {
+      const s = park();
+      s.fossilBeds = [{ x: 15, y: 3, radius: 3, richness }];
+      for (let x = 12; x < 18; x++) applyCommand(s, { type: 'placeBuilding', kind: 'digsite', x, y: 3 });
+      const c = ctxFor(s, 5);
+      atMidnight(s);
+      let rare = 0;
+      let all = 0;
+      for (let night = 0; night < 300; night++) {
+        const before = { ...s.fossils };
+        hourlyFossils(c);
+        for (const id of SPECIES_IDS) {
+          const n = (s.fossils[id] ?? 0) - (before[id] ?? 0);
+          all += n;
+          if (SPECIES[id].fossilWeight < 15) rare += n;
+        }
+        s.unlockedSpecies = [...STARTER_SPECIES];
+        s.fossils = {};
+      }
+      return rare / all;
+    };
+    expect(rareShare(3)).toBeGreaterThan(rareShare(1) * 1.8);
   });
 
   it('once everything is unlocked, finds are sold to museums', () => {

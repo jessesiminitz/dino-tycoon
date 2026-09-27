@@ -51,36 +51,50 @@ const PAINTERS: Record<Terrain, Painter> = {
     }
   },
   [Terrain.Forest]: (px, r) => {
+    // Forest floor under the tree sprites: darker grass, ferns and leaf litter.
     fill(px, '#3f7a2c');
-    speckle(px, r, ['#356a25'], 0.2);
-    // A conifer or a round broadleaf, nudged by the variant so forests don't tile visibly.
-    const ox = Math.floor(r(99, 1) * 5) - 2;
-    const trunkX = 7 + ox;
-    if (r(50, 50) < 0.5) {
-      for (let row = 0; row < 9; row++) {
-        const half = Math.floor(row / 2) + 1;
-        for (let dx = -half; dx < half; dx++) px(trunkX + dx + 1, 2 + row, row % 3 === 0 ? '#2f6b3a' : '#1f4d2a');
-      }
-    } else {
-      for (let y = 1; y < 10; y++)
-        for (let x = -4; x <= 5; x++) {
-          const d = ((x - 0.5) / 5) ** 2 + ((y - 5) / 4.5) ** 2;
-          if (d < 1) px(trunkX + x, y, y < 4 && x < 2 ? '#5b9a3f' : d > 0.7 ? '#24552a' : '#3a7a31');
-        }
+    speckle(px, r, ['#356a25', '#4a8a33', '#5a3b1f'], 0.3);
+    if (r(9, 9) < 0.5) {
+      const fx = Math.floor(r(1, 9) * 10) + 3;
+      const fy = Math.floor(r(9, 1) * 10) + 3;
+      for (const [dx, dy] of [[0, 0], [-1, 1], [1, 1], [-2, 2], [2, 2]]) px(fx + dx, fy + dy, '#5b9a3f');
     }
-    px(trunkX, 11, '#5a3b1f');
-    px(trunkX + 1, 11, '#5a3b1f');
-    px(trunkX, 12, '#4a2f18');
-    px(trunkX + 1, 12, '#4a2f18');
+  },
+  [Terrain.Mountain]: (px, r) => {
+    // Ground under the mountain sprites: dark scree.
+    fill(px, '#6f695c');
+    speckle(px, r, ['#5e584c', '#8a8373'], 0.35);
+  },
+  [Terrain.Volcano]: (px, r) => {
+    fill(px, '#4a4038');
+    speckle(px, r, ['#3a322c', '#5e524a'], 0.35);
+  },
+  [Terrain.Pond]: (px, r) => {
+    fill(px, '#4f9a9a');
+    speckle(px, r, ['#6fb8b0', '#3f8a8a'], 0.12);
+    // A lily pad or two.
+    if (r(3, 3) < 0.6) {
+      const lx = Math.floor(r(1, 2) * 10) + 2;
+      const ly = Math.floor(r(2, 1) * 10) + 2;
+      for (const [dx, dy] of [[0, 0], [1, 0], [2, 0], [0, 1], [1, 1], [2, 1], [1, -1]]) px(lx + dx, ly + dy, '#4e8a33');
+      if (r(4, 4) < 0.4) px(lx + 1, ly, '#ff9fb8');
+    }
   },
   [Terrain.Rock]: (px, r) => {
     fill(px, '#8a8373');
-    speckle(px, r, ['#6f695c', '#a39d8c'], 0.25);
-    for (let y = 5; y < 12; y++)
-      for (let x = 4; x < 12; x++) {
-        const d = (x - 7.5) ** 2 / 16 + (y - 8.5) ** 2 / 10;
-        if (d < 1) px(x, y, y < 8 ? '#b5ae9c' : '#5e584c');
-      }
+    speckle(px, r, ['#6f695c', '#a39d8c', '#7a7466'], 0.3);
+    // A boulder on some tiles only, of varying size and position, so rocky ground doesn't look tiled.
+    if (r(20, 20) < 0.4) {
+      const bx = 3 + Math.floor(r(21, 1) * 8);
+      const by = 4 + Math.floor(r(1, 21) * 7);
+      const rx = 2 + r(22, 2) * 2.5;
+      const ry = 1.5 + r(2, 22) * 1.5;
+      for (let y = 0; y < TILE; y++)
+        for (let x = 0; x < TILE; x++) {
+          const d = (x - bx) ** 2 / (rx * rx) + (y - by) ** 2 / (ry * ry);
+          if (d < 1) px(x, y, y < by ? '#b5ae9c' : '#5e584c');
+        }
+    }
   },
 };
 

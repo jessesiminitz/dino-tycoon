@@ -98,7 +98,7 @@ const updateSW = registerSW({
 function eventSound(text: string, kind: string, outcome?: 'won' | 'lost'): Sfx | null {
   if (outcome) return outcome === 'won' ? 'fanfare' : 'sad';
   if (/^🦴/.test(text)) return 'chime';
-  if (/^⛈️ A storm/.test(text)) return 'thunder';
+  if (/^(⛈️ A storm|🌋)/.test(text)) return 'thunder';
   if (/^(🚨|🚑|🦠|📋 Failed)|smashed through|knocked down|rotted/.test(text)) return 'alert';
   if (/^(📋 Safety inspection passed|🚌)/.test(text)) return 'cash';
   return kind === 'bad' && /died|starved/.test(text) ? 'sad' : null;

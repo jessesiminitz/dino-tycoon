@@ -32,7 +32,7 @@ export const BUILDING_TYPES: Record<BuildingKind, BuildingType> = {
   },
   digsite: {
     kind: 'digsite', name: 'Dig site', cost: 2500, upkeep: 150, salePrice: 0, needsPath: false,
-    description: 'A fossil crew digs here every day. Finds unlock new species. Best on rocky ground.',
+    description: 'A fossil crew digs here every day. Must go on a fossil bed; richer beds find more, and rarer species.',
   },
 };
 
@@ -70,8 +70,7 @@ export const SOUVENIRS: Record<ItemKind, { name: string; price: number }> = {
   poncho: { name: 'rain poncho', price: 7 },
 };
 
-/** Nightly chance a dig site turns up a fossil (rocky ground multiplies it). */
+/** Nightly chance a dig site on an ordinary fossil bed turns up a fossil. */
 export const DIG_FIND_CHANCE = 0.2;
-export const ROCK_DIG_BONUS = 1.6;
 /** What a museum pays for a find once every species is unlocked. */
 export const MUSEUM_PRICE = 600;

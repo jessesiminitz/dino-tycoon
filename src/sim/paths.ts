@@ -16,6 +16,7 @@ export const onWalkway: CanEnter = (state, i) =>
 export function tileOccupant(state: GameState, x: number, y: number): string | null {
   if (state.feeders.some((f) => f.x === x && f.y === y)) return 'There is a feeder here';
   if (state.buildings.some((b) => b.x === x && b.y === y)) return 'There is a building here';
+  if (state.decor.some((d) => d.x === x && d.y === y)) return 'There is a garden decoration here';
   return null;
 }
 

@@ -479,7 +479,8 @@ button {
   }
 
   .tool-btn {
-    font-size: 20px;
+    min-width: 38px;
+    font-size: 19px;
     padding: 2px;
   }
 

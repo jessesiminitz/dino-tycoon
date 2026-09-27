@@ -1,5 +1,5 @@
 import type { GameState } from './GameState';
-import { isLand, Terrain, terrainAt, type TerrainMap } from './terrain';
+import { isLand, isSea, Terrain, terrainAt, type TerrainMap } from './terrain';
 
 /** Land is bought in square parcels of PARCEL × PARCEL tiles. */
 export const PARCEL = 8;
@@ -74,7 +74,7 @@ export function findEntrance(map: TerrainMap): Point {
         [0, -1],
       ].some(([dx, dy]) => {
         const t = terrainAt(map, x + dx, y + dy);
-        return t !== undefined && !isLand(t);
+        return t !== undefined && isSea(t);
       });
       if (!touchesWater) continue;
       const score = y * 4 - Math.abs(x - cx);
