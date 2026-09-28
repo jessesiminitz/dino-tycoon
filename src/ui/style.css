@@ -2123,3 +2123,135 @@ body:not(.in-park) #info {
   text-align: center;
   font-weight: bold;
 }
+
+/* ---------- Sticker book ---------- */
+
+.stickers-card {
+  width: min(100%, 860px);
+}
+
+.stickers-count {
+  margin-left: 6px;
+  font-size: 12px;
+  color: var(--text);
+}
+
+.sticker-page h3 {
+  margin: 10px 0 6px;
+  font-size: 14px;
+  color: var(--accent-ink);
+}
+
+.sticker-page h3 small {
+  font-weight: normal;
+  color: var(--muted);
+}
+
+.sticker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 8px;
+}
+
+.sticker {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin: 0;
+  padding: 6px 4px;
+  text-align: center;
+  background: #f7f1e3;
+  border: 3px solid #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+}
+
+.sticker.earned {
+  transform: rotate(-1.5deg);
+}
+
+.sticker.earned:nth-child(even) {
+  transform: rotate(1.5deg);
+}
+
+.sticker.locked {
+  background: rgba(60, 45, 20, 0.08);
+  border: 2px dashed var(--panel-edge);
+  box-shadow: none;
+}
+
+.sticker-art {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 56px;
+}
+
+.sticker-img {
+  max-width: 96px;
+  max-height: 56px;
+  image-rendering: pixelated;
+}
+
+.sticker.locked .sticker-img {
+  filter: brightness(0) opacity(0.35);
+}
+
+.sticker-emoji {
+  font-size: 34px;
+  line-height: 1;
+}
+
+.sticker.locked .sticker-emoji {
+  filter: grayscale(1) opacity(0.35);
+}
+
+.sticker figcaption {
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.sticker small {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.sticker-new {
+  position: absolute;
+  top: -8px;
+  right: -6px;
+  padding: 1px 5px;
+  font-size: 10px;
+  font-weight: bold;
+  color: #fff;
+  background: var(--bad);
+  border-radius: 8px;
+  transform: rotate(8deg);
+  animation: sticker-shine 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes sticker-shine {
+  to {
+    transform: rotate(8deg) scale(1.12);
+  }
+}
+
+/* The trophy room: medals stand on a wooden shelf. */
+.sticker-grid.medals {
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  padding: 8px;
+  background: linear-gradient(#b07a3f, #8a5a2b);
+  border-radius: 6px;
+}
+
+.sticker-grid.medals .sticker.locked {
+  background: rgba(247, 241, 227, 0.6);
+  border-color: rgba(247, 241, 227, 0.8);
+}
+
+.sticker-grid.medals .sticker.locked small,
+.sticker-grid.medals .sticker.locked figcaption {
+  color: var(--text);
+}

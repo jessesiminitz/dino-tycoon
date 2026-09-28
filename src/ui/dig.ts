@@ -5,6 +5,7 @@ import { hash2 } from '../sim/rng';
 import { dinoShape } from '../render/dinoArt';
 import { playSfx } from '../audio/audio';
 import { getSettings } from './settings';
+import { award } from './stickers';
 
 type Find = NonNullable<GameEvent['fossil']>;
 
@@ -142,6 +143,7 @@ export function mountDig(sim: Simulation): void {
       : `It's a ${sp.name} ${current.bone}! (${current.have} of ${current.needed} found)`;
     done.classList.remove('hidden');
     playSfx(current.unlocked ? 'fanfare' : 'chime');
+    award('moment:fossil');
   };
 
   /** Brushes sand away along the finger's path, with a ragged (dithered) edge. */

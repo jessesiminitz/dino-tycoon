@@ -20,7 +20,7 @@ State-shape changes bump `SAVE_VERSION` (currently 16) with a `migrate()` step. 
 | 5 | Fossil dig mini-game | M | none | ✅ 2026-09-28 |
 | 6 | New habitats: lagoon and aviary, with 4 new species | XL | none | ✅ 2026-09-28 |
 | 7 | Attractions: jeep safari, viewing tower, petting area | L | v16 | ✅ 2026-09-28 |
-| 8 | Sticker book and trophy room | M | v18 | ☐ |
+| 8 | Sticker book and trophy room | M | none (album is per device) | ✅ 2026-09-28 |
 | 9 | Day and night | M | none | ☐ |
 | 10 | Events with choices | M | v19 | ☐ |
 | 11 | More sound: species calls, cheers, splashes | S–M | none | ☐ |

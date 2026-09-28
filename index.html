@@ -33,6 +33,7 @@
         <button id="btn-park" class="hud-btn" aria-label="Park report">📊<span>Park</span></button>
         <button id="btn-guide" class="hud-btn" aria-label="Dino Guide">📖<span>Guide</span></button>
         <button id="btn-goals" class="hud-btn" aria-label="Goals">🏆<span>Goals</span></button>
+        <button id="btn-stickers" class="hud-btn" aria-label="Sticker book">📒<span>Stickers</span><b id="stickers-badge" class="badge hidden"></b></button>
         <button id="btn-log" class="hud-btn" aria-label="Park log">🔔<span>Log</span><b id="log-badge" class="badge hidden"></b></button>
       </div>
       <div class="hud-group" role="group" aria-label="Game speed">
@@ -109,6 +110,13 @@
           <p class="dig-caption">Drag your finger over the sand to uncover the find.</p>
           <button class="action-btn dig-done hidden">Wonderful!</button>
         </div>
+      </div>
+    </div>
+
+    <div id="stickers" class="modal hidden" role="dialog" aria-label="Sticker book">
+      <div class="modal-card stickers-card">
+        <header class="modal-head"><h2>📒 Sticker book <small class="stickers-count"></small></h2><button class="modal-close" aria-label="Close">✕</button></header>
+        <div class="panel-body stickers-body"></div>
       </div>
     </div>
 

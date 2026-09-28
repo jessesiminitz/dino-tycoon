@@ -106,6 +106,10 @@ Always bump `SAVE_VERSION` and add a step to `migrate()` when the state shape ch
   - **Viewing tower** ($3): reveals dinos within 8 tiles.
   - **Petting pen** ($4): +12 for kids, +5 for adults; needs a worker as keeper.
   - Each attraction is used once per visit. Riding visitors are skipped by the visitor system and hidden on the paths.
+- **Sticker book** (`sim/stickers.ts` for the rules, `ui/stickers.ts` for the album; 📒 button with a NEW count):
+  - 58 stickers: 16 species, 16 babies, a trophy room of 12 scenario medals, and 14 park moments.
+  - The album lives in localStorage (`dino-tycoon:stickers`), per device and shared across saves. It isn't part of save exports.
+  - `earnedStickers(state)` is checked every 2 s and after each event. Only the dig mini-game awards the hand-dug fossil sticker.
 - **Placing dinos:** a fence gap is circled in red with a "Close gap · $x" button that fences or repairs it and releases the dino.
 - **Panels:** 👥 People, 🔔 alert log (newest first, filters, unread badge), 🏆 Goals medal track, 📖 Dino Guide.
 - **Scenarios:** First Steps (tutorial), Fossil Fever, Storm Coast, Rex Rising, each with 3 rounds of milestones; plus Sandbox. You can keep playing after winning or losing.
