@@ -69,8 +69,8 @@ describe('Simulation clock', () => {
     expect(sim.state.hours).toBe(10);
   });
 
-  it('a game day lasts five minutes at normal speed', () => {
-    expect((MS_PER_HOUR * 24) / 60_000).toBe(5);
+  it('a game day lasts four minutes at normal speed', () => {
+    expect((MS_PER_HOUR * 24) / 60_000).toBe(4);
   });
 
   it('calendar starts at day 1, 08:00 and rolls over', () => {

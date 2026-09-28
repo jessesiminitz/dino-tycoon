@@ -119,7 +119,9 @@ export class ParkScene extends Phaser.Scene {
     // Start zoomed in on the gate, where the player's land is.
     cam.setZoom(Phaser.Math.Clamp(Math.floor(Math.min(cam.width / worldW, cam.height / worldH) * 3), 2, MAX_ZOOM));
     this.fitBounds();
-    cam.centerOn(this.sim.state.entrance.x * TILE, (this.sim.state.entrance.y - 6) * TILE);
+    // Held upright (a tall iPad screen), look further inland so the view isn't mostly sea.
+    const inland = cam.height > cam.width ? 11 : 6;
+    cam.centerOn(this.sim.state.entrance.x * TILE, (this.sim.state.entrance.y - inland) * TILE);
 
     this.touch = new TouchController(this);
     this.touch.on('tap', (wx: number, wy: number) => this.onTap(wx, wy));

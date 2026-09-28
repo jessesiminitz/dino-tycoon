@@ -36,7 +36,7 @@ End commit messages with the Co-Authored-By / Claude-Session trailers the harnes
 ## Architecture (see README for the overview)
 
 - `src/sim/`: pure TS game rules, no Phaser. One serializable `GameState` (`GameState.ts`), a fixed-timestep `Simulation` (`Simulation.ts`), and commands via `sim.dispatch(cmd)` → `commands.ts` `applyCommand`. Seeded RNG (`rng.ts`; `hash2` gives stateless variation).
-  - **Time:** `MS_PER_HOUR = 12_500` (a game day is 5 real minutes at 1×). `STEPS_PER_HOUR = 16` (in `systems/dinos.ts`). Speeds are `0 | 1 | 3 | 8`. Per-step odds that were tuned at 4 steps/hour go through `perStep()`; staff `WORK_STEPS` are in 16ths of an hour.
+  - **Time:** `MS_PER_HOUR = 10_000` (a game day is 4 real minutes at 1×). `STEPS_PER_HOUR = 16` (in `systems/dinos.ts`). Speeds are `0 | 1 | 3 | 8`. Per-step odds that were tuned at 4 steps/hour go through `perStep()`; staff `WORK_STEPS` are in 16ths of an hour.
   - Step systems: dinos, escapes, visitors, staff. Hourly: dinos (hunger, happiness, **droppings**), health, fences, events, visitors (needs, thoughts, accidents, litter warnings), fossils, economy, scenario.
   - Regions come from a flood fill over fences (`regions.ts`: public, paddock or wild). `gaps.ts` finds missing or broken fence segments around a tapped tile.
   - `concerns.ts`: live dino and staff concerns, plus `whatVisitorsSay` (complaints with advice).
@@ -126,6 +126,8 @@ Always bump `SAVE_VERSION` and add a step to `migrate()` when the state shape ch
   - A synthesised call for each species (roar, honk, bellow, chirp, screech, song), played on tap or release. Babies are higher and softer.
   - A crowd `cheer` for hatchings, milestones and birthdays. `splash` and `flap` play every few seconds from visible lagoon and aviary animals.
   - Ambience (`setAmbience`, driven by `WeatherScene`): birdsong by day, crickets by night, quiet at dusk and in storms. Setting: "Birds & crickets" (`ambience`).
+- **Orientation:** phones play sideways only (a rotate screen shows under 700 px wide). iPads play either way up. The manifest orientation is `any`, and the camera starts further inland when the screen is taller than it is wide. Check with `scripts/checks/ipad-portrait.mjs`.
+- **Building signs:** `withSign()` in `sceneryArt.ts` puts a picture board on a post over each building (fries, ice cream, gift, restroom figures, jeep, binoculars, heart, bone).
 - **Placing dinos:** a fence gap is circled in red with a "Close gap · $x" button that fences or repairs it and releases the dino.
 - **Panels:** 👥 People, 🔔 alert log (newest first, filters, unread badge), 🏆 Goals medal track, 📖 Dino Guide.
 - **Scenarios:** First Steps (tutorial), Fossil Fever, Storm Coast, Rex Rising, each with 3 rounds of milestones; plus Sandbox. You can keep playing after winning or losing.
@@ -134,7 +136,7 @@ Always bump `SAVE_VERSION` and add a step to `migrate()` when the state shape ch
 
 ## Owner preferences and feedback so far
 
-- Pacing: a 5-minute game day at 1×, with 3× and 8× available.
+- Pacing: a 4-minute game day at 1×, with 3× and 8× available.
 - Keep the game kid-friendly. Mess and pee/poop jokes are wanted but mild; cleanliness should not dominate.
 - Wants more depth: richer menus, milestones with unlock rewards, visible items, lively visitors.
 - Art should evoke classic DinoPark Tycoon (VGA palette, beige bevel UI, 3/4 view), with good dino likeness.
@@ -168,7 +170,6 @@ The ten fun and engagement features the owner approved are all built and deploye
 ## Other ideas not done yet (ask before starting)
 
 - Milestone M8 from the original plan: an App Store build (Capacitor plus a cloud macOS build). It needs an Apple Developer account.
-- Scenario deadlines are counted in game days, so at 5-minute days they take long in real time (First Steps Bronze is 45 days, about 3¾ h at 1×). Offered to shorten them; no answer yet.
-- iPad portrait play (currently shows a "turn sideways" screen; the top bar is too wide for a portrait iPad mini).
+- Scenario deadlines are counted in game days, so at 4-minute days they take a while in real time (First Steps Bronze is 45 days, 3 h at 1×). Offered to shorten them; no answer yet.
 - Offered earlier: storms washing away litter; mess made purely cosmetic.
 - Possible: a credits screen listing the music, and a day/night tint.

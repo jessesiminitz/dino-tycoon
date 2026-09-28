@@ -32,7 +32,7 @@ export default defineConfig({
         short_name: 'Dino Tycoon',
         description: 'Build and run your own dinosaur park.',
         display: 'standalone',
-        orientation: 'landscape',
+        orientation: 'any',
         background_color: '#1b3a4b',
         theme_color: '#1b3a4b',
         start_url: '.',

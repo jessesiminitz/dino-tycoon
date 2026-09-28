@@ -509,8 +509,8 @@ button {
   font-size: 48px;
 }
 
-/* Landscape-first: nag only on touch devices held upright. */
-@media (orientation: portrait) and (pointer: coarse) {
+/* Phones need to be held sideways; tablets play either way up. */
+@media (orientation: portrait) and (pointer: coarse) and (max-width: 700px) {
   .rotate-hint {
     display: flex;
   }

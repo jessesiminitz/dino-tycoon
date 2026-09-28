@@ -488,3 +488,66 @@ export function paintTrough(kind: 'plants' | 'meat' | 'fish', full: boolean): HT
     for (const x of [3, 16]) px(x, 12, '#4a3018');
   });
 }
+
+// --- Shop signs: a little board on a post above a building, with a picture of what it's for. ---
+
+export type SignIcon = 'fries' | 'icecream' | 'gift' | 'restroom' | 'jeep' | 'binoculars' | 'heart' | 'bone';
+
+/** Pixel pictures for signs, 9×8, one character per pixel. */
+const SIGN_ART: Record<SignIcon, { rows: string[]; colors: Record<string, string> }> = {
+  fries: {
+    rows: ['.Y.Y.Y.Y.', '.YYYYYYY.', '.YYYYYYY.', 'RWRWRWRWR', 'RWRWRWRWR', '.RWRWRWR.', '.RWRWRWR.', '..RWRWR..'],
+    colors: { Y: '#f7d046', R: '#d9453b', W: '#f4ecd2' },
+  },
+  icecream: {
+    rows: ['...PPP...', '..PPPPP..', '..PPPPP..', '..CCCCC..', '...CCC...', '...CCC...', '....C....', '....C....'],
+    colors: { P: '#f28fb1', C: '#d9a45a' },
+  },
+  gift: {
+    rows: ['..Y...Y..', '...Y.Y...', 'RRRRYRRRR', 'RRRRYRRRR', 'YYYYYYYYY', 'RRRRYRRRR', 'RRRRYRRRR', 'RRRRYRRRR'],
+    colors: { R: '#3f8fd0', Y: '#f7d046' },
+  },
+  restroom: {
+    rows: ['.B.....P.', 'BBB...PPP', '.B....PPP', 'BBB..PPPPP', '.B.....P.', 'B.B...P.P', 'B.B...P.P', '.........'],
+    colors: { B: '#3f7fd0', P: '#e05a8f' },
+  },
+  jeep: {
+    rows: ['.........', '..KKKK...', '..K..KG..', 'GGGGGGGGG', 'GGGGGGGGG', '.KK...KK.', '.KK...KK.', '.........'],
+    colors: { G: '#6f9a3a', K: '#2b2b2b' },
+  },
+  binoculars: {
+    rows: ['.........', '.KK...KK.', 'KKKK.KKKK', 'KBBKKKBBK', 'KBBK.KBBK', 'KKKK.KKKK', '.KK...KK.', '.........'],
+    colors: { K: '#2b2b2b', B: '#8fb8d0' },
+  },
+  heart: {
+    rows: ['.........', '.RR...RR.', 'RRRR.RRRR', 'RRRRRRRRR', '.RRRRRRR.', '..RRRRR..', '...RRR...', '....R....'],
+    colors: { R: '#e0455a' },
+  },
+  bone: {
+    rows: ['.........', 'WW.....WW', 'WWW...WWW', '.WWWWWWW.', '.WWWWWWW.', 'WWW...WWW', 'WW.....WW', '.........'],
+    colors: { W: '#f4ecd2' },
+  },
+};
+
+/** A building with its sign on a post above it: the icon on a cream board with a dark frame. */
+export function withSign(building: HTMLCanvasElement, icon: SignIcon): HTMLCanvasElement {
+  const art = SIGN_ART[icon];
+  const boardW = 13;
+  const boardH = 12;
+  const pole = 3;
+  const sign = paintSprite(boardW + 2, boardH + pole + 2, (px) => {
+    for (let y = 1; y < boardH; y++) for (let x = 1; x < boardW + 1; x++) px(x, y, y === 1 || y === boardH - 1 || x === 1 || x === boardW ? '#6b4a2a' : '#f7f1e3');
+    art.rows.forEach((row, y) => {
+      for (let x = 0; x < row.length; x++) if (row[x] !== '.') px(3 + x, 3 + y, art.colors[row[x]]);
+    });
+    for (let y = boardH; y < boardH + pole; y++) px(Math.floor((boardW + 2) / 2), y, '#5a3b1f');
+  }, false);
+  const out = document.createElement('canvas');
+  const overlap = 3; // the post tucks behind the roof a little
+  out.width = Math.max(building.width, sign.width);
+  out.height = building.height + sign.height - overlap;
+  const ctx = out.getContext('2d')!;
+  ctx.drawImage(sign, Math.round((out.width - sign.width) / 2), 0);
+  ctx.drawImage(building, Math.round((out.width - building.width) / 2), sign.height - overlap);
+  return out;
+}
