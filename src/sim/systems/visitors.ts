@@ -100,22 +100,63 @@ const GENERIC_REVIEWS: Record<number, string> = {
   1: 'Terrible. Never again.',
 };
 
-/** Leaving visitors sum up their day, pointing at what stood out most. */
-function review(state: GameState, v: Visitor): void {
-  const stars = starsFor(v.satisfaction);
-  const good = stars >= 3;
-  // Any of their thoughts that match the verdict, picked stably so reviews vary.
-  const matching = v.thoughts.filter((t) => t.good === good);
-  const pick = matching[Math.floor(hash2(v.id, state.hours, 5) * matching.length)];
-  state.reviews.push({
-    hour: state.hours,
-    name: v.name,
-    stars,
-    text: pick?.text ?? GENERIC_REVIEWS[stars],
-    topic: pick?.topic ?? null,
-    good,
-  });
+/** The most stars a review can give, by how many different things the visitor complained about. */
+const STAR_CAP_BY_COMPLAINTS = [5, 4, 3, 2];
+/** Each different complaint takes this off the review score; each different compliment adds a little. */
+const COMPLAINT_WEIGHT = 8;
+const PRAISE_WEIGHT = 2;
+const MAX_PRAISE = 3;
+/** Some visitors are easier to please than others (± this much). */
+const PICKINESS = 8;
+/** Where each review pulls the park's reputation. */
+const STAR_REPUTATION = [0, 10, 30, 55, 80, 100];
+
+/**
+ * Leaving visitors sum up their day. The stars start from how happy they
+ * ended up, but every different thing they complained about knocks the score
+ * down and caps it (one gripe: at most 4 stars, two: 3, three or more: 2), so
+ * a park with problems can't collect five-star reviews. The text points at
+ * what stood out; a good review with a gripe mentions both.
+ */
+export function reviewStars(v: Visitor): number {
+  const complaints = new Set(v.thoughts.filter((t) => !t.good).map((t) => t.topic)).size;
+  const praise = Math.min(MAX_PRAISE, new Set(v.thoughts.filter((t) => t.good).map((t) => t.topic)).size);
+  const picky = (hash2(v.id, 17, 29) * 2 - 1) * PICKINESS;
+  const score = v.satisfaction + picky - complaints * COMPLAINT_WEIGHT + praise * PRAISE_WEIGHT;
+  const cap = STAR_CAP_BY_COMPLAINTS[Math.min(complaints, STAR_CAP_BY_COMPLAINTS.length - 1)];
+  return Math.min(cap, starsFor(score));
+}
+
+function review(state: GameState, v: Visitor): number {
+  const stars = reviewStars(v);
+  const roll = hash2(v.id, state.hours, 5);
+  const pickFrom = (good: boolean) => {
+    const matching = v.thoughts.filter((t) => t.good === good);
+    return matching[Math.floor(roll * matching.length)];
+  };
+  const praise = pickFrom(true);
+  const gripe = pickFrom(false);
+  let text = GENERIC_REVIEWS[stars];
+  let topic: Topic | null = null;
+  let good = stars >= 4;
+  if (stars >= 5 && praise) {
+    text = praise.text;
+    topic = praise.topic;
+  } else if (stars === 4 && praise && gripe) {
+    text = `${praise.text} Only downside: ${gripe.text}`;
+    topic = gripe.topic;
+    good = false;
+  } else if (stars >= 4 && praise) {
+    text = praise.text;
+    topic = praise.topic;
+  } else if (gripe) {
+    text = gripe.text;
+    topic = gripe.topic;
+    good = false;
+  }
+  state.reviews.push({ hour: state.hours, name: v.name, stars, text, topic, good });
   if (state.reviews.length > MAX_REVIEWS) state.reviews.shift();
+  return stars;
 }
 
 function drop(state: GameState, kind: Mess['kind'], x: number, y: number): void {
@@ -194,13 +235,13 @@ function buildingNear(state: GameState, x: number, y: number, kind: BuildingKind
   return state.buildings.find((b) => b.kind === kind && Math.abs(b.x - x) + Math.abs(b.y - y) <= 1);
 }
 
-/** Each departing visitor nudges reputation toward their satisfaction: a slow moving average. */
+/** Each departing visitor's review nudges reputation toward it: a slow moving average of what people say. */
 const REPUTATION_WEIGHT = 0.005;
 
 function leave(state: GameState, v: Visitor): void {
   state.visitors.splice(state.visitors.indexOf(v), 1);
-  review(state, v);
-  state.reputation += (v.satisfaction - state.reputation) * REPUTATION_WEIGHT;
+  const stars = review(state, v);
+  state.reputation += (STAR_REPUTATION[stars] - state.reputation) * REPUTATION_WEIGHT;
 }
 
 /** Hourly: new arrivals pay at the gate; everyone gets hungrier. */

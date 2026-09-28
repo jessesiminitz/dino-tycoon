@@ -666,9 +666,16 @@ button {
   padding: 2px 5px;
   font-size: 20px;
   line-height: 1;
-  background: rgba(255, 138, 92, 0.25);
-  border: 2px solid var(--accent);
+  background: transparent;
+  border: 2px solid transparent;
   border-radius: 6px;
+}
+
+/* Lit up only while its panel is open (or while being pressed). */
+.hud-btn:active,
+.hud-btn.active {
+  border-color: var(--bevel-in);
+  background: rgba(255, 138, 92, 0.35);
 }
 
 .hud-btn span {

@@ -75,6 +75,15 @@ export function pathEdges(ax: number, ay: number, bx: number, by: number, horizo
 }
 
 /**
+ * Fence edges for a drag from vertex (ax, ay) to (bx, by): the whole box with
+ * those two opposite corners, or a straight run if the drag stayed in line.
+ */
+export function boxEdges(ax: number, ay: number, bx: number, by: number): Edge[] {
+  if (ax === bx || ay === by) return pathEdges(ax, ay, bx, by, true);
+  return [...pathEdges(ax, ay, bx, by, true), ...pathEdges(ax, ay, bx, by, false)];
+}
+
+/**
  * Tiles along an L-shaped path from tile (ax, ay) to tile (bx, by), both ends
  * included, turning at (bx, ay) with `horizontalFirst`, else at (ax, by).
  */

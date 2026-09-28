@@ -78,7 +78,7 @@ function modeHint(ui: UiState): string | null {
     case 'select':
       return null;
     case 'fence':
-      return 'Drag to draw a fence · two fingers to move the map';
+      return 'Drag from one corner to the opposite corner to fence a box (drag straight for a single line) · two fingers to move the map';
     case 'demolish':
       return 'Drag along fences or paths to remove them · tap a fence, path, building, feeder or garden item to remove it';
     case 'land':
@@ -321,6 +321,22 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
       else guide.open();
     });
   }
+
+  // A top-bar button lights up while its panel is open.
+  const panelsFor: Record<string, string[]> = {
+    'btn-park': ['park'],
+    'btn-people': ['people'],
+    'btn-requests': ['requests'],
+    'btn-book': ['guide', 'stickers'],
+    'btn-log': ['log'],
+  };
+  const syncOpen = () => {
+    for (const [btn, panels] of Object.entries(panelsFor))
+      $(btn).classList.toggle('active', panels.some((id) => !$(id).classList.contains('hidden')));
+  };
+  const watcher = new MutationObserver(syncOpen);
+  for (const id of Object.values(panelsFor).flat()) watcher.observe($(id), { attributes: true, attributeFilter: ['class'] });
+  syncOpen();
 
   renderTools();
   return hud;

@@ -213,3 +213,14 @@ The ten fun and engagement features the owner approved are all built and deploye
   - `terrain-closeups.mjs`: waterfall, springs, lava, cliffs
   - `big-island-perf.mjs`: normal vs big frame times
   - Tests are in `tests/landscape.test.ts`.
+
+## Fixes (2026-09-28, after the islands update)
+- **Reviews:** `reviewStars()` in `visitors.ts`.
+  - The score is satisfaction ± a per-visitor pickiness (8), minus 8 per different complaint topic, plus 2 per praise topic (up to 3).
+  - Stars are capped by the number of different complaints: 0 → 5, 1 → 4, 2 → 3, 3+ → 2.
+  - A 4-star review with a gripe reads "<praise> Only downside: <gripe>".
+  - **Reputation now follows reviews** (`STAR_REPUTATION`: 5★ → 100, 4★ → 80, 3★ → 55, 2★ → 30, 1★ → 10), not raw satisfaction.
+  - Measured on the visitor-life test park: basic park (no restroom or snacks) ≈ 60 reputation, mostly 3–4★; overpriced ≈ 67, mostly 4★; fair price and well equipped ≈ 88, 90% 5★.
+- **Fences:** a Fence-tool drag builds the whole box from corner to corner (`boxEdges` in `grid.ts`), or a single line if the drag stays straight. The Remove tool still clears along an L.
+- **Top bar:** buttons are plain, and light up only while their panel is open (MutationObserver in `hud.ts`).
+- Check: `scripts/checks/fixes-check.mjs`.

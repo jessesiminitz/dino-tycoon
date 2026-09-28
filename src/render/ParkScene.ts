@@ -14,7 +14,7 @@ import { dinoLabel } from '../sim/systems/dinos';
 import { hoursToGrow, hoursToHatch } from '../sim/systems/breeding';
 import { SNACK_NAMES } from '../sim/systems/visitors';
 import { fenceAt, fenceHp, fenceTypeAt } from '../sim/fences';
-import { pathEdges, tileLine, type Edge } from '../sim/grid';
+import { boxEdges, pathEdges, tileLine, type Edge } from '../sim/grid';
 import { BUILDING_TYPES, PATH_COST, PATH_REFUND, SOUVENIRS, TRACK_COST } from '../sim/data/economy';
 import { isTileOwned, parcelBuyBlocker, parcelLandTiles, parcelOf, parcelPrice, type Point } from '../sim/land';
 import { isLand, Terrain, terrainAt, TERRAIN_NAMES } from '../sim/terrain';
@@ -790,7 +790,11 @@ export class ParkScene extends Phaser.Scene {
       }
     }
     const end = this.vertexAt(wx, wy);
-    d.edges = pathEdges(d.start.x, d.start.y, end.x, end.y, d.horizontalFirst ?? true);
+    // Fences draw a whole box from corner to corner; the Remove tool clears along a line.
+    d.edges =
+      this.ui.mode === 'fence'
+        ? boxEdges(d.start.x, d.start.y, end.x, end.y)
+        : pathEdges(d.start.x, d.start.y, end.x, end.y, d.horizontalFirst ?? true);
     this.previewEdges(d.edges);
   }
 

@@ -17,7 +17,7 @@ const STEPS: Step[] = [
     button: 'Let’s build',
   },
   {
-    text: 'Dinosaurs need a paddock. Tap 🚧 Fence and choose Wooden. Then drag from one corner to the opposite corner, and drag again to close the box.',
+    text: 'Dinosaurs need a paddock. Tap 🚧 Fence and choose Wooden. Then drag from one corner of your paddock to the opposite corner, and the whole box is fenced.',
     target: '.tool-btn[data-mode="fence"]',
     done: (sim) => sim.regions().regions.some((r) => r.kind === 'paddock'),
   },
