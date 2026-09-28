@@ -58,19 +58,43 @@ function unlock(): void {
     onSettings(applySettings);
     void startMusic();
   }
-  if (ctx.state === 'suspended') void ctx.resume();
+  if (ctx.state !== 'running') void ctx.resume().then(listenIfSilent, listenIfSilent);
+  // iOS only wakes audio once something actually plays during a tap: a one-sample silent blip does it.
+  const blip = ctx.createBufferSource();
+  blip.buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
+  blip.connect(ctx.destination);
+  blip.start();
+  listenIfSilent();
+}
+
+/**
+ * Browsers only allow sound after the player touches the screen, and iPhones
+ * and iPads only count a finished tap (not a finger going down, or a drag).
+ * So listen for every kind of touch, keep trying until audio is really running,
+ * then stop listening.
+ */
+const GESTURES = ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'] as const;
+let listening = false;
+
+function listenIfSilent(): void {
+  const running = ctx?.state === 'running';
+  if (running === !listening) return;
+  listening = !running;
+  for (const type of GESTURES) {
+    if (listening) window.addEventListener(type, unlock, { capture: true, passive: true });
+    else window.removeEventListener(type, unlock, { capture: true });
+  }
 }
 
 /** Call once at startup: audio starts on the first touch or click anywhere. */
 export function initAudio(): void {
-  const once = () => unlock();
-  window.addEventListener('pointerdown', once, { capture: true });
-  window.addEventListener('keydown', once, { capture: true });
-  // Resume after the app comes back from the background.
+  listenIfSilent();
+  // Resume after the app comes back from the background (iOS may need another tap first).
   document.addEventListener('visibilitychange', () => {
     if (!ctx) return;
-    if (document.visibilityState === 'visible') void ctx.resume();
+    if (document.visibilityState === 'visible') void ctx.resume().then(listenIfSilent, listenIfSilent);
     else void ctx.suspend();
+    listenIfSilent();
   });
 }
 
