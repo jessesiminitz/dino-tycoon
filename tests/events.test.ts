@@ -128,6 +128,12 @@ describe('fossil digs', () => {
     expect(c.events.some((e) => /Fossil find/.test(e.text))).toBe(true);
     expect(c.events.some((e) => /\ba [AEIOU]/.test(e.text))).toBe(false); // "an Ankylosaurus", not "a Ankylosaurus"
     expect(c.events.some((e) => new RegExp(`${SPECIES[unlocked[0]].name} unlocked`).test(e.text))).toBe(true);
+    // Every find carries its details for the dig mini-game, already credited.
+    const finds = c.events.filter((e) => e.fossil);
+    expect(finds.length).toBe(c.events.filter((e) => e.text.startsWith('🦴')).length);
+    const last = finds.filter((e) => e.fossil!.species === unlocked[0]).at(-1)!.fossil!;
+    expect(last).toMatchObject({ species: unlocked[0], unlocked: true, have: SPECIES[unlocked[0]].fossilsNeeded, needed: SPECIES[unlocked[0]].fossilsNeeded });
+    expect(finds.every((e) => e.fossil!.bone.length > 0 && e.fossil!.have <= e.fossil!.needed)).toBe(true);
     // The new species can now be bought.
     expect(applyCommand(s, { type: 'buyDino', species: unlocked[0], x: 4, y: 4 }).ok).toBe(true);
   });

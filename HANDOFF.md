@@ -86,6 +86,11 @@ Always bump `SAVE_VERSION` and add a step to `migrate()` when the state shape ch
   - They pay cash, and reputation only for active ones. Missed ones expire quietly.
   - Completion is checked hourly and after every successful command.
   - Requests use their own RNG (seeded from the seed and hour), so the rest of the sim is unaffected.
+- **Fossil dig mini-game** (`ui/dig.ts`):
+  - Dig-site find events carry `fossil: { species, bone, have, needed, unlocked }`. They're credited at once as before; the mini-game is presentation only.
+  - Finds queue behind a pulsing "🦴 Dig!" button (top right).
+  - The pit is a 128×96 pixel canvas: the species' shape rendered as bone in dirt, under dithered sand. A finger brush clears the sand, and 70% uncovered triggers the reveal with sparkles and a caption.
+  - The game pauses while digging, and there's a Skip button. The Settings switch "Fossil dig mini-game" (`digGame`) turns it off.
 - **Placing dinos:** a fence gap is circled in red with a "Close gap · $x" button that fences or repairs it and releases the dino.
 - **Panels:** 👥 People, 🔔 alert log (newest first, filters, unread badge), 🏆 Goals medal track, 📖 Dino Guide.
 - **Scenarios:** First Steps (tutorial), Fossil Fever, Storm Coast, Rex Rising, each with 3 rounds of milestones; plus Sandbox. You can keep playing after winning or losing.

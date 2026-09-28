@@ -95,6 +95,23 @@
       </div>
     </div>
 
+    <button id="dig-btn" class="dig-btn hidden" aria-label="Dig up your fossil find">🦴 Dig!<b class="badge hidden"></b></button>
+    <div id="dig" class="modal hidden" role="dialog" aria-label="Fossil dig">
+      <div class="modal-card dig-card">
+        <header class="modal-head"><h2>🦴 Brush away the sand!</h2><button class="modal-close dig-skip" aria-label="Skip">Skip</button></header>
+        <div class="dig-pit">
+          <canvas class="dig-fossil" width="128" height="96"></canvas>
+          <canvas class="dig-sand" width="128" height="96"></canvas>
+          <div class="dig-sparkles" aria-hidden="true"></div>
+        </div>
+        <div class="dig-foot">
+          <span class="need-bar"><span></span></span>
+          <p class="dig-caption">Drag your finger over the sand to uncover the find.</p>
+          <button class="action-btn dig-done hidden">Wonderful!</button>
+        </div>
+      </div>
+    </div>
+
     <div id="requests" class="modal hidden" role="dialog" aria-label="Park requests">
       <div class="modal-card requests-card">
         <header class="modal-head"><h2>📋 Park requests</h2><button class="modal-close" aria-label="Close">✕</button></header>

@@ -4,10 +4,12 @@ export interface Settings {
   sfxVolume: number;
   music: boolean;
   musicVolume: number;
+  /** Uncover fossil finds by brushing away sand (off: finds just appear). */
+  digGame: boolean;
 }
 
 const KEY = 'dino-tycoon:settings';
-const DEFAULTS: Settings = { sfx: true, sfxVolume: 0.7, music: true, musicVolume: 0.35 };
+const DEFAULTS: Settings = { sfx: true, sfxVolume: 0.7, music: true, musicVolume: 0.35, digGame: true };
 
 type Listener = (s: Settings) => void;
 const listeners = new Set<Listener>();
@@ -50,6 +52,9 @@ export function renderSettings(root: HTMLElement): void {
     <label class="setting">
       <input type="checkbox" data-key="music" ${s.music ? 'checked' : ''}> Music
       <input type="range" min="0" max="1" step="0.05" value="${s.musicVolume}" data-key="musicVolume" aria-label="Music volume">
+    </label>
+    <label class="setting">
+      <input type="checkbox" data-key="digGame" ${s.digGame ? 'checked' : ''}> Fossil dig mini-game
     </label>`;
   root.oninput = (e) => {
     const el = e.target as HTMLInputElement;

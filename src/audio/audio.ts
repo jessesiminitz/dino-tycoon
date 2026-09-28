@@ -5,7 +5,7 @@ import { decodeRag, type Note, type Rag } from './ragNotes';
  * All sound is synthesised with Web Audio: no audio files to download or license.
  * iOS only allows audio after a user gesture, so the context starts on the first tap.
  */
-export type Sfx = 'click' | 'build' | 'cash' | 'error' | 'roar' | 'alert' | 'chime' | 'fanfare' | 'sad' | 'thunder' | 'chirp' | 'snap' | 'shutter';
+export type Sfx = 'click' | 'build' | 'cash' | 'error' | 'roar' | 'alert' | 'chime' | 'fanfare' | 'sad' | 'thunder' | 'chirp' | 'snap' | 'shutter' | 'brush';
 
 let ctx: AudioContext | null = null;
 let sfxGain: GainNode;
@@ -115,7 +115,7 @@ function burst(start: number, dur: number, vol: number, freq: number, q = 1): vo
 
 const lastPlayed = new Map<Sfx, number>();
 /** Minimum gap between repeats of the same sound, so bursts of events don't stack up. */
-const MIN_GAP_MS: Partial<Record<Sfx, number>> = { alert: 700, cash: 120, chime: 300, click: 40 };
+const MIN_GAP_MS: Partial<Record<Sfx, number>> = { alert: 700, cash: 120, chime: 300, click: 40, brush: 90 };
 
 export function playSfx(name: Sfx): void {
   if (!ctx || !getSettings().sfx) return;
@@ -143,6 +143,9 @@ export function playSfx(name: Sfx): void {
       // A grumpy chomp.
       burst(t, 0.12, 0.5, 400, 3);
       return tone('sawtooth', 140, t, 0.18, 0.14, sfxGain, 70);
+    case 'brush':
+      // A soft swish of sand.
+      return burst(t, 0.12, 0.18, 1800 + Math.random() * 900, 0.8);
     case 'shutter':
       burst(t, 0.03, 0.45, 3500, 1.5);
       return burst(t + 0.07, 0.05, 0.35, 2500, 1.5);

@@ -17,7 +17,7 @@ State-shape changes bump `SAVE_VERSION` (currently 15) with a `migrate()` step. 
 | 1 | Baby dinosaurs (eggs, hatching, growing up) | L | v13 | ✅ 2026-09-27 |
 | 2 | Tap a dino: treats, pats and 📷 photos | M | v14 (tiny) | ✅ 2026-09-28 |
 | 3 | Park requests: short daily goals | M | v15 | ✅ 2026-09-28 |
-| 5 | Fossil dig mini-game | M | none | ☐ |
+| 5 | Fossil dig mini-game | M | none | ✅ 2026-09-28 |
 | 6 | New habitats: lagoon and aviary, with 4 new species | XL | v16 | ☐ |
 | 7 | Attractions: jeep safari, viewing tower, petting area | L | v17 | ☐ |
 | 8 | Sticker book and trophy room | M | v18 | ☐ |

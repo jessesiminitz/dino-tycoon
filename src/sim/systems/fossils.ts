@@ -48,11 +48,13 @@ export function hourlyFossils(ctx: SimContext): void {
     const have = (state.fossils[found] ?? 0) + 1;
     state.fossils[found] = have;
     const bone = BONES[rng.int(0, BONES.length - 1)];
-    if (have >= sp.fossilsNeeded) {
+    const unlocked = have >= sp.fossilsNeeded;
+    const fossil = { species: found, bone, have, needed: sp.fossilsNeeded, unlocked };
+    if (unlocked) {
       state.unlockedSpecies.push(found);
-      ctx.emit({ text: `🦴 ${sp.name} unlocked! ${article(bone) === 'an' ? 'An' : 'A'} ${bone} completed the find. Buy them in the Dinos catalog.`, kind: 'good' });
+      ctx.emit({ text: `🦴 ${sp.name} unlocked! ${article(bone) === 'an' ? 'An' : 'A'} ${bone} completed the find. Buy them in the Dinos catalog.`, kind: 'good', fossil });
     } else {
-      ctx.emit({ text: `🦴 Fossil find: ${article(sp.name)} ${sp.name} ${bone} (${have}/${sp.fossilsNeeded})`, kind: 'good' });
+      ctx.emit({ text: `🦴 Fossil find: ${article(sp.name)} ${sp.name} ${bone} (${have}/${sp.fossilsNeeded})`, kind: 'good', fossil });
     }
   }
 }
