@@ -110,6 +110,11 @@ Always bump `SAVE_VERSION` and add a step to `migrate()` when the state shape ch
   - 58 stickers: 16 species, 16 babies, a trophy room of 12 scenario medals, and 14 park moments.
   - The album lives in localStorage (`dino-tycoon:stickers`), per device and shared across saves. It isn't part of save exports.
   - `earnedStickers(state)` is checked every 2 s and after each event. Only the dig mini-game awards the hand-dug fossil sticker.
+- **Day and night** (`render/daylight.ts`, night layer in `WeatherScene`):
+  - Dusk from 17:00, full dark 20:30–05:00, dawn until 07:00, with a warm tint at sunset and sunrise.
+  - The darkness is a RenderTexture with soft light stamps erased around path lamps (new decor `lamp`), lit buildings, the gate and jeeps. It's redrawn only when the view, the darkness or the lights change.
+  - Setting: `nightDarkness`, where 0 turns it off.
+  - `isAsleep` (21:00–05:00): animals stay put and show "Zz", unless they're nocturnal (Velociraptor, Compsognathus), escaped, or hungry. Sleeping flyers settle on the ground.
 - **Placing dinos:** a fence gap is circled in red with a "Close gap · $x" button that fences or repairs it and releases the dino.
 - **Panels:** 👥 People, 🔔 alert log (newest first, filters, unread badge), 🏆 Goals medal track, 📖 Dino Guide.
 - **Scenarios:** First Steps (tutorial), Fossil Fever, Storm Coast, Rex Rising, each with 3 rounds of milestones; plus Sandbox. You can keep playing after winning or losing.

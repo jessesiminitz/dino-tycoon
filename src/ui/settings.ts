@@ -6,10 +6,12 @@ export interface Settings {
   musicVolume: number;
   /** Uncover fossil finds by brushing away sand (off: finds just appear). */
   digGame: boolean;
+  /** How dark nights get, 0 (off) to 1. */
+  nightDarkness: number;
 }
 
 const KEY = 'dino-tycoon:settings';
-const DEFAULTS: Settings = { sfx: true, sfxVolume: 0.7, music: true, musicVolume: 0.35, digGame: true };
+const DEFAULTS: Settings = { sfx: true, sfxVolume: 0.7, music: true, musicVolume: 0.35, digGame: true, nightDarkness: 1 };
 
 type Listener = (s: Settings) => void;
 const listeners = new Set<Listener>();
@@ -55,7 +57,13 @@ export function renderSettings(root: HTMLElement): void {
     </label>
     <label class="setting">
       <input type="checkbox" data-key="digGame" ${s.digGame ? 'checked' : ''}> Fossil dig mini-game
+    </label>
+    <label class="setting">
+      🌙 Night darkness
+      <input type="range" min="0" max="1" step="0.1" value="${s.nightDarkness}" data-key="nightDarkness" aria-label="Night darkness">
     </label>`;
+  // Two columns where there's room, so the pause menu still fits on a small phone held sideways.
+  root.classList.add('settings-grid');
   root.oninput = (e) => {
     const el = e.target as HTMLInputElement;
     const key = el.dataset.key as keyof Settings | undefined;

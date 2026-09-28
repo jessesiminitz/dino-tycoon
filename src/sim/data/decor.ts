@@ -1,4 +1,4 @@
-export type DecorKind = 'tree' | 'palm' | 'flowers' | 'fountain' | 'bench';
+export type DecorKind = 'tree' | 'palm' | 'flowers' | 'fountain' | 'bench' | 'lamp';
 
 export interface DecorType {
   kind: DecorKind;
@@ -17,6 +17,7 @@ export const DECOR_TYPES: Record<DecorKind, DecorType> = {
   flowers: { kind: 'flowers', name: 'Flower bed', cost: 120, upkeep: 0, charm: 1, description: 'A splash of colour.' },
   bench: { kind: 'bench', name: 'Bench', cost: 80, upkeep: 0, charm: 1, description: 'Somewhere to rest tired feet.' },
   fountain: { kind: 'fountain', name: 'Fountain', cost: 900, upkeep: 10, charm: 3, description: 'A splashing centrepiece visitors love.' },
+  lamp: { kind: 'lamp', name: 'Path lamp', cost: 60, upkeep: 1, charm: 1, description: 'Lights up the paths after dark.' },
 };
 
 export const DECOR_KINDS = Object.keys(DECOR_TYPES) as DecorKind[];

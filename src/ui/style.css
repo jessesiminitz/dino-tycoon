@@ -1332,8 +1332,8 @@ body:not(.in-park) #info {
   }
 
   .pause-card .menu-btn {
-    min-height: 40px;
-    padding: 4px 12px;
+    min-height: 36px;
+    padding: 3px 12px;
     font-size: 14px;
   }
 
@@ -2254,4 +2254,11 @@ body:not(.in-park) #info {
 .sticker-grid.medals .sticker.locked small,
 .sticker-grid.medals .sticker.locked figcaption {
   color: var(--text);
+}
+
+/* Settings in two columns where there's room (keeps the pause menu short on phones). */
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0 16px;
 }

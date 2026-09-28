@@ -226,6 +226,17 @@ export function paintFountain(): HTMLCanvasElement {
   });
 }
 
+/** Path lamp: a slim dark post with a lantern on top. */
+export function paintLamp(): HTMLCanvasElement {
+  return paintSprite(10, 24, (px) => {
+    for (let y = 8; y < 22; y++) px(5, y, '#3b3b3b');
+    for (const x of [3, 4, 5, 6, 7]) px(x, 22, '#2b2b2b'); // foot
+    for (let y = 3; y < 8; y++) for (let x = 3; x < 8; x++) px(x, y, x === 3 || x === 7 || y === 3 ? '#3b3b3b' : '#f7d77a'); // lantern
+    for (const x of [4, 5, 6]) px(x, 2, '#3b3b3b');
+    px(5, 1, '#3b3b3b');
+  });
+}
+
 export function paintBench(): HTMLCanvasElement {
   return paintSprite(16, 12, (px) => {
     for (let x = 2; x < 14; x++) {

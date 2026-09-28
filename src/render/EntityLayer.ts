@@ -8,6 +8,7 @@ import { FEEDER_TYPES, type FeederKind } from '../sim/data/feeders';
 import { habitatOf, SPECIES, SPECIES_IDS, type SpeciesId } from '../sim/data/species';
 import { paintDino, paintEgg } from './dinoArt';
 import { hoursToHatch, WOBBLE_HOURS } from '../sim/systems/breeding';
+import { isAsleep } from '../sim/systems/dinos';
 import type { CareEffect } from '../sim/systems/care';
 import { TILE } from './tileset';
 import { paintRows } from './pixels';
@@ -21,6 +22,7 @@ const WATERLINE = 0.62;
 /** How high flying reptiles hover, in world pixels. */
 const FLY_HEIGHT = 14;
 const JEEP_KEY = 'jeep';
+const ZZZ = ['XXX', '..X', '.X.', 'XXX'];
 /** How long hearts or a "Nope!" stay up, in ms. */
 const EFFECT_MS = 1100;
 const HEART = ['.X.X.', 'XXXXX', '.XXX.', '..X..'];
@@ -404,6 +406,7 @@ export class EntityLayer {
       const hop = d.baby ? -2 : -1;
       const bob = moving ? (this.sim.stepProgress < 0.5 ? hop : 0) : Math.sin(time / 600 + d.id) > 0.9 ? -1 : 0;
       const habitat = habitatOf(d.species);
+      const asleep = isAsleep(state, d);
       if (habitat === 'water') {
         // Swimming: flippers keep stroking; only the top of the animal shows above the water.
         img.setTexture(dinoKey(d.species, Math.floor(time / 450 + d.id) % 2 === 0 ? 0 : 1, d.baby));
@@ -412,9 +415,10 @@ export class EntityLayer {
         img.setPosition(Math.round(x), Math.round(y) - 2 + (img.height - shown) + (Math.sin(time / 700 + d.id) > 0.6 ? 1 : 0));
         sh.lineStyle(1, 0xe8f6fb, 0.75).strokeEllipse(Math.round(x), Math.round(y) - 2, img.width * 0.8, 4);
       } else if (habitat === 'air') {
-        // Flying: always flapping, bobbing about a tile up, with a shadow on the ground below.
-        img.setTexture(dinoKey(d.species, Math.floor(time / 240 + d.id) % 2 === 0 ? 0 : 1, d.baby));
-        const lift = FLY_HEIGHT + Math.round(Math.sin(time / 520 + d.id) * 2);
+        // Flying: always flapping, bobbing about a tile up, with a shadow on the ground below (asleep: settled on the ground).
+        const flapping = !asleep;
+        img.setTexture(dinoKey(d.species, flapping && Math.floor(time / 240 + d.id) % 2 === 1 ? 1 : 0, d.baby));
+        const lift = flapping ? FLY_HEIGHT + Math.round(Math.sin(time / 520 + d.id) * 2) : 0;
         img.setPosition(Math.round(x), Math.round(y) - lift);
         sh.fillEllipse(Math.round(x), Math.round(y) - 1, img.width * 0.45, 3);
       } else {
@@ -438,6 +442,15 @@ export class EntityLayer {
         // Sick: green cross.
         g.fillStyle(0x1b1b14, 1).fillRect(cx - 3, top - 7, 7, 7);
         g.fillStyle(0x6fd36a, 1).fillRect(cx - 2, top - 5, 5, 1).fillRect(cx, top - 6, 1, 5);
+      } else if (asleep) {
+        // Zz: little letters drifting up from a sleeping animal.
+        for (let i = 0; i < 2; i++) {
+          const t = ((time / 1400 + i * 0.5 + d.id * 0.13) % 1 + 1) % 1;
+          const zx = cx + 3 + i * 4 + Math.round(t * 3);
+          const zy = top - Math.round(t * 8) + 2;
+          g.fillStyle(0xf4ecd2, 1 - t);
+          for (const [row, bits] of ZZZ.entries()) for (let c = 0; c < bits.length; c++) if (bits[c] === 'X') g.fillRect(zx + c, zy + row, 1, 1);
+        }
       } else if (d.hunger >= 75 || d.health < 50) {
         // Red "!" above animals that need help.
         g.fillStyle(0x1b1b14, 1).fillRect(Math.round(x) - 2, top - 7, 4, 9);

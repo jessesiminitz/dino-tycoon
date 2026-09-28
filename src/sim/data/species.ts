@@ -38,6 +38,8 @@ export interface Species {
   hungerRate: number;
   /** Land unless set. */
   habitat?: Habitat;
+  /** Active at night instead of sleeping. */
+  nocturnal?: boolean;
   /** Food units eaten per meal from a feeder. */
   meal: number;
   /** Minimum fence strength that holds this species (escapes arrive in Milestone 5). */
@@ -131,7 +133,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
     art: { template: 'trike', body: '#7d8a96', dark: '#4b5560', accent: '#d9c7a3' },
   },
   compsognathus: {
-    id: 'compsognathus', name: 'Compsognathus', diet: 'carnivore', price: 2500, size: 1,
+    id: 'compsognathus', name: 'Compsognathus', diet: 'carnivore', nocturnal: true, price: 2500, size: 1,
     hungerRate: 3, meal: 6, fenceNeeded: 1, space: 6, appeal: 1, pace: 1, social: true, starter: true,
     period: 'Late Jurassic', lengthM: 1,
     fact: 'About the size of a turkey. Fossils have been found with lizards in their stomachs, a quick hunter of small prey.',
@@ -191,7 +193,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
     art: { template: 'ankylo', body: '#7a6f5a', dark: '#4a4336', accent: '#b0a17a' },
   },
   velociraptor: {
-    id: 'velociraptor', name: 'Velociraptor', diet: 'carnivore', price: 15000, size: 2,
+    id: 'velociraptor', name: 'Velociraptor', diet: 'carnivore', nocturnal: true, price: 15000, size: 2,
     hungerRate: 2.8, meal: 10, fenceNeeded: 3, space: 16, appeal: 7, pace: 1, social: true, starter: false,
     period: 'Late Cretaceous', lengthM: 2,
     fact: 'Really about the size of a large dog, and feathered. It had a large sickle-shaped claw on each foot.',

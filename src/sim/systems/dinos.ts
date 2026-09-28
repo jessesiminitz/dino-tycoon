@@ -1,4 +1,4 @@
-import type { Dino, Feeder, GameState } from '../GameState';
+import { calendar, type Dino, type Feeder, type GameState } from '../GameState';
 import { FEEDER_TYPES } from '../data/feeders';
 import { habitatOf, SPECIES } from '../data/species';
 import { isLand, Terrain } from '../terrain';
@@ -42,6 +42,17 @@ const MAX_DUNG_PER_DINO = 4;
 /** Droppings per animal before the paddock bothers them. */
 const DUNG_BOTHERS = 2;
 const DUNG_UNHAPPY = 8;
+
+/** Night-time, when most animals sleep: from 21:00 until 05:00. */
+export function isNight(state: GameState): boolean {
+  const { hour } = calendar(state);
+  return hour >= 21 || hour < 5;
+}
+
+/** Asleep: night-time, not a night-owl, not on the loose, and not hungry enough to get up for food. */
+export function isAsleep(state: GameState, d: Dino): boolean {
+  return isNight(state) && !SPECIES[d.species].nocturnal && !d.escaped && d.hunger < HUNGRY;
+}
 
 /** Starving or miserable animals go looking for a way out. */
 export function isRestless(d: Dino): boolean {
@@ -144,6 +155,10 @@ export function stepDinos(ctx: SimContext): void {
 
     // Big animals move less often than small ones; the id offsets keep herds out of lockstep.
     if (held.has(d.id) || (stepNo + d.id) % sp.pace !== 0) continue;
+    if (isAsleep(state, d)) {
+      d.path = []; // curled up for the night
+      continue;
+    }
     if (d.path.length === 0) d.path = plan(d, here) ?? [];
     const next = d.path.shift();
     if (next === undefined) continue;

@@ -228,7 +228,7 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
   }
   for (const kind of DECOR_KINDS) {
     const t = DECOR_TYPES[kind];
-    const swatch = { tree: '#4f9a3a', palm: '#86c25c', flowers: '#ff9fb8', fountain: '#8fd3ea', bench: '#9c6b3c' }[kind];
+    const swatch = { tree: '#4f9a3a', palm: '#86c25c', flowers: '#ff9fb8', fountain: '#8fd3ea', bench: '#9c6b3c', lamp: '#f7d77a' }[kind];
     const b = pickButton(swatch, t.name.replace(' tree', ''), formatMoney(t.cost));
     b.dataset.decor = kind;
     b.addEventListener('click', () => ui.setDecorKind(kind));

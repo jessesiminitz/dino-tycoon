@@ -6,6 +6,7 @@ import { isLand, Terrain } from '../sim/terrain';
 import {
   FOREST_TREES,
   paintBench,
+  paintLamp,
   paintBroadleaf,
   paintFlowerBed,
   paintFountain,
@@ -69,6 +70,7 @@ export class SceneryLayer {
     tex(decorKey('flowers'), () => paintFlowerBed(5));
     tex(decorKey('fountain'), paintFountain);
     tex(decorKey('bench'), paintBench);
+    tex(decorKey('lamp'), paintLamp);
 
     const { map } = sim.state;
     const { width, height, tiles } = map;
