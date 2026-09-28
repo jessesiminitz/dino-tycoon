@@ -122,7 +122,7 @@ describe('treats, pats and photos', () => {
       delete d.lastPatHour;
     }
     const m = migrate(raw)!;
-    expect(m.version).toBe(14);
+    expect(m.version).toBe(15);
     expect(m.stats.photos).toBe(0);
     expect(m.dinos.every((d) => careJoy(m, d) === 0)).toBe(true);
   });

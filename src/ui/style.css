@@ -1929,3 +1929,72 @@ body:not(.in-park) #info {
     opacity: 0;
   }
 }
+
+/* ---------- Park requests ---------- */
+
+.requests-card {
+  width: min(100%, 640px);
+}
+
+.requests-body h3 {
+  margin: 12px 0 4px;
+  font-size: 13px;
+  color: var(--accent-ink);
+}
+
+.request-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 8px;
+  padding: 8px 10px;
+  background: var(--tint);
+  border: 2px solid var(--panel-edge);
+  border-left: 4px solid var(--accent);
+  border-radius: 4px;
+}
+
+.request-card.done {
+  border-left-color: var(--good);
+  opacity: 0.8;
+}
+
+.request-card.missed {
+  border-left-color: var(--muted);
+  opacity: 0.6;
+}
+
+.request-card p {
+  margin: 0 0 4px;
+}
+
+.request-card small {
+  display: block;
+  font-size: 11px;
+}
+
+.request-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.request-reward {
+  margin-top: 2px;
+  font-weight: bold;
+  color: var(--accent-ink);
+}
+
+.need-bar {
+  display: block;
+  height: 7px;
+  margin: 2px 0 4px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+}
+
+.need-bar span {
+  display: block;
+  height: 100%;
+  background: var(--good);
+}

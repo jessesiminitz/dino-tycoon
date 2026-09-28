@@ -173,7 +173,7 @@ describe('baby dinosaurs', () => {
     delete raw.stats.hatched;
     for (const d of raw.dinos) delete d.baby;
     const m = migrate(raw)!;
-    expect(m.version).toBe(14);
+    expect(m.version).toBe(15);
     expect(m.eggs).toEqual([]);
     expect(m.dinos.every((d) => d.baby === false)).toBe(true);
     expect(m.stats.hatched).toBe(0);

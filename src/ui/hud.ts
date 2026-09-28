@@ -9,6 +9,7 @@ import { mountParkPanel } from './parkPanel';
 import { mountGuide } from './guide';
 import { mountLog } from './log';
 import { mountPeople } from './people';
+import { mountRequests } from './requests';
 import { SCENARIOS } from '../sim/data/scenarios';
 import { DECOR_KINDS, DECOR_TYPES } from '../sim/data/decor';
 import type { Mode, UiState } from './uiState';
@@ -361,6 +362,7 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
   goalsBtn.addEventListener('click', () => parkPanel.open('goals'));
   mountLog(sim);
   mountPeople(sim, ui);
+  mountRequests(sim);
   const guide = mountGuide(sim);
   $('btn-guide').addEventListener('click', () => guide.open());
 

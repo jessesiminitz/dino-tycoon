@@ -17,7 +17,7 @@ export const MAP_WIDTH = 64;
 export const MAP_HEIGHT = 48;
 export const STARTING_MONEY = 50_000;
 export const START_HOUR = 8;
-export const SAVE_VERSION = 14;
+export const SAVE_VERSION = 15;
 
 export interface Dino {
   id: number;
@@ -48,6 +48,28 @@ export interface Dino {
   /** Game-hours of the last treat and the last pat that cheered it up (see systems/care.ts). */
   lastTreatHour: number;
   lastPatHour: number;
+}
+
+export type RequestKind = 'see' | 'food' | 'visitors' | 'review' | 'photo' | 'treats' | 'clean' | 'feeders';
+
+/** A short goal from someone visiting the park (see systems/requests.ts). */
+export interface ParkRequest {
+  id: number;
+  kind: RequestKind;
+  icon: string;
+  text: string;
+  /** How much is needed (visitors, treats, places to eat...). */
+  target: number;
+  progress: number;
+  species?: SpeciesId;
+  /** For photo requests: any baby will do. */
+  baby?: boolean;
+  /** For review requests: the star rating needed. */
+  stars?: number;
+  createdHour: number;
+  expiresHour: number;
+  reward: { money: number; reputation: number };
+  status: 'active' | 'done' | 'missed';
 }
 
 /** Long ago: never treated or patted. */
@@ -209,6 +231,8 @@ export interface Stats {
   hatched: number;
   /** Dino photos taken. */
   photos: number;
+  /** Park requests completed. */
+  requestsDone: number;
   /** Last game day the park was warned about accidents, and about litter. */
   messDay: number;
   litterDay: number;
@@ -268,6 +292,8 @@ export interface GameState {
   reviews: Review[];
   /** Eggs waiting to hatch. */
   eggs: Egg[];
+  /** Today's park requests, plus recently finished ones. */
+  requests: ParkRequest[];
   /** Next id for dinos, feeders and other entities. */
   nextId: number;
 }
@@ -302,7 +328,7 @@ export function newGame(seed: number): GameState {
     fossils: {},
     stormHours: 0,
     scenario: { id: 'sandbox', status: 'free', round: 0, roundStart: 1, earned: [] },
-    stats: { bestDayVisitors: 0, escapes: 0, inspectionsPassed: 0, restroomComplaintDay: 0, hatched: 0, photos: 0, messDay: 0, litterDay: 0 },
+    stats: { bestDayVisitors: 0, escapes: 0, inspectionsPassed: 0, restroomComplaintDay: 0, hatched: 0, photos: 0, requestsDone: 0, messDay: 0, litterDay: 0 },
     tutorialStep: null,
     fossilBeds: [],
     decor: [],
@@ -311,6 +337,7 @@ export function newGame(seed: number): GameState {
     messes: [],
     reviews: [],
     eggs: [],
+    requests: [],
     nextId: 1,
   };
   state.fossilBeds = bedsFor(state);
@@ -444,6 +471,12 @@ export function migrate(raw: { version?: number } & Record<string, unknown>): Ga
     for (const d of state.dinos) Object.assign(d, { lastTreatHour: NEVER, lastPatHour: NEVER });
     state.stats.photos = 0;
     raw.version = 14;
+  }
+  if (raw.version === 14) {
+    const state = raw as unknown as GameState;
+    state.requests = [];
+    state.stats.requestsDone = 0;
+    raw.version = 15;
   }
   return raw.version === SAVE_VERSION ? (raw as unknown as GameState) : null;
 }

@@ -1,4 +1,5 @@
 import { patDino, treatDino, type CareEffect } from './systems/care';
+import { noteRequestAction } from './systems/requests';
 import { NEVER } from './GameState';
 import type { GameState } from './GameState';
 import { FENCE_REFUND, FENCE_TYPES, type FenceTypeId } from './data/fences';
@@ -368,13 +369,18 @@ export function applyCommand(state: GameState, cmd: Command): CommandResult {
       return { ok: true, cost: -refund, message: `Removed ${DECOR_TYPES[d.kind].name.toLowerCase()}` };
     }
 
-    case 'treatDino':
-      return treatDino(state, cmd.id);
+    case 'treatDino': {
+      const r = treatDino(state, cmd.id);
+      if (r.ok) noteRequestAction(state, 'treat');
+      return r;
+    }
     case 'patDino':
       return patDino(state, cmd.id);
     case 'photoDino': {
-      if (!state.dinos.some((d) => d.id === cmd.id)) return { ok: false, message: 'That dinosaur is gone' };
+      const d = state.dinos.find((x) => x.id === cmd.id);
+      if (!d) return { ok: false, message: 'That dinosaur is gone' };
       state.stats.photos++;
+      noteRequestAction(state, 'photo', d);
       return { ok: true, cost: 0, message: 'Say cheese!' };
     }
 

@@ -1,0 +1,41 @@
+// The park requests board on a phone: some active, one done, one missed.
+import puppeteer from 'puppeteer-core';
+const OUT = new URL('.', import.meta.url).pathname;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const [W, H] = (process.argv[2] ?? '667x375').split('x').map(Number);
+const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+const page = await browser.newPage();
+const errors = []; page.on('pageerror', (e) => errors.push(e.message));
+await page.setViewport({ width: W, height: H, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'load' });
+await sleep(1200);
+const setup = await page.evaluate(async () => {
+  const { sim } = window.__dino; const s = sim.state; s.money = 1e6; sim.setSpeed(0);
+  s.parcelsOwned = s.parcelsOwned.map(() => true);
+  const { x: ex, y: ey } = s.entrance; const w = s.map.width;
+  const A = { x: ex - 5, y: ey - 11 }, C = { x: ex + 5, y: ey - 4 };
+  const edges = [];
+  for (let x = A.x; x < C.x; x++) edges.push({ dir: 'h', x, y: A.y }, { dir: 'h', x, y: C.y });
+  for (let y = A.y; y < C.y; y++) edges.push({ dir: 'v', x: A.x, y }, { dir: 'v', x: C.x, y });
+  sim.dispatch({ type: 'buildFences', edges, fence: 4 });
+  sim.dispatch({ type: 'placeFeeder', kind: 'plants', x: A.x + 1, y: A.y + 1 });
+  for (const dx of [3, 6]) sim.dispatch({ type: 'buyDino', species: 'protoceratops', x: A.x + dx, y: A.y + 3 });
+  const tiles = []; for (let x = ex - 6; x <= ex + 6; x++) tiles.push((ey - 3) * w + x); tiles.push((ey - 2) * w + ex, (ey - 1) * w + ex);
+  sim.dispatch({ type: 'buildPaths', tiles });
+  sim.dispatch({ type: 'placeBuilding', kind: 'restaurant', x: ex - 3, y: ey - 2 });
+  // Run to the morning arrivals, then play a bit.
+  for (let i = 0; i < 16 * 24; i++) sim.step();
+  const [d] = s.dinos;
+  sim.dispatch({ type: 'treatDino', id: d.id });
+  return { requests: s.requests.map((r) => `${r.icon} ${r.status} ${r.progress}/${r.target}: ${r.text}`), done: s.stats.requestsDone };
+});
+console.log(JSON.stringify(setup, null, 1));
+await sleep(300);
+const badge = await page.$eval('#requests-badge', (b) => ({ text: b.textContent, hidden: b.classList.contains('hidden') }));
+console.log('badge:', badge);
+await (await page.$('#btn-requests')).tap(); await sleep(400);
+const fit = await page.evaluate(() => { const c = document.querySelector('#requests .modal-card').getBoundingClientRect(); return { top: Math.round(c.top), bottom: Math.round(c.bottom), vh: innerHeight, cards: document.querySelectorAll('#requests .request-card').length }; });
+console.log('panel:', fit);
+await page.screenshot({ path: `${OUT}requests-${W}.png` });
+console.log('errors:', errors.length ? errors : 'none');
+await browser.close();

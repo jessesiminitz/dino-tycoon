@@ -29,6 +29,7 @@
         <span id="hud-clock" class="hud-stat">Day 1 · 08:00</span>
         <span id="hud-dinos" class="hud-stat">0 dinos</span>
         <button id="btn-people" class="hud-btn" aria-label="People">👥<span>People</span><b id="hud-guests" class="hud-count">0</b></button>
+        <button id="btn-requests" class="hud-btn" aria-label="Park requests">📋<span>Requests</span><b id="requests-badge" class="badge hidden"></b></button>
         <button id="btn-park" class="hud-btn" aria-label="Park report">📊<span>Park</span></button>
         <button id="btn-guide" class="hud-btn" aria-label="Dino Guide">📖<span>Guide</span></button>
         <button id="btn-goals" class="hud-btn" aria-label="Goals">🏆<span>Goals</span></button>
@@ -91,6 +92,13 @@
           <button class="modal-close" aria-label="Close">✕</button>
         </header>
         <div class="species-grid"></div>
+      </div>
+    </div>
+
+    <div id="requests" class="modal hidden" role="dialog" aria-label="Park requests">
+      <div class="modal-card requests-card">
+        <header class="modal-head"><h2>📋 Park requests</h2><button class="modal-close" aria-label="Close">✕</button></header>
+        <div class="panel-body requests-body"></div>
       </div>
     </div>
 

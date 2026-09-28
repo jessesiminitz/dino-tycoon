@@ -46,14 +46,15 @@ End commit messages with the Co-Authored-By / Claude-Session trailers the harnes
 - `src/audio/`: `audio.ts` (sfx, rain, piano synth, shuffled playlist), `ragNotes.ts` (decoder and alphabet), `rags.ts` (generated, lazy-loaded chunk).
 - `src/save/storage.ts`: 3 IndexedDB slots plus a localStorage mirror, and a boot directive (used to return to the park after an update reload).
 
-### Save format: **v14**
+### Save format: **v15**
 
-Always bump `SAVE_VERSION` and add a step to `migrate()` when the state shape changes, then update the version assertions in the tests (`tests/{dinos,island,visitorlife,mess}.test.ts` check `toBe(14)`). Recent steps:
+Always bump `SAVE_VERSION` and add a step to `migrate()` when the state shape changes, then update the version assertions in the tests (`tests/{dinos,island,visitorlife,mess}.test.ts` check `toBe(15)`). Recent steps:
 - v10 added the log.
 - v11 added visitor names, thoughts and thirst, soda and snack fields, plus `messes` and `reviews`.
 - v12 added scenario `round`, `roundStart` and `earned`. Saves that had already won carry on into Silver.
 - v13 added `Dino.baby`, `eggs` and `stats.hatched`.
 - v14 added `Dino.lastTreatHour`, `Dino.lastPatHour` and `stats.photos`, plus the `treats` expense category.
+- v15 added `requests` and `stats.requestsDone`.
 
 ## Features in place (all deployed)
 
@@ -79,6 +80,12 @@ Always bump `SAVE_VERSION` and add a step to `migrate()` when the state shape ch
   - Effects are hearts plus a happy hop, or a red "Nope!" sign, with chirp, snap and shutter sounds.
   - 📷 snapshots the canvas around the dino (without the selection ring), frames it as a polaroid with a caption, and offers `navigator.share` (Save Image on iOS), a download, or press-and-hold saving.
   - `hud.showInfo` accepts an array of actions (small icon buttons plus one main button).
+- **Park requests** (`systems/requests.ts`, `ui/requests.ts`, the 📋 button with a badge):
+  - Up to 3 at a time, arriving at 08:00, 12:00 and 16:00, each a different kind and only ever what the park can manage.
+  - Kinds: see a species from a path, places to eat, visitors today (+25% stretch), a 4- or 5-star review, a photo (baby or species), N treats, the mayor (spotless paths when they arrive), the vet (feeders half full when they arrive).
+  - They pay cash, and reputation only for active ones. Missed ones expire quietly.
+  - Completion is checked hourly and after every successful command.
+  - Requests use their own RNG (seeded from the seed and hour), so the rest of the sim is unaffected.
 - **Placing dinos:** a fence gap is circled in red with a "Close gap · $x" button that fences or repairs it and releases the dino.
 - **Panels:** 👥 People, 🔔 alert log (newest first, filters, unread badge), 🏆 Goals medal track, 📖 Dino Guide.
 - **Scenarios:** First Steps (tutorial), Fossil Fever, Storm Coast, Rex Rising, each with 3 rounds of milestones; plus Sandbox. You can keep playing after winning or losing.

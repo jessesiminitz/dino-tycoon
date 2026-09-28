@@ -5,6 +5,7 @@ import { Rng } from './rng';
 import type { GameEvent, SimContext } from './systems/context';
 import { hourlyDinos, stepDinos, STEPS_PER_HOUR } from './systems/dinos';
 import { hourlyBreeding } from './systems/breeding';
+import { hourlyRequests, updateRequests } from './systems/requests';
 import { hourlyVisitors, stepVisitors } from './systems/visitors';
 import { hourlyEconomy } from './systems/economy';
 import { hourlyFences, hourlyHealth, stepEscapes } from './systems/incidents';
@@ -94,6 +95,7 @@ export class Simulation {
       hourlyFossils(ctx);
       hourlyEconomy(ctx);
       hourlyScenario(ctx);
+      hourlyRequests(ctx);
     }
     state.rngState = rng.snapshot;
   }
@@ -101,6 +103,8 @@ export class Simulation {
   dispatch(cmd: Command): CommandResult {
     const result = applyCommand(this.state, cmd);
     if (result.ok) {
+      // Building a stall or buying a species can meet a request straight away.
+      updateRequests(this.state, (e) => this.emitEvent(e));
       this.worldRevision++;
       this.emit();
     }
