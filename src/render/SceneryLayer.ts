@@ -1,15 +1,11 @@
 import Phaser from 'phaser';
 import type { Simulation } from '../sim/Simulation';
-import type { DecorKind } from '../sim/data/decor';
+import { DECOR_KINDS, type DecorKind } from '../sim/data/decor';
 import { hash2 } from '../sim/rng';
 import { isLand, Terrain } from '../sim/terrain';
 import {
   FOREST_TREES,
-  paintBench,
-  paintLamp,
-  paintBroadleaf,
-  paintFlowerBed,
-  paintFountain,
+  paintDecor,
   paintMountain,
   paintPalm,
   paintBush,
@@ -65,12 +61,7 @@ export class SceneryLayer {
     for (let v = 0; v < 6; v++) tex(`mountain-${v}`, () => paintMountain(v * 13 + 3));
     for (let v = 0; v < 3; v++) tex(`bush-${v}`, () => paintBush(v));
     tex('volcano', paintVolcano);
-    tex(decorKey('tree'), () => paintBroadleaf(99));
-    tex(decorKey('palm'), () => paintPalm(1));
-    tex(decorKey('flowers'), () => paintFlowerBed(5));
-    tex(decorKey('fountain'), paintFountain);
-    tex(decorKey('bench'), paintBench);
-    tex(decorKey('lamp'), paintLamp);
+    for (const kind of DECOR_KINDS) tex(decorKey(kind), () => paintDecor(kind));
 
     const { map } = sim.state;
     const { width, height, tiles } = map;

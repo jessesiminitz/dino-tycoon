@@ -1,4 +1,6 @@
 import { hash2 } from '../sim/rng';
+import type { DecorKind } from '../sim/data/decor';
+import type { BuildingKind } from '../sim/data/economy';
 import { paintSprite, type Plot } from './pixels';
 
 /**
@@ -589,4 +591,46 @@ export function paintBasketShop(): HTMLCanvasElement {
     for (let y = 21; y <= 29; y++) for (let x = 12; x < 16; x++) px(x, y, y === 21 ? '#f4ecd2' : x === 12 ? '#4a3018' : '#6b4a2a');
     px(15, 25, '#f2c14e');
   });
+}
+
+/** Each building is shaped like what it offers, so it's obvious at a glance. */
+export function paintBuilding(kind: BuildingKind): HTMLCanvasElement {
+  switch (kind) {
+    case 'restaurant':
+      return paintFriesStand();
+    case 'snackstall':
+      return paintPopcornStand();
+    case 'giftshop':
+      return paintBasketShop();
+    case 'restroom':
+      return paintPortaPotties();
+    case 'trashcan':
+      return paintTrashCan();
+    case 'station':
+      return paintStation();
+    case 'tower':
+      return paintTower();
+    case 'petting':
+      return paintPettingPen();
+    case 'digsite':
+      return paintDigSite();
+  }
+}
+
+/** Garden decorations, as placed in the park. */
+export function paintDecor(kind: DecorKind): HTMLCanvasElement {
+  switch (kind) {
+    case 'tree':
+      return paintBroadleaf(99);
+    case 'palm':
+      return paintPalm(1);
+    case 'flowers':
+      return paintFlowerBed(5);
+    case 'fountain':
+      return paintFountain();
+    case 'bench':
+      return paintBench();
+    case 'lamp':
+      return paintLamp();
+  }
 }

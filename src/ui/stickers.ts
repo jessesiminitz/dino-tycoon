@@ -63,7 +63,7 @@ function art(s: Sticker): string {
 }
 
 /** 📒 The sticker book, and awarding stickers as the park earns them. */
-export function mountStickers(sim: Simulation, toast: (text: string) => void): void {
+export function mountStickers(sim: Simulation, toast: (text: string) => void): { open(): void; hasNew(): boolean } {
   const modal = document.getElementById('stickers')!;
   const body = modal.querySelector<HTMLElement>('.stickers-body')!;
   const title = modal.querySelector<HTMLElement>('.stickers-count')!;
@@ -105,13 +105,13 @@ export function mountStickers(sim: Simulation, toast: (text: string) => void): v
     }).join('');
   };
 
-  document.getElementById('btn-stickers')!.addEventListener('click', () => {
+  const open = () => {
     render();
     modal.classList.remove('hidden');
     // Looked at: the NEW! shine stays for this visit to the book, then goes.
     album.fresh = [];
     save();
-  });
+  };
   const close = () => modal.classList.add('hidden');
   modal.querySelector('.modal-close')!.addEventListener('click', close);
   modal.addEventListener('click', (e) => {
@@ -124,4 +124,5 @@ export function mountStickers(sim: Simulation, toast: (text: string) => void): v
   check();
   window.setInterval(check, 2000);
   sim.onEvent(() => check());
+  return { open, hasNew: () => album.fresh.length > 0 };
 }

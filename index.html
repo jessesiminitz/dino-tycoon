@@ -25,16 +25,12 @@
     <div id="hud" class="hud">
       <div class="hud-group">
         <span class="hud-title">🦕 Dino Tycoon</span>
-        <span id="hud-money" class="hud-stat">$0</span>
-        <span id="hud-clock" class="hud-stat">Day 1 · 08:00</span>
-        <span id="hud-dinos" class="hud-stat">0 dinos</span>
+        <span class="hud-stats"><span id="hud-money" class="hud-stat">$0</span><span id="hud-clock" class="hud-stat">Day 1 · 08:00</span></span>
+        <button id="btn-park" class="hud-btn" aria-label="Park: goals, money and staff">📊<span>Park</span></button>
         <button id="btn-people" class="hud-btn" aria-label="People">👥<span>People</span><b id="hud-guests" class="hud-count">0</b></button>
         <button id="btn-requests" class="hud-btn" aria-label="Park requests">📋<span>Requests</span><b id="requests-badge" class="badge hidden"></b></button>
-        <button id="btn-park" class="hud-btn" aria-label="Park report">📊<span>Park</span></button>
-        <button id="btn-guide" class="hud-btn" aria-label="Dino Guide">📖<span>Guide</span></button>
-        <button id="btn-goals" class="hud-btn" aria-label="Goals">🏆<span>Goals</span></button>
-        <button id="btn-stickers" class="hud-btn" aria-label="Sticker book">📒<span>Stickers</span><b id="stickers-badge" class="badge hidden"></b></button>
-        <button id="btn-log" class="hud-btn" aria-label="Park log">🔔<span>Log</span><b id="log-badge" class="badge hidden"></b></button>
+        <button id="btn-book" class="hud-btn" aria-label="Dino Guide and sticker book">📖<span>Book</span><b id="stickers-badge" class="badge hidden"></b></button>
+        <button id="btn-log" class="hud-btn" aria-label="Park news">🔔<span>News</span><b id="log-badge" class="badge hidden"></b></button>
       </div>
       <div class="hud-group" role="group" aria-label="Game speed">
         <button class="speed-btn" data-speed="0" aria-label="Pause">❚❚</button>
@@ -51,11 +47,9 @@
     </div>
 
     <div class="toolbar">
-      <div id="fence-picker" class="hud-group picker hidden" role="group" aria-label="Fence type"></div>
-      <div id="feeder-picker" class="hud-group picker hidden" role="group" aria-label="Feeder type"></div>
-      <div id="building-picker" class="hud-group picker hidden" role="group" aria-label="Building type"></div>
-      <div id="path-picker" class="hud-group picker hidden" role="group" aria-label="Path tool"></div>
-      <div id="decor-picker" class="hud-group picker hidden" role="group" aria-label="Garden items"></div>
+      <div id="pick-chip" class="hud-group pick-chip hidden">
+        <button aria-label="Change what you're building"><img alt="" /><span><b></b><small></small></span><em>Change</em></button>
+      </div>
       <div class="hud-group tools" role="group" aria-label="Tools">
         <button id="btn-catalog" class="tool-btn">🦖<span>Dinos</span></button>
         <button class="tool-btn" data-mode="feeder">🍖<span>Feeder</span></button>
@@ -87,7 +81,7 @@
 
 
     <div id="catalog" class="modal hidden" role="dialog" aria-label="Buy dinosaurs">
-      <div class="modal-card">
+      <div class="modal-card sheet">
         <header class="modal-head">
           <h2>Buy Dinosaurs</h2>
           <button class="modal-close" aria-label="Close">✕</button>
@@ -127,14 +121,14 @@
     </div>
 
     <div id="stickers" class="modal hidden" role="dialog" aria-label="Sticker book">
-      <div class="modal-card stickers-card">
-        <header class="modal-head"><h2>📒 Sticker book <small class="stickers-count"></small></h2><button class="modal-close" aria-label="Close">✕</button></header>
+      <div class="modal-card sheet stickers-card">
+        <header class="modal-head"><nav class="tabs book-tabs" role="tablist"><button class="tab-btn" data-book="guide" role="tab">📖 Dino Guide</button><button class="tab-btn active" data-book="stickers" role="tab">📒 Stickers <small class="stickers-count"></small></button></nav><button class="modal-close" aria-label="Close">✕</button></header>
         <div class="panel-body stickers-body"></div>
       </div>
     </div>
 
     <div id="requests" class="modal hidden" role="dialog" aria-label="Park requests">
-      <div class="modal-card requests-card">
+      <div class="modal-card sheet requests-card">
         <header class="modal-head"><h2>📋 Park requests</h2><button class="modal-close" aria-label="Close">✕</button></header>
         <div class="panel-body requests-body"></div>
       </div>
@@ -153,17 +147,17 @@
     <div id="photo-flash" class="photo-flash"></div>
 
     <div id="people" class="modal hidden" role="dialog" aria-label="People">
-      <div class="modal-card people-card">
+      <div class="modal-card sheet people-card">
         <header class="modal-head"><nav class="tabs" role="tablist"></nav><button class="modal-close" aria-label="Close">✕</button></header>
         <div class="log-filters" role="group" aria-label="Filter"></div>
         <div class="panel-body people-body"></div>
       </div>
     </div>
 
-    <div id="log" class="modal hidden" role="dialog" aria-label="Park log">
-      <div class="modal-card">
+    <div id="log" class="modal hidden" role="dialog" aria-label="Park news">
+      <div class="modal-card sheet">
         <header class="modal-head">
-          <h2>🔔 Park log</h2>
+          <h2>🔔 Park news</h2>
           <button class="modal-close" aria-label="Close">✕</button>
         </header>
         <div class="log-filters" role="group" aria-label="Filter"></div>
@@ -172,9 +166,9 @@
     </div>
 
     <div id="guide" class="modal hidden" role="dialog" aria-label="Dino Guide">
-      <div class="modal-card">
+      <div class="modal-card sheet">
         <header class="modal-head">
-          <h2>📖 Dino Guide</h2>
+          <nav class="tabs book-tabs" role="tablist"><button class="tab-btn active" data-book="guide" role="tab">📖 Dino Guide</button><button class="tab-btn" data-book="stickers" role="tab">📒 Stickers</button></nav>
           <button class="modal-close" aria-label="Close">✕</button>
         </header>
         <div class="guide-body">
@@ -185,7 +179,7 @@
     </div>
 
     <div id="park" class="modal hidden" role="dialog" aria-label="Park report">
-      <div class="modal-card">
+      <div class="modal-card sheet">
         <header class="modal-head">
           <div class="tabs" role="tablist">
             <button class="tab-btn" data-tab="goals" role="tab">Goals</button>

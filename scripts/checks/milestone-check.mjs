@@ -25,7 +25,7 @@ const pop = await page.evaluate(() => ({ visible: !document.getElementById('outc
 console.log('popup:', pop);
 await page.screenshot({ path: `${OUT}ms-1-popup.png` });
 await (await page.$('[data-outcome="keep"]')).tap(); await sleep(300);
-await (await page.$('#btn-goals')).tap(); await sleep(400);
+await (await page.$('#btn-park')).tap(); await sleep(400);
 await page.screenshot({ path: `${OUT}ms-2-goals.png` });
 console.log('unlocked:', await page.evaluate(() => window.__dino.sim.state.unlockedSpecies.join(',')));
 console.log('errors:', errors.length ? errors : 'none');

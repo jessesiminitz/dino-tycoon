@@ -1,10 +1,9 @@
 import { calendar, type GameState } from '../sim/GameState';
 import type { Simulation, Speed } from '../sim/Simulation';
-import { FENCE_TYPE_IDS, FENCE_TYPES } from '../sim/data/fences';
-import { FEEDER_TYPES, type FeederKind } from '../sim/data/feeders';
+import { FEEDER_TYPES } from '../sim/data/feeders';
 import { habitatOf, SPECIES } from '../sim/data/species';
 import { POND_COST } from '../sim/commands';
-import { BUILDING_TYPES, PATH_COST, TRACK_COST, type BuildingKind } from '../sim/data/economy';
+import { BUILDING_TYPES, PATH_COST, TRACK_COST } from '../sim/data/economy';
 import { mountCatalog } from './catalog';
 import { mountParkPanel } from './parkPanel';
 import { mountGuide } from './guide';
@@ -13,10 +12,10 @@ import { mountPeople } from './people';
 import { mountRequests } from './requests';
 import { mountDig } from './dig';
 import { mountStickers } from './stickers';
+import { mountTools } from './tools';
 import { mountChoice } from './choice';
-import { SCENARIOS } from '../sim/data/scenarios';
-import { DECOR_KINDS, DECOR_TYPES } from '../sim/data/decor';
-import type { Mode, UiState } from './uiState';
+import { DECOR_TYPES } from '../sim/data/decor';
+import type { UiState } from './uiState';
 import type { GameEvent } from '../sim/systems/context';
 
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
@@ -118,32 +117,18 @@ function modeHint(ui: UiState): string | null {
   }
 }
 
-function pickButton(swatch: string, label: string, price: string): HTMLButtonElement {
-  const b = document.createElement('button');
-  b.className = 'pick-btn';
-  b.innerHTML = `<span class="swatch" style="background:${swatch}"></span>${label}<small>${price}</small>`;
-  return b;
-}
-
 /** DOM overlay: money, clock, speed buttons, tool bar, info panel and toasts. */
 export function mountHud(sim: Simulation, ui: UiState): Hud {
   const moneyEl = $('hud-money');
   const clockEl = $('hud-clock');
-  const dinosEl = $('hud-dinos');
   const info = $('info');
   const infoText = $('info-text');
   const infoAction = $('info-action') as HTMLButtonElement;
   const infoActions = $('info-actions');
   const smallButtons: HTMLButtonElement[] = [];
   const toasts = $('toasts');
-  const fencePicker = $('fence-picker');
-  const feederPicker = $('feeder-picker');
-  const buildingPicker = $('building-picker');
-  const pathPicker = $('path-picker');
-  const decorPicker = $('decor-picker');
   const guestsEl = $('hud-guests');
   const speedButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('.speed-btn'));
-  const toolButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('.tool-btn[data-mode]'));
   const catalog = mountCatalog(sim, ui);
 
   // --- money, clock, speed ---
@@ -192,8 +177,8 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
       lastWidth = width;
       fitHud();
     }
-    dinosEl.textContent = `${state.dinos.length} dino${state.dinos.length === 1 ? '' : 's'}`;
     guestsEl.textContent = String(state.visitors.length);
+    guestsEl.hidden = state.visitors.length === 0;
     moneyEl.classList.toggle('negative', state.money < 0);
     for (const b of speedButtons) b.classList.toggle('active', Number(b.dataset.speed) === sim.speed);
   };
@@ -204,57 +189,7 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
   render(sim.state);
 
   // --- tools ---
-  for (const id of FENCE_TYPE_IDS) {
-    const t = FENCE_TYPES[id];
-    const b = pickButton(`#${t.rail.toString(16).padStart(6, '0')}`, t.name, `$${t.cost}`);
-    b.dataset.fence = String(id);
-    b.addEventListener('click', () => ui.setFenceType(id));
-    fencePicker.appendChild(b);
-  }
-  for (const kind of Object.keys(FEEDER_TYPES) as FeederKind[]) {
-    const t = FEEDER_TYPES[kind];
-    const look = { plants: ['#73b44f', 'Plants'], meat: ['#d9454d', 'Meat'], fish: ['#5ba3d6', 'Fish'] }[kind];
-    const b = pickButton(look[0], look[1], `$${t.cost}`);
-    b.dataset.feeder = kind;
-    b.addEventListener('click', () => ui.setFeederKind(kind));
-    feederPicker.appendChild(b);
-  }
-  for (const kind of Object.keys(BUILDING_TYPES) as BuildingKind[]) {
-    const t = BUILDING_TYPES[kind];
-    const swatch = { restaurant: '#d9454d', snackstall: '#f28fb1', giftshop: '#3f7fb0', restroom: '#6ec6ff', trashcan: '#4f8f5a', station: '#c9a36b', tower: '#9c6b3c', petting: '#86c25c', digsite: '#d9c7a3' }[kind];
-    const b = pickButton(swatch, t.name, formatMoney(t.cost));
-    b.dataset.building = kind;
-    b.addEventListener('click', () => ui.setBuildingKind(kind));
-    buildingPicker.appendChild(b);
-  }
-  for (const kind of DECOR_KINDS) {
-    const t = DECOR_TYPES[kind];
-    const swatch = { tree: '#4f9a3a', palm: '#86c25c', flowers: '#ff9fb8', fountain: '#8fd3ea', bench: '#9c6b3c', lamp: '#f7d77a' }[kind];
-    const b = pickButton(swatch, t.name.replace(' tree', ''), formatMoney(t.cost));
-    b.dataset.decor = kind;
-    b.addEventListener('click', () => ui.setDecorKind(kind));
-    decorPicker.appendChild(b);
-  }
-  {
-    // Not a decoration: digs water into the ground, for lagoons.
-    const b = pickButton('#3f86c0', 'Pond', `${formatMoney(POND_COST)}/tile`);
-    b.dataset.decor = 'pond';
-    b.addEventListener('click', () => ui.setDecorKind('pond'));
-    decorPicker.appendChild(b);
-  }
-  for (const [track, erase] of [[false, false], [false, true], [true, false], [true, true]] as const) {
-    const label = track ? (erase ? 'Erase track' : 'Jeep track') : erase ? 'Erase' : 'Path';
-    const swatch = erase ? '#ff7a6b' : track ? '#a8875a' : '#cdb58a';
-    const b = pickButton(swatch, label, erase ? 'refund 25%' : `$${track ? TRACK_COST : PATH_COST}/tile`);
-    b.dataset.erase = String(erase);
-    b.dataset.track = String(track);
-    b.addEventListener('click', () => ui.setPathErase(erase, track));
-    pathPicker.appendChild(b);
-  }
-  for (const b of toolButtons) {
-    // Tapping the active tool again goes back to Look.
-    b.addEventListener('click', () => ui.setMode(ui.mode === b.dataset.mode ? 'select' : (b.dataset.mode as Mode)));
-  }
+  mountTools(sim, ui);
   $('btn-catalog').addEventListener('click', () => {
     ui.setMode('select');
     catalog.open();
@@ -262,22 +197,6 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
 
   let prevHint: string | null = null;
   const renderTools = () => {
-    for (const b of toolButtons) b.classList.toggle('active', b.dataset.mode === ui.mode);
-    fencePicker.classList.toggle('hidden', ui.mode !== 'fence');
-    feederPicker.classList.toggle('hidden', ui.mode !== 'feeder');
-    buildingPicker.classList.toggle('hidden', ui.mode !== 'building');
-    pathPicker.classList.toggle('hidden', ui.mode !== 'path');
-    decorPicker.classList.toggle('hidden', ui.mode !== 'decor');
-    for (const b of decorPicker.querySelectorAll<HTMLButtonElement>('.pick-btn'))
-      b.classList.toggle('active', b.dataset.decor === ui.decorKind);
-    for (const b of buildingPicker.querySelectorAll<HTMLButtonElement>('.pick-btn'))
-      b.classList.toggle('active', b.dataset.building === ui.buildingKind);
-    for (const b of pathPicker.querySelectorAll<HTMLButtonElement>('.pick-btn'))
-      b.classList.toggle('active', b.dataset.erase === String(ui.pathErase) && b.dataset.track === String(ui.pathTrack));
-    for (const b of fencePicker.querySelectorAll<HTMLButtonElement>('.pick-btn'))
-      b.classList.toggle('active', Number(b.dataset.fence) === ui.fenceType);
-    for (const b of feederPicker.querySelectorAll<HTMLButtonElement>('.pick-btn'))
-      b.classList.toggle('active', b.dataset.feeder === ui.feederKind);
     const hint = modeHint(ui);
     if (hint !== prevHint) {
       hud.showHint();
@@ -384,17 +303,23 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
 
   const parkPanel = mountParkPanel(sim, hud);
   $('btn-park').addEventListener('click', () => parkPanel.open());
-  const goalsBtn = $('btn-goals');
-  goalsBtn.hidden = SCENARIOS[sim.state.scenario.id].rounds.length === 0;
-  goalsBtn.addEventListener('click', () => parkPanel.open('goals'));
   mountLog(sim);
   mountPeople(sim, ui);
   mountRequests(sim);
   mountDig(sim);
-  mountStickers(sim, (t) => hud.toast(t));
+  const stickers = mountStickers(sim, (t) => hud.toast(t));
   mountChoice(sim, (t, k) => hud.toast(t, k));
   const guide = mountGuide(sim);
-  $('btn-guide').addEventListener('click', () => guide.open());
+  // The Book holds the Dino Guide and the sticker book, a tab each. New stickers open it at the stickers.
+  $('btn-book').addEventListener('click', () => (stickers.hasNew() ? stickers.open() : guide.open()));
+  for (const tab of document.querySelectorAll<HTMLButtonElement>('.book-tabs .tab-btn')) {
+    tab.addEventListener('click', () => {
+      if (tab.classList.contains('active')) return;
+      for (const id of ['guide', 'stickers']) $(id).classList.add('hidden');
+      if (tab.dataset.book === 'stickers') stickers.open();
+      else guide.open();
+    });
+  }
 
   renderTools();
   return hud;

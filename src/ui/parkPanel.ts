@@ -42,7 +42,8 @@ export function mountParkPanel(sim: Simulation, hud: Hud): { open(tab?: Tab): vo
   const body = document.getElementById('park-body')!;
   const tabs = Array.from(modal.querySelectorAll<HTMLButtonElement>('.tab-btn'));
   const hasGoals = SCENARIOS[sim.state.scenario.id].rounds.length > 0;
-  let tab: Tab = 'overview';
+  // Opens on the goals first, so it's always clear what to aim for.
+  let tab: Tab = hasGoals ? 'goals' : 'overview';
   for (const t of tabs) if (t.dataset.tab === 'goals') t.hidden = !hasGoals;
   let timer: number | undefined;
 

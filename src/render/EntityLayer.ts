@@ -12,7 +12,7 @@ import { isAsleep } from '../sim/systems/dinos';
 import type { CareEffect } from '../sim/systems/care';
 import { TILE } from './tileset';
 import { paintRows } from './pixels';
-import { paintBasketShop, paintDigSite, paintFriesStand, paintJeep, paintPettingPen, paintPopcornStand, paintPortaPotties, paintStation, paintTower, paintTrashCan, paintTrough } from './sceneryArt';
+import { paintBuilding, paintJeep, paintTrough } from './sceneryArt';
 
 const dinoKey = (id: SpeciesId, frame: 0 | 1 = 0, baby = false) => `dino-${id}-${frame}${baby ? '-baby' : ''}`;
 const eggKey = (id: SpeciesId) => `egg-${id}`;
@@ -90,30 +90,6 @@ function paintStaff(role: StaffRole, frame: 0 | 1): HTMLCanvasElement {
     ...UNIFORMS[role],
     S: '#e0b48a',
   });
-}
-
-function paintBuilding(kind: BuildingKind): HTMLCanvasElement {
-  switch (kind) {
-    // Each building is shaped like what it offers, so it's obvious at a glance.
-    case 'restaurant':
-      return paintFriesStand();
-    case 'snackstall':
-      return paintPopcornStand();
-    case 'giftshop':
-      return paintBasketShop();
-    case 'restroom':
-      return paintPortaPotties();
-    case 'trashcan':
-      return paintTrashCan();
-    case 'station':
-      return paintStation();
-    case 'tower':
-      return paintTower();
-    case 'petting':
-      return paintPettingPen();
-    case 'digsite':
-      return paintDigSite();
-  }
 }
 
 /** Feeding troughs, full and empty. */

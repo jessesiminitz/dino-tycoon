@@ -17,12 +17,12 @@ const STEPS: Step[] = [
     button: 'Let’s build',
   },
   {
-    text: 'Dinosaurs need a paddock. Tap 🚧 Fence, then drag from one corner to the opposite corner, and drag again to close the box.',
+    text: 'Dinosaurs need a paddock. Tap 🚧 Fence and choose Wooden. Then drag from one corner to the opposite corner, and drag again to close the box.',
     target: '.tool-btn[data-mode="fence"]',
     done: (sim) => sim.regions().regions.some((r) => r.kind === 'paddock'),
   },
   {
-    text: 'Dinosaurs get hungry. Tap 🍖 Feeder and place a plant feeder inside your paddock.',
+    text: 'Dinosaurs get hungry. Tap 🍖 Feeder, choose the Plant feeder, and tap inside your paddock to put it there.',
     target: '.tool-btn[data-mode="feeder"]',
     done: (sim) => {
       const { regions, tileRegion } = sim.regions();
@@ -38,7 +38,7 @@ const STEPS: Step[] = [
     done: (sim) => sim.state.dinos.length > 0,
   },
   {
-    text: 'Visitors walk on paths. Tap 🛤️ Path and drag from the gate up to your paddock, so they can see your dinosaur.',
+    text: 'Visitors walk on paths. Tap 🛤️ Path, choose Path, and drag from the gate up to your paddock so they can see your dinosaur.',
     target: '.tool-btn[data-mode="path"]',
     done: (sim) => {
       const { state } = sim;
@@ -57,7 +57,7 @@ const STEPS: Step[] = [
     },
   },
   {
-    text: 'Hungry visitors spend money. Tap 🏪 Build and put a Restaurant right next to your path.',
+    text: 'Hungry visitors spend money. Tap 🏪 Build, choose the Restaurant (the giant fries!), and tap right next to your path.',
     target: '.tool-btn[data-mode="building"]',
     done: (sim) => sim.state.buildings.some((b) => b.kind === 'restaurant'),
   },
@@ -67,8 +67,8 @@ const STEPS: Step[] = [
     done: (sim) => sim.state.staff.some((m) => m.role === 'worker'),
   },
   {
-    text: 'You’re open for business! Visitors will soon need restrooms, drinks and trash cans: tap 👥 to hear what they think. Tap ▶▶ to speed up time and check 🏆 Goals to see what it takes to win.',
-    target: '#btn-goals',
+    text: 'You’re open for business! Visitors will soon need restrooms, drinks and trash cans: tap 👥 People to hear what they think. Tap ▶▶ to speed up time, and check 📊 Park to see your goals.',
+    target: '#btn-park',
     button: 'Finish',
   },
 ];

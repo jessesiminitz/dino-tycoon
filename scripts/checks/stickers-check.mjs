@@ -29,7 +29,7 @@ await sleep(2600);
 const badge = await page.$eval('#stickers-badge', (b) => ({ text: b.textContent, hidden: b.classList.contains('hidden') }));
 console.log('badge:', badge, '| toasts:', await page.$$eval('.toast', (t) => t.map((x) => x.textContent).filter((x) => x.includes('sticker'))));
 await page.screenshot({ path: `${OUT}stickers-0-toast-${W}.png` });
-await (await page.$('#btn-stickers')).tap(); await sleep(500);
+await (await page.$('#btn-book')).tap(); await sleep(500);
 const book = await page.evaluate(() => ({
   count: document.querySelector('.stickers-count').textContent,
   earned: document.querySelectorAll('.sticker.earned').length,

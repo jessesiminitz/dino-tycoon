@@ -25,7 +25,7 @@ for (const [w, h, name] of [[744, 1133, 'mini'], [820, 1180, 'air'], [1024, 1366
   });
   // Open a couple of panels and make sure they fit.
   const panels = {};
-  for (const [btn, modal] of [['#btn-people', '#people'], ['#btn-stickers', '#stickers'], ['#btn-park', '#park']]) {
+  for (const [btn, modal] of [['#btn-people', '#people'], ['#btn-book', '#guide'], ['#btn-park', '#park']]) {
     await (await page.$(btn))?.tap(); await sleep(300);
     panels[modal] = await page.evaluate((m) => { const c = document.querySelector(`${m} .modal-card`)?.getBoundingClientRect(); return c ? c.bottom <= innerHeight + 1 && c.right <= innerWidth + 1 : 'n/a'; }, modal);
     await page.evaluate((m) => document.querySelector(m)?.classList.add('hidden'), modal);

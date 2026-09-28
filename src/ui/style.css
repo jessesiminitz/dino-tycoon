@@ -114,26 +114,28 @@ body {
   flex-shrink: 0;
 }
 
-.hud.fit-1 #hud-dinos {
+/* Squeezing the top bar, step by step (see fitHud). Buttons never drop below a comfortable tap size. */
+.hud.fit-1 .hud-group {
+  gap: 3px;
+  padding: 3px 5px;
+}
+
+.hud.fit-1 .hud-btn {
+  min-width: 46px;
+  padding: 2px 3px;
+}
+
+.hud.fit-2 .hud-btn span {
   display: none;
 }
 
-.hud.fit-2 .hud-group {
-  gap: 3px;
-  padding: 4px 5px;
-}
-
 .hud.fit-2 .hud-btn {
-  padding: 0 4px;
-}
-
-.hud.fit-2 .speed-btn {
-  min-width: 36px;
-  padding: 0 1px;
+  min-width: var(--tap);
+  font-size: 22px;
 }
 
 .hud.fit-3 .hud-stat {
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .hud-title {
@@ -146,11 +148,28 @@ body {
   white-space: nowrap;
 }
 
+/* Money above the clock, so the buttons get the width. */
+.hud-stats {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+  padding-right: 2px;
+}
+
+#hud-money {
+  font-size: 18px;
+}
+
+#hud-clock {
+  font-size: 14px;
+  color: var(--muted);
+}
+
 .speed-btn {
   min-width: var(--tap);
   min-height: var(--tap);
   font: inherit;
-  font-size: 12px;
+  font-size: 16px;
   color: var(--text);
   background: transparent;
   border: 2px solid transparent;
@@ -210,14 +229,12 @@ button {
   pointer-events: none;
 }
 
-.tools,
-.picker {
+.tools {
   padding: 3px;
   gap: 3px;
 }
 
-.tool-btn,
-.pick-btn {
+.tool-btn {
   min-width: var(--tap);
   min-height: var(--tap);
   display: flex;
@@ -233,34 +250,68 @@ button {
   border-radius: 4px;
 }
 
-.tool-btn span,
-.pick-btn small {
-  font-size: 10px;
+.tool-btn span {
+  font-size: 12px;
 }
 
-.pick-btn {
-  font-size: 11px;
-}
-
-.pick-btn small {
-  color: var(--accent-ink);
-}
-
-.swatch {
-  width: 22px;
-  height: 5px;
-  border: 1px solid #1b1b1b;
-}
-
-.tool-btn.active,
-.pick-btn.active {
+.tool-btn.active {
   border-color: var(--bevel-in);
-  background: rgba(232, 181, 58, 0.35);
+  background: rgba(255, 138, 92, 0.35);
+}
+
+/* What the build tool is placing; tap to pick something else. */
+.pick-chip {
+  padding: 3px;
+}
+
+.pick-chip button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--tap);
+  padding: 2px 8px 2px 4px;
+  background: transparent;
+  border: 0;
+  text-align: left;
+}
+
+.pick-chip img {
+  height: 36px;
+  max-width: 44px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.pick-chip span {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.pick-chip b {
+  font-size: 15px;
+}
+
+.pick-chip small {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.pick-chip em {
+  margin-left: 4px;
+  padding: 4px 8px;
+  font-style: normal;
+  font-size: 13px;
+  font-weight: bold;
+  color: #1b1b1b;
+  background: var(--accent);
+  border: 2px solid #1b1b1b;
+  border-radius: 4px;
 }
 
 .toasts {
   position: fixed;
-  top: calc(var(--safe-top) + 62px);
+  top: calc(var(--safe-top) + 70px);
   left: calc(var(--safe-left) + 8px);
   display: flex;
   flex-direction: column;
@@ -339,6 +390,17 @@ button {
   border-radius: 6px;
 }
 
+/* Big panels all share one size, so switching tabs or panels never makes them jump. */
+.modal-card.sheet {
+  width: min(100%, 980px);
+  height: min(100%, 760px);
+}
+
+.modal-card.sheet > :last-child {
+  flex: 1;
+  min-height: 0;
+}
+
 .modal-head {
   display: flex;
   align-items: center;
@@ -375,8 +437,10 @@ button {
 .species-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  align-content: start;
   gap: 8px;
   padding: 8px;
+  overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
@@ -385,6 +449,7 @@ button {
 .species-card {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   gap: 4px;
   padding: 8px;
   background: var(--tint);
@@ -403,8 +468,31 @@ button {
 
 .species-art {
   height: 54px;
+  max-width: 100%;
+  object-fit: contain;
   align-self: center;
   image-rendering: pixelated;
+}
+
+/* Long button labels (like "Fossils 1/3 · build a dig site") wrap instead of widening the card. */
+.species-card .action-btn {
+  white-space: normal;
+  line-height: 1.1;
+}
+
+.shop-card.current {
+  border: 2px solid var(--accent);
+  background: rgba(255, 138, 92, 0.15);
+}
+
+.shop-tag {
+  font-size: 11px;
+  white-space: nowrap;
+  color: var(--muted);
+}
+
+.panel-body {
+  overflow-x: hidden;
 }
 
 .species-card header {
@@ -539,27 +627,11 @@ button {
   }
 }
 
-/* Phones: icon-only top-bar buttons so the speed controls and ☰ stay on screen. */
-@media (max-width: 1100px) {
-  .hud-btn span {
-    display: none;
-  }
-
-  .hud-btn {
-    padding: 0 6px;
-  }
-}
 
 /* Small phones: tighter stats and an icon-only toolbar so the info panel has room beside it. */
 @media (max-width: 740px) {
-  .tool-btn span,
-  #hud-dinos {
+  .tool-btn span {
     display: none;
-  }
-
-  .speed-btn {
-    min-width: 40px;
-    padding: 0 2px;
   }
 
   .tool-btn {
@@ -582,16 +654,21 @@ button {
   }
 }
 
+/* Top-bar buttons: a big picture with its name underneath. */
 .hud-btn {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 4px;
-  min-height: 36px;
-  padding: 0 8px;
-  font-size: 14px;
-  background: rgba(232, 181, 58, 0.35);
+  justify-content: center;
+  gap: 1px;
+  min-width: 52px;
+  min-height: 46px;
+  padding: 2px 5px;
+  font-size: 20px;
+  line-height: 1;
+  background: rgba(255, 138, 92, 0.25);
   border: 2px solid var(--accent);
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 .hud-btn span {
@@ -1407,7 +1484,7 @@ body:not(.in-park) #info {
 .tutorial {
   position: fixed;
   z-index: 4;
-  top: calc(var(--safe-top) + 64px);
+  top: calc(var(--safe-top) + 70px);
   right: calc(var(--safe-right) + 8px);
   width: min(300px, 44vw);
   padding: 8px 10px;
@@ -1558,8 +1635,19 @@ body:not(.in-park) #info {
 /* ---------- People ---------- */
 
 .hud-count {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
   font-size: 12px;
+  line-height: 18px;
+  text-align: center;
   font-variant-numeric: tabular-nums;
+  color: #fff;
+  background: var(--head);
+  border-radius: 9px;
 }
 
 .people-card .modal-head {
@@ -1963,9 +2051,6 @@ body:not(.in-park) #info {
 
 /* ---------- Park requests ---------- */
 
-.requests-card {
-  width: min(100%, 640px);
-}
 
 .requests-body h3 {
   margin: 12px 0 4px;
@@ -2035,7 +2120,7 @@ body:not(.in-park) #info {
 /* Pulsing buttons under the speed controls (a fossil to dig up, a decision waiting). */
 .float-btns {
   position: fixed;
-  top: calc(var(--safe-top) + 64px);
+  top: calc(var(--safe-top) + 70px);
   right: calc(var(--safe-right) + 12px);
   z-index: 3;
   display: flex;
@@ -2164,9 +2249,6 @@ body:not(.in-park) #info {
 
 /* ---------- Sticker book ---------- */
 
-.stickers-card {
-  width: min(100%, 860px);
-}
 
 .stickers-count {
   margin-left: 6px;

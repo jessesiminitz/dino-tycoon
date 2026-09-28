@@ -174,3 +174,9 @@ The ten fun and engagement features the owner approved are all built and deploye
 - Scenario deadlines are counted in game days, so at 4-minute days they take a while in real time (First Steps Bronze is 45 days, 3 h at 1×). Offered to shorten them; no answer yet.
 - Offered earlier: storms washing away litter; mess made purely cosmetic.
 - Possible: a credits screen listing the music, and a day/night tint.
+
+## UI layout (2026-09-28 reorganisation)
+- **Top bar:** money above the clock, then five labelled buttons: 📊 Park (opens on Goals when the scenario has them; also Overview, Staff, Finances, Bank), 👥 People, 📋 Requests, 📖 Book (Dino Guide and Stickers as two tabs; opens at Stickers when there are new ones), 🔔 News (the park log). `fitHud` squeezes gaps first, then drops the labels; buttons never go below 44px.
+- **Build tools:** Feeder, Build, Path, Garden and Fence each open a picture sheet like Buy Dinosaurs (`src/ui/tools.ts` builds the cards; `src/ui/shop.ts` is the generic sheet; small pictures for fences, paths and ponds are in `src/render/shopArt.ts`). Choosing a card starts placing it, and a chip above the toolbar shows the choice with a Change button. Remove and Land act straight away.
+- **Sheets:** every big panel has `.modal-card.sheet`, a fixed size (`min(100%, 980px)` × `min(100%, 760px)`), so panels don't jump when switching tabs. Grids and bodies hide sideways overflow.
+- Checks: `scripts/checks/ui-tour.mjs [WxH]` opens every sheet, reports its size and any sideways scrolling, and saves screenshots to `scripts/checks/tour/`.
