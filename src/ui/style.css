@@ -2005,11 +2005,22 @@ body:not(.in-park) #info {
 
 /* ---------- Fossil dig ---------- */
 
-.dig-btn {
+/* Pulsing buttons under the speed controls (a fossil to dig up, a decision waiting). */
+.float-btns {
   position: fixed;
   top: calc(var(--safe-top) + 64px);
   right: calc(var(--safe-right) + 12px);
   z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.dig-btn {
+  position: relative;
+  pointer-events: auto;
   min-height: var(--tap);
   padding: 0 14px;
   font: inherit;
@@ -2261,4 +2272,74 @@ body:not(.in-park) #info {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 0 16px;
+}
+
+/* ---------- Decisions ---------- */
+
+.choice-card {
+  width: min(100%, 520px);
+  align-items: center;
+  gap: 6px;
+  padding: 14px 18px;
+  text-align: center;
+}
+
+.choice-icon {
+  font-size: 40px;
+  line-height: 1;
+}
+
+.choice-title {
+  margin: 0;
+  font-size: 18px;
+  color: var(--accent-ink);
+}
+
+.choice-text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.choice-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.choice-options .action-btn.secondary {
+  background: var(--panel);
+}
+
+.choice-later {
+  min-height: 32px;
+  font-size: 12px;
+  text-decoration: underline;
+  background: none;
+  border: 0;
+}
+
+.choice-note {
+  margin: 0;
+}
+
+@media (max-height: 480px) {
+  .choice-card {
+    gap: 3px;
+    padding: 8px 14px;
+  }
+
+  .choice-icon {
+    font-size: 28px;
+  }
+
+  .choice-title {
+    font-size: 16px;
+  }
+
+  .choice-text {
+    font-size: 13px;
+  }
 }

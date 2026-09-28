@@ -308,6 +308,7 @@ export function hourlyVisitors(ctx: SimContext): void {
   }
 
   if (hour < OPEN_HOUR || hour > LAST_ENTRY_HOUR) return;
+  if (state.stats.closedDay === day) return; // closed early today
   const expected = expectedArrivals(state, regions);
   let n = Math.floor(expected) + (rng.chance(expected % 1) ? 1 : 0);
   n = Math.min(n, MAX_VISITORS - state.visitors.length);

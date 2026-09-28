@@ -1,5 +1,6 @@
 import { patDino, treatDino, type CareEffect } from './systems/care';
 import { noteRequestAction } from './systems/requests';
+import { answerChoice } from './systems/choices';
 import { NEVER } from './GameState';
 import type { GameState } from './GameState';
 import { FENCE_REFUND, FENCE_TYPES, type FenceTypeId } from './data/fences';
@@ -44,6 +45,7 @@ export type Command =
   | { type: 'removeTracks'; tiles: number[] }
   | { type: 'digPonds'; tiles: number[] }
   | { type: 'fillPonds'; tiles: number[] }
+  | { type: 'chooseOption'; option: number }
   | { type: 'treatDino'; id: number }
   | { type: 'patDino'; id: number }
   | { type: 'photoDino'; id: number };
@@ -456,6 +458,11 @@ export function applyCommand(state: GameState, cmd: Command): CommandResult {
       const refund = Math.floor(fill.length * POND_COST * POND_REFUND);
       earn(state, 'sales', refund);
       return { ok: true, cost: -refund, message: `Filled in ${fill.length} tile${fill.length === 1 ? '' : 's'} of pond (+${usd(refund)})` };
+    }
+
+    case 'chooseOption': {
+      const result = answerChoice(state, cmd.option);
+      return result ? { ok: true, cost: 0, message: result } : { ok: false, message: 'There is nothing to decide right now' };
     }
 
     case 'treatDino': {

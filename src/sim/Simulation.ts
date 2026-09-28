@@ -7,6 +7,7 @@ import { hourlyDinos, stepDinos, STEPS_PER_HOUR } from './systems/dinos';
 import { hourlyBreeding } from './systems/breeding';
 import { hourlyRequests, updateRequests } from './systems/requests';
 import { stepJeeps } from './systems/rides';
+import { hourlyChoices } from './systems/choices';
 import { hourlyVisitors, stepVisitors } from './systems/visitors';
 import { hourlyEconomy } from './systems/economy';
 import { hourlyFences, hourlyHealth, stepEscapes } from './systems/incidents';
@@ -98,12 +99,15 @@ export class Simulation {
       hourlyEconomy(ctx);
       hourlyScenario(ctx);
       hourlyRequests(ctx);
+      hourlyChoices(ctx);
     }
     state.rngState = rng.snapshot;
   }
 
   dispatch(cmd: Command): CommandResult {
     const result = applyCommand(this.state, cmd);
+    // A decision's outcome goes in the park log like any other news.
+    if (result.ok && cmd.type === 'chooseOption') this.emitEvent({ text: result.message, kind: 'info' });
     if (result.ok) {
       // Building a stall or buying a species can meet a request straight away.
       updateRequests(this.state, (e) => this.emitEvent(e));

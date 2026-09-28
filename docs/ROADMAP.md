@@ -10,7 +10,7 @@ Each feature ships as its own release:
 5. Commit and push to `main` (auto-deploys).
 6. Tick it off here.
 
-State-shape changes bump `SAVE_VERSION` (currently 16) with a `migrate()` step. Keep everything kid-friendly and all art original: we paint our own animals in code and imitate no film or franchise designs.
+State-shape changes bump `SAVE_VERSION` (currently 17) with a `migrate()` step. Keep everything kid-friendly and all art original: we paint our own animals in code and imitate no film or franchise designs.
 
 | # | Feature | Size | Save bump | Status |
 |---|---------|------|-----------|--------|
@@ -22,7 +22,7 @@ State-shape changes bump `SAVE_VERSION` (currently 16) with a `migrate()` step. 
 | 7 | Attractions: jeep safari, viewing tower, petting area | L | v16 | ✅ 2026-09-28 |
 | 8 | Sticker book and trophy room | M | none (album is per device) | ✅ 2026-09-28 |
 | 9 | Day and night | M | none | ✅ 2026-09-28 |
-| 10 | Events with choices | M | v19 | ☐ |
+| 10 | Events with choices | M | v17 | ✅ 2026-09-28 |
 | 11 | More sound: species calls, cheers, splashes | S–M | none | ☐ |
 
 Sizes: S is under half a session, M one session, L one to two, XL two to three. Stickers (#8) come after babies, habitats and attractions, so they have more to collect. Day and night (#9) and sound (#11) touch everything, so they go late.

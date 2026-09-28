@@ -96,7 +96,20 @@
       </div>
     </div>
 
-    <button id="dig-btn" class="dig-btn hidden" aria-label="Dig up your fossil find">🦴 Dig!<b class="badge hidden"></b></button>
+    <div class="float-btns">
+      <button id="dig-btn" class="dig-btn hidden" aria-label="Dig up your fossil find">🦴 Dig!<b class="badge hidden"></b></button>
+      <button id="choice-btn" class="dig-btn hidden" aria-label="A decision is waiting">❓ Decide!</button>
+    </div>
+    <div id="choice" class="modal hidden" role="dialog" aria-label="A decision">
+      <div class="modal-card choice-card">
+        <div class="choice-icon" aria-hidden="true"></div>
+        <h2 class="choice-title"></h2>
+        <p class="choice-text"></p>
+        <div class="choice-options"></div>
+        <button class="choice-later">Decide later</button>
+        <p class="note choice-note"></p>
+      </div>
+    </div>
     <div id="dig" class="modal hidden" role="dialog" aria-label="Fossil dig">
       <div class="modal-card dig-card">
         <header class="modal-head"><h2>🦴 Brush away the sand!</h2><button class="modal-close dig-skip" aria-label="Skip">Skip</button></header>

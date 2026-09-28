@@ -46,9 +46,9 @@ End commit messages with the Co-Authored-By / Claude-Session trailers the harnes
 - `src/audio/`: `audio.ts` (sfx, rain, piano synth, shuffled playlist), `ragNotes.ts` (decoder and alphabet), `rags.ts` (generated, lazy-loaded chunk).
 - `src/save/storage.ts`: 3 IndexedDB slots plus a localStorage mirror, and a boot directive (used to return to the park after an update reload).
 
-### Save format: **v16**
+### Save format: **v17**
 
-Always bump `SAVE_VERSION` and add a step to `migrate()` when the state shape changes, then update the version assertions in the tests (`tests/{dinos,island,visitorlife,mess}.test.ts` check `toBe(16)`). Recent steps:
+Always bump `SAVE_VERSION` and add a step to `migrate()` when the state shape changes, then update the version assertions in the tests (`tests/{dinos,island,visitorlife,mess}.test.ts` check `toBe(17)`). Recent steps:
 - v10 added the log.
 - v11 added visitor names, thoughts and thirst, soda and snack fields, plus `messes` and `reviews`.
 - v12 added scenario `round`, `roundStart` and `earned`. Saves that had already won carry on into Silver.
@@ -56,6 +56,7 @@ Always bump `SAVE_VERSION` and add a step to `migrate()` when the state shape ch
 - v14 added `Dino.lastTreatHour`, `Dino.lastPatHour` and `stats.photos`, plus the `treats` expense category.
 - v15 added `requests` and `stats.requestsDone`.
 - v16 added `tracks`, `jeeps`, and `Visitor.rode` and `Visitor.riding`, plus the `rides` income category.
+- v17 added `pendingChoice` and `stats.closedDay`.
 
 ## Features in place (all deployed)
 
@@ -115,6 +116,12 @@ Always bump `SAVE_VERSION` and add a step to `migrate()` when the state shape ch
   - The darkness is a RenderTexture with soft light stamps erased around path lamps (new decor `lamp`), lit buildings, the gate and jeeps. It's redrawn only when the view, the darkness or the lights change.
   - Setting: `nightDarkness`, where 0 turns it off.
   - `isAsleep` (21:00–05:00): animals stay put and show "Zz", unless they're nocturnal (Velociraptor, Compsognathus), escaped, or hungry. Sleeping flyers settle on the ground.
+- **Decisions** (`systems/choices.ts`, `ui/choice.ts`):
+  - About once a day while the park is open, one of 8 two-option events comes up: TV crew, birthday naming, scientist, storm warning, fossil collector, famous presenter, school fundraiser, lost child.
+  - Each event's `setup` returns null when it doesn't fit the park.
+  - The card pauses the game; "Decide later" leaves a ❓ button; after 4 game-hours the last (cautious) option is taken automatically. That option gives no reward for doing nothing.
+  - Answers go through the `chooseOption` command, and results are written to the log.
+  - Decisions use their own dice. Closing early sets `stats.closedDay`, which stops arrivals for the day.
 - **Placing dinos:** a fence gap is circled in red with a "Close gap · $x" button that fences or repairs it and releases the dino.
 - **Panels:** 👥 People, 🔔 alert log (newest first, filters, unread badge), 🏆 Goals medal track, 📖 Dino Guide.
 - **Scenarios:** First Steps (tutorial), Fossil Fever, Storm Coast, Rex Rising, each with 3 rounds of milestones; plus Sandbox. You can keep playing after winning or losing.

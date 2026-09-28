@@ -17,7 +17,7 @@ export const MAP_WIDTH = 64;
 export const MAP_HEIGHT = 48;
 export const STARTING_MONEY = 50_000;
 export const START_HOUR = 8;
-export const SAVE_VERSION = 16;
+export const SAVE_VERSION = 17;
 
 export interface Dino {
   id: number;
@@ -70,6 +70,19 @@ export interface ParkRequest {
   expiresHour: number;
   reward: { money: number; reputation: number };
   status: 'active' | 'done' | 'missed';
+}
+
+/** A decision waiting for the player (see systems/choices.ts). */
+export interface PendingChoice {
+  eventId: string;
+  createdHour: number;
+  /** Past this game-hour the default answer is taken. */
+  expiresHour: number;
+  /** Whatever the event is about: an animal, a species, a name, an amount. */
+  dinoId?: number;
+  species?: SpeciesId;
+  name?: string;
+  amount?: number;
 }
 
 /** Long ago: never treated or patted. */
@@ -259,6 +272,8 @@ export interface Stats {
   photos: number;
   /** Park requests completed. */
   requestsDone: number;
+  /** Game day the gates were closed early (for a storm), or 0. */
+  closedDay: number;
   /** Last game day the park was warned about accidents, and about litter. */
   messDay: number;
   litterDay: number;
@@ -323,6 +338,8 @@ export interface GameState {
   /** 1 where a tile has a safari jeep track. */
   tracks: number[];
   jeeps: Jeep[];
+  /** A decision card waiting for an answer, or null. */
+  pendingChoice: PendingChoice | null;
   /** Next id for dinos, feeders and other entities. */
   nextId: number;
 }
@@ -357,7 +374,7 @@ export function newGame(seed: number): GameState {
     fossils: {},
     stormHours: 0,
     scenario: { id: 'sandbox', status: 'free', round: 0, roundStart: 1, earned: [] },
-    stats: { bestDayVisitors: 0, escapes: 0, inspectionsPassed: 0, restroomComplaintDay: 0, hatched: 0, photos: 0, requestsDone: 0, messDay: 0, litterDay: 0 },
+    stats: { bestDayVisitors: 0, escapes: 0, inspectionsPassed: 0, restroomComplaintDay: 0, hatched: 0, photos: 0, requestsDone: 0, closedDay: 0, messDay: 0, litterDay: 0 },
     tutorialStep: null,
     fossilBeds: [],
     decor: [],
@@ -369,6 +386,7 @@ export function newGame(seed: number): GameState {
     requests: [],
     tracks: new Array<number>(map.width * map.height).fill(0),
     jeeps: [],
+    pendingChoice: null,
     nextId: 1,
   };
   state.fossilBeds = bedsFor(state);
@@ -515,6 +533,12 @@ export function migrate(raw: { version?: number } & Record<string, unknown>): Ga
     state.jeeps = [];
     for (const v of state.visitors) Object.assign(v, { rode: [], riding: null });
     raw.version = 16;
+  }
+  if (raw.version === 16) {
+    const state = raw as unknown as GameState;
+    state.pendingChoice = null;
+    state.stats.closedDay = 0;
+    raw.version = 17;
   }
   return raw.version === SAVE_VERSION ? (raw as unknown as GameState) : null;
 }
