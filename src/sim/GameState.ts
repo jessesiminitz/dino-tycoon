@@ -17,7 +17,7 @@ export const MAP_WIDTH = 64;
 export const MAP_HEIGHT = 48;
 export const STARTING_MONEY = 50_000;
 export const START_HOUR = 8;
-export const SAVE_VERSION = 15;
+export const SAVE_VERSION = 16;
 
 export interface Dino {
   id: number;
@@ -149,6 +149,10 @@ export interface Visitor {
   name: string;
   /** Recent thoughts, oldest first. */
   thoughts: Thought[];
+  /** Attractions already enjoyed this visit (each is done once). */
+  rode: RideKind[];
+  /** Aboard this safari jeep (hidden from the paths until it's back), or null. */
+  riding: number | null;
   /** 0 = fine … 100 = desperate for a restroom. */
   bladder: number;
   kid: boolean;
@@ -157,6 +161,28 @@ export interface Visitor {
 }
 
 export type SnackKind = 'icecream' | 'popcorn' | 'hotdog';
+
+export type RideKind = 'jeep' | 'tower' | 'petting';
+
+/** A safari jeep: waits at its station for riders, tours the track, brings them back. */
+export interface Jeep {
+  id: number;
+  stationId: number;
+  x: number;
+  y: number;
+  px: number;
+  py: number;
+  /** Track tile driven from, so it doesn't turn round. */
+  from: number;
+  /** Riders and the path tile each got on at (where they're dropped off). */
+  riders: { id: number; tile: number }[];
+  /** Steps into the current tour (0 = parked at the station). */
+  steps: number;
+  /** Steps spent waiting at the station with someone aboard. */
+  waiting: number;
+  /** Route home at the end of a tour. */
+  path: number[];
+}
 
 export interface Thought {
   hour: number;
@@ -294,6 +320,9 @@ export interface GameState {
   eggs: Egg[];
   /** Today's park requests, plus recently finished ones. */
   requests: ParkRequest[];
+  /** 1 where a tile has a safari jeep track. */
+  tracks: number[];
+  jeeps: Jeep[];
   /** Next id for dinos, feeders and other entities. */
   nextId: number;
 }
@@ -338,6 +367,8 @@ export function newGame(seed: number): GameState {
     reviews: [],
     eggs: [],
     requests: [],
+    tracks: new Array<number>(map.width * map.height).fill(0),
+    jeeps: [],
     nextId: 1,
   };
   state.fossilBeds = bedsFor(state);
@@ -477,6 +508,13 @@ export function migrate(raw: { version?: number } & Record<string, unknown>): Ga
     state.requests = [];
     state.stats.requestsDone = 0;
     raw.version = 15;
+  }
+  if (raw.version === 15) {
+    const state = raw as unknown as GameState;
+    state.tracks = new Array<number>(state.map.width * state.map.height).fill(0);
+    state.jeeps = [];
+    for (const v of state.visitors) Object.assign(v, { rode: [], riding: null });
+    raw.version = 16;
   }
   return raw.version === SAVE_VERSION ? (raw as unknown as GameState) : null;
 }

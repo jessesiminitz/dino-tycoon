@@ -19,6 +19,7 @@ import { onWalkway } from '../paths';
 import type { RegionMap } from '../regions';
 import type { SimContext } from './context';
 import { perStep } from './dinos';
+import { tryAttractions } from './rides';
 
 /** Tiles (Chebyshev distance) within which a visitor can see a dinosaur. */
 const VIEW_RADIUS = 4;
@@ -347,6 +348,8 @@ export function spawnVisitor(ctx: SimContext, satisfaction: number, ticket: numb
     look: rng.int(0, LOOKS - 1),
     name: visitorName(id, hash2(id, 3, 11)),
     thoughts: [],
+    rode: [],
+    riding: null,
   };
   state.visitors.push(v);
   earn(state, 'admissions', ticket);
@@ -399,6 +402,7 @@ export function stepVisitors(ctx: SimContext): void {
   for (const v of [...state.visitors]) {
     v.px = v.x;
     v.py = v.y;
+    if (v.riding !== null) continue; // out on the safari jeep
     const here = v.y * width + v.x;
 
     // Escaped dinosaurs: carnivores send visitors fleeing (some get hurt); herbivores unsettle them.
@@ -471,6 +475,7 @@ export function stepVisitors(ctx: SimContext): void {
     }
 
     const leaving = closing || state.hours >= v.leaveHour;
+    if (tryAttractions(ctx, v, leaving)) continue; // hopped into a jeep
     if (leaving && here === gate) {
       leave(state, v);
       continue;

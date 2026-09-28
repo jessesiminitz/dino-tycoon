@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import type { Simulation } from '../sim/Simulation';
-import { planFences, planPaths, pondDigBlocker, POND_COST, refillCost, repairCost } from '../sim/commands';
+import { planFences, planPaths, planTracks, pondDigBlocker, POND_COST, refillCost, repairCost } from '../sim/commands';
+import { stationStatus } from '../sim/systems/rides';
 import { STAFF_TYPES } from '../sim/data/staff';
 import { describeTask } from '../sim/systems/staff';
 import { digChance, lockedSpecies } from '../sim/systems/fossils';
@@ -13,7 +14,7 @@ import { hoursToGrow, hoursToHatch } from '../sim/systems/breeding';
 import { SNACK_NAMES } from '../sim/systems/visitors';
 import { fenceAt, fenceHp, fenceTypeAt } from '../sim/fences';
 import { pathEdges, tileLine, type Edge } from '../sim/grid';
-import { BUILDING_TYPES, PATH_COST, PATH_REFUND, SOUVENIRS } from '../sim/data/economy';
+import { BUILDING_TYPES, PATH_COST, PATH_REFUND, SOUVENIRS, TRACK_COST } from '../sim/data/economy';
 import { isTileOwned, parcelBuyBlocker, parcelLandTiles, parcelOf, parcelPrice, type Point } from '../sim/land';
 import { isLand, Terrain, terrainAt, TERRAIN_NAMES } from '../sim/terrain';
 import { bedAt, RICHNESS_LABEL } from '../sim/fossilBeds';
@@ -270,6 +271,7 @@ export class ParkScene extends Phaser.Scene {
         if (decor) return this.report(this.sim.dispatch({ type: 'removeDecor', id: decor.id }));
         const w = this.sim.state.map.width;
         if (this.sim.state.paths[ty * w + tx]) return this.report(this.sim.dispatch({ type: 'removePaths', tiles: [ty * w + tx] }));
+        if (this.sim.state.tracks[ty * w + tx]) return this.report(this.sim.dispatch({ type: 'removeTracks', tiles: [ty * w + tx] }));
         if (this.sim.state.map.tiles[ty * w + tx] === Terrain.Pond) this.report(this.sim.dispatch({ type: 'fillPonds', tiles: [ty * w + tx] }));
         return;
       }
@@ -590,6 +592,16 @@ export class ParkScene extends Phaser.Scene {
         this.hud.showInfo(`${t.name} · ${chance}% chance of a find each night · ${note} · upkeep ${formatMoney(t.upkeep)}/day`);
         return;
       }
+      if (b.kind === 'station') {
+        this.hud.showInfo(`${t.name} · ${formatMoney(t.salePrice)} a ride · ${stationStatus(state, b)} · ride takings today ${formatMoney(state.finance.today.income.rides)} · upkeep ${formatMoney(t.upkeep)}/day`);
+        return;
+      }
+      if (b.kind === 'tower' || b.kind === 'petting') {
+        const closed = b.kind === 'petting' && !state.staff.some((m) => m.role === 'worker');
+        const what = b.kind === 'tower' ? 'visitors climb up to spot dinosaurs up to 8 tiles away' : 'little dinos to pat (kids love it)';
+        this.hud.showInfo(`${t.name} · ${formatMoney(t.salePrice)} a go · ${closed ? 'CLOSED: hire a worker to be its keeper' : what} · upkeep ${formatMoney(t.upkeep)}/day`);
+        return;
+      }
       if (b.kind === 'trashcan') {
         this.hud.showInfo(`${t.name} · visitors within 3 tiles bin their rubbish instead of dropping it · upkeep ${formatMoney(t.upkeep)}/day`);
         return;
@@ -768,12 +780,14 @@ export class ParkScene extends Phaser.Scene {
   private commitDemolish(edges: Edge[], tiles: number[]): void {
     const pathTiles = tiles.filter((i) => this.sim.state.paths[i]);
     const pondTiles = tiles.filter((i) => this.sim.state.map.tiles[i] === Terrain.Pond);
+    const trackTiles = tiles.filter((i) => this.sim.state.tracks[i]);
     const hasFence = edges.some((e) => fenceTypeAt(this.sim.state, e));
-    if (!hasFence && pathTiles.length === 0 && pondTiles.length === 0) return this.report({ ok: false, message: 'Nothing to remove there' });
+    if (!hasFence && pathTiles.length === 0 && pondTiles.length === 0 && trackTiles.length === 0) return this.report({ ok: false, message: 'Nothing to remove there' });
     const results = [];
     if (hasFence) results.push(this.sim.dispatch({ type: 'removeFences', edges }));
     if (pathTiles.length) results.push(this.sim.dispatch({ type: 'removePaths', tiles: pathTiles }));
     if (pondTiles.length) results.push(this.sim.dispatch({ type: 'fillPonds', tiles: pondTiles }));
+    if (trackTiles.length) results.push(this.sim.dispatch({ type: 'removeTracks', tiles: trackTiles }));
     const ok = results.filter((r) => r.ok);
     this.report(ok.length ? { ok: true, message: ok.map((r) => r.message).join(' · ') } : results[0]);
   }
@@ -788,23 +802,29 @@ export class ParkScene extends Phaser.Scene {
     const { state } = this.sim;
     const w = state.map.width;
     const at = (i: number) => ({ x: i % w, y: Math.floor(i / w) });
+    const layer = this.ui.pathTrack ? state.tracks : state.paths;
+    const noun = this.ui.pathTrack ? 'track' : 'path';
+    const cost = this.ui.pathTrack ? TRACK_COST : PATH_COST;
     if (this.ui.pathErase) {
-      const count = tiles.filter((i) => state.paths[i]).length;
-      this.layers.drawTileGhost(tiles.map((i) => ({ ...at(i), style: state.paths[i] ? 'remove' : 'none' })));
-      this.hud.showInfo(`Remove ${count} path tile${count === 1 ? '' : 's'} · +${formatMoney(Math.floor(count * PATH_COST * PATH_REFUND))}`);
+      const count = tiles.filter((i) => layer[i]).length;
+      this.layers.drawTileGhost(tiles.map((i) => ({ ...at(i), style: layer[i] ? 'remove' : 'none' })));
+      this.hud.showInfo(`Remove ${count} ${noun} tile${count === 1 ? '' : 's'} · +${formatMoney(Math.floor(count * cost * PATH_REFUND))}`);
       return;
     }
-    const plan = planPaths(state, tiles);
+    const plan = this.ui.pathTrack ? planTracks(state, tiles) : planPaths(state, tiles);
     const building = new Set(plan.build);
-    this.layers.drawTileGhost(tiles.map((i) => ({ ...at(i), style: building.has(i) ? 'build' : state.paths[i] ? 'none' : 'blocked' })));
+    this.layers.drawTileGhost(tiles.map((i) => ({ ...at(i), style: building.has(i) ? 'build' : layer[i] ? 'none' : 'blocked' })));
     const short = plan.cost > state.money ? ' · not enough money!' : '';
     const why = plan.blocked ? ` · red: ${plan.blockReason.toLowerCase()}` : '';
-    this.hud.showInfo(`${plan.build.length} path tile${plan.build.length === 1 ? '' : 's'} · ${formatMoney(plan.cost)}${short}${why}`);
+    this.hud.showInfo(`${plan.build.length} ${noun} tile${plan.build.length === 1 ? '' : 's'} · ${formatMoney(plan.cost)}${short}${why}`);
   }
 
   private commitTiles(tiles: number[]): void {
+    const track = this.ui.pathTrack;
     this.report(
-      this.ui.pathErase ? this.sim.dispatch({ type: 'removePaths', tiles }) : this.sim.dispatch({ type: 'buildPaths', tiles }),
+      this.ui.pathErase
+        ? this.sim.dispatch({ type: track ? 'removeTracks' : 'removePaths', tiles })
+        : this.sim.dispatch({ type: track ? 'buildTracks' : 'buildPaths', tiles }),
     );
   }
 

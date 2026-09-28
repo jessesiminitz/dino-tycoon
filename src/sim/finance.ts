@@ -1,7 +1,7 @@
 import type { GameState } from './GameState';
 import { LOAN_MONTHLY_RATE, LOAN_TERM_MONTHS, MAX_DEBT } from './data/economy';
 
-export const INCOME_CATEGORIES = ['admissions', 'food', 'snacks', 'souvenirs', 'sales', 'awards', 'loans'] as const;
+export const INCOME_CATEGORIES = ['admissions', 'food', 'snacks', 'souvenirs', 'rides', 'sales', 'awards', 'loans'] as const;
 export const EXPENSE_CATEGORIES = [
   'construction',
   'land',
@@ -23,6 +23,7 @@ export const CATEGORY_LABELS: Record<IncomeCategory | ExpenseCategory, string> =
   food: 'Restaurant',
   snacks: 'Snack stalls',
   souvenirs: 'Souvenir shops',
+  rides: 'Rides & attractions',
   sales: 'Sales & refunds',
   awards: 'Awards',
   loans: 'Loans received',

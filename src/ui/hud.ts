@@ -4,7 +4,7 @@ import { FENCE_TYPE_IDS, FENCE_TYPES } from '../sim/data/fences';
 import { FEEDER_TYPES, type FeederKind } from '../sim/data/feeders';
 import { habitatOf, SPECIES } from '../sim/data/species';
 import { POND_COST } from '../sim/commands';
-import { BUILDING_TYPES, PATH_COST, type BuildingKind } from '../sim/data/economy';
+import { BUILDING_TYPES, PATH_COST, TRACK_COST, type BuildingKind } from '../sim/data/economy';
 import { mountCatalog } from './catalog';
 import { mountParkPanel } from './parkPanel';
 import { mountGuide } from './guide';
@@ -85,6 +85,11 @@ function modeHint(ui: UiState): string | null {
     case 'feeder':
       return `Tap inside a paddock to build a ${FEEDER_TYPES[ui.feederKind].name.toLowerCase()} (${formatMoney(FEEDER_TYPES[ui.feederKind].cost)}, comes full)`;
     case 'path':
+      if (ui.pathTrack) {
+        return ui.pathErase
+          ? 'Drag over jeep track to remove it'
+          : `Drag to lay jeep track (${formatMoney(TRACK_COST)} a tile) past your paddocks, starting beside a Safari station · a loop works best`;
+      }
       return ui.pathErase
         ? 'Drag over paths to remove them'
         : `Drag to lay a path (${formatMoney(PATH_COST)} a tile) · connect it to the gate`;
@@ -214,7 +219,7 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
   }
   for (const kind of Object.keys(BUILDING_TYPES) as BuildingKind[]) {
     const t = BUILDING_TYPES[kind];
-    const swatch = { restaurant: '#d9454d', snackstall: '#f28fb1', giftshop: '#3f7fb0', restroom: '#6ec6ff', trashcan: '#4f8f5a', digsite: '#d9c7a3' }[kind];
+    const swatch = { restaurant: '#d9454d', snackstall: '#f28fb1', giftshop: '#3f7fb0', restroom: '#6ec6ff', trashcan: '#4f8f5a', station: '#c9a36b', tower: '#9c6b3c', petting: '#86c25c', digsite: '#d9c7a3' }[kind];
     const b = pickButton(swatch, t.name, formatMoney(t.cost));
     b.dataset.building = kind;
     b.addEventListener('click', () => ui.setBuildingKind(kind));
@@ -235,10 +240,13 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
     b.addEventListener('click', () => ui.setDecorKind('pond'));
     decorPicker.appendChild(b);
   }
-  for (const erase of [false, true]) {
-    const b = pickButton(erase ? '#ff7a6b' : '#cdb58a', erase ? 'Erase' : 'Path', erase ? 'refund 25%' : `$${PATH_COST}/tile`);
+  for (const [track, erase] of [[false, false], [false, true], [true, false], [true, true]] as const) {
+    const label = track ? (erase ? 'Erase track' : 'Jeep track') : erase ? 'Erase' : 'Path';
+    const swatch = erase ? '#ff7a6b' : track ? '#a8875a' : '#cdb58a';
+    const b = pickButton(swatch, label, erase ? 'refund 25%' : `$${track ? TRACK_COST : PATH_COST}/tile`);
     b.dataset.erase = String(erase);
-    b.addEventListener('click', () => ui.setPathErase(erase));
+    b.dataset.track = String(track);
+    b.addEventListener('click', () => ui.setPathErase(erase, track));
     pathPicker.appendChild(b);
   }
   for (const b of toolButtons) {
@@ -263,7 +271,7 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
     for (const b of buildingPicker.querySelectorAll<HTMLButtonElement>('.pick-btn'))
       b.classList.toggle('active', b.dataset.building === ui.buildingKind);
     for (const b of pathPicker.querySelectorAll<HTMLButtonElement>('.pick-btn'))
-      b.classList.toggle('active', b.dataset.erase === String(ui.pathErase));
+      b.classList.toggle('active', b.dataset.erase === String(ui.pathErase) && b.dataset.track === String(ui.pathTrack));
     for (const b of fencePicker.querySelectorAll<HTMLButtonElement>('.pick-btn'))
       b.classList.toggle('active', Number(b.dataset.fence) === ui.fenceType);
     for (const b of feederPicker.querySelectorAll<HTMLButtonElement>('.pick-btn'))

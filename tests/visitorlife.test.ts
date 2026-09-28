@@ -157,7 +157,7 @@ describe('saves', () => {
       v.boughtSouvenir = true;
     }
     const m = migrate(old)!;
-    expect(m.version).toBe(15);
+    expect(m.version).toBe(16);
     expect(m.visitors[0].items).toEqual(['plush']);
     expect(m.visitors[0].bladder).toBe(0);
     expect(m.finance.month.income.snacks).toBe(0);

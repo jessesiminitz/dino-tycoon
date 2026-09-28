@@ -11,18 +11,10 @@ import { edgeKey, type Edge } from './grid';
 import { isTileOwned, parcelBuyBlocker, parcelGrid, parcelPrice } from './land';
 import { DINO_NAMES, habitatOf, SPECIES, type SpeciesId } from './data/species';
 import { DINO_RESALE, FEEDER_REFUND, FEEDER_TYPES, type FeederKind } from './data/feeders';
-import { computeRegions, isOccupiedPaddock, regionHasPaths } from './regions';
+import { type RegionMap, computeRegions, isOccupiedPaddock, regionHasPaths } from './regions';
 import { Rng } from './rng';
 import { isLand, Terrain, terrainAt } from './terrain';
-import {
-  BUILDING_REFUND,
-  BUILDING_TYPES,
-  LOAN_AMOUNTS,
-  MAX_TICKET_PRICE,
-  PATH_COST,
-  PATH_REFUND,
-  type BuildingKind,
-} from './data/economy';
+import { BUILDING_REFUND, BUILDING_TYPES, LOAN_AMOUNTS, MAX_TICKET_PRICE, PATH_COST, PATH_REFUND, type BuildingKind, TRACK_COST } from './data/economy';
 import { earn, loanBlocker, spend } from './finance';
 import { pathBlocker, tileOccupant, touchesWalkway } from './paths';
 
@@ -48,6 +40,8 @@ export type Command =
   | { type: 'placeDecor'; kind: DecorKind; x: number; y: number }
   | { type: 'removeDecor'; id: number }
   | { type: 'rename'; kind: 'visitor' | 'dino' | 'staff'; id: number; name: string }
+  | { type: 'buildTracks'; tiles: number[] }
+  | { type: 'removeTracks'; tiles: number[] }
   | { type: 'digPonds'; tiles: number[] }
   | { type: 'fillPonds'; tiles: number[] }
   | { type: 'treatDino'; id: number }
@@ -411,6 +405,26 @@ export function applyCommand(state: GameState, cmd: Command): CommandResult {
       return { ok: true, cost: -refund, message: `Removed ${DECOR_TYPES[d.kind].name.toLowerCase()}` };
     }
 
+    case 'buildTracks': {
+      const plan = planTracks(state, cmd.tiles);
+      if (plan.build.length === 0) return { ok: false, message: plan.blocked ? plan.blockReason : 'Already a track' };
+      if (plan.cost > state.money) return { ok: false, message: `Not enough money: need ${usd(plan.cost)}` };
+      for (const i of plan.build) state.tracks[i] = 1;
+      spend(state, 'construction', plan.cost);
+      const n = plan.build.length;
+      const skipped = plan.blocked ? ` (${plan.blocked} skipped: ${plan.blockReason.toLowerCase()})` : '';
+      return { ok: true, cost: plan.cost, message: `Built ${n} jeep track tile${n === 1 ? '' : 's'} for ${usd(plan.cost)}${skipped}` };
+    }
+
+    case 'removeTracks': {
+      const tiles = [...new Set(cmd.tiles)].filter((i) => state.tracks[i]);
+      if (tiles.length === 0) return { ok: false, message: 'No track here' };
+      for (const i of tiles) state.tracks[i] = 0;
+      const refund = Math.floor(tiles.length * TRACK_COST * PATH_REFUND);
+      earn(state, 'sales', refund);
+      return { ok: true, cost: -refund, message: `Removed ${tiles.length} track tile${tiles.length === 1 ? '' : 's'} (+${usd(refund)})` };
+    }
+
     case 'digPonds': {
       const w = state.map.width;
       const dig = [...new Set(cmd.tiles)].filter((i) => !pondDigBlocker(state, i % w, Math.floor(i / w)));
@@ -490,6 +504,31 @@ export function repairCost(state: GameState, e: Edge): number {
 }
 
 /** What a path build would do, for the drag preview and the command. */
+/** Why jeep track can't go on this tile: like a path, but not on paths, and never inside a paddock with animals. */
+export function trackBlocker(state: GameState, regions: RegionMap, x: number, y: number): string | null {
+  const i = y * state.map.width + x;
+  if (state.paths[i]) return 'There is a path here (tracks run alongside paths)';
+  return pathBlocker(state, regions, x, y);
+}
+
+/** What a track build would do, without changing anything. Used for the drag preview. */
+export function planTracks(state: GameState, tiles: number[]) {
+  const regions = computeRegions(state);
+  const w = state.map.width;
+  const build: number[] = [];
+  let blocked = 0;
+  let blockReason = '';
+  for (const i of new Set(tiles)) {
+    if (state.tracks[i]) continue;
+    const reason = trackBlocker(state, regions, i % w, Math.floor(i / w));
+    if (reason) {
+      blocked++;
+      blockReason = reason;
+    } else build.push(i);
+  }
+  return { build, blocked, blockReason, cost: build.length * TRACK_COST };
+}
+
 export function planPaths(state: GameState, tiles: number[]) {
   const regions = computeRegions(state);
   const w = state.map.width;

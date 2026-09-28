@@ -18,6 +18,8 @@ export class UiState {
   decorKind: DecorKind | 'pond' = 'tree';
   /** Path tool erases instead of building. */
   pathErase = false;
+  /** Path tool works on safari jeep track instead of footpath. */
+  pathTrack = false;
   /** Species being released while in 'place-dino' mode. */
   placing: SpeciesId | null = null;
   /** Someone the camera should jump to and select (set by the People panel, consumed by the park scene). */
@@ -51,8 +53,9 @@ export class UiState {
     this.emit();
   }
 
-  setPathErase(erase: boolean): void {
+  setPathErase(erase: boolean, track = false): void {
     this.pathErase = erase;
+    this.pathTrack = track;
     this.emit();
   }
 

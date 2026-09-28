@@ -11,9 +11,10 @@ export type Topic =
   | 'safety'
   | 'staff'
   | 'scenery'
-  | 'shop';
+  | 'shop'
+  | 'rides';
 
-export const TOPICS: Topic[] = ['dinos', 'price', 'food', 'drink', 'restroom', 'mess', 'litter', 'weather', 'safety', 'staff', 'scenery', 'shop'];
+export const TOPICS: Topic[] = ['dinos', 'price', 'food', 'drink', 'restroom', 'mess', 'litter', 'weather', 'safety', 'staff', 'scenery', 'shop', 'rides'];
 
 /** Details a thought can mention: `{species}`, `{name}`, `{price}`, `{item}`. */
 export type ThoughtVars = Partial<Record<'species' | 'name' | 'price' | 'item', string>>;
@@ -84,6 +85,10 @@ export const THOUGHTS: Record<Topic, Lines> = {
     good: ['I got a {item}!', 'Love my new {item}.'],
     bad: [],
   },
+  rides: {
+    good: ['What a great ride!'],
+    bad: [],
+  },
 };
 
 /** What to do about each kind of complaint, for the "what visitors are saying" summary. */
@@ -100,6 +105,7 @@ export const ADVICE: Record<Topic, string> = {
   staff: '',
   scenery: 'Plant gardens along the paths.',
   shop: 'Build a souvenir shop.',
+  rides: 'Build a safari jeep ride, a viewing tower or a petting pen.',
 };
 
 export const TOPIC_LABELS: Record<Topic, string> = {
@@ -115,6 +121,7 @@ export const TOPIC_LABELS: Record<Topic, string> = {
   staff: 'Staff',
   scenery: 'Gardens',
   shop: 'Souvenirs',
+  rides: 'Rides',
 };
 
 export function thoughtText(topic: Topic, good: boolean, vars: ThoughtVars, roll: number): string {

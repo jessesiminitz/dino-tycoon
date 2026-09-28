@@ -11,7 +11,7 @@ import { hoursToHatch, WOBBLE_HOURS } from '../sim/systems/breeding';
 import type { CareEffect } from '../sim/systems/care';
 import { TILE } from './tileset';
 import { paintRows } from './pixels';
-import { paintDigSite, paintRestaurant, paintRestroom, paintSnackStall, paintSouvenirShop, paintTrashCan, paintTrough } from './sceneryArt';
+import { paintDigSite, paintJeep, paintPettingPen, paintRestaurant, paintRestroom, paintSnackStall, paintSouvenirShop, paintStation, paintTower, paintTrashCan, paintTrough } from './sceneryArt';
 
 const dinoKey = (id: SpeciesId, frame: 0 | 1 = 0, baby = false) => `dino-${id}-${frame}${baby ? '-baby' : ''}`;
 const eggKey = (id: SpeciesId) => `egg-${id}`;
@@ -20,6 +20,7 @@ const feederKey = (kind: FeederKind, full: boolean) => `feeder-${kind}-${full ? 
 const WATERLINE = 0.62;
 /** How high flying reptiles hover, in world pixels. */
 const FLY_HEIGHT = 14;
+const JEEP_KEY = 'jeep';
 /** How long hearts or a "Nope!" stay up, in ms. */
 const EFFECT_MS = 1100;
 const HEART = ['.X.X.', 'XXXXX', '.XXX.', '..X..'];
@@ -101,6 +102,12 @@ function paintBuilding(kind: BuildingKind): HTMLCanvasElement {
       return paintRestroom();
     case 'trashcan':
       return paintTrashCan();
+    case 'station':
+      return paintStation();
+    case 'tower':
+      return paintTower();
+    case 'petting':
+      return paintPettingPen();
     case 'digsite':
       return paintDigSite();
   }
@@ -120,6 +127,7 @@ export class EntityLayer {
   private buildings = new Map<number, Phaser.GameObjects.Image>();
   private staff = new Map<number, Phaser.GameObjects.Image>();
   private eggs = new Map<number, Phaser.GameObjects.Image>();
+  private jeeps = new Map<number, Phaser.GameObjects.Image>();
   /** Hearts and "Nope!" bubbles over animals that were just treated or patted. */
   private effects: { dinoId: number; kind: CareEffect; start: number; label?: Phaser.GameObjects.Text }[] = [];
   private markers: Phaser.GameObjects.Graphics;
@@ -150,6 +158,7 @@ export class EntityLayer {
       for (const role of STAFF_ROLES) scene.textures.addCanvas(staffKey(role, frame), paintStaff(role, frame));
     }
     for (const kind of Object.keys(BUILDING_TYPES) as BuildingKind[]) scene.textures.addCanvas(buildingKey(kind), paintBuilding(kind));
+    if (!scene.textures.exists(JEEP_KEY)) scene.textures.addCanvas(JEEP_KEY, paintJeep());
     this.markers = scene.add.graphics().setDepth(9);
     this.shadows = scene.add.graphics().setDepth(3.9);
     this.dirt = scene.add.graphics().setDepth(3.85);
@@ -288,10 +297,33 @@ export class EntityLayer {
     const selB = this.selection?.kind === 'building' ? state.buildings.find((b) => b.id === this.selection!.id) : undefined;
     if (selB) g.lineStyle(1, 0xf2c14e, 1).strokeRect(selB.x * TILE - 0.5, selB.y * TILE - 0.5, TILE + 1, TILE + 1);
 
-    // Visitors
+    // Safari jeeps, with their riders' heads showing.
+    this.sync(this.jeeps, state.jeeps, () => this.scene.add.image(0, 0, JEEP_KEY).setOrigin(0.5, 1));
+    for (const j of state.jeeps) {
+      const img = this.jeeps.get(j.id)!;
+      const t = this.sim.stepProgress;
+      const x = (j.px + (j.x - j.px) * t) * TILE + TILE / 2;
+      const y = (j.py + (j.y - j.py) * t) * TILE + FOOT_Y + 1;
+      if (j.x !== j.px) img.setFlipX(j.x < j.px);
+      const bump = j.steps > 0 && Math.floor(time / 160 + j.id) % 2 === 0 ? -1 : 0;
+      img.setPosition(Math.round(x), Math.round(y) + bump).setDepth(4 + y / 10000);
+      sh.fillEllipse(Math.round(x), Math.round(y) - 1, 18, 4);
+      j.riders.forEach((r, i) => {
+        const v = state.visitors.find((q) => q.id === r.id);
+        const hx = Math.round(x) + Math.round((i - 1.5) * 3) - (img.flipX ? -2 : 2); // seats behind the windscreen
+        const hy = Math.round(y) + bump - img.height + 1;
+        g.fillStyle(0x1b1b14, 1).fillRect(hx - 2, hy - 1, 4, 5);
+        g.fillStyle(parseInt(SKIN[(v?.look ?? i) % SKIN.length].slice(1), 16), 1).fillRect(hx - 1, hy, 2, 2);
+        g.fillStyle(parseInt(SHIRTS[(v?.look ?? i) % SHIRTS.length].slice(1), 16), 1).fillRect(hx - 1, hy + 2, 2, 2);
+      });
+    }
+
+    // Visitors (except those out on a jeep)
     this.sync(this.visitors, state.visitors, (v) => this.scene.add.image(0, 0, visitorKey(v.look)).setOrigin(0.5, 1));
     for (const v of state.visitors) {
       const img = this.visitors.get(v.id)!;
+      img.setVisible(v.riding === null);
+      if (v.riding !== null) continue;
       const { x, y } = this.visitorPosition(v);
       const moving = v.x !== v.px || v.y !== v.py;
       const stride = moving && this.sim.stepProgress >= 0.5;

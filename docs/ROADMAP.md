@@ -10,7 +10,7 @@ Each feature ships as its own release:
 5. Commit and push to `main` (auto-deploys).
 6. Tick it off here.
 
-State-shape changes bump `SAVE_VERSION` (currently 15) with a `migrate()` step. Keep everything kid-friendly and all art original: we paint our own animals in code and imitate no film or franchise designs.
+State-shape changes bump `SAVE_VERSION` (currently 16) with a `migrate()` step. Keep everything kid-friendly and all art original: we paint our own animals in code and imitate no film or franchise designs.
 
 | # | Feature | Size | Save bump | Status |
 |---|---------|------|-----------|--------|
@@ -19,7 +19,7 @@ State-shape changes bump `SAVE_VERSION` (currently 15) with a `migrate()` step. 
 | 3 | Park requests: short daily goals | M | v15 | ✅ 2026-09-28 |
 | 5 | Fossil dig mini-game | M | none | ✅ 2026-09-28 |
 | 6 | New habitats: lagoon and aviary, with 4 new species | XL | none | ✅ 2026-09-28 |
-| 7 | Attractions: jeep safari, viewing tower, petting area | L | v17 | ☐ |
+| 7 | Attractions: jeep safari, viewing tower, petting area | L | v16 | ✅ 2026-09-28 |
 | 8 | Sticker book and trophy room | M | v18 | ☐ |
 | 9 | Day and night | M | none | ☐ |
 | 10 | Events with choices | M | v19 | ☐ |

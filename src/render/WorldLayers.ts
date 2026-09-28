@@ -155,6 +155,7 @@ export class WorldLayers {
   /** Gravel footpaths, with darker edges where a path meets grass. */
   drawPaths(): void {
     const g = this.paths.clear();
+    this.drawTracks(g);
     const { state } = this.sim;
     const { width, height } = state.map;
     const gate = state.entrance.y * width + state.entrance.x;
@@ -178,6 +179,29 @@ export class WorldLayers {
         if (!walk(x + 1, y)) g.fillRect(ox + TILE - 1, oy, 1, TILE);
       }
     }
+  }
+
+  /** Jeep tracks: packed earth with two tyre ruts that join up with neighbouring track. */
+  private drawTracks(g: Phaser.GameObjects.Graphics): void {
+    const { state } = this.sim;
+    const { width, height } = state.map;
+    const track = (x: number, y: number) => x >= 0 && y >= 0 && x < width && y < height && state.tracks[y * width + x] === 1;
+    for (let y = 0; y < height; y++)
+      for (let x = 0; x < width; x++) {
+        if (!track(x, y)) continue;
+        const ox = x * TILE;
+        const oy = y * TILE;
+        g.fillStyle(0xa8875a, 1).fillRect(ox + 1, oy + 1, TILE - 2, TILE - 2);
+        g.fillStyle(0x7a5e3a, 1);
+        const ruts = [4, 11];
+        // Ruts run toward each neighbour that's track (a lone tile gets an east–west pair).
+        const east = track(x + 1, y);
+        const west = track(x - 1, y);
+        const north = track(x, y - 1);
+        const south = track(x, y + 1);
+        if (east || west || (!north && !south)) for (const r of ruts) g.fillRect(west ? ox : ox + 3, oy + r, (west ? 0 : -3) + (east ? TILE : TILE - 3), 1);
+        if (north || south) for (const r of ruts) g.fillRect(ox + r, north ? oy : oy + 3, 1, (north ? 0 : -3) + (south ? TILE : TILE - 3));
+      }
   }
 
   /** Path-tool preview: tiles that will be built (or erased) and ones that can't be. */

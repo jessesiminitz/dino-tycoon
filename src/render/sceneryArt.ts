@@ -326,6 +326,87 @@ export function paintTrashCan(): HTMLCanvasElement {
   });
 }
 
+/** Safari station: a thatched hut with a striped awning and a little flag. */
+export function paintStation(): HTMLCanvasElement {
+  return paintSprite(24, 26, (px) => {
+    for (let y = 14; y < 24; y++) for (let x = 4; x < 20; x++) px(x, y, x < 6 ? '#e8d9b0' : '#d9c79a'); // walls
+    for (let y = 16; y < 24; y++) for (let x = 10; x < 14; x++) px(x, y, '#6b4a2a'); // doorway
+    // Thatched roof.
+    for (let y = 6; y < 14; y++) {
+      const half = 5 + (y - 6) * 1.1;
+      for (let x = Math.round(12 - half); x <= Math.round(12 + half); x++) px(x, y, (x + y) % 3 === 0 ? '#b8923f' : '#d9b060');
+    }
+    // Striped awning over the door.
+    for (let x = 7; x < 17; x++) px(x, 14, Math.floor(x / 2) % 2 ? '#3f7a3a' : '#f4ecd2');
+    for (let y = 1; y < 7; y++) px(18, y, '#5a3b1f'); // flagpole
+    for (let y = 1; y < 4; y++) for (let x = 19; x < 22; x++) px(x, y, '#e05a4f');
+  });
+}
+
+/** Viewing tower: a tall wooden lookout with a railed platform on top. */
+export function paintTower(): HTMLCanvasElement {
+  return paintSprite(20, 42, (px) => {
+    // Legs and cross-bracing.
+    for (let y = 12; y < 41; y++) {
+      px(4 + Math.round((y - 12) * -0.05), y, '#6b4a2a');
+      px(15 + Math.round((y - 12) * 0.05), y, '#6b4a2a');
+    }
+    for (let y = 14; y < 40; y += 6) for (let i = 0; i < 11; i++) px(5 + i, y + Math.round(i * 0.5), '#8a6038');
+    for (let y = 14; y < 40; y += 6) for (let i = 0; i < 11; i++) px(15 - i, y + Math.round(i * 0.5), '#7a5430');
+    // Platform, railing and a little roof.
+    for (let x = 2; x < 18; x++) {
+      px(x, 11, '#8a6038');
+      px(x, 12, '#5a3b1f');
+      if (x % 3 === 0) for (let y = 7; y < 11; y++) px(x, y, '#9c6b3c');
+      px(x, 7, '#b07a3f');
+    }
+    for (let y = 1; y < 5; y++) {
+      const half = 3 + y * 2;
+      for (let x = 10 - half; x <= 10 + half; x++) px(x, y, y % 2 ? '#d9573b' : '#b8432f');
+    }
+  });
+}
+
+/** Petting pen: a low wooden fence round a straw floor, with two little dinos inside. */
+export function paintPettingPen(): HTMLCanvasElement {
+  return paintSprite(24, 20, (px) => {
+    for (let y = 8; y < 18; y++) for (let x = 2; x < 22; x++) px(x, y, (x * 7 + y * 3) % 5 === 0 ? '#d9bd6a' : '#e8d18b'); // straw
+    // Two tiny, round, friendly dinos.
+    for (const [cx, c, dark] of [[8, '#86c25c', '#4e8a33'], [16, '#e0a86b', '#a86e3a']] as const) {
+      for (let y = 11; y < 15; y++) for (let x = cx - 2; x <= cx + 2; x++) px(x, y, y === 14 ? dark : c);
+      for (let y = 9; y < 12; y++) for (let x = cx + 1; x <= cx + 3; x++) px(x, y, c);
+      px(cx + 3, 10, '#101010');
+      px(cx - 3, 13, c);
+      px(cx - 1, 15, dark);
+      px(cx + 1, 15, dark);
+    }
+    // Low fence all round.
+    for (let x = 1; x < 23; x++) {
+      px(x, 7, '#9c6b3c');
+      px(x, 17, '#9c6b3c');
+      if (x % 4 === 1) for (let y = 5; y < 19; y++) px(x, y, '#6b4a2a');
+    }
+    for (let y = 7; y < 18; y++) {
+      px(1, y, '#9c6b3c');
+      px(22, y, '#9c6b3c');
+    }
+  });
+}
+
+/** Safari jeep: khaki with a green stripe, roll bar and big tyres (facing right). */
+export function paintJeep(): HTMLCanvasElement {
+  return paintSprite(22, 14, (px) => {
+    for (let y = 6; y < 11; y++) for (let x = 2; x < 20; x++) px(x, y, y === 8 ? '#3f7a3a' : y === 6 ? '#e8d9a8' : '#cdb97a');
+    for (let x = 14; x < 19; x++) px(x, 5, '#cdb97a'); // bonnet
+    for (let y = 2; y < 6; y++) px(13, y, '#8fb8d0'); // windscreen
+    for (let x = 3; x < 12; x++) px(x, 2, '#3b3b3b'); // roll bar
+    for (const x of [3, 11]) for (let y = 2; y < 6; y++) px(x, y, '#3b3b3b');
+    px(19, 7, '#f2d24e'); // headlight
+    for (const cx of [5, 16])
+      for (let y = 10; y < 14; y++) for (let x = cx - 2; x <= cx + 1; x++) px(x, y, (x === cx - 1 || x === cx) && (y === 11 || y === 12) ? '#8a8a8a' : '#2b2b2b');
+  });
+}
+
 export function paintSnackStall(): HTMLCanvasElement {
   return paintSprite(22, 26, (px) => {
     // Striped umbrella dome.

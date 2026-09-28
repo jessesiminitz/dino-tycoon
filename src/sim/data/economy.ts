@@ -1,4 +1,4 @@
-export type BuildingKind = 'restaurant' | 'snackstall' | 'giftshop' | 'restroom' | 'trashcan' | 'digsite';
+export type BuildingKind = 'restaurant' | 'snackstall' | 'giftshop' | 'restroom' | 'trashcan' | 'station' | 'tower' | 'petting' | 'digsite';
 
 export interface BuildingType {
   kind: BuildingKind;
@@ -34,6 +34,18 @@ export const BUILDING_TYPES: Record<BuildingKind, BuildingType> = {
     kind: 'trashcan', name: 'Trash can', cost: 100, upkeep: 2, salePrice: 0, needsPath: true,
     description: 'Visitors nearby bin their cups and wrappers instead of dropping them on the path.',
   },
+  station: {
+    kind: 'station', name: 'Safari station', cost: 4000, upkeep: 40, salePrice: 8, needsPath: true,
+    description: 'A jeep takes visitors round a track you lay (Path tool: Track) to see dinosaurs up close. Build it next to a path and a track.',
+  },
+  tower: {
+    kind: 'tower', name: 'Viewing tower', cost: 2500, upkeep: 20, salePrice: 3, needsPath: true,
+    description: 'Visitors climb it to spot every dinosaur within 8 tiles.',
+  },
+  petting: {
+    kind: 'petting', name: 'Petting pen', cost: 3000, upkeep: 30, salePrice: 4, needsPath: true,
+    description: 'Little dinosaurs to pat. Kids adore it. Needs a worker on staff as keeper.',
+  },
   digsite: {
     kind: 'digsite', name: 'Dig site', cost: 2500, upkeep: 150, salePrice: 0, needsPath: false,
     description: 'A fossil crew digs here every day. Must go on a fossil bed; richer beds find more, and rarer species.',
@@ -43,6 +55,7 @@ export const BUILDING_TYPES: Record<BuildingKind, BuildingType> = {
 export const BUILDING_REFUND = 0.25;
 
 export const PATH_COST = 10;
+export const TRACK_COST = 15;
 export const PATH_REFUND = 0.25;
 
 /** Gates open to new arrivals from OPEN_HOUR until LAST_ENTRY_HOUR; everyone heads out at CLOSE_HOUR. */

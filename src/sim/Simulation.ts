@@ -6,6 +6,7 @@ import type { GameEvent, SimContext } from './systems/context';
 import { hourlyDinos, stepDinos, STEPS_PER_HOUR } from './systems/dinos';
 import { hourlyBreeding } from './systems/breeding';
 import { hourlyRequests, updateRequests } from './systems/requests';
+import { stepJeeps } from './systems/rides';
 import { hourlyVisitors, stepVisitors } from './systems/visitors';
 import { hourlyEconomy } from './systems/economy';
 import { hourlyFences, hourlyHealth, stepEscapes } from './systems/incidents';
@@ -81,6 +82,7 @@ export class Simulation {
     stepDinos(ctx);
     stepEscapes(ctx);
     stepVisitors(ctx);
+    stepJeeps(ctx);
     stepStaff(ctx);
     state.stepInHour++;
     if (state.stepInHour >= STEPS_PER_HOUR) {
