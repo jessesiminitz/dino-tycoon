@@ -9,6 +9,7 @@ import {
   paintMountain,
   paintPalm,
   paintBush,
+  paintReeds,
   paintVolcano,
   VOLCANO_CRATER_ABOVE_BASE,
 } from './sceneryArt';
@@ -20,6 +21,8 @@ const PALM_CHANCE = 0.1;
 /** Open grass tiles that get a lone tree or a bush. */
 const LONE_TREE_CHANCE = 0.025;
 const BUSH_CHANCE = 0.05;
+/** Share of marsh tiles with a clump of reeds. */
+const REED_CHANCE = 0.45;
 /** Mountain tiles that carry a peak sprite (the rest show scree between peaks). */
 const PEAK_CHANCE = 0.55;
 /** Keep peaks this far from the volcano so its cone stands clear. */
@@ -60,6 +63,7 @@ export class SceneryLayer {
     for (let v = 0; v < TREE_VARIANTS; v++) tex(`palm-${v}`, () => paintPalm(v));
     for (let v = 0; v < 6; v++) tex(`mountain-${v}`, () => paintMountain(v * 13 + 3));
     for (let v = 0; v < 3; v++) tex(`bush-${v}`, () => paintBush(v));
+    for (let v = 0; v < 3; v++) tex(`reeds-${v}`, () => paintReeds(v * 7 + 1));
     tex('volcano', paintVolcano);
     for (const kind of DECOR_KINDS) tex(decorKey(kind), () => paintDecor(kind));
 
@@ -98,6 +102,12 @@ export class SceneryLayer {
             .setOrigin(0.5, 1)
             .setDepth(depthAt(base));
           this.trees.set(i, img);
+        } else if (t === Terrain.Marsh && h < REED_CHANCE) {
+          const img = scene.add
+            .image(x * TILE + TILE / 2 + jitter, base - 2, `reeds-${Math.floor(hash2(x, y, 10) * 3)}`)
+            .setOrigin(0.5, 1)
+            .setDepth(depthAt(base));
+          this.trees.set(i, img);
         } else if (t === Terrain.Mountain) {
           const v = map.volcano;
           const nearVolcano = v && Math.max(Math.abs(x - v.x), Math.abs(y - v.y)) <= VOLCANO_CLEARANCE;
@@ -130,7 +140,8 @@ export class SceneryLayer {
     for (const o of [...state.buildings, ...state.feeders, ...state.decor]) busy.add(o.y * w + o.x);
     busy.add(state.entrance.y * w + state.entrance.x);
     for (let i = 0; i < state.map.tiles.length; i++) if (state.map.tiles[i] === Terrain.Pond) busy.add(i); // dug ponds
-    for (const [i, img] of this.trees) img.setVisible(!busy.has(i));
+    // Reeds go when their marsh is drained.
+    for (const [i, img] of this.trees) img.setVisible(!busy.has(i) && (img.texture.key.startsWith('reeds') ? state.map.tiles[i] === Terrain.Marsh : true));
 
     const live = new Set<number>();
     for (const d of state.decor) {

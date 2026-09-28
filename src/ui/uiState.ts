@@ -14,8 +14,8 @@ export class UiState {
   fenceType: FenceTypeId = 1;
   feederKind: FeederKind = 'plants';
   buildingKind: BuildingKind = 'restaurant';
-  /** A garden item, or 'pond' to dig water (for lagoons). */
-  decorKind: DecorKind | 'pond' = 'tree';
+  /** A garden item, 'pond' to dig water (for lagoons), or 'drain' to dry out marsh. */
+  decorKind: DecorKind | 'pond' | 'drain' = 'tree';
   /** Path tool erases instead of building. */
   pathErase = false;
   /** Path tool works on safari jeep track instead of footpath. */
@@ -48,7 +48,7 @@ export class UiState {
     this.emit();
   }
 
-  setDecorKind(kind: DecorKind | 'pond'): void {
+  setDecorKind(kind: DecorKind | 'pond' | 'drain'): void {
     this.decorKind = kind;
     this.emit();
   }

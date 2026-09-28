@@ -56,6 +56,10 @@ export const BUILDING_REFUND = 0.25;
 
 export const PATH_COST = 10;
 export const TRACK_COST = 15;
+/** A path laid across a river is a wooden bridge. */
+export const BRIDGE_COST = 60;
+/** Draining a tile of marsh so it can be built on. */
+export const DRAIN_COST = 80;
 export const PATH_REFUND = 0.25;
 
 /** Gates open to new arrivals from OPEN_HOUR until LAST_ENTRY_HOUR; everyone heads out at CLOSE_HOUR. */

@@ -62,11 +62,12 @@ export function parcelBuyBlocker(state: GameState, px: number, py: number): stri
  */
 export function findEntrance(map: TerrainMap): Point {
   const cx = map.width / 2;
+  const main = mainland(map);
   let best: Point | null = null;
   let bestScore = -Infinity;
   for (let y = 0; y < map.height; y++) {
     for (let x = 0; x < map.width; x++) {
-      if (terrainAt(map, x, y) !== Terrain.Sand) continue;
+      if (terrainAt(map, x, y) !== Terrain.Sand || !main[y * map.width + x]) continue;
       const touchesWater = [
         [1, 0],
         [-1, 0],
@@ -86,6 +87,37 @@ export function findEntrance(map: TerrainMap): Point {
   }
   // Generated islands always have a beach; fall back to the centre just in case.
   return best ?? { x: Math.floor(map.width / 2), y: Math.floor(map.height / 2) };
+}
+
+/** The biggest connected stretch of land (so the gate never lands on a little islet offshore). */
+function mainland(map: TerrainMap): Uint8Array {
+  const { width, height, tiles } = map;
+  const label = new Int32Array(width * height).fill(-1);
+  const sizes: number[] = [];
+  for (let start = 0; start < tiles.length; start++) {
+    if (label[start] !== -1 || !isLand(tiles[start])) continue;
+    const id = sizes.length;
+    let size = 0;
+    const stack = [start];
+    label[start] = id;
+    while (stack.length) {
+      const i = stack.pop()!;
+      size++;
+      const x = i % width;
+      const y = (i - x) / width;
+      for (const [nx, ny] of [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]]) {
+        if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+        const j = ny * width + nx;
+        if (label[j] === -1 && isLand(tiles[j])) {
+          label[j] = id;
+          stack.push(j);
+        }
+      }
+    }
+    sizes.push(size);
+  }
+  const biggest = sizes.indexOf(Math.max(...sizes));
+  return Uint8Array.from(label, (l) => (l === biggest ? 1 : 0));
 }
 
 /** Starting land: a 3 × 2 block of parcels around and above the entrance. */

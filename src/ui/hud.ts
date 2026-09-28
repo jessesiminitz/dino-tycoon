@@ -3,7 +3,7 @@ import type { Simulation, Speed } from '../sim/Simulation';
 import { FEEDER_TYPES } from '../sim/data/feeders';
 import { habitatOf, SPECIES } from '../sim/data/species';
 import { POND_COST } from '../sim/commands';
-import { BUILDING_TYPES, PATH_COST, TRACK_COST } from '../sim/data/economy';
+import { BUILDING_TYPES, DRAIN_COST, PATH_COST, TRACK_COST } from '../sim/data/economy';
 import { mountCatalog } from './catalog';
 import { mountParkPanel } from './parkPanel';
 import { mountGuide } from './guide';
@@ -93,8 +93,9 @@ function modeHint(ui: UiState): string | null {
       }
       return ui.pathErase
         ? 'Drag over paths to remove them'
-        : `Drag to lay a path (${formatMoney(PATH_COST)} a tile) · connect it to the gate`;
+        : `Drag to lay a path (${formatMoney(PATH_COST)} a tile) · connect it to the gate · across a river it's a bridge`;
     case 'decor': {
+      if (ui.decorKind === 'drain') return `Tap or drag over marsh to drain it into firm grass (${formatMoney(DRAIN_COST)} a tile)`;
       if (ui.decorKind === 'pond') {
         return `Tap or drag over grass or sand to dig a pond (${formatMoney(POND_COST)} a tile). A pond inside a paddock makes a lagoon for sea reptiles`;
       }

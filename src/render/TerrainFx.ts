@@ -5,6 +5,10 @@ import { TILE } from './tileset';
 
 const SPARKLES = 40;
 const SPARKLE_MS = 1600;
+const STEAM_MS = 2600;
+const SPRAY_MS = 700;
+/** Water whose banks get surf foam (rivers and springs have plain banks). */
+const FOAMY = new Set([Terrain.DeepWater, Terrain.Shallows, Terrain.Pond]);
 
 /**
  * Terrain dressing drawn over the tilemap: surf where water meets land (static)
@@ -14,10 +18,15 @@ export class TerrainFx {
   private sparkle: Phaser.GameObjects.Graphics;
   private surf: Phaser.GameObjects.Graphics;
   private water: number[] = [];
+  private springs: number[] = [];
+  private falls: number[] = [];
+  private fx: Phaser.GameObjects.Graphics;
 
   constructor(scene: Phaser.Scene, private map: TerrainMap) {
     this.surf = scene.add.graphics().setDepth(0.3);
     this.sparkle = scene.add.graphics().setDepth(0.35);
+    // Steam and spray rise above sprites standing nearby.
+    this.fx = scene.add.graphics().setDepth(8.4);
     this.rebuild();
   }
 
@@ -25,13 +34,19 @@ export class TerrainFx {
   rebuild(): void {
     const surf = this.surf.clear();
     this.water = [];
+    this.springs = [];
+    this.falls = [];
     const { width, height, tiles } = this.map;
     const land = (x: number, y: number) => x >= 0 && y >= 0 && x < width && y < height && isLand(tiles[y * width + x]);
 
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
-        if (!isWater(tiles[y * width + x])) continue;
-        if (tiles[y * width + x] !== Terrain.Pond) this.water.push(y * width + x);
+        const t = tiles[y * width + x];
+        if (t === Terrain.HotSpring) this.springs.push(y * width + x);
+        if (t === Terrain.Waterfall) this.falls.push(y * width + x);
+        if (!isWater(t)) continue;
+        if (t !== Terrain.Pond && t !== Terrain.HotSpring && t !== Terrain.Waterfall) this.water.push(y * width + x);
+        if (!FOAMY.has(t)) continue;
         const ox = x * TILE;
         const oy = y * TILE;
         // A broken line of foam along each side that touches land.
@@ -57,6 +72,7 @@ export class TerrainFx {
 
   /** Twinkles: each sparkle fades in and out at a spot that moves every cycle. */
   update(time: number): void {
+    this.updateSteamAndSpray(time);
     const g = this.sparkle.clear();
     if (this.water.length === 0) return;
     const { width } = this.map;
@@ -69,6 +85,32 @@ export class TerrainFx {
       const a = Math.sin(phase * Math.PI);
       g.fillStyle(0xffffff, 0.8 * a).fillRect(x, y, 1, 1);
       if (a > 0.7) g.fillStyle(0xffffff, 0.4 * a).fillRect(x - 1, y, 3, 1).fillRect(x, y - 1, 1, 3);
+    }
+  }
+
+  /** Wisps of steam drifting up from hot springs, and spray at the foot of waterfalls. */
+  private updateSteamAndSpray(time: number): void {
+    const g = this.fx.clear();
+    const { width } = this.map;
+    for (const tile of this.springs) {
+      const bx = (tile % width) * TILE;
+      const by = Math.floor(tile / width) * TILE + 10;
+      for (let k = 0; k < 3; k++) {
+        const phase = (time / STEAM_MS + k / 3 + hash2(tile, k, 4)) % 1;
+        const x = bx + 4 + k * 4 + Math.sin(phase * 6 + k) * 2;
+        const y = by - phase * 22;
+        const size = 2 + Math.floor(phase * 3);
+        g.fillStyle(0xffffff, 0.85 * (1 - phase)).fillRect(Math.round(x), Math.round(y), size + 1, size);
+      }
+    }
+    for (const tile of this.falls) {
+      const bx = (tile % width) * TILE;
+      const by = (Math.floor(tile / width) + 1) * TILE;
+      for (let k = 0; k < 5; k++) {
+        const phase = (time / SPRAY_MS + k / 5) % 1;
+        const x = bx + 1 + Math.floor(hash2(k, Math.floor(time / SPRAY_MS), tile) * 14);
+        g.fillStyle(0xffffff, 0.8 * (1 - phase)).fillRect(x, by - 2 - Math.round(phase * 4), 2, 1);
+      }
     }
   }
 }

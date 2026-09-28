@@ -13,6 +13,7 @@ import {
 } from '../data/economy';
 import { SPECIES } from '../data/species';
 import { DECOR_RADIUS, DECOR_TYPES, MAX_DECOR_CHARM } from '../data/decor';
+import { Terrain } from '../terrain';
 import { earn } from '../finance';
 import { canStep, findPath, walkableNeighbours } from '../pathfind';
 import { onWalkway } from '../paths';
@@ -150,13 +151,30 @@ export function parkAppeal(state: GameState, regions: RegionMap): number {
   return appeal + species.size * 3 + Math.min(8, charm * 0.15);
 }
 
-/** Mood lift per hour from gardens around a spot. */
+/** How much a view of each natural feature cheers visitors (the best one in sight counts). */
+export const NATURE_CHARM: Partial<Record<Terrain, number>> = {
+  [Terrain.Waterfall]: 3,
+  [Terrain.HotSpring]: 3,
+  [Terrain.River]: 1,
+  [Terrain.Pond]: 1,
+};
+
+/** Mood lift per hour from gardens and natural features around a spot. */
 export function sceneryCharm(state: GameState, x: number, y: number): number {
   let charm = 0;
   for (const d of state.decor) {
     if (Math.abs(d.x - x) <= DECOR_RADIUS && Math.abs(d.y - y) <= DECOR_RADIUS) charm += DECOR_TYPES[d.kind].charm;
   }
-  return Math.min(MAX_DECOR_CHARM, charm);
+  const { width, height, tiles } = state.map;
+  let nature = 0;
+  for (let dy = -DECOR_RADIUS; dy <= DECOR_RADIUS; dy++)
+    for (let dx = -DECOR_RADIUS; dx <= DECOR_RADIUS; dx++) {
+      const nx = x + dx;
+      const ny = y + dy;
+      if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+      nature = Math.max(nature, NATURE_CHARM[tiles[ny * width + nx]] ?? 0);
+    }
+  return Math.min(MAX_DECOR_CHARM, charm + nature);
 }
 
 /** The ticket price visitors consider fair for what's on show. */

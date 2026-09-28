@@ -1305,6 +1305,62 @@ body:not(.in-park) #info {
   white-space: nowrap;
 }
 
+.map-preview {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  image-rendering: pixelated;
+  border: 2px solid var(--panel-lo);
+  border-radius: 3px;
+}
+
+.island-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 8px;
+  text-align: left;
+}
+
+.island-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  font-size: 12px;
+  text-align: left;
+  background: var(--panel);
+  border: 3px solid;
+  border-color: var(--bevel);
+  border-radius: 4px;
+}
+
+.island-card b {
+  font-size: 14px;
+}
+
+.island-card.active {
+  border-color: var(--accent);
+  background: var(--panel-hi);
+}
+
+.island-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.seg {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.seg .step-btn.active {
+  border-color: var(--accent);
+  background: rgba(255, 138, 92, 0.3);
+}
+
 .scenario-card ul {
   margin: 0;
   padding-left: 16px;

@@ -1,11 +1,11 @@
 import type { GameState } from './GameState';
 import { fenceAt } from './fences';
-import { isLand } from './terrain';
+import { isGround } from './terrain';
 
 export type CanEnter = (state: GameState, i: number) => boolean;
 
-/** Dinosaurs walk on any land; they never swim. */
-export const onLand: CanEnter = (state, i) => isLand(state.map.tiles[i]);
+/** Dinosaurs and staff walk on any land (and over bridges); they never swim. */
+export const onLand: CanEnter = (state, i) => isGround(state.map.tiles[i], state.paths[i] === 1);
 
 /**
  * Tiles reachable in one step from tile index `i`: neighbours that `canEnter`

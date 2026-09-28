@@ -31,7 +31,7 @@ const H = 14;
 /** Grass park, all owned, gate (0,13), paths along x=0 and y=9, fenced paddock [2,10)×[2,8). */
 function park(fence: 1 | 2 | 3 | 4 = 4): GameState {
   const s = newGame(31);
-  s.map = { width: W, height: H, tiles: new Array(W * H).fill(Terrain.Grass) };
+  s.map = { width: W, height: H, tiles: new Array(W * H).fill(Terrain.Grass), heights: new Array(W * H).fill(5), shape: "classic" };
   s.entrance = { x: 0, y: 13 };
   const { cols, rows } = parcelGrid(s.map);
   s.parcelsOwned = new Array(cols * rows).fill(true);

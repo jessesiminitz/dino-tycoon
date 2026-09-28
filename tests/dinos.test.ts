@@ -17,7 +17,7 @@ function parkWithPaddock(): GameState {
   const s = newGame(7);
   const width = 20;
   const height = 14;
-  s.map = { width, height, tiles: new Array(width * height).fill(Terrain.Grass) };
+  s.map = { width, height, tiles: new Array(width * height).fill(Terrain.Grass), heights: new Array(width * height).fill(5), shape: "classic" };
   s.entrance = { x: 0, y: 13 };
   const { cols, rows } = parcelGrid(s.map);
   s.parcelsOwned = new Array(cols * rows).fill(true);
@@ -210,7 +210,7 @@ describe('determinism and saves', () => {
     } = current;
     const v2 = JSON.parse(JSON.stringify({ ...rest, version: 2 }));
     const migrated = migrate(v2)!;
-    expect(migrated.version).toBe(17);
+    expect(migrated.version).toBe(18);
     expect(migrated.fossilBeds.length).toBeGreaterThan(0);
     expect(migrated.scenario).toEqual({ id: 'sandbox', status: 'free', round: 0, roundStart: 1, earned: [] });
     expect(migrated.tutorialStep).toBeNull();

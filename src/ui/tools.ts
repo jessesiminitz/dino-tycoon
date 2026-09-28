@@ -3,10 +3,10 @@ import { FENCE_TYPE_IDS, FENCE_TYPES, NET, type FenceTypeId } from '../sim/data/
 import { FEEDER_TYPES, type FeederKind } from '../sim/data/feeders';
 import { DIET_LABELS } from '../sim/data/species';
 import { POND_COST } from '../sim/commands';
-import { BUILDING_TYPES, PATH_COST, TRACK_COST, type BuildingKind } from '../sim/data/economy';
+import { BRIDGE_COST, BUILDING_TYPES, DRAIN_COST, PATH_COST, TRACK_COST, type BuildingKind } from '../sim/data/economy';
 import { DECOR_KINDS, DECOR_TYPES, type DecorKind } from '../sim/data/decor';
 import { paintBuilding, paintDecor, paintTrough } from '../render/sceneryArt';
-import { paintFenceSample, paintPathSample, paintPondSample, withCross } from '../render/shopArt';
+import { paintFenceSample, paintMarshSample, paintPathSample, paintPondSample, withCross } from '../render/shopArt';
 import { mountShop, type Shop, type ShopItem } from './shop';
 import type { Mode, UiState } from './uiState';
 
@@ -105,8 +105,11 @@ function pathItems(): ShopItem[] {
       art: path,
       name: 'Path',
       tag: '🚶 Visitors',
-      facts: [['Price', `${$(PATH_COST)} a tile`]],
-      blurb: 'Visitors walk on paths. Join them to the gate and lead them past your paddocks.',
+      facts: [
+        ['Price', `${$(PATH_COST)} a tile`],
+        ['Bridge', `${$(BRIDGE_COST)} a tile over a river`],
+      ],
+      blurb: 'Visitors walk on paths. Join them to the gate and lead them past your paddocks. Drag across a river to build a bridge.',
       button: `Choose · ${$(PATH_COST)}`,
       cost: PATH_COST,
     },
@@ -159,6 +162,16 @@ function gardenItems(): ShopItem[] {
     button: `Choose · ${$(POND_COST)}`,
     cost: POND_COST,
   });
+  items.push({
+    id: 'drain',
+    art: paintMarshSample(),
+    name: 'Drain marsh',
+    tag: '🪏 Dry out',
+    facts: [['Price', `${$(DRAIN_COST)} a tile`]],
+    blurb: 'Marsh is too soggy to build on. Drag over it to drain it into firm grass.',
+    button: `Choose · ${$(DRAIN_COST)}`,
+    cost: DRAIN_COST,
+  });
   return items;
 }
 
@@ -185,7 +198,7 @@ export function mountTools(sim: Simulation, ui: UiState): void {
     feeder: (id) => ui.setFeederKind(id as FeederKind),
     fence: (id) => ui.setFenceType(Number(id) as FenceTypeId),
     path: (id) => ui.setPathErase(id.endsWith('-erase'), id.startsWith('track')),
-    decor: (id) => ui.setDecorKind(id as DecorKind | 'pond'),
+    decor: (id) => ui.setDecorKind(id as DecorKind | 'pond' | 'drain'),
   };
   const shop = (mode: ShopMode, title: string, items: ShopItem[]) =>
     mountShop(sim, title, items, () => (ui.mode === mode ? current[mode]() : null), (id) => {

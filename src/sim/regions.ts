@@ -2,7 +2,7 @@ import type { GameState } from './GameState';
 import { FENCE_TYPES, NET, type FenceTypeId } from './data/fences';
 import { fenceAt } from './fences';
 import { isTileOwned } from './land';
-import { isLand, Terrain } from './terrain';
+import { isGround, isLand, Terrain } from './terrain';
 
 export type RegionKind = 'public' | 'paddock' | 'wild';
 
@@ -39,7 +39,7 @@ export function computeRegions(state: GameState): RegionMap {
   const waterEdges: Set<number>[] = [];
 
   for (let start = 0; start < tiles.length; start++) {
-    if (tileRegion[start] !== -1 || !isLand(tiles[start])) continue;
+    if (tileRegion[start] !== -1 || !isGround(tiles[start], state.paths[start] === 1)) continue;
 
     const id = regions.length;
     const members: number[] = [];
@@ -77,7 +77,8 @@ export function computeRegions(state: GameState): RegionMap {
           continue;
         }
         const n = ny * width + nx;
-        if (!isLand(tiles[n])) {
+        // Water edges a region, unless a bridge crosses it.
+        if (!isGround(tiles[n], state.paths[n] === 1)) {
           water.add(n);
           continue;
         }

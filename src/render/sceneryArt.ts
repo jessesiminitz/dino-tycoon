@@ -202,6 +202,17 @@ export function paintBush(seed: number): HTMLCanvasElement {
   });
 }
 
+/** A clump of cattails for marshland. */
+export function paintReeds(seed: number): HTMLCanvasElement {
+  return paintSprite(12, 16, (px) => {
+    for (let k = 0; k < 5; k++) {
+      const x = 2 + k * 2 + (hash2(k, seed, 4) < 0.5 ? 0 : 1);
+      const top = 2 + Math.floor(hash2(seed, k, 5) * 5);
+      for (let y = top; y < 15; y++) px(x, y, y < top + 3 && k % 2 === 0 ? '#7a5a30' : k % 2 ? '#8aa84a' : '#6f8f3a');
+    }
+  }, false);
+}
+
 export function paintFlowerBed(seed: number): HTMLCanvasElement {
   const colors = ['#f2d24e', '#ff9fb8', '#f4ecd2', '#e05a4f', '#b28dff'];
   return paintSprite(16, 12, (px) => {

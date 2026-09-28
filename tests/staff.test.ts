@@ -19,7 +19,7 @@ const H = 14;
 /** 20×14 grass, all owned, gate at (0, 13), paddock over tiles [2,10) × [2,8) with the given fence. */
 function park(fence: FenceTypeId = 4): GameState {
   const s = newGame(21);
-  s.map = { width: W, height: H, tiles: new Array(W * H).fill(Terrain.Grass) };
+  s.map = { width: W, height: H, tiles: new Array(W * H).fill(Terrain.Grass), heights: new Array(W * H).fill(5), shape: "classic" };
   s.entrance = { x: 0, y: 13 };
   const { cols, rows } = parcelGrid(s.map);
   s.parcelsOwned = new Array(cols * rows).fill(true);

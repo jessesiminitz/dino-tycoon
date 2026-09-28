@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { hash2, Rng } from '../src/sim/rng';
-import { generateIsland, isLand, Terrain } from '../src/sim/terrain';
+import { isLand, Terrain } from '../src/sim/terrain';
+import { generateIsland } from '../src/sim/island';
 import { calendar, newGame } from '../src/sim/GameState';
 import { MS_PER_HOUR, Simulation } from '../src/sim/Simulation';
 

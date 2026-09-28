@@ -13,7 +13,7 @@ function flatWorld(): GameState {
   const s = newGame(1);
   const width = 12;
   const height = 10;
-  s.map = { width, height, tiles: new Array(width * height).fill(Terrain.Grass) };
+  s.map = { width, height, tiles: new Array(width * height).fill(Terrain.Grass), heights: new Array(width * height).fill(5), shape: "classic" };
   s.entrance = { x: 0, y: 9 };
   const { cols, rows } = parcelGrid(s.map);
   s.parcelsOwned = new Array(cols * rows).fill(true);
@@ -168,7 +168,7 @@ describe('land', () => {
 
   it('parcels must border owned land and cost per land tile', () => {
     const s = flatWorld();
-    s.map = { width: 24, height: 8, tiles: new Array(24 * 8).fill(Terrain.Grass) };
+    s.map = { width: 24, height: 8, tiles: new Array(24 * 8).fill(Terrain.Grass), heights: new Array(24 * 8).fill(5), shape: "classic" };
     s.parcelsOwned = [true, false, false];
     expect(parcelBuyBlocker(s, 2, 0)).toMatch(/border/);
     expect(parcelBuyBlocker(s, 1, 0)).toBeNull();

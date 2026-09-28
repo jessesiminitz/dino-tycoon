@@ -1,6 +1,6 @@
 # Dino Tycoon: handoff notes
 
-Everything a fresh session needs to carry on. Last updated 2026-09-28, at commit `405775c` plus this file.
+Everything a fresh session needs to carry on. Last updated 2026-09-28 (islands update) plus this file.
 
 ## What this is
 
@@ -184,3 +184,32 @@ The ten fun and engagement features the owner approved are all built and deploye
 - **Build tools:** Feeder, Build, Path, Garden and Fence each open a picture sheet like Buy Dinosaurs (`src/ui/tools.ts` builds the cards; `src/ui/shop.ts` is the generic sheet; small pictures for fences, paths and ponds are in `src/render/shopArt.ts`). Choosing a card starts placing it, and a chip above the toolbar shows the choice with a Change button. Remove and Land act straight away.
 - **Sheets:** every big panel has `.modal-card.sheet`, a fixed size (`min(100%, 980px)` × `min(100%, 760px)`), so panels don't jump when switching tabs. Grids and bodies hide sideways overflow.
 - Checks: `scripts/checks/ui-tour.mjs [WxH]` opens every sheet, reports its size and any sideways scrolling, and saves screenshots to `scripts/checks/tour/`.
+
+## Islands (Phase 2 of `docs/PLAN-challenges.md`, done 2026-09-28)
+- **Generator:** `src/sim/island.ts` (`generateIsland(width, height, seed, shape)`). Six shapes: classic, twin, crescent, river, fire, peninsula (`ISLAND_SHAPES`). Classic keeps its original elevation formula, so fixed scenario islands keep their outline.
+- **Scenario islands:** First Steps classic, Fossil Fever River Valley, Storm Coast Crescent Bay, Rex Rising Fire Mountain. Sandbox has an island picker (shape, Normal/Big size, 🎲 reroll) with map previews (`src/render/minimap.ts`).
+- **New terrain** (appended to `Terrain`, which is saved as numbers):
+
+  | Terrain | Behaviour |
+  | --- | --- |
+  | River | Water. A path across it is a bridge at `BRIDGE_COST`; `isGround()` makes bridged tiles walkable and joins regions. A river is a natural paddock wall. |
+  | Marsh | Walkable and fenceable, but `isBuildable()` is false. Drain it with Garden → Drain marsh (`drainMarsh`, `DRAIN_COST`). |
+  | LavaRock | Plain land. |
+  | HotSpring | Water, with steam. |
+  | Cliff | Impassable. |
+  | Waterfall | Water, with spray. |
+
+- **Scenery:** hot springs and waterfalls give charm 3, rivers and ponds 1 (`NATURE_CHARM` in `visitors.ts`).
+- **Generation rules:**
+  - The starting plots near the gate (plus a 2-tile margin) are always kept clear of rivers, cliffs, marsh and lava.
+  - The gate goes on the main island, never an islet (`mainland()` in `land.ts`).
+  - Rivers start far from the sea (distance map), head for the far coast, carve downhill, and end in the sea, a lake or another river. Each river gets one waterfall with cliffs either side where it first flows south off high ground.
+- **Height map:** `map.heights` (0–15) and `map.shape` are saved (SAVE_VERSION 18). Old saves get heights estimated from terrain (`DEFAULT_HEIGHT`). Floods and lava in Phase 3 will use them.
+- **Big islands:** 96×72 (`newGame(seed, { big: true })`). Headless frame time and sim cost are about the same as normal size; still to be confirmed on a real iPhone and iPad.
+- **Dev:** `/?quickstart&shape=river&seed=7&big` starts a specific island.
+- **Checks:**
+  - `island-gallery.mjs [n] [big]`: every shape × n seeds, with terrain counts
+  - `islands-ui.mjs [WxH]`: menu previews, picker, bridge and marsh screenshots
+  - `terrain-closeups.mjs`: waterfall, springs, lava, cliffs
+  - `big-island-perf.mjs`: normal vs big frame times
+  - Tests are in `tests/landscape.test.ts`.

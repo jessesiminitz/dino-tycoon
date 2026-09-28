@@ -1,6 +1,7 @@
 import { hEdgeCount, vEdgeCount } from './grid';
 import { findEntrance, initialParcels, type Point } from './land';
-import { generateIsland, type TerrainMap } from './terrain';
+import { DEFAULT_HEIGHT, type TerrainMap } from './terrain';
+import { generateIsland, type IslandShape } from './island';
 import { STARTER_SPECIES, type SpeciesId } from './data/species';
 import type { FeederKind } from './data/feeders';
 import { DEFAULT_TICKET_PRICE, type BuildingKind, type ItemKind } from './data/economy';
@@ -15,9 +16,12 @@ import { hash2 } from './rng';
 
 export const MAP_WIDTH = 64;
 export const MAP_HEIGHT = 48;
+/** Big islands, for challenges and a roomier Sandbox. */
+export const BIG_MAP_WIDTH = 96;
+export const BIG_MAP_HEIGHT = 72;
 export const STARTING_MONEY = 50_000;
 export const START_HOUR = 8;
-export const SAVE_VERSION = 17;
+export const SAVE_VERSION = 18;
 
 export interface Dino {
   id: number;
@@ -344,8 +348,13 @@ export interface GameState {
   nextId: number;
 }
 
-export function newGame(seed: number): GameState {
-  const map = generateIsland(MAP_WIDTH, MAP_HEIGHT, seed);
+export interface IslandOptions {
+  shape?: IslandShape;
+  big?: boolean;
+}
+
+export function newGame(seed: number, island: IslandOptions = {}): GameState {
+  const map = generateIsland(island.big ? BIG_MAP_WIDTH : MAP_WIDTH, island.big ? BIG_MAP_HEIGHT : MAP_HEIGHT, seed, island.shape ?? 'classic');
   const entrance = findEntrance(map);
   const state: GameState = {
     version: SAVE_VERSION,
@@ -401,9 +410,9 @@ function bedsFor(state: GameState): FossilBed[] {
 }
 
 /** A fresh park set up for a scenario: its island, budget, unlocked species and tutorial. */
-export function startScenario(id: ScenarioId, randomSeed: number): GameState {
+export function startScenario(id: ScenarioId, randomSeed: number, island: IslandOptions = {}): GameState {
   const sc = SCENARIOS[id];
-  const state = newGame(sc.seed ?? randomSeed);
+  const state = newGame(sc.seed ?? randomSeed, { shape: sc.island, ...island });
   state.money = sc.startMoney;
   if (sc.unlocked) state.unlockedSpecies = [...sc.unlocked];
   state.scenario = { id, status: sc.rounds.length > 0 ? 'playing' : 'free', round: 0, roundStart: 1, earned: [] };
@@ -539,6 +548,13 @@ export function migrate(raw: { version?: number } & Record<string, unknown>): Ga
     state.pendingChoice = null;
     state.stats.closedDay = 0;
     raw.version = 17;
+  }
+  if (raw.version === 17) {
+    // Islands now keep a height per tile and remember their shape.
+    const map = (raw as unknown as GameState).map;
+    map.heights = map.tiles.map((t) => DEFAULT_HEIGHT[t]);
+    map.shape = 'classic';
+    raw.version = 18;
   }
   return raw.version === SAVE_VERSION ? (raw as unknown as GameState) : null;
 }

@@ -21,7 +21,7 @@ const idx = (x: number, y: number) => y * W + x;
  */
 export function openPark(): GameState {
   const s = newGame(11);
-  s.map = { width: W, height: H, tiles: new Array(W * H).fill(Terrain.Grass) };
+  s.map = { width: W, height: H, tiles: new Array(W * H).fill(Terrain.Grass), heights: new Array(W * H).fill(5), shape: "classic" };
   s.entrance = { x: 0, y: 13 };
   const { cols, rows } = parcelGrid(s.map);
   s.parcelsOwned = new Array(cols * rows).fill(true);
@@ -157,7 +157,7 @@ describe('saves', () => {
       v.boughtSouvenir = true;
     }
     const m = migrate(old)!;
-    expect(m.version).toBe(17);
+    expect(m.version).toBe(18);
     expect(m.visitors[0].items).toEqual(['plush']);
     expect(m.visitors[0].bladder).toBe(0);
     expect(m.finance.month.income.snacks).toBe(0);

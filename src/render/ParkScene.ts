@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import type { Simulation } from '../sim/Simulation';
-import { planFences, planPaths, planTracks, pondDigBlocker, POND_COST, refillCost, repairCost } from '../sim/commands';
+import { drainBlocker, planFences, planPaths, planTracks, pondDigBlocker, POND_COST, refillCost, repairCost } from '../sim/commands';
+import { DRAIN_COST } from '../sim/data/economy';
 import { stationStatus } from '../sim/systems/rides';
 import { STAFF_TYPES } from '../sim/data/staff';
 import { describeTask } from '../sim/systems/staff';
@@ -209,9 +210,9 @@ export class ParkScene extends Phaser.Scene {
     if (changed) this.terrainFx.rebuild();
   }
 
-  /** Garden tool with Pond picked: tap or drag to dig. */
+  /** Garden tool with Pond (dig) or Drain marsh picked: tap or drag over ground. */
   private get digging(): boolean {
-    return this.ui.mode === 'decor' && this.ui.decorKind === 'pond';
+    return this.ui.mode === 'decor' && (this.ui.decorKind === 'pond' || this.ui.decorKind === 'drain');
   }
 
   private onModeChange(): void {
@@ -293,6 +294,7 @@ export class ParkScene extends Phaser.Scene {
         const x = Math.floor(wx / TILE);
         const y = Math.floor(wy / TILE);
         if (this.ui.decorKind === 'pond') return this.report(this.sim.dispatch({ type: 'digPonds', tiles: [y * this.sim.state.map.width + x] }));
+        if (this.ui.decorKind === 'drain') return this.report(this.sim.dispatch({ type: 'drainMarsh', tiles: [y * this.sim.state.map.width + x] }));
         this.report(this.sim.dispatch({ type: 'placeDecor', kind: this.ui.decorKind, x, y }));
         return;
       }
@@ -666,6 +668,16 @@ export class ParkScene extends Phaser.Scene {
     const decor = this.sim.state.decor.find((d) => d.x === tx && d.y === ty);
     if (decor) parts.push(`${DECOR_TYPES[decor.kind].name}: cheers up visitors nearby`);
     if (t === Terrain.Volcano) parts.push(this.sim.state.volcanoActivity > 0 ? 'rumbling!' : 'smoking quietly');
+    const bridged = this.sim.state.paths[ty * this.sim.state.map.width + tx] === 1;
+    const NATURE_TIPS: Partial<Record<Terrain, string>> = {
+      [Terrain.River]: bridged ? 'wooden bridge' : 'lay a path across it to build a bridge · makes a natural paddock wall',
+      [Terrain.Marsh]: 'too soggy to build on · drain it with 🌳 Garden → Drain marsh',
+      [Terrain.LavaRock]: 'old cooled lava: bare but solid',
+      [Terrain.HotSpring]: 'visitors love to watch it steam',
+      [Terrain.Waterfall]: 'visitors love the view',
+      [Terrain.Cliff]: 'too steep to cross: go round',
+    };
+    if (NATURE_TIPS[t]) parts.push(NATURE_TIPS[t]!);
     if (isLand(t)) {
       const { regions, tileRegion } = this.sim.regions();
       const region = regions[tileRegion[ty * this.sim.state.map.width + tx]];
@@ -768,9 +780,12 @@ export class ParkScene extends Phaser.Scene {
         return;
       }
       if (this.digging) {
-        const ok = d.tiles.filter((i) => !pondDigBlocker(this.sim.state, i % w, Math.floor(i / w)));
+        const drain = this.ui.decorKind === 'drain';
+        const blocker = drain ? drainBlocker : pondDigBlocker;
+        const ok = d.tiles.filter((i) => !blocker(this.sim.state, i % w, Math.floor(i / w)));
         this.layers.drawTileGhost(d.tiles.map((i) => ({ x: i % w, y: Math.floor(i / w), style: ok.includes(i) ? 'build' : 'blocked' })));
-        this.hud.showInfo(`Dig ${ok.length} tile${ok.length === 1 ? '' : 's'} of pond · ${formatMoney(ok.length * POND_COST)}`);
+        const n = `${ok.length} tile${ok.length === 1 ? '' : 's'}`;
+        this.hud.showInfo(drain ? `Drain ${n} of marsh · ${formatMoney(ok.length * DRAIN_COST)}` : `Dig ${n} of pond · ${formatMoney(ok.length * POND_COST)}`);
         return;
       }
     }
@@ -786,7 +801,7 @@ export class ParkScene extends Phaser.Scene {
     if (this.ui.mode === 'path') {
       if (tiles.length > 0) this.commitTiles(tiles);
     } else if (this.digging) {
-      if (tiles.length > 0) this.report(this.sim.dispatch({ type: 'digPonds', tiles }));
+      if (tiles.length > 0) this.report(this.sim.dispatch({ type: this.ui.decorKind === 'drain' ? 'drainMarsh' : 'digPonds', tiles }));
     } else if (this.ui.mode === 'demolish') {
       this.commitDemolish(edges, tiles);
     } else if (edges.length > 0) this.commitEdges(edges);

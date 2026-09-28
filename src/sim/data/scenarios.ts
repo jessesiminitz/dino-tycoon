@@ -1,4 +1,5 @@
 import { SPECIES_IDS, type SpeciesId } from './species';
+import type { IslandShape } from '../island';
 
 export type GoalKind = 'dinos' | 'species' | 'dayVisitors' | 'reputation' | 'cash' | 'unlocked' | 'own';
 
@@ -41,6 +42,8 @@ export interface Scenario {
   startMoney: number;
   /** Fixed island so everyone plays the same map; null = random. */
   seed: number | null;
+  /** The kind of island (classic when left out; Sandbox lets you choose). */
+  island?: IslandShape;
   /** Bronze, Silver and Gold milestones, each harder than the last (empty for the sandbox). */
   rounds: Round[];
   /** Species available from the start (defaults to the six starters). */
@@ -98,6 +101,7 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
     difficulty: 2,
     startMoney: 45_000,
     seed: 77113,
+    island: 'river',
     rounds: [
       {
         goals: [
@@ -135,6 +139,7 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
     difficulty: 2,
     startMoney: 60_000,
     seed: 5150,
+    island: 'crescent',
     rounds: [
       {
         goals: [
@@ -173,6 +178,7 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
     difficulty: 3,
     startMoney: 40_000,
     seed: 1905,
+    island: 'fire',
     rounds: [
       {
         goals: [

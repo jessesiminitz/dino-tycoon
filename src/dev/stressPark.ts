@@ -17,7 +17,7 @@ export function stressPark(): GameState {
   const s = newGame(123);
   const W = 64;
   const H = 48;
-  s.map = { width: W, height: H, tiles: new Array(W * H).fill(Terrain.Grass) };
+  s.map = { width: W, height: H, tiles: new Array(W * H).fill(Terrain.Grass), heights: new Array(W * H).fill(5), shape: "classic" };
   s.entrance = { x: 0, y: H - 1 };
   const { cols, rows } = parcelGrid(s.map);
   s.parcelsOwned = new Array(cols * rows).fill(true);

@@ -96,6 +96,74 @@ const PAINTERS: Record<Terrain, Painter> = {
         }
     }
   },
+  [Terrain.River]: (px, r) => {
+    // Clear running water with ripple streaks.
+    fill(px, '#3f8fc8');
+    speckle(px, r, ['#4fa0d8', '#357fb8'], 0.1);
+    for (let k = 0; k < 3; k++) {
+      const y = 2 + Math.floor(r(k, 50) * 12);
+      const x0 = Math.floor(r(50, k) * 8);
+      for (let x = x0; x < x0 + 5; x++) px(x, y, '#8fd0f0');
+    }
+  },
+  [Terrain.Marsh]: (px, r) => {
+    // Soggy green-brown ground with puddles and reeds.
+    fill(px, '#5f7f3a');
+    speckle(px, r, ['#4f6e30', '#6f8f44', '#566b3a'], 0.3);
+    const cx = 3 + Math.floor(r(5, 5) * 9);
+    const cy = 3 + Math.floor(r(6, 6) * 9);
+    for (let y = 0; y < TILE; y++)
+      for (let x = 0; x < TILE; x++) if ((x - cx) ** 2 / 9 + (y - cy) ** 2 / 3 < 1) px(x, y, y < cy ? '#5a8a8a' : '#46706e');
+    for (let k = 0; k < 4; k++) {
+      const x = Math.floor(r(k, 60) * 15);
+      const y = 5 + Math.floor(r(60, k) * 9);
+      px(x, y, '#a8b85a');
+      px(x, y - 1, '#a8b85a');
+      px(x, y - 2, '#7a5a30');
+    }
+  },
+  [Terrain.LavaRock]: (px, r) => {
+    // Dark cooled lava with cracks, and now and then a faint glow.
+    fill(px, '#3e3533');
+    speckle(px, r, ['#2e2624', '#4e4440', '#58504a'], 0.35);
+    let x = Math.floor(r(7, 1) * 16);
+    for (let y = 0; y < TILE; y++) {
+      px(x, y, '#241c1a');
+      if (r(y, 8) < 0.4) x += r(8, y) < 0.5 ? -1 : 1;
+    }
+    if (r(9, 9) < 0.3) px(Math.floor(r(1, 10) * 14) + 1, Math.floor(r(10, 1) * 14) + 1, '#d9602a');
+  },
+  [Terrain.HotSpring]: (px, r) => {
+    // Milky turquoise water with bubbles.
+    fill(px, '#6fd0c8');
+    speckle(px, r, ['#8fe0d8', '#5fc0b8'], 0.2);
+    for (let k = 0; k < 4; k++) {
+      const x = 2 + Math.floor(r(k, 70) * 12);
+      const y = 2 + Math.floor(r(70, k) * 12);
+      px(x, y, '#e8fbf8');
+    }
+  },
+  [Terrain.Cliff]: (px, r) => {
+    // A south-facing rock face: grassy lip on top, layered rock, a shadow at the foot.
+    fill(px, '#8a7a62');
+    for (let y = 0; y < TILE; y++)
+      for (let x = 0; x < TILE; x++) {
+        if (y < 2) px(x, y, y === 0 ? '#78b850' : '#57963a');
+        else if (y === 2) px(x, y, '#a8987a');
+        else if (y > 13) px(x, y, '#5e5242');
+        else if ((y + Math.floor(r(x, 11) * 2)) % 4 === 0) px(x, y, '#6f6250');
+        else if (r(x, y) < 0.15) px(x, y, '#9c8c70');
+      }
+  },
+  [Terrain.Waterfall]: (px, r) => {
+    // Water tumbling down a rock face: white streaks over blue.
+    fill(px, '#5fb0e0');
+    for (let x = 0; x < TILE; x++) {
+      const light = r(x, 12) < 0.5;
+      for (let y = 0; y < TILE; y++) if ((y + Math.floor(r(x, 13) * 6)) % 5 < (light ? 3 : 1)) px(x, y, light ? '#e8f6fb' : '#bfe6f5');
+    }
+    for (let x = 0; x < TILE; x++) px(x, 15, '#ffffff');
+  },
 };
 
 /** Paints the terrain tileset (TERRAIN_COUNT × VARIANTS tiles in one row) and the selection cursor. */

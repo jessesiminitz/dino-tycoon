@@ -5,6 +5,7 @@ import type { Edge } from '../sim/grid';
 import { isParcelOwned, parcelBuyBlocker, parcelGrid, parcelPrice, PARCEL, type Point } from '../sim/land';
 import { formatMoney } from '../ui/hud';
 import { hash2 } from '../sim/rng';
+import { Terrain } from '../sim/terrain';
 import { TILE } from './tileset';
 
 const PADDOCK_TINTS = [0xf2c14e, 0x6ec6ff, 0xff8fb1, 0xb28dff, 0x7ee0b5, 0xffa257];
@@ -166,6 +167,10 @@ export class WorldLayers {
         if (!walk(x, y)) continue;
         const ox = x * TILE;
         const oy = y * TILE;
+        if (state.map.tiles[y * width + x] === Terrain.River) {
+          this.drawBridge(g, x, y, walk);
+          continue;
+        }
         g.fillStyle(0xcdb58a, 1).fillRect(ox, oy, TILE, TILE);
         g.fillStyle(0xb89f73, 1);
         for (let k = 0; k < 6; k++) {
@@ -178,6 +183,32 @@ export class WorldLayers {
         if (!walk(x - 1, y)) g.fillRect(ox, oy, 1, TILE);
         if (!walk(x + 1, y)) g.fillRect(ox + TILE - 1, oy, 1, TILE);
       }
+    }
+  }
+
+  /**
+   * A wooden bridge over a river: planks laid across the way you walk, with a
+   * rail on each open side.
+   */
+  private drawBridge(g: Phaser.GameObjects.Graphics, x: number, y: number, walk: (x: number, y: number) => boolean): void {
+    const ox = x * TILE;
+    const oy = y * TILE;
+    const alongX = walk(x - 1, y) || walk(x + 1, y);
+    const alongY = walk(x, y - 1) || walk(x, y + 1);
+    const across = alongY && !alongX; // walking north–south: planks run east–west
+    g.fillStyle(0x9c6b3c, 1).fillRect(ox, oy, TILE, TILE);
+    g.fillStyle(0x6b4a2a, 1);
+    for (let k = 3; k < TILE; k += 4) {
+      if (across) g.fillRect(ox, oy + k, TILE, 1);
+      else g.fillRect(ox + k, oy, 1, TILE);
+    }
+    g.fillStyle(0x5a3b1f, 1);
+    if (across) {
+      if (!walk(x - 1, y)) g.fillRect(ox, oy, 2, TILE);
+      if (!walk(x + 1, y)) g.fillRect(ox + TILE - 2, oy, 2, TILE);
+    } else {
+      if (!walk(x, y - 1)) g.fillRect(ox, oy, TILE, 2);
+      if (!walk(x, y + 1)) g.fillRect(ox, oy + TILE - 2, TILE, 2);
     }
   }
 

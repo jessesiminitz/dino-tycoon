@@ -1,4 +1,6 @@
-import { startScenario, type GameState } from '../sim/GameState';
+import { newGame, startScenario, type GameState } from '../sim/GameState';
+import { ISLAND_SHAPE_IDS, ISLAND_SHAPES, type IslandShape } from '../sim/island';
+import { paintMinimap } from '../render/minimap';
 import { SCENARIO_IDS, SCENARIOS, type ScenarioId } from '../sim/data/scenarios';
 import { SPECIES, SPECIES_IDS } from '../sim/data/species';
 import { goalLabel } from '../sim/goals';
@@ -15,7 +17,7 @@ import {
 } from '../save/storage';
 import { renderSettings } from './settings';
 
-type Screen = 'main' | 'new' | 'load' | 'settings';
+type Screen = 'main' | 'new' | 'island' | 'load' | 'settings';
 
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 const stars = (n: number) => (n === 0 ? 'Free play' : '★'.repeat(n) + '☆'.repeat(3 - n));
@@ -57,6 +59,18 @@ export function showMenu(handlers: MenuHandlers): void {
   /** When set, the next slot choice overwrites with this state (new park or import). */
   let pendingState: GameState | null = null;
   let confirmDelete: SlotId | null = null;
+  /** The Sandbox island being chosen: its shape, size and seed (🎲 picks a new seed). */
+  const island = { shape: 'classic' as IslandShape, big: false, seed: (Math.random() * 2 ** 32) >>> 0 };
+  const previews = new Map<string, string>();
+  /** A map preview as an image URL (cached: generating an island takes a few milliseconds). */
+  const preview = (seed: number, shape: IslandShape, big = false) => {
+    const key = `${seed}:${shape}:${big}`;
+    if (!previews.has(key)) {
+      const s = newGame(seed, { shape, big });
+      previews.set(key, paintMinimap(s.map, s.entrance).toDataURL());
+    }
+    return previews.get(key)!;
+  };
 
   const go = (screen: Screen) => {
     confirmDelete = null;
@@ -106,14 +120,40 @@ export function showMenu(handlers: MenuHandlers): void {
           const sc = SCENARIOS[id];
           const first = sc.rounds[0];
           const goals = first ? first.goals.map((g) => `<li>${goalLabel(g)}</li>`).join('') : '';
-          return `<button class="scenario-card" data-scenario="${id}">
+          const map = sc.seed !== null ? `<img class="map-preview" alt="" src="${preview(sc.seed, sc.island ?? 'classic')}">` : '';
+          const attr = id === 'sandbox' ? 'data-go="island"' : `data-scenario="${id}"`;
+          return `<button class="scenario-card" ${attr}>
+            ${map}
             <span class="scenario-head"><b>${sc.name}</b><span class="stars">${stars(sc.difficulty)}</span></span>
             <span class="note">${sc.blurb}</span>
             ${goals ? `<ul>${goals}</ul><span class="note">🥉 Bronze within ${first.days} days, then 🥈 Silver and 🥇 Gold · start with ${money.format(sc.startMoney)}</span>` : `<span class="note">Start with ${money.format(sc.startMoney)}</span>`}
             ${sc.tutorial ? '<span class="tag">Includes a tutorial</span>' : ''}
+            ${id === 'sandbox' ? '<span class="tag">Choose your island</span>' : ''}
           </button>`;
         }).join('')}</div>
         <button class="menu-btn back" data-go="main">Back</button>`;
+    } else if (screen === 'island') {
+      body.innerHTML = `
+        <h2>Sandbox: choose your island</h2>
+        <div class="island-grid">${ISLAND_SHAPE_IDS.map((shape) => {
+          const info = ISLAND_SHAPES[shape];
+          return `<button class="island-card ${shape === island.shape ? 'active' : ''}" data-shape="${shape}">
+            <img class="map-preview" alt="" src="${preview(island.seed, shape, island.big)}">
+            <b>${info.icon} ${info.name}</b>
+            <span class="note">${info.blurb}</span>
+          </button>`;
+        }).join('')}</div>
+        <div class="island-options">
+          <span class="seg" role="group" aria-label="Island size">
+            <button class="step-btn ${island.big ? '' : 'active'}" data-big="0">Normal size</button>
+            <button class="step-btn ${island.big ? 'active' : ''}" data-big="1">Big island</button>
+          </span>
+          <button class="step-btn" data-reroll>🎲 Another island</button>
+        </div>
+        <div class="menu-buttons">
+          <button class="menu-btn primary" data-start-sandbox>Start building</button>
+          <button class="menu-btn back" data-go="new">Back</button>
+        </div>`;
     } else if (screen === 'load') {
       const overwrite = pendingState !== null;
       body.innerHTML = `
@@ -148,6 +188,17 @@ export function showMenu(handlers: MenuHandlers): void {
     if (d.go) {
       if (d.go === 'main') pendingState = null;
       go(d.go as Screen);
+    } else if (d.shape) {
+      island.shape = d.shape as IslandShape;
+      render('island');
+    } else if (d.big) {
+      island.big = d.big === '1';
+      render('island');
+    } else if ('reroll' in d) {
+      island.seed = (Math.random() * 2 ** 32) >>> 0;
+      render('island');
+    } else if ('startSandbox' in d) {
+      placeNew(startScenario('sandbox', island.seed, { shape: island.shape, big: island.big }));
     } else if (d.scenario) {
       placeNew(startScenario(d.scenario as ScenarioId, (Math.random() * 2 ** 32) >>> 0));
     } else if (d.use && pendingState) {

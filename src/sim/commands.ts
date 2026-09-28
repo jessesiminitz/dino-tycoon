@@ -14,8 +14,8 @@ import { DINO_NAMES, habitatOf, SPECIES, type SpeciesId } from './data/species';
 import { DINO_RESALE, FEEDER_REFUND, FEEDER_TYPES, type FeederKind } from './data/feeders';
 import { type RegionMap, computeRegions, isOccupiedPaddock, regionHasPaths } from './regions';
 import { Rng } from './rng';
-import { isLand, Terrain, terrainAt } from './terrain';
-import { BUILDING_REFUND, BUILDING_TYPES, LOAN_AMOUNTS, MAX_TICKET_PRICE, PATH_COST, PATH_REFUND, type BuildingKind, TRACK_COST } from './data/economy';
+import { isBuildable, isLand, Terrain, terrainAt } from './terrain';
+import { BRIDGE_COST, BUILDING_REFUND, BUILDING_TYPES, DRAIN_COST, LOAN_AMOUNTS, MAX_TICKET_PRICE, PATH_COST, PATH_REFUND, type BuildingKind, TRACK_COST } from './data/economy';
 import { earn, loanBlocker, spend } from './finance';
 import { pathBlocker, tileOccupant, touchesWalkway } from './paths';
 
@@ -45,6 +45,7 @@ export type Command =
   | { type: 'removeTracks'; tiles: number[] }
   | { type: 'digPonds'; tiles: number[] }
   | { type: 'fillPonds'; tiles: number[] }
+  | { type: 'drainMarsh'; tiles: number[] }
   | { type: 'chooseOption'; option: number }
   | { type: 'treatDino'; id: number }
   | { type: 'patDino'; id: number }
@@ -99,6 +100,7 @@ export function pickName(state: GameState, pool: string[], taken: string[]): str
 function tileBlocker(state: GameState, x: number, y: number): string | null {
   const t = terrainAt(state.map, x, y);
   if (t === undefined || !isLand(t)) return 'Needs dry land';
+  if (!isBuildable(t)) return 'Too soggy to build on: drain the marsh first (🌳 Garden → Drain marsh)';
   if (!isTileOwned(state, x, y)) return "You don't own this land";
   return null;
 }
@@ -114,7 +116,7 @@ function pondBlocker(state: GameState, x: number, y: number): string | null {
 export const POND_COST = 250;
 export const POND_REFUND = 0.25;
 /** Ground a pond can be dug in (forest and rock are too much work). */
-const DIGGABLE = [Terrain.Grass, Terrain.Sand];
+const DIGGABLE = [Terrain.Grass, Terrain.Sand, Terrain.Marsh];
 
 /** Why a pond can't be dug here, or null if it can. */
 export function pondDigBlocker(state: GameState, x: number, y: number): string | null {
@@ -126,6 +128,13 @@ export function pondDigBlocker(state: GameState, x: number, y: number): string |
   if (state.paths[i]) return 'There is a path here';
   if (state.dinos.some((d) => d.x === x && d.y === y) || state.eggs.some((e) => e.x === x && e.y === y)) return 'An animal is standing here';
   return tileOccupant(state, x, y);
+}
+
+/** Why this tile can't be drained, or null if it's marsh you own. */
+export function drainBlocker(state: GameState, x: number, y: number): string | null {
+  if (terrainAt(state.map, x, y) !== Terrain.Marsh) return 'Only marsh can be drained';
+  if (!isTileOwned(state, x, y)) return "You don't own this land";
+  return null;
 }
 
 export function refillCost(state: GameState, id: number): number {
@@ -441,6 +450,20 @@ export function applyCommand(state: GameState, cmd: Command): CommandResult {
       return { ok: true, cost, message: `Dug ${dig.length} tile${dig.length === 1 ? '' : 's'} of pond for ${usd(cost)}` };
     }
 
+    case 'drainMarsh': {
+      const w = state.map.width;
+      const drain = [...new Set(cmd.tiles)].filter((i) => !drainBlocker(state, i % w, Math.floor(i / w)));
+      if (drain.length === 0) {
+        const first = cmd.tiles[0];
+        return { ok: false, message: (first !== undefined && drainBlocker(state, first % w, Math.floor(first / w))) || 'No marsh to drain here' };
+      }
+      const cost = drain.length * DRAIN_COST;
+      if (cost > state.money) return { ok: false, message: `Not enough money: need ${usd(cost)}` };
+      for (const i of drain) state.map.tiles[i] = Terrain.Grass;
+      spend(state, 'construction', cost);
+      return { ok: true, cost, message: `Drained ${drain.length} tile${drain.length === 1 ? '' : 's'} of marsh for ${usd(cost)}` };
+    }
+
     case 'fillPonds': {
       const w = state.map.width;
       const fill = [...new Set(cmd.tiles)].filter((i) => {
@@ -550,5 +573,6 @@ export function planPaths(state: GameState, tiles: number[]) {
       blockReason = reason;
     } else build.push(i);
   }
-  return { build, blocked, blockReason, cost: build.length * PATH_COST };
+  const bridges = build.filter((i) => state.map.tiles[i] === Terrain.River).length;
+  return { build, blocked, blockReason, bridges, cost: (build.length - bridges) * PATH_COST + bridges * BRIDGE_COST };
 }

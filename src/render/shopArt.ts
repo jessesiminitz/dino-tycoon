@@ -59,6 +59,18 @@ export function paintPondSample(): HTMLCanvasElement {
   });
 }
 
+/** A patch of marsh with reeds, for the Drain tool. */
+export function paintMarshSample(): HTMLCanvasElement {
+  return paintSprite(34, 20, (px) => {
+    for (let y = 3; y < 17; y++)
+      for (let x = 1; x < 33; x++) {
+        const puddle = ((x - 12) / 7) ** 2 + ((y - 11) / 3) ** 2 < 1 || ((x - 25) / 5) ** 2 + ((y - 8) / 2) ** 2 < 1;
+        px(x, y, puddle ? (y < 10 ? '#5a8a8a' : '#46706e') : (x * 5 + y * 3) % 7 === 0 ? '#4f6e30' : '#5f7f3a');
+      }
+    for (const x of [4, 7, 19, 21, 29]) for (let y = 4; y < 10; y++) px(x, y, y < 6 ? '#7a5a30' : '#a8b85a');
+  });
+}
+
 /** The same picture with a big red cross over it, for the erase tools. */
 export function withCross(art: HTMLCanvasElement): HTMLCanvasElement {
   const out = document.createElement('canvas');

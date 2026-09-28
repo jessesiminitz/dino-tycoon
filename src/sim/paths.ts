@@ -1,7 +1,7 @@
 import type { GameState } from './GameState';
 import { isTileOwned } from './land';
 import { isOccupiedPaddock, type RegionMap } from './regions';
-import { isLand } from './terrain';
+import { isLand, Terrain } from './terrain';
 import type { CanEnter } from './pathfind';
 
 export function isPath(state: GameState, i: number): boolean {
@@ -25,7 +25,8 @@ export function pathBlocker(state: GameState, regions: RegionMap, x: number, y: 
   const { width, height, tiles } = state.map;
   if (x < 0 || y < 0 || x >= width || y >= height) return 'Off the map';
   const i = y * width + x;
-  if (!isLand(tiles[i])) return 'Paths need dry land';
+  // A path across a river is a bridge; other water, cliffs and mountains are out.
+  if (!isLand(tiles[i]) && tiles[i] !== Terrain.River) return 'Paths need dry land (or a river to bridge)';
   if (!isTileOwned(state, x, y)) return "You don't own this land";
   if (isOccupiedPaddock(state, regions, i)) return "Paths can't go inside a paddock with animals or feeders";
   return tileOccupant(state, x, y);

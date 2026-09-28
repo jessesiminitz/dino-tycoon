@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { registerSW } from 'virtual:pwa-register';
+import type { IslandShape } from './sim/island';
 import { newGame, type GameState } from './sim/GameState';
 import { Simulation } from './sim/Simulation';
 import { ParkScene } from './render/ParkScene';
@@ -118,9 +119,12 @@ document.addEventListener('click', (e) => {
 });
 
 async function boot(): Promise<void> {
-  // Dev-only: /?quickstart jumps straight into a fresh classic park (used by automated browser checks).
-  if (import.meta.env.DEV && new URLSearchParams(location.search).has('quickstart')) {
-    return startGame(newGame((Math.random() * 2 ** 32) >>> 0), 3);
+  // Dev-only: /?quickstart jumps straight into a fresh park (used by automated browser checks).
+  // Optional: &shape=river&seed=123&big to pick the island.
+  const params = new URLSearchParams(location.search);
+  if (import.meta.env.DEV && params.has('quickstart')) {
+    const seed = params.has('seed') ? Number(params.get('seed')) : (Math.random() * 2 ** 32) >>> 0;
+    return startGame(newGame(seed, { shape: (params.get('shape') ?? 'classic') as IslandShape, big: params.has('big') }), 3);
   }
   const directive = takeBootDirective();
   if (directive?.kind === 'load') {
