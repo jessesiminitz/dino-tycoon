@@ -15,7 +15,7 @@ const out = await page.evaluate(() => {
   for (let y = ey - 8; y < ey; y++) for (let x = ex - 10; x < ex + 11; x++) s.map.tiles[y * w + x] = 3;
   const path = []; for (let x = ex - 9; x <= ex + 9; x++) path.push((ey - 4) * w + x); for (let y = ey - 3; y <= ey; y++) path.push(y * w + ex);
   sim.dispatch({ type: 'buildPaths', tiles: path });
-  const kinds = ['restaurant', 'snackstall', 'giftshop', 'restroom', 'trashcan', 'station', 'tower', 'petting'];
+  const kinds = ["restaurant", "snackstall", "giftshop", "restroom", "trashcan", "station", "tower", "petting", "digsite"];
   const res = kinds.map((kind, i) => `${kind}: ${sim.dispatch({ type: 'placeBuilding', kind, x: ex - 8 + i * 2, y: ey - 5 }).ok}`);
   const cam = game.scene.getScene('park').cameras.main; cam.setZoom(3); cam.centerOn(ex * 16 - 8, (ey - 6) * 16);
   return res;
