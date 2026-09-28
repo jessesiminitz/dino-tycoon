@@ -1,0 +1,26 @@
+import puppeteer from 'puppeteer-core';
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--autoplay-policy=user-gesture-required'] });
+const page = await browser.newPage();
+const errors = [];
+page.on('pageerror', (e) => errors.push(e.message));
+page.on('console', (m) => m.type() === 'error' && !/favicon|fonts\.g/.test(m.text()) && errors.push(m.text()));
+await page.setViewport({ width: 844, height: 390, isMobile: true, hasTouch: true });
+await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'networkidle0' });
+await sleep(600);
+console.log('before any tap:', JSON.stringify(await page.evaluate(() => window.__dino.audioDebug())));
+await page.touchscreen.tap(420, 200);
+await sleep(600);
+console.log('after tap:', JSON.stringify(await page.evaluate(() => window.__dino.audioDebug())));
+await page.evaluate(() => { for (const s of ['click','build','cash','error','roar','alert','chime','fanfare','sad','thunder']) window.__dino.playSfx(s); });
+await page.evaluate(() => { window.__dino.sim.state.stormHours = 5; window.__dino.sim.setSpeed(1); });
+await sleep(2500);
+console.log('storm:', JSON.stringify(await page.evaluate(() => window.__dino.audioDebug())));
+// Settings: turn music off from the pause menu
+await (await page.$('#btn-menu')).tap(); await sleep(200);
+await (await page.$('[data-pause="settings"]')).tap(); await sleep(200);
+await page.$eval('#pause input[data-key="music"]', (el) => { el.checked = false; el.dispatchEvent(new Event('input', { bubbles: true })); });
+await sleep(1500);
+console.log('music off:', JSON.stringify(await page.evaluate(() => window.__dino.audioDebug())), '| saved:', await page.evaluate(() => localStorage.getItem('dino-tycoon:settings')));
+console.log('errors:', errors.length ? errors : 'none');
+await browser.close();
