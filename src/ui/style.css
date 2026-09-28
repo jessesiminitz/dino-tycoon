@@ -1506,15 +1506,15 @@ body:not(.in-park) #info {
   border-bottom: 1px solid rgba(60, 45, 20, 0.12);
 }
 
-.log-entry.bad {
+.log-entry.kind-bad {
   border-left-color: var(--bad);
 }
 
-.log-entry.good {
+.log-entry.kind-good {
   border-left-color: var(--good);
 }
 
-.log-entry.report {
+.log-entry.kind-report {
   border-left-color: #2a78d6;
 }
 
@@ -1776,7 +1776,7 @@ body:not(.in-park) #info {
   grid-template-columns: 5.5em 1fr;
 }
 
-.log-entry.neutral {
+.log-entry.kind-info {
   border-left-color: var(--accent);
 }
 

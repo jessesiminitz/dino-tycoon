@@ -185,7 +185,7 @@ export function mountPeople(sim: Simulation, ui: UiState): void {
        <ol class="log-list reviews">${
          list
            .map(
-             (r) => `<li class="log-entry ${r.stars >= 4 ? 'good' : r.stars <= 2 ? 'bad' : 'neutral'}">
+             (r) => `<li class="log-entry kind-${r.stars >= 4 ? 'good' : r.stars <= 2 ? 'bad' : 'info'}">
                <span class="stars" aria-label="${r.stars} stars">${stars(r.stars)}</span>
                <span>“${esc(r.text)}” <small class="note">— ${esc(r.name)} · ${when(r.hour)}</small></span></li>`,
            )

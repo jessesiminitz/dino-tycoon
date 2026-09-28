@@ -50,7 +50,8 @@ export function mountLog(sim: Simulation): void {
       .filter((e) => matches(e, filter))
       .reverse()
       .map(
-        (e) => `<li class="log-entry ${isReport(e) ? 'report' : e.kind}">
+        // "kind-…" class names: a bare "info" would pick up the bottom-left info panel's fixed position.
+        (e) => `<li class="log-entry kind-${isReport(e) ? 'report' : e.kind}">
           <span class="log-when">${when(e.hour)}</span><span>${esc(e.text)}</span></li>`,
       );
     list.innerHTML = rows.length ? rows.join('') : '<li class="note">Nothing here yet.</li>';
