@@ -1,11 +1,13 @@
 import { getSettings, onSettings, type Settings } from '../ui/settings';
 import { decodeRag, type Note, type Rag } from './ragNotes';
+import { callFor } from './calls';
+import type { SpeciesId } from '../sim/data/species';
 
 /**
  * All sound is synthesised with Web Audio: no audio files to download or license.
  * iOS only allows audio after a user gesture, so the context starts on the first tap.
  */
-export type Sfx = 'click' | 'build' | 'cash' | 'error' | 'roar' | 'alert' | 'chime' | 'fanfare' | 'sad' | 'thunder' | 'chirp' | 'snap' | 'shutter' | 'brush';
+export type Sfx = 'click' | 'build' | 'cash' | 'error' | 'roar' | 'alert' | 'chime' | 'fanfare' | 'sad' | 'thunder' | 'chirp' | 'snap' | 'shutter' | 'brush' | 'cheer' | 'splash' | 'flap';
 
 let ctx: AudioContext | null = null;
 let sfxGain: GainNode;
@@ -139,7 +141,7 @@ function burst(start: number, dur: number, vol: number, freq: number, q = 1): vo
 
 const lastPlayed = new Map<Sfx, number>();
 /** Minimum gap between repeats of the same sound, so bursts of events don't stack up. */
-const MIN_GAP_MS: Partial<Record<Sfx, number>> = { alert: 700, cash: 120, chime: 300, click: 40, brush: 90 };
+const MIN_GAP_MS: Partial<Record<Sfx, number>> = { alert: 700, cash: 120, chime: 300, click: 40, brush: 90, cheer: 1500, splash: 600, flap: 600 };
 
 export function playSfx(name: Sfx): void {
   if (!ctx || !getSettings().sfx) return;
@@ -167,6 +169,18 @@ export function playSfx(name: Sfx): void {
       // A grumpy chomp.
       burst(t, 0.12, 0.5, 400, 3);
       return tone('sawtooth', 140, t, 0.18, 0.14, sfxGain, 70);
+    case 'cheer':
+      // A happy crowd: bursts of voices and a couple of whoops.
+      for (let i = 0; i < 9; i++) burst(t + Math.random() * 0.9, 0.12 + Math.random() * 0.2, 0.14, 900 + Math.random() * 1600, 1.2);
+      for (let i = 0; i < 3; i++) tone('sine', 1000 + i * 180, t + 0.1 + i * 0.25, 0.25, 0.035, sfxGain, 1500 + i * 200);
+      return;
+    case 'splash':
+      burst(t, 0.28, 0.3, 650, 0.7);
+      for (let i = 0; i < 3; i++) tone('sine', 900 + Math.random() * 600, t + 0.12 + i * 0.07, 0.05, 0.04, sfxGain, 1400);
+      return;
+    case 'flap':
+      for (let i = 0; i < 3; i++) burst(t + i * 0.13, 0.07, 0.25, 380, 0.8);
+      return;
     case 'brush':
       // A soft swish of sand.
       return burst(t, 0.12, 0.18, 1800 + Math.random() * 900, 0.8);
@@ -192,6 +206,109 @@ export function playSfx(name: Sfx): void {
       burst(t, 1.6, 0.9, 90, 0.5);
       return burst(t + 0.05, 0.4, 0.5, 400, 0.7);
   }
+}
+
+/** An animal's call (see calls.ts): synthesised from an oscillator, a filter and a little noise. */
+export function playCall(species: SpeciesId, baby = false): void {
+  if (!ctx || !getSettings().sfx) return;
+  const now = performance.now();
+  if (now - lastCall < 350) return;
+  lastCall = now;
+  const { kind, pitch: f, length: len, volume } = callFor(species, baby);
+  const t = ctx.currentTime;
+  const v = 0.16 * volume;
+  switch (kind) {
+    case 'roar':
+      voice('sawtooth', [[0, f * 1.3], [len * 0.3, f], [len, f * 0.75]], t, len, v * 1.1, { type: 'bandpass', from: 520, to: 240, q: 1 });
+      return burst(t, len, 0.35 * volume, 320, 0.7);
+    case 'bellow':
+      return voice('square', [[0, f], [len, f * 0.85]], t, len, v * 0.7, { type: 'lowpass', from: 700, to: 450, q: 0.8 }, 6);
+    case 'honk':
+      voice('triangle', [[0, f], [len * 0.4, f * 1.05], [len, f * 0.95]], t, len * 0.55, v * 1.2, { type: 'lowpass', from: 1300, to: 900, q: 1 }, 5);
+      return voice('triangle', [[0, f * 1.25], [len * 0.45, f * 1.2]], t + len * 0.45, len * 0.55, v, { type: 'lowpass', from: 1300, to: 800, q: 1 }, 5);
+    case 'chirp':
+      for (let i = 0; i < 3; i++) tone('sine', f, t + i * (len / 2.5), len / 3, v * 0.6, sfxGain, f * 1.5);
+      return;
+    case 'screech':
+      return voice('sawtooth', [[0, f], [len * 0.4, f * 1.45], [len, f * 1.1]], t, len, v * 0.6, { type: 'bandpass', from: 1500, to: 1900, q: 2 });
+    case 'song':
+      return voice('sine', [[0, f * 1.2], [len * 0.5, f * 1.3], [len, f * 0.8]], t, len, v * 1.3, { type: 'lowpass', from: 900, to: 600, q: 0.7 }, 4);
+  }
+}
+let lastCall = 0;
+
+/**
+ * One voice: an oscillator following a pitch path [time, Hz][], through a
+ * sweeping filter, with an optional vibrato (Hz) and a soft attack and release.
+ */
+function voice(
+  type: OscillatorType,
+  path: [number, number][],
+  start: number,
+  dur: number,
+  vol: number,
+  filter: { type: BiquadFilterType; from: number; to: number; q: number },
+  vibrato = 0,
+): void {
+  if (!ctx) return;
+  const o = ctx.createOscillator();
+  o.type = type;
+  o.frequency.setValueAtTime(path[0][1], start);
+  for (const [at, hz] of path.slice(1)) o.frequency.linearRampToValueAtTime(hz, start + at);
+  if (vibrato) {
+    const lfo = ctx.createOscillator();
+    const depth = ctx.createGain();
+    lfo.frequency.value = vibrato;
+    depth.gain.value = path[0][1] * 0.04;
+    lfo.connect(depth).connect(o.frequency);
+    lfo.start(start);
+    lfo.stop(start + dur + 0.1);
+  }
+  const f = ctx.createBiquadFilter();
+  f.type = filter.type;
+  f.Q.value = filter.q;
+  f.frequency.setValueAtTime(filter.from, start);
+  f.frequency.linearRampToValueAtTime(filter.to, start + dur);
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, start);
+  g.gain.exponentialRampToValueAtTime(vol, start + Math.min(0.06, dur / 4));
+  g.gain.setValueAtTime(vol, start + dur * 0.7);
+  g.gain.exponentialRampToValueAtTime(0.0001, start + dur + 0.1);
+  o.connect(f).connect(g).connect(sfxGain);
+  o.start(start);
+  o.stop(start + dur + 0.15);
+}
+
+// --- Ambience: birdsong by day, crickets at night, very quietly. ---
+
+export type Ambience = 'day' | 'night' | 'off';
+let ambience: Ambience = 'off';
+let ambienceTimer = 0;
+/** Ambience sits well under everything else. */
+const AMBIENCE_VOLUME = 0.35;
+
+/** Called by the park view as the light changes (and with 'off' in storms or when turned off). */
+export function setAmbience(mode: Ambience): void {
+  ambience = mode;
+  if (ambienceTimer || !ctx) return;
+  ambienceTimer = window.setInterval(() => {
+    if (!ctx || ctx.state !== 'running' || !getSettings().sfx || ambience === 'off') return;
+    const t = ctx.currentTime + Math.random() * 0.8;
+    const v = AMBIENCE_VOLUME;
+    if (ambience === 'day' && Math.random() < 0.3) {
+      // A little birdsong phrase.
+      const base = 2200 + Math.random() * 1800;
+      const notes = 3 + Math.floor(Math.random() * 4);
+      for (let i = 0; i < notes; i++) {
+        const hz = base * (0.85 + Math.random() * 0.4);
+        tone('sine', hz, t + i * 0.1, 0.07, 0.03 * v, sfxGain, hz * (1.1 + Math.random() * 0.3));
+      }
+    } else if (ambience === 'night' && Math.random() < 0.7) {
+      // A cricket's chirrup.
+      const pulses = 3 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < pulses; i++) tone('sine', 4300 + Math.random() * 200, t + i * 0.06, 0.03, 0.02 * v, sfxGain);
+    }
+  }, 1000);
 }
 
 /** Rain at full downpour, relative to other sound effects: a soft patter under the music. */

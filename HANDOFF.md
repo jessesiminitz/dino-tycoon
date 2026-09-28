@@ -122,6 +122,10 @@ Always bump `SAVE_VERSION` and add a step to `migrate()` when the state shape ch
   - The card pauses the game; "Decide later" leaves a ❓ button; after 4 game-hours the last (cautious) option is taken automatically. That option gives no reward for doing nothing.
   - Answers go through the `chooseOption` command, and results are written to the log.
   - Decisions use their own dice. Closing early sets `stats.closedDay`, which stops arrivals for the day.
+- **Sound** (`audio/calls.ts` and `audio.ts`):
+  - A synthesised call for each species (roar, honk, bellow, chirp, screech, song), played on tap or release. Babies are higher and softer.
+  - A crowd `cheer` for hatchings, milestones and birthdays. `splash` and `flap` play every few seconds from visible lagoon and aviary animals.
+  - Ambience (`setAmbience`, driven by `WeatherScene`): birdsong by day, crickets by night, quiet at dusk and in storms. Setting: "Birds & crickets" (`ambience`).
 - **Placing dinos:** a fence gap is circled in red with a "Close gap · $x" button that fences or repairs it and releases the dino.
 - **Panels:** 👥 People, 🔔 alert log (newest first, filters, unread badge), 🏆 Goals medal track, 📖 Dino Guide.
 - **Scenarios:** First Steps (tutorial), Fossil Fever, Storm Coast, Rex Rising, each with 3 rounds of milestones; plus Sandbox. You can keep playing after winning or losing.
@@ -157,9 +161,9 @@ Headless Chrome against the dev server (`http://localhost:5173`), using `puppete
 
 Scripts that step the sim by hand should use 16 steps per game-hour.
 
-## Next up: `docs/ROADMAP.md`
+## Roadmap: `docs/ROADMAP.md` (all ten features done)
 
-The owner approved ten fun and engagement features, **to be built in order**: babies, tap-to-interact and photos, park requests, the fossil dig mini-game, lagoon and aviary, attractions, the sticker book, day and night, choice events, and more sound. Each has a design, sim, UI, test and check plan there. Work through the table from the top, one release per feature.
+The ten fun and engagement features the owner approved are all built and deployed (2026-09-28). Ask the owner what's next; the ideas below are still open.
 
 ## Other ideas not done yet (ask before starting)
 

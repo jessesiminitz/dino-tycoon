@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import type { Simulation } from '../sim/Simulation';
-import { playSfx, setRain } from '../audio/audio';
+import { playSfx, setAmbience, setRain } from '../audio/audio';
 import { calendar } from '../sim/GameState';
 import { getSettings } from '../ui/settings';
 import { TILE } from './tileset';
@@ -107,7 +107,10 @@ export class WeatherScene extends Phaser.Scene {
   private drawNight(): number {
     const { hour } = calendar(this.sim.state);
     const { dark, warm } = lightAt(hour + this.sim.stepProgressInHour);
-    const strength = getSettings().nightDarkness;
+    // Birds by day, crickets by night; quiet at dusk, in storms, or if turned off.
+    const settings = getSettings();
+    setAmbience(!settings.ambience || this.sim.state.stormHours > 0 ? 'off' : dark > 0.6 ? 'night' : dark < 0.3 ? 'day' : 'off');
+    const strength = settings.nightDarkness;
     const night = dark * strength;
     this.glow.clear();
     if (night < 0.02) {

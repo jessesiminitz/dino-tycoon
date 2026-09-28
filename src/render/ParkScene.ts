@@ -7,7 +7,7 @@ import { describeTask } from '../sim/systems/staff';
 import { digChance, lockedSpecies } from '../sim/systems/fossils';
 import { FENCE_REFUND, FENCE_TYPES, strongEnough } from '../sim/data/fences';
 import { DINO_RESALE, FEEDER_TYPES } from '../sim/data/feeders';
-import { SPECIES, type SpeciesId } from '../sim/data/species';
+import { habitatOf, SPECIES, type SpeciesId } from '../sim/data/species';
 import { findFenceGaps, gapCost } from '../sim/gaps';
 import { dinoLabel } from '../sim/systems/dinos';
 import { hoursToGrow, hoursToHatch } from '../sim/systems/breeding';
@@ -32,7 +32,7 @@ import { WorldLayers, type GhostStyle } from './WorldLayers';
 import { EntityLayer } from './EntityLayer';
 import { TerrainFx } from './TerrainFx';
 import { SceneryLayer } from './SceneryLayer';
-import { playSfx, type Sfx } from '../audio/audio';
+import { playCall, playSfx, type Sfx } from '../audio/audio';
 
 /** How often (ms) the info panel refreshes while a dino or feeder is selected. */
 const INFO_REFRESH_MS = 250;
@@ -140,6 +140,7 @@ export class ParkScene extends Phaser.Scene {
   }
 
   update(time: number, delta: number): void {
+    this.animalSounds(time);
     const cam = this.cameras.main;
     if (cam.zoom !== this.boundsZoom) this.fitBounds();
     this.sim.advance(delta);
@@ -178,6 +179,17 @@ export class ParkScene extends Phaser.Scene {
     this.layers.drawPaths();
     this.scenery?.refresh();
     this.layers.drawOverlay(this.ui.mode === 'land', this.selectedParcel);
+  }
+
+  /** Now and then, a splash from a lagoon or a flap from an aviary that's on screen. */
+  private nextAnimalSound = 0;
+  private animalSounds(time: number): void {
+    if (time < this.nextAnimalSound || this.sim.speed === 0) return;
+    this.nextAnimalSound = time + 3000 + Math.random() * 4000;
+    const view = this.cameras.main.worldView;
+    const onScreen = this.sim.state.dinos.filter((d) => view.contains(d.x * TILE + TILE / 2, d.y * TILE + TILE / 2) && habitatOf(d.species) !== 'land');
+    const d = onScreen[Math.floor(Math.random() * onScreen.length)];
+    if (d) playSfx(habitatOf(d.species) === 'water' ? 'splash' : 'flap');
   }
 
   /** Updates any map tiles whose terrain changed (a pond dug or filled in). */
@@ -355,7 +367,7 @@ export class ParkScene extends Phaser.Scene {
     const y = Math.floor(wy / TILE);
     const r = this.sim.dispatch({ type: 'buyDino', species, x, y });
     if (!r.ok && this.offerGapFix(species, x, y)) return;
-    this.report(r, 'roar');
+    this.report(r, 'build');
     if (!r.ok) return;
     this.afterRelease(species, x, y);
   }
@@ -400,7 +412,7 @@ export class ParkScene extends Phaser.Scene {
         for (const edge of gaps.broken) this.sim.dispatch({ type: 'repairFence', edge });
         this.layers.clearGhost();
         const r = this.sim.dispatch({ type: 'buyDino', species, x, y });
-        this.report(r, 'roar');
+        this.report(r, 'build');
         if (r.ok) this.afterRelease(species, x, y);
       },
     });
@@ -408,6 +420,7 @@ export class ParkScene extends Phaser.Scene {
   }
 
   private afterRelease(species: SpeciesId, x: number, y: number): void {
+    playCall(species);
     const sp = SPECIES[species];
     const { regions, tileRegion } = this.sim.regions();
     const weakest = regions[tileRegion[y * this.sim.state.map.width + x]]?.weakestFence ?? 0;
@@ -458,6 +471,7 @@ export class ParkScene extends Phaser.Scene {
     if (selection) {
       this.cursor.setVisible(false);
       this.entities.selection = selection;
+      if (dino) playCall(dino.species, dino.baby);
       this.showSelection();
       return;
     }

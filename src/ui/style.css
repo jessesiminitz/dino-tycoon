@@ -1293,6 +1293,16 @@ body:not(.in-park) #info {
   min-height: var(--tap);
 }
 
+.setting-pair {
+  gap: 16px;
+}
+
+.setting-pair label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .setting input[type='checkbox'] {
   width: 22px;
   height: 22px;

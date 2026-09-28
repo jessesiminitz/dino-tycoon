@@ -47,6 +47,8 @@ function startGame(state: GameState, slot: SlotId): void {
   sim.onEvent((e) => {
     const sound = eventSound(e.text, e.kind, e.outcome);
     if (sound) playSfx(sound);
+    // The crowd cheers for new babies, medals and birthdays.
+    if (/^(🐣|🎂 Happy birthday)/.test(e.text) || e.outcome === 'milestone' || e.outcome === 'won') playSfx('cheer');
     if (e.outcome) showOutcome(sim, e.outcome, toMainMenu, e.text);
   });
   document.body.classList.add('in-park');

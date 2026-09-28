@@ -1,6 +1,6 @@
 # Roadmap: making Dino Tycoon more fun
 
-Agreed with the owner on 2026-09-27: build these ten features **in this order**. They're numbered as in the original suggestion list; #4 (relaxed mode) and #12 (welcome-back summary) were left out on purpose.
+Agreed with the owner on 2026-09-27: build these ten features **in this order**. **All ten were done by 2026-09-28.** They're numbered as in the original suggestion list; #4 (relaxed mode) and #12 (welcome-back summary) were left out on purpose.
 
 Each feature ships as its own release:
 1. Build it.
@@ -23,7 +23,7 @@ State-shape changes bump `SAVE_VERSION` (currently 17) with a `migrate()` step. 
 | 8 | Sticker book and trophy room | M | none (album is per device) | ✅ 2026-09-28 |
 | 9 | Day and night | M | none | ✅ 2026-09-28 |
 | 10 | Events with choices | M | v17 | ✅ 2026-09-28 |
-| 11 | More sound: species calls, cheers, splashes | S–M | none | ☐ |
+| 11 | More sound: species calls, cheers, splashes | S–M | none | ✅ 2026-09-28 |
 
 Sizes: S is under half a session, M one session, L one to two, XL two to three. Stickers (#8) come after babies, habitats and attractions, so they have more to collect. Day and night (#9) and sound (#11) touch everything, so they go late.
 
