@@ -1,0 +1,16 @@
+/* Option A: DOS grey windows — grey 3D bevels, blue title bars, a DOS-style pixel font. */
+:root {
+  --panel: #c0c0c0; --panel-hi: #ffffff; --panel-lo: #6e6e6e; --panel-edge: #6e6e6e;
+  --text: #000000; --muted: #3a3a3a; --accent: #fcfc54; --accent-ink: #0000a8;
+  --tint: rgba(0, 0, 0, 0.06); --pixel-font: 'VT323', monospace;
+}
+body, button, input, select { font-family: 'VT323', monospace; font-size-adjust: 0.56; }
+.modal-head { background: #0000a8; border-bottom: 2px solid #000; }
+.modal-head h2, .modal-close, .modal-head .tab-btn { color: #fff; }
+.tab-btn.active { color: #fcfc54; border-bottom-color: #fcfc54; }
+.hud-btn, .action-btn, .chip, .pick-btn, .tool-btn, .menu-btn {
+  background: #c0c0c0; color: #000; border: 2px solid; border-color: #fff #404040 #404040 #fff; border-radius: 0;
+}
+.action-btn { font-weight: normal; }
+.chip.active, .tool-btn.active, .pick-btn.active, .speed-btn.active { border-color: #404040 #fff #fff #404040; background: #a8a8a8; color: #0000a8; }
+.hud-group, .modal-card, .toast, .info { border-radius: 0; }

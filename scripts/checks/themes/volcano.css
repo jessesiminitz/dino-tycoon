@@ -1,0 +1,11 @@
+:root {
+  --panel: #e8d2b8; --panel-hi: #fbeee0; --panel-lo: #8a5a3c; --panel-edge: #8a5a3c;
+  --text: #2b1a10; --muted: #6b4a36; --accent: #ffb33b; --accent-ink: #b0301c;
+  --tint: rgba(0,0,0,0.06); --pixel-font: 'VT323', monospace;
+}
+body, button, input, select { font-family: 'VT323', monospace; font-size-adjust: 0.56; }
+.modal-head { background: #6b1f14; border-bottom: 3px solid #ffcf4a; }
+.modal-head h2, .modal-close, .modal-head .tab-btn { color: #ffcf4a; }
+.tab-btn.active { color: #ffffff; border-bottom-color: #ffffff; }
+.hud-btn, .action-btn, .chip, .pick-btn, .tool-btn, .menu-btn { border-color: #fbeee0 #8a5a3c #8a5a3c #fbeee0; }
+.action-btn { background: #ffb33b; }

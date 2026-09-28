@@ -1,0 +1,14 @@
+/* Option B: Jungle khaki — khaki and olive panels, dark green title bars with gold lettering. */
+:root {
+  --panel: #cbbb8b; --panel-hi: #ecdfb6; --panel-lo: #6f5f3a; --panel-edge: #6f5f3a;
+  --text: #2a2210; --muted: #5a4a28; --accent: #e8b53a; --accent-ink: #2f5a1f;
+  --tint: rgba(47, 74, 31, 0.08); --pixel-font: 'Pixelify Sans', monospace;
+}
+body, button, input, select { font-family: 'Pixelify Sans', sans-serif; font-size-adjust: 0.5; }
+.modal-head { background: #2f4a1f; border-bottom: 3px solid #e8b53a; }
+.modal-head h2, .modal-close, .modal-head .tab-btn { color: #f2d060; }
+.tab-btn.active { color: #fff3c0; border-bottom-color: #f2d060; }
+.hud-group, .modal-card { border-color: #e8d49a #4a3c1f #4a3c1f #e8d49a; }
+.hud-btn { background: rgba(232, 181, 58, 0.45); border-color: #8a6a1f; }
+.action-btn { background: #e8b53a; border-color: #4a3c1f; }
+.tool-btn.active, .speed-btn.active { background: rgba(47, 74, 31, 0.25); color: #2f4a1f; }

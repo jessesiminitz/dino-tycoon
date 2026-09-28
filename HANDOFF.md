@@ -139,7 +139,8 @@ Always bump `SAVE_VERSION` and add a step to `migrate()` when the state shape ch
 - Pacing: a 4-minute game day at 1×, with 3× and 8× available.
 - Keep the game kid-friendly. Mess and pee/poop jokes are wanted but mild; cleanliness should not dominate.
 - Wants more depth: richer menus, milestones with unlock rewards, visible items, lively visitors.
-- Art should evoke classic DinoPark Tycoon (VGA palette, beige bevel UI, 3/4 view), with good dino likeness.
+- Art should evoke classic DinoPark Tycoon (VGA palette, bevelled UI, 3/4 view), with good dino likeness.
+- UI theme is "Tropical lagoon" (chosen by the owner 2026-09-28): sea-green panels, deep teal title bars with yellow lettering, coral buttons, VT323 font. Colours are CSS variables at the top of `src/ui/style.css`; other candidate themes and `preview.mjs` are in `scripts/checks/themes/`.
 - Recurring bug class: UI clashes on small or notched iPhones. Always check phone sizes (see `scripts/checks/hud-check.mjs`, `info-overlap.mjs`, `overflow-check.mjs`) after touching the HUD, toasts or panels.
 - The rain volume was too loud before; it's now `RAIN_VOLUME = 0.045`.
 

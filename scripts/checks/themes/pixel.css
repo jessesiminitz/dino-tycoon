@@ -1,0 +1,3 @@
+/* Option C: today's beige, with every piece of text in a chunky pixel font. */
+:root { --pixel-font: 'Pixelify Sans', monospace; }
+body, button, input, select { font-family: 'Pixelify Sans', sans-serif; font-size-adjust: 0.5; }

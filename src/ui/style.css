@@ -1,26 +1,30 @@
 :root {
   --bg: #1b3a4b;
-  /* Classic beige panels with bevelled edges (light top-left, dark bottom-right). */
-  --panel: #d9ceb4;
-  --panel-hi: #f4ecd8;
-  --panel-lo: #8b7d5f;
-  --panel-edge: #8b7d5f;
+  /* Tropical lagoon: sea-green panels with bevelled edges (light top-left, dark bottom-right). */
+  --panel: #bfe3dc;
+  --panel-hi: #e6f7f3;
+  --panel-lo: #4f8f86;
+  --panel-edge: #4f8f86;
   --bevel: var(--panel-hi) var(--panel-lo) var(--panel-lo) var(--panel-hi);
   --bevel-in: var(--panel-lo) var(--panel-hi) var(--panel-hi) var(--panel-lo);
-  --text: #2a2317;
-  --muted: #5f5440;
-  /* Gold for highlight fills and borders; darker ink for headings on beige. */
-  --accent: #e8b53a;
-  --accent-ink: #8a3a10;
+  --text: #10302c;
+  --muted: #3d6660;
+  /* Coral for highlight fills and buttons; darker ink for headings on the panels. */
+  --accent: #ff8a5c;
+  --accent-ink: #b33d1a;
+  /* Deep teal title bars with sunny yellow lettering. */
+  --head: #0f6b63;
+  --head-ink: #ffe08a;
+  --head-active: #ffffff;
   --good: #2e7d32;
   --bad: #b3261e;
-  --tint: rgba(60, 45, 20, 0.07);
+  --tint: rgba(0, 0, 0, 0.06);
   --tap: 44px; /* Apple's minimum comfortable tap target */
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
-  --pixel-font: 'Silkscreen', ui-monospace, 'SF Mono', Menlo, monospace;
+  --pixel-font: 'VT323', ui-monospace, 'SF Mono', Menlo, monospace;
 }
 
 * {
@@ -34,7 +38,9 @@ body {
   overflow: hidden;
   background: var(--bg);
   color: var(--text);
-  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  /* A chunky old-computer font, scaled so its small x-height reads like the others. */
+  font-family: 'VT323', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size-adjust: 0.56;
   /* No iOS text selection, callouts, tap flashes or rubber-band scrolling. */
   -webkit-user-select: none;
   user-select: none;
@@ -338,13 +344,24 @@ button {
   align-items: center;
   justify-content: space-between;
   padding: 0 4px 0 14px;
-  border-bottom: 2px solid var(--panel-edge);
+  background: var(--head);
+  border-bottom: 3px solid var(--head-ink);
 }
 
 .modal-head h2 {
   margin: 0;
   font-size: 16px;
-  color: var(--accent-ink);
+}
+
+.modal-head h2,
+.modal-head .modal-close,
+.modal-head .tab-btn {
+  color: var(--head-ink);
+}
+
+.modal-head .tab-btn.active {
+  color: var(--head-active);
+  border-bottom-color: var(--head-active);
 }
 
 .modal-close {
@@ -1115,7 +1132,7 @@ body:not(.in-park) #info {
 }
 
 .menu-btn small {
-  font-family: ui-monospace, Menlo, monospace;
+  font-family: inherit;
   font-size: 11px;
   opacity: 0.8;
 }
