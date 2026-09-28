@@ -1,6 +1,6 @@
 # Dino Tycoon: handoff notes
 
-Everything a fresh session needs to carry on. Last updated 2026-09-27, at commit `ba96d88` plus this file.
+Everything a fresh session needs to carry on. Last updated 2026-09-28, at commit `405775c` plus this file.
 
 ## What this is
 
@@ -102,7 +102,7 @@ Always bump `SAVE_VERSION` and add a step to `migrate()` when the state shape ch
   - Movement per habitat uses `enterFor(d)`. Swimmers make no dung and have live young (no egg wait). A flyer escapes if its net is breached.
   - Rendering: swimmers are cropped at the waterline with ripples; flyers hover 14 px up, always flapping, with a ground shadow.
 - **Attractions** (`systems/rides.ts`):
-  - **Jeep track:** Path picker → Jeep track / Erase track ($15 a tile). It can't go on paths or inside occupied paddocks, and fences block it.
+  - **Jeep track:** Path screen → Jeep track / Remove track ($15 a tile). It can't go on paths or inside occupied paddocks, and fences block it.
   - **Safari station** (next to a path, with track beside it): its jeep waits for up to 4 riders, or leaves after 6 steps with anyone aboard. It tours 32 steps, and riders see every dino within 5 tiles (×1.3 thrill). It then returns and drops riders where they boarded ($8).
   - **Viewing tower** ($3): reveals dinos within 8 tiles.
   - **Petting pen** ($4): +12 for kids, +5 for adults; needs a worker as keeper.
@@ -129,7 +129,7 @@ Always bump `SAVE_VERSION` and add a step to `migrate()` when the state shape ch
 - **Orientation:** phones play sideways only (a rotate screen shows under 700 px wide). iPads play either way up. The manifest orientation is `any`, and the camera starts further inland when the screen is taller than it is wide. Check with `scripts/checks/ipad-portrait.mjs`.
 - **Building shapes:** every building is shaped like what it offers (all in `sceneryArt.ts`; preview with `scripts/checks/shaped-buildings.mjs`): fries carton (restaurant), popcorn bucket (snack stall), shopping basket (souvenir shop), porta-potties (restrooms), hungry dino-head bin (trash can), giant jeep (safari station), giant binoculars on a stand (viewing tower), hatching egg (petting pen), giant fossil bone in a sand heap (dig site). There are no picture signs any more.
 - **Placing dinos:** a fence gap is circled in red with a "Close gap · $x" button that fences or repairs it and releases the dino.
-- **Panels:** 👥 People, 🔔 alert log (newest first, filters, unread badge), 🏆 Goals medal track, 📖 Dino Guide.
+- **Panels:** 📊 Park (Goals medal track, Overview, Staff, Finances, Bank), 👥 People, 📋 Requests, 📖 Book (Dino Guide + Stickers tabs), 🔔 News (alert log: newest first, filters, unread badge). See "UI layout" below.
 - **Scenarios:** First Steps (tutorial), Fossil Fever, Storm Coast, Rex Rising, each with 3 rounds of milestones; plus Sandbox. You can keep playing after winning or losing.
 - **Music:** 21 public-domain ragtime pieces (Joplin, Joplin & Hayden, Turpin, Hunter; 1899–1914), about 69 minutes, from Mutopia Project public-domain MIDI editions. They're converted by `scripts/rags/gen.mjs` (download instructions are in the file) and played on a honky-tonk piano synth, reshuffled every loop, with a "🎹 Now playing" toast. **Only use pre-1929, public-domain compositions in public-domain editions.**
 - **Home Screen icon:** a green Brachiosaurus on a sunset island (from `iconArt.ts`), plus a maskable variant.
@@ -141,6 +141,7 @@ Always bump `SAVE_VERSION` and add a step to `migrate()` when the state shape ch
 - Wants more depth: richer menus, milestones with unlock rewards, visible items, lively visitors.
 - Art should evoke classic DinoPark Tycoon (VGA palette, bevelled UI, 3/4 view), with good dino likeness.
 - UI theme is "Tropical lagoon" (chosen by the owner 2026-09-28): sea-green panels, deep teal title bars with yellow lettering, coral buttons, VT323 font. Colours are CSS variables at the top of `src/ui/style.css`; other candidate themes and `preview.mjs` are in `scripts/checks/themes/`.
+- Owner feedback 2026-09-28: top buttons were too small and his daughter couldn't find things, which led to the labelled top bar and picture build screens. Keep menus simple, labelled and the same size.
 - Recurring bug class: UI clashes on small or notched iPhones. Always check phone sizes (see `scripts/checks/hud-check.mjs`, `info-overlap.mjs`, `overflow-check.mjs`) after touching the HUD, toasts or panels.
 - The rain volume was too loud before; it's now `RAIN_VOLUME = 0.045`.
 
@@ -151,12 +152,15 @@ Headless Chrome against the dev server (`http://localhost:5173`), using `puppete
 | Script | What it checks |
 | --- | --- |
 | `hud-check.mjs` | ☰ visible and nothing clipped on 7 iPhone sizes with notch insets |
-| `info-overlap.mjs` | the info panel never covers the toolbar or pickers, and the text stays readable |
+| `info-overlap.mjs` | the info panel never covers the toolbar or the build chip, and the text stays readable |
 | `overflow-check.mjs` | the pause menu fits, and alerts don't clash with buttons |
 | `people-check.mjs` | 👥 panel tabs, filters, rename and locate |
 | `gap-check.mjs` | fence-gap detection and "Close gap" on dino placement |
-| `milestone-check.mjs` | Bronze milestone popup and Goals tab |
-| `ipad-check.mjs` | iPad layouts (portrait shows the "turn sideways" screen) |
+| `milestone-check.mjs` | Bronze milestone popup and Goals tab (via 📊 Park) |
+| `ipad-check.mjs` | iPad layouts, landscape and portrait |
+| `ipad-portrait.mjs` | iPads upright: HUD fits, panels open; iPhone upright shows the rotate screen |
+| `ui-tour.mjs [WxH]` | opens every sheet (build screens, Dinos, Book, Park, People, News, Requests), reports size and sideways scrolling |
+| `shaped-buildings.mjs` | all nine building sprites, enlarged |
 | `dino-gallery.mjs` | all 12 species, both walk frames, at 4× |
 | `icon-preview.mjs` | icon at full size, real size and maskable |
 | `items-check.mjs` | carried items, pee and poop, litter, dung, janitor, trash can |
