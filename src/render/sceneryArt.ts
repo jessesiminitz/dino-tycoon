@@ -251,81 +251,9 @@ export function paintBench(): HTMLCanvasElement {
 /** Tree kinds used on forest tiles, picked per tile. */
 export const FOREST_TREES = [paintConifer, paintBroadleaf, paintCycad, paintTreeFern, paintGiant] as const;
 
-// --- Buildings, drawn in 3/4 view: a sloped roof you can see the top of, over a front wall. ---
+// --- Park buildings, drawn in 3/4 view. ---
 
 type Px = Plot;
-
-/** A pitched roof (top face visible) over a front wall with a door. */
-function house(px: Px, w: number, roof: [string, string], wall: [string, string], roofRows = 8, wallRows = 13): { wallTop: number; bottom: number } {
-  const roofTop = 2;
-  for (let y = 0; y < roofRows; y++)
-    for (let x = 1 + Math.max(0, 2 - y); x < w - 1 - Math.max(0, 2 - y); x++) {
-      // Tiles: alternate shades by row, darker at the front edge.
-      px(x, roofTop + y, y === roofRows - 1 ? roof[1] : (y + (x >> 1)) % 3 === 0 ? roof[1] : roof[0]);
-    }
-  const wallTop = roofTop + roofRows;
-  const bottom = wallTop + wallRows - 1;
-  for (let y = wallTop; y <= bottom; y++) for (let x = 2; x < w - 2; x++) px(x, y, x < 4 ? wall[0] : wall[x > w - 5 ? 1 : 0]);
-  return { wallTop, bottom };
-}
-
-function windowAt(px: Px, x: number, y: number, w = 4, h = 4): void {
-  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) px(x + i, y + j, j === 0 || i === 0 ? '#5a8fb0' : '#8fd3ea');
-  px(x + w - 1, y, '#e8f6fb');
-}
-
-function doorAt(px: Px, x: number, y: number, bottom: number, color = '#6b4a2a'): void {
-  for (let j = y; j <= bottom; j++) for (let i = 0; i < 4; i++) px(x + i, j, i === 0 ? '#4a3018' : color);
-  px(x + 3, Math.round((y + bottom) / 2), '#f2c14e'); // handle
-}
-
-export function paintRestaurant(): HTMLCanvasElement {
-  const w = 24;
-  return paintSprite(w, 28, (px) => {
-    const { wallTop, bottom } = house(px, w, ['#c8483a', '#8f2f24'], ['#f4ecd2', '#d9ccaa']);
-    windowAt(px, 4, wallTop + 3);
-    windowAt(px, w - 8, wallTop + 3);
-    doorAt(px, 10, wallTop + 5, bottom);
-    // Striped awning over the door and a sign with a fork and knife.
-    for (let x = 8; x < 16; x++) px(x, wallTop + 3, x % 2 ? '#d9454d' : '#f4ecd2');
-    for (let x = 8; x < 16; x++) px(x, wallTop + 4, x % 2 ? '#8f2f24' : '#d9ccaa');
-    for (let x = 8; x < 16; x++) px(x, 1, '#f2c14e');
-    px(10, 0, '#f2c14e');
-    px(13, 0, '#f2c14e');
-    px(10, 1, '#5a4028');
-    px(13, 1, '#5a4028');
-  });
-}
-
-export function paintSouvenirShop(): HTMLCanvasElement {
-  const w = 24;
-  return paintSprite(w, 28, (px) => {
-    const { wallTop, bottom } = house(px, w, ['#3f7fb0', '#2a5a80'], ['#f4ecd2', '#d9ccaa']);
-    // A big shop window with a plush dino and a balloon on display.
-    for (let j = 0; j < 7; j++) for (let i = 0; i < 9; i++) px(4 + i, wallTop + 2 + j, j === 0 || i === 0 ? '#5a8fb0' : '#bfe6f2');
-    for (const [dx, dy] of [[2, 4], [3, 4], [4, 4], [3, 3], [4, 3], [5, 3], [2, 5], [4, 5]]) px(4 + dx, wallTop + 2 + dy, '#5fb84a');
-    px(10, wallTop + 3, '#e05a4f');
-    px(10, wallTop + 4, '#e05a4f');
-    doorAt(px, w - 9, wallTop + 4, bottom, '#2a5a80');
-    for (let x = 5; x < w - 5; x++) px(x, 1, x % 3 ? '#6fb34f' : '#2f6b2a'); // sign
-  });
-}
-
-export function paintRestroom(): HTMLCanvasElement {
-  const w = 22;
-  return paintSprite(w, 26, (px) => {
-    const { wallTop, bottom } = house(px, w, ['#3f8f9a', '#2a646c'], ['#e8f0ec', '#c9d6d0'], 7, 12);
-    doorAt(px, 4, wallTop + 4, bottom, '#5a6b7a');
-    doorAt(px, w - 8, wallTop + 4, bottom, '#5a6b7a');
-    // Figure signs above the doors.
-    for (const [x, c] of [[5, '#3f7fb0'], [w - 7, '#e05a8f']] as const) {
-      px(x + 1, wallTop + 1, c);
-      px(x, wallTop + 2, c);
-      px(x + 1, wallTop + 2, c);
-      px(x + 2, wallTop + 2, c);
-    }
-  });
-}
 
 /** A green park bin with a lid and a recycling stripe. */
 export function paintTrashCan(): HTMLCanvasElement {
@@ -418,30 +346,6 @@ export function paintJeep(): HTMLCanvasElement {
   });
 }
 
-export function paintSnackStall(): HTMLCanvasElement {
-  return paintSprite(22, 26, (px) => {
-    // Striped umbrella dome.
-    for (let y = 1; y < 9; y++) {
-      const half = Math.min(10, 2 + y * 1.6);
-      for (let x = Math.round(11 - half); x <= Math.round(11 + half); x++) px(x, y, Math.floor((x - 11) / 3 + 10) % 2 ? '#f28fb1' : '#f4ecd2');
-    }
-    for (let y = 9; y < 14; y++) px(11, y, '#8f8f96');
-    // The cart: counter, front panel with an ice-cream cone, wheels.
-    for (let x = 3; x < 19; x++) px(x, 14, '#f4ecd2');
-    for (let y = 15; y < 21; y++) for (let x = 3; x < 19; x++) px(x, y, x < 5 ? '#f2b8cc' : '#e8a0b8');
-    px(10, 16, '#f4ecd2');
-    px(11, 16, '#ff9fb8');
-    px(12, 16, '#f4ecd2');
-    for (let y = 17; y < 20; y++) px(11, y, '#d9a45a');
-    for (const x of [5, 16]) {
-      px(x, 21, '#3b3b3b');
-      px(x + 1, 21, '#3b3b3b');
-      px(x, 22, '#3b3b3b');
-      px(x + 1, 22, '#3b3b3b');
-    }
-  });
-}
-
 export function paintDigSite(): HTMLCanvasElement {
   return paintSprite(26, 24, (px) => {
     // Canvas tent.
@@ -491,26 +395,10 @@ export function paintTrough(kind: 'plants' | 'meat' | 'fish', full: boolean): HT
 
 // --- Shop signs: a little board on a post above a building, with a picture of what it's for. ---
 
-export type SignIcon = 'fries' | 'icecream' | 'gift' | 'restroom' | 'jeep' | 'binoculars' | 'heart' | 'bone';
+export type SignIcon = 'jeep' | 'binoculars' | 'heart' | 'bone';
 
 /** Pixel pictures for signs, 9×8, one character per pixel. */
 const SIGN_ART: Record<SignIcon, { rows: string[]; colors: Record<string, string> }> = {
-  fries: {
-    rows: ['.Y.Y.Y.Y.', '.YYYYYYY.', '.YYYYYYY.', 'RWRWRWRWR', 'RWRWRWRWR', '.RWRWRWR.', '.RWRWRWR.', '..RWRWR..'],
-    colors: { Y: '#f7d046', R: '#d9453b', W: '#f4ecd2' },
-  },
-  icecream: {
-    rows: ['...PPP...', '..PPPPP..', '..PPPPP..', '..CCCCC..', '...CCC...', '...CCC...', '....C....', '....C....'],
-    colors: { P: '#f28fb1', C: '#d9a45a' },
-  },
-  gift: {
-    rows: ['..Y...Y..', '...Y.Y...', 'RRRRYRRRR', 'RRRRYRRRR', 'YYYYYYYYY', 'RRRRYRRRR', 'RRRRYRRRR', 'RRRRYRRRR'],
-    colors: { R: '#3f8fd0', Y: '#f7d046' },
-  },
-  restroom: {
-    rows: ['.B.....P.', 'BBB...PPP', '.B....PPP', 'BBB..PPPPP', '.B.....P.', 'B.B...P.P', 'B.B...P.P', '.........'],
-    colors: { B: '#3f7fd0', P: '#e05a8f' },
-  },
   jeep: {
     rows: ['.........', '..KKKK...', '..K..KG..', 'GGGGGGGGG', 'GGGGGGGGG', '.KK...KK.', '.KK...KK.', '.........'],
     colors: { G: '#6f9a3a', K: '#2b2b2b' },
@@ -550,4 +438,146 @@ export function withSign(building: HTMLCanvasElement, icon: SignIcon): HTMLCanva
   ctx.drawImage(sign, Math.round((out.width - sign.width) / 2), 0);
   ctx.drawImage(building, Math.round((out.width - building.width) / 2), sign.height - overlap);
   return out;
+}
+
+// --- Novelty buildings shaped like what they sell, roadside-attraction style. ---
+
+/** Fills the rows y0..y1 between edges that slide from (l0, r0) at the top to (l1, r1) at the bottom. */
+function taper(px: Px, y0: number, y1: number, l0: number, r0: number, l1: number, r1: number, color: (x: number, y: number, l: number, r: number) => string | null): void {
+  for (let y = y0; y <= y1; y++) {
+    const t = (y - y0) / Math.max(1, y1 - y0);
+    const l = Math.round(l0 + (l1 - l0) * t);
+    const r = Math.round(r0 + (r1 - r0) * t);
+    for (let x = l; x <= r; x++) {
+      const c = color(x, y, l, r);
+      if (c) px(x, y, c);
+    }
+  }
+}
+
+/** A serving hatch: dark inside, a striped awning above and a wooden counter below. */
+function hatch(px: Px, x0: number, x1: number, y: number, stripe: [string, string]): void {
+  for (let x = x0; x <= x1; x++) px(x, y, (x - x0) % 2 ? stripe[1] : stripe[0]);
+  for (let j = 1; j <= 3; j++) for (let x = x0 + 1; x < x1; x++) px(x, y + j, j === 1 ? '#2a1c12' : '#3a2a1a');
+  for (let x = x0; x <= x1; x++) px(x, y + 4, x === x0 ? '#d9b27a' : '#b88a4f');
+}
+
+/** Restaurant: a giant carton of fries with a serving hatch and a door. */
+export function paintFriesStand(): HTMLCanvasElement {
+  return paintSprite(24, 32, (px) => {
+    // Fries poking out of the top, at jaunty heights.
+    const tops = [6, 3, 5, 2, 4, 3, 5, 2, 4, 6];
+    tops.forEach((top, i) => {
+      const x = 3 + i * 2;
+      for (let y = top; y < 13; y++) {
+        px(x, y, y === top ? '#fbe79a' : '#f7d046');
+        px(x + 1, y, y === top ? '#f7d046' : '#d9a92a');
+      }
+    });
+    // The red carton, wider at the top, with a light rim and shading on the right.
+    taper(px, 11, 29, 2, 21, 5, 18, (x, y, l, r) =>
+      y === 11 ? '#f06a5c' : x <= l + 1 ? '#e8584b' : x >= r - 1 ? '#a8322a' : '#d9453b');
+    // The hatch and the door.
+    hatch(px, 5, 18, 16, ['#f4ecd2', '#d9453b']);
+    for (let y = 23; y <= 29; y++) for (let x = 10; x < 14; x++) px(x, y, x === 10 ? '#4a3018' : '#6b4a2a');
+    px(13, 26, '#f2c14e');
+  });
+}
+
+/** Snack stall: a big striped popcorn bucket, heaped high, with a serving hatch. */
+export function paintPopcornStand(): HTMLCanvasElement {
+  return paintSprite(22, 30, (px) => {
+    // Heaped popcorn: overlapping puffs, lit from the upper left.
+    const puffs = [[5, 8], [8, 6], [11, 5], [14, 6], [17, 8], [7, 9], [11, 8], [15, 9], [10, 3], [13, 4]];
+    for (const [cx, cy] of puffs)
+      for (let dy = -2; dy <= 1; dy++)
+        for (let dx = -2; dx <= 2; dx++) {
+          if (dx * dx + dy * dy > 4) continue;
+          px(cx + dx, cy + dy, dx + dy < -1 ? '#fffbea' : dx + dy > 1 ? '#e8c96a' : '#fbf1c8');
+        }
+    // Red-and-white striped bucket.
+    taper(px, 10, 27, 2, 19, 4, 17, (x, y, _l, r) => {
+      if (y === 10) return '#f4ecd2';
+      const red = Math.floor((x - 1) / 3) % 2 === 0;
+      const edge = x >= r - 1 ? 1 : 0;
+      return red ? (edge ? '#a8322a' : '#d9453b') : edge ? '#cfc4a6' : '#f4ecd2';
+    });
+    hatch(px, 5, 16, 14, ['#f7d046', '#e0a020']);
+    // A yellow band near the base.
+    taper(px, 24, 25, 4, 17, 4, 17, (x) => (x > 15 ? '#c89a2a' : '#f7d046'));
+  });
+}
+
+/** Restrooms: a pair of porta-potties, one blue and one pink, with moon vents on the doors. */
+export function paintPortaPotties(): HTMLCanvasElement {
+  return paintSprite(24, 30, (px) => {
+    const potty = (x0: number, body: [string, string, string], vent: boolean, dress: boolean) => {
+      const x1 = x0 + 9;
+      // Rounded white roof.
+      for (let x = x0 + 1; x < x1; x++) px(x, 6, '#f4f7f9');
+      for (let x = x0; x <= x1; x++) px(x, 7, x > x1 - 2 ? '#c9d2d8' : '#e8eef2');
+      if (vent) for (let y = 3; y < 6; y++) px(x1 - 2, y, '#8f9aa3');
+      // Body with light left edge and dark right edge.
+      for (let y = 8; y <= 27; y++) for (let x = x0; x <= x1; x++) px(x, y, x === x0 ? body[0] : x >= x1 - 1 ? body[2] : body[1]);
+      // Door panel, crescent moon vent and handle.
+      for (let y = 10; y <= 27; y++) for (let x = x0 + 2; x <= x1 - 2; x++) px(x, y, x === x0 + 2 || y === 10 ? body[2] : body[1]);
+      px(x0 + 4, 12, '#f7d046');
+      px(x0 + 5, 12, '#f7d046');
+      px(x0 + 4, 13, '#f7d046');
+      px(x0 + 4, 14, '#f7d046');
+      px(x0 + 5, 14, '#f7d046');
+      // A little white figure on the door.
+      const fx = x0 + 5;
+      px(fx, 16, '#ffffff');
+      for (let y = 18; y <= 20; y++) for (let dx = dress && y >= 19 ? -1 : 0; dx <= (dress && y >= 19 ? 1 : 0); dx++) px(fx + dx, y, '#ffffff');
+      px(fx - 1, 18, '#ffffff');
+      px(fx + 1, 18, '#ffffff');
+      px(fx - 1, 21, '#ffffff');
+      px(fx + 1, 21, '#ffffff');
+      px(x1 - 3, 24, '#e8eef2');
+      // Base skid.
+      for (let x = x0 - 1; x <= x1 + 1; x++) px(x, 28, '#5a6470');
+    };
+    potty(2, ['#6fa8e8', '#3f7fd0', '#2a5a9a'], true, false);
+    potty(12, ['#f59ac0', '#e05a8f', '#a83a66'], false, true);
+  });
+}
+
+/** Souvenir shop: a giant shopping basket with a dino plush, a balloon and a present peeking out. */
+export function paintBasketShop(): HTMLCanvasElement {
+  return paintSprite(28, 32, (px) => {
+    // Balloon on a string, rising behind everything.
+    for (let y = 2; y < 6; y++) for (let x = 18; x < 22; x++) if (!((y === 2 || y === 5) && (x === 18 || x === 21))) px(x, y, x === 18 || y === 2 ? '#f06a8f' : '#d9456f');
+    px(19, 3, '#ffd0de');
+    for (let y = 6; y < 12; y++) px(19, y, '#6b6b6b');
+    // Metal carrying handle arching over the top.
+    for (let y = 5; y <= 13; y++) {
+      px(4, y, '#c9d2d8');
+      px(23, y, '#8f9aa3');
+    }
+    for (let x = 5; x <= 22; x++) px(x, 4, x < 8 ? '#e8eef2' : '#c9d2d8');
+    // Plush dino: a neck rising out of the basket to a round head with a big eye and a smile.
+    for (let y = 8; y < 13; y++) for (let x = 6; x < 9; x++) px(x, y, x === 6 ? '#7fcf6a' : '#5fb84a');
+    for (let y = 4; y < 8; y++) for (let x = 6; x < 12; x++) if (!(y === 4 && (x === 6 || x === 11))) px(x, y, y === 4 || x === 6 ? '#7fcf6a' : '#5fb84a');
+    px(9, 5, '#ffffff');
+    px(10, 5, '#1b1b14');
+    px(10, 7, '#2f6b2a');
+    px(11, 6, '#2f6b2a');
+    px(7, 3, '#e8b53a'); // back spikes
+    px(7, 8, '#e8b53a');
+    px(7, 10, '#e8b53a');
+    for (let y = 9; y < 13; y++) for (let x = 12; x < 17; x++) px(x, y, x === 14 || y === 10 ? '#f7d046' : '#3f8fd0');
+    px(13, 8, '#f7d046');
+    px(15, 8, '#f7d046');
+    // Red plastic basket with rows of slots, wider at the top.
+    taper(px, 13, 29, 2, 25, 4, 23, (x, y, l, r) => {
+      if (y <= 14) return y === 13 ? '#f06a5c' : '#b8352c';
+      const slot = y % 3 !== 0 && (x - l) % 3 !== 0 && x > l && x < r;
+      if (slot) return '#7a1f1a';
+      return x <= l + 1 ? '#e8584b' : x >= r - 1 ? '#a8322a' : '#d9453b';
+    });
+    // A welcoming door in the middle.
+    for (let y = 21; y <= 29; y++) for (let x = 12; x < 16; x++) px(x, y, y === 21 ? '#f4ecd2' : x === 12 ? '#4a3018' : '#6b4a2a');
+    px(15, 25, '#f2c14e');
+  });
 }

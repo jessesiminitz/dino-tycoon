@@ -12,7 +12,7 @@ import { isAsleep } from '../sim/systems/dinos';
 import type { CareEffect } from '../sim/systems/care';
 import { TILE } from './tileset';
 import { paintRows } from './pixels';
-import { paintDigSite, paintJeep, paintPettingPen, paintRestaurant, paintRestroom, paintSnackStall, paintSouvenirShop, paintStation, paintTower, paintTrashCan, paintTrough, withSign } from './sceneryArt';
+import { paintBasketShop, paintDigSite, paintFriesStand, paintJeep, paintPettingPen, paintPopcornStand, paintPortaPotties, paintStation, paintTower, paintTrashCan, paintTrough, withSign } from './sceneryArt';
 
 const dinoKey = (id: SpeciesId, frame: 0 | 1 = 0, baby = false) => `dino-${id}-${frame}${baby ? '-baby' : ''}`;
 const eggKey = (id: SpeciesId) => `egg-${id}`;
@@ -94,15 +94,15 @@ function paintStaff(role: StaffRole, frame: 0 | 1): HTMLCanvasElement {
 
 function paintBuilding(kind: BuildingKind): HTMLCanvasElement {
   switch (kind) {
-    // Each gets a sign with a picture of what it's for, so it's obvious at a glance.
+    // Food, shop and restrooms are shaped like what they offer; the rest carry a picture sign.
     case 'restaurant':
-      return withSign(paintRestaurant(), 'fries');
+      return paintFriesStand();
     case 'snackstall':
-      return withSign(paintSnackStall(), 'icecream');
+      return paintPopcornStand();
     case 'giftshop':
-      return withSign(paintSouvenirShop(), 'gift');
+      return paintBasketShop();
     case 'restroom':
-      return withSign(paintRestroom(), 'restroom');
+      return paintPortaPotties();
     case 'trashcan':
       return paintTrashCan();
     case 'station':
