@@ -9,11 +9,11 @@ import { DECOR_REFUND, DECOR_TYPES, type DecorKind } from './data/decor';
 import { bedAt } from './fossilBeds';
 import { edgeKey, type Edge } from './grid';
 import { isTileOwned, parcelBuyBlocker, parcelGrid, parcelPrice } from './land';
-import { DINO_NAMES, SPECIES, type SpeciesId } from './data/species';
+import { DINO_NAMES, habitatOf, SPECIES, type SpeciesId } from './data/species';
 import { DINO_RESALE, FEEDER_REFUND, FEEDER_TYPES, type FeederKind } from './data/feeders';
 import { computeRegions, isOccupiedPaddock, regionHasPaths } from './regions';
 import { Rng } from './rng';
-import { isLand, terrainAt } from './terrain';
+import { isLand, Terrain, terrainAt } from './terrain';
 import {
   BUILDING_REFUND,
   BUILDING_TYPES,
@@ -48,6 +48,8 @@ export type Command =
   | { type: 'placeDecor'; kind: DecorKind; x: number; y: number }
   | { type: 'removeDecor'; id: number }
   | { type: 'rename'; kind: 'visitor' | 'dino' | 'staff'; id: number; name: string }
+  | { type: 'digPonds'; tiles: number[] }
+  | { type: 'fillPonds'; tiles: number[] }
   | { type: 'treatDino'; id: number }
   | { type: 'patDino'; id: number }
   | { type: 'photoDino'; id: number };
@@ -103,6 +105,31 @@ function tileBlocker(state: GameState, x: number, y: number): string | null {
   if (t === undefined || !isLand(t)) return 'Needs dry land';
   if (!isTileOwned(state, x, y)) return "You don't own this land";
   return null;
+}
+
+/** Why a sea reptile (or a floating fish feeder) can't go on this tile, or null if it's pond water you own. */
+function pondBlocker(state: GameState, x: number, y: number): string | null {
+  if (terrainAt(state.map, x, y) !== Terrain.Pond) return 'Needs pond water: dig a pond with 🌳 Garden → Pond';
+  if (!isTileOwned(state, x, y)) return "You don't own this pond";
+  return null;
+}
+
+/** Digging a pond costs this per tile; filling one in refunds a little. */
+export const POND_COST = 250;
+export const POND_REFUND = 0.25;
+/** Ground a pond can be dug in (forest and rock are too much work). */
+const DIGGABLE = [Terrain.Grass, Terrain.Sand];
+
+/** Why a pond can't be dug here, or null if it can. */
+export function pondDigBlocker(state: GameState, x: number, y: number): string | null {
+  const t = terrainAt(state.map, x, y);
+  if (t === Terrain.Pond) return 'Already a pond';
+  if (t === undefined || !DIGGABLE.includes(t)) return 'Ponds can be dug in grass or sand';
+  if (!isTileOwned(state, x, y)) return "You don't own this land";
+  const i = y * state.map.width + x;
+  if (state.paths[i]) return 'There is a path here';
+  if (state.dinos.some((d) => d.x === x && d.y === y) || state.eggs.some((e) => e.x === x && e.y === y)) return 'An animal is standing here';
+  return tileOccupant(state, x, y);
 }
 
 export function refillCost(state: GameState, id: number): number {
@@ -167,11 +194,24 @@ export function applyCommand(state: GameState, cmd: Command): CommandResult {
     case 'buyDino': {
       const sp = SPECIES[cmd.species];
       if (!state.unlockedSpecies.includes(cmd.species)) return { ok: false, message: `${sp.name} isn't available yet` };
-      const blocker = tileBlocker(state, cmd.x, cmd.y);
-      if (blocker) return { ok: false, message: blocker };
+      const habitat = habitatOf(cmd.species);
+      if (habitat === 'water') {
+        const blocker = pondBlocker(state, cmd.x, cmd.y);
+        if (blocker) return { ok: false, message: `${sp.name} lives in water. ${blocker}.` };
+      } else {
+        const blocker = tileBlocker(state, cmd.x, cmd.y);
+        if (blocker) return { ok: false, message: blocker };
+      }
       const { regions, tileRegion } = computeRegions(state);
-      if (regions[tileRegion[cmd.y * state.map.width + cmd.x]].kind !== 'paddock') {
-        return { ok: false, message: 'Dinosaurs must go inside a fenced paddock' };
+      const home = regions[tileRegion[cmd.y * state.map.width + cmd.x]];
+      if (home?.kind !== 'paddock') {
+        return {
+          ok: false,
+          message: habitat === 'water' ? 'This pond needs to be inside a fenced paddock to be a lagoon' : 'Dinosaurs must go inside a fenced paddock',
+        };
+      }
+      if (habitat === 'air' && !home.covered) {
+        return { ok: false, message: `${sp.name} flies! It needs an aviary: a paddock fenced all the way round with aviary net` };
       }
       if (sp.price > state.money) return { ok: false, message: `Not enough money: need ${usd(sp.price)}` };
       // Paths left inside the paddock (laid while it was empty) are cleared: visitors can't reach them anyway.
@@ -225,7 +265,9 @@ export function applyCommand(state: GameState, cmd: Command): CommandResult {
 
     case 'placeFeeder': {
       const type = FEEDER_TYPES[cmd.kind];
-      const blocker = tileBlocker(state, cmd.x, cmd.y);
+      // Fish feeders can float on a lagoon, or stand on land for the flyers.
+      const onPond = cmd.kind === 'fish' && terrainAt(state.map, cmd.x, cmd.y) === Terrain.Pond;
+      const blocker = onPond ? pondBlocker(state, cmd.x, cmd.y) : tileBlocker(state, cmd.x, cmd.y);
       if (blocker) return { ok: false, message: blocker };
       const occupied = tileOccupant(state, cmd.x, cmd.y);
       if (occupied) return { ok: false, message: occupied };
@@ -367,6 +409,39 @@ export function applyCommand(state: GameState, cmd: Command): CommandResult {
       state.decor.splice(state.decor.indexOf(d), 1);
       earn(state, 'sales', refund);
       return { ok: true, cost: -refund, message: `Removed ${DECOR_TYPES[d.kind].name.toLowerCase()}` };
+    }
+
+    case 'digPonds': {
+      const w = state.map.width;
+      const dig = [...new Set(cmd.tiles)].filter((i) => !pondDigBlocker(state, i % w, Math.floor(i / w)));
+      if (dig.length === 0) {
+        const first = cmd.tiles[0];
+        return { ok: false, message: (first !== undefined && pondDigBlocker(state, first % w, Math.floor(first / w))) || 'Nothing to dig' };
+      }
+      const cost = dig.length * POND_COST;
+      if (cost > state.money) return { ok: false, message: `Not enough money: need ${usd(cost)}` };
+      for (const i of dig) state.map.tiles[i] = Terrain.Pond;
+      spend(state, 'construction', cost);
+      return { ok: true, cost, message: `Dug ${dig.length} tile${dig.length === 1 ? '' : 's'} of pond for ${usd(cost)}` };
+    }
+
+    case 'fillPonds': {
+      const w = state.map.width;
+      const fill = [...new Set(cmd.tiles)].filter((i) => {
+        const x = i % w;
+        const y = Math.floor(i / w);
+        return (
+          state.map.tiles[i] === Terrain.Pond &&
+          isTileOwned(state, x, y) &&
+          !state.dinos.some((d) => d.x === x && d.y === y) &&
+          !state.feeders.some((f) => f.x === x && f.y === y)
+        );
+      });
+      if (fill.length === 0) return { ok: false, message: 'No pond you can fill in here' };
+      for (const i of fill) state.map.tiles[i] = Terrain.Grass;
+      const refund = Math.floor(fill.length * POND_COST * POND_REFUND);
+      earn(state, 'sales', refund);
+      return { ok: true, cost: -refund, message: `Filled in ${fill.length} tile${fill.length === 1 ? '' : 's'} of pond (+${usd(refund)})` };
     }
 
     case 'treatDino': {

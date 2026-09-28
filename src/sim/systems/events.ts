@@ -1,6 +1,6 @@
 import { calendar } from '../GameState';
 import { LAST_ENTRY_HOUR, MAX_VISITORS, OPEN_HOUR } from '../data/economy';
-import { FENCE_TYPES, type FenceTypeId } from '../data/fences';
+import { FENCE_TYPES, strongEnough, type FenceTypeId } from '../data/fences';
 import { SPECIES } from '../data/species';
 import { earn, spend } from '../finance';
 import { allFenceEdges, fenceAt, fenceHp, setFenceHp } from '../fences';
@@ -132,7 +132,7 @@ export function safetyIssues(ctx: SimContext): string[] {
   if (broken) issues.push(`${broken} broken fence segment${broken === 1 ? '' : 's'}`);
   const weak = state.dinos.filter((d) => {
     const r = regions.regions[regions.tileRegion[d.y * state.map.width + d.x]];
-    return r?.kind === 'paddock' && r.weakestFence !== 0 && r.weakestFence < SPECIES[d.species].fenceNeeded;
+    return r?.kind === 'paddock' && r.weakestFence !== 0 && !strongEnough(r.weakestFence, SPECIES[d.species].fenceNeeded);
   });
   if (weak.length) {
     const names = [...new Set(weak.map((d) => SPECIES[d.species].name))];

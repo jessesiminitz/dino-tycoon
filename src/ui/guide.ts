@@ -1,6 +1,6 @@
 import type { Simulation } from '../sim/Simulation';
 import { FENCE_TYPES } from '../sim/data/fences';
-import { SPECIES, SPECIES_IDS, type SpeciesId } from '../sim/data/species';
+import { SPECIES, SPECIES_IDS, type SpeciesId, DIET_LABELS, HABITAT_LABELS, habitatOf, HABITAT_HELP } from '../sim/data/species';
 import { paintDino } from '../render/dinoArt';
 
 /**
@@ -48,15 +48,15 @@ export function mountGuide(sim: Simulation): { open(species?: SpeciesId): void }
       <img class="guide-art ${unlocked ? '' : 'locked'}" alt="${sp.name}" src="${art.get(id)}">
       <h3>${sp.name}</h3>
       <p class="guide-tags">
-        <span class="diet ${sp.diet}">${sp.diet === 'carnivore' ? '🥩 Carnivore' : '🌿 Herbivore'}</span>
-        · ${sp.period}
+        <span class="diet ${sp.diet}">${DIET_LABELS[sp.diet]}</span>
+        · ${HABITAT_LABELS[habitatOf(sp.id)]} · ${sp.period}
       </p>
       <ul class="guide-facts">${[sp.fact, ...sp.facts].map((f) => `<li>${f}</li>`).join('')}</ul>
       <dl class="guide-stats">
         <dt>Length</dt><dd>${sp.lengthM} m</dd>
         <dt>Weight</dt><dd>${sp.weight}</dd>
         <dt>Discovered</dt><dd>${sp.discovered}</dd>
-        <dt>In the park</dt><dd>${FENCE_TYPES[sp.fenceNeeded].name} fences or stronger · ${sp.space} tiles of space${sp.social ? ' · likes company' : ''}</dd>
+        <dt>In the park</dt><dd>Needs ${HABITAT_HELP[habitatOf(sp.id)]} · ${FENCE_TYPES[sp.fenceNeeded].name} fences or stronger · ${sp.space} tiles of space${sp.social ? ' · likes company' : ''}</dd>
       </dl>
       ${status}`;
     detail.scrollTop = 0;

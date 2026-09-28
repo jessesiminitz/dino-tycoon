@@ -12,12 +12,20 @@ export type SpeciesId =
   | 'velociraptor'
   | 'allosaurus'
   | 'brachiosaurus'
-  | 'tyrannosaurus';
+  | 'tyrannosaurus'
+  | 'plesiosaurus'
+  | 'mosasaurus'
+  | 'pteranodon'
+  | 'dimorphodon';
 
-export type Diet = 'herbivore' | 'carnivore';
+/** Fish-eaters (the sea and flying reptiles) eat from fish feeders and don't hunt dinosaurs. */
+export type Diet = 'herbivore' | 'carnivore' | 'piscivore';
+
+/** Where an animal lives: land paddocks, a lagoon (a paddock with a pond) or an aviary (a paddock fenced with nets). */
+export type Habitat = 'land' | 'water' | 'air';
 
 /** Body template used to paint the sprite (see render/dinoArt.ts). */
-export type BodyTemplate = 'raptor' | 'theropod' | 'ceratops' | 'trike' | 'stego' | 'ankylo' | 'hadro' | 'dome' | 'sauropod';
+export type BodyTemplate = 'raptor' | 'theropod' | 'ceratops' | 'trike' | 'stego' | 'ankylo' | 'hadro' | 'dome' | 'sauropod' | 'swimmer' | 'flyer';
 
 export interface Species {
   id: SpeciesId;
@@ -28,6 +36,8 @@ export interface Species {
   size: number;
   /** Hunger gained per game-hour (hunger runs 0 = full … 100 = starving). */
   hungerRate: number;
+  /** Land unless set. */
+  habitat?: Habitat;
   /** Food units eaten per meal from a feeder. */
   meal: number;
   /** Minimum fence strength that holds this species (escapes arrive in Milestone 5). */
@@ -240,9 +250,84 @@ export const SPECIES: Record<SpeciesId, Species> = {
     fossilsNeeded: 12, fossilWeight: 6,
     art: { template: 'theropod', body: '#6b7a4a', dark: '#40492a', accent: '#c9573b', pattern: 'stripes' },
   },
+  plesiosaurus: {
+    id: 'plesiosaurus', name: 'Plesiosaurus', diet: 'piscivore', habitat: 'water', price: 14000, size: 3,
+    hungerRate: 1.8, meal: 20, fenceNeeded: 1, space: 16, appeal: 7, pace: 2, social: true, starter: false,
+    period: 'Early Jurassic', lengthM: 3.5,
+    fact: 'A sea reptile with a small head on a long neck, a broad body and four big paddle-shaped flippers.',
+    weight: 'about 450 kg',
+    discovered: 'Named in 1821. Mary Anning found the first nearly complete skeleton in 1823, at Lyme Regis in England.',
+    facts: [
+      'It was not a dinosaur: plesiosaurs were marine reptiles that lived alongside the dinosaurs.',
+      'It “flew” through the water by beating its four flippers, a bit like a sea turtle or a penguin.',
+      'Fossils show that plesiosaurs gave birth to live young in the water instead of laying eggs.',
+      'It probably snapped up fish and squid-like animals with its long, sharp teeth.',
+    ],
+    fossilsNeeded: 3, fossilWeight: 20,
+    art: { template: 'swimmer', body: '#4f8a9e', dark: '#2f5a6b', accent: '#9fd0d8' },
+  },
+  mosasaurus: {
+    id: 'mosasaurus', name: 'Mosasaurus', diet: 'piscivore', habitat: 'water', price: 32000, size: 5,
+    hungerRate: 2.4, meal: 40, fenceNeeded: 3, space: 30, appeal: 11, pace: 2, social: false, starter: false,
+    period: 'Late Cretaceous', lengthM: 12,
+    fact: 'A giant sea lizard with powerful jaws, paddle flippers and a tail fin: a top predator of the ancient oceans.',
+    weight: 'several tonnes',
+    discovered: 'Its skull was found in the 1700s in a quarry near Maastricht in the Netherlands, and named in 1822.',
+    facts: [
+      'It was a marine reptile, more closely related to today’s lizards and snakes than to dinosaurs.',
+      'It had a second row of teeth on the roof of its mouth to help grip slippery prey.',
+      'It swam by sweeping its tail, which ended in a fin a little like a shark’s.',
+      'It was one of the very first prehistoric reptiles ever described by scientists.',
+    ],
+    fossilsNeeded: 8, fossilWeight: 7,
+    art: { template: 'swimmer', body: '#4a6b7a', dark: '#2b4450', accent: '#c9d8c0', pattern: 'stripes' },
+  },
+  pteranodon: {
+    id: 'pteranodon', name: 'Pteranodon', diet: 'piscivore', habitat: 'air', price: 11000, size: 2,
+    hungerRate: 1.6, meal: 12, fenceNeeded: 1, space: 14, appeal: 7, pace: 1, social: true, starter: false,
+    period: 'Late Cretaceous', lengthM: 6,
+    fact: 'A huge flying reptile with a wingspan of about six metres, a long toothless beak and a swept-back head crest.',
+    weight: 'about 25 kg',
+    discovered: 'Named in 1876 from fossils found in the chalk of Kansas, in the United States.',
+    facts: [
+      'It was a pterosaur, a flying reptile: not a dinosaur and not a bird.',
+      'Its name means “wing without a tooth”: its beak had no teeth at all.',
+      'Its wings were sheets of skin stretched from an incredibly long fourth finger to its legs.',
+      'It probably soared over the sea like an albatross, scooping up fish.',
+    ],
+    fossilsNeeded: 3, fossilWeight: 28,
+    art: { template: 'flyer', body: '#c9b48a', dark: '#8a7250', accent: '#d9573b' },
+  },
+  dimorphodon: {
+    id: 'dimorphodon', name: 'Dimorphodon', diet: 'piscivore', habitat: 'air', price: 6000, size: 1,
+    hungerRate: 1.8, meal: 8, fenceNeeded: 1, space: 10, appeal: 5, pace: 1, social: true, starter: false,
+    period: 'Early Jurassic', lengthM: 1.4,
+    fact: 'A small flying reptile with an oversized, puffin-like head, two kinds of teeth and a long stiff tail.',
+    weight: 'about 2 kg',
+    discovered: 'Mary Anning found the first skeleton in 1828 at Lyme Regis; it was named in 1859.',
+    facts: [
+      'Its name means “two-form tooth”: long fangs at the front of its jaws and small teeth behind.',
+      'Its head was big but light, full of openings that saved weight.',
+      'It may have been better at climbing and scrambling than at long flights.',
+      'Its long tail probably ended in a little vane that helped it steer.',
+    ],
+    fossilsNeeded: 3, fossilWeight: 35,
+    art: { template: 'flyer', body: '#7a8f4a', dark: '#4d5e2a', accent: '#e0a040', pattern: 'spots' },
+  },
 };
 
 export const SPECIES_IDS = Object.keys(SPECIES) as SpeciesId[];
+
+export const habitatOf = (id: SpeciesId): Habitat => SPECIES[id].habitat ?? 'land';
+
+export const DIET_LABELS: Record<Diet, string> = { carnivore: '🥩 Carnivore', herbivore: '🌿 Herbivore', piscivore: '🐟 Fish-eater' };
+export const HABITAT_LABELS: Record<Habitat, string> = { land: '🌳 Paddock', water: '🌊 Lagoon', air: '🪽 Aviary' };
+/** Where each kind of animal needs to live, for the catalog and guide. */
+export const HABITAT_HELP: Record<Habitat, string> = {
+  land: 'a fenced paddock',
+  water: 'a lagoon: a pond inside a fenced paddock (dig one with Garden → Pond)',
+  air: 'an aviary: a paddock fenced all the way round with aviary net',
+};
 export const STARTER_SPECIES = SPECIES_IDS.filter((id) => SPECIES[id].starter);
 
 /** Pet names handed out to new arrivals. */

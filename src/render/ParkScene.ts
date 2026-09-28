@@ -1,10 +1,10 @@
 import Phaser from 'phaser';
 import type { Simulation } from '../sim/Simulation';
-import { planFences, planPaths, refillCost, repairCost } from '../sim/commands';
+import { planFences, planPaths, pondDigBlocker, POND_COST, refillCost, repairCost } from '../sim/commands';
 import { STAFF_TYPES } from '../sim/data/staff';
 import { describeTask } from '../sim/systems/staff';
 import { digChance, lockedSpecies } from '../sim/systems/fossils';
-import { FENCE_REFUND, FENCE_TYPES } from '../sim/data/fences';
+import { FENCE_REFUND, FENCE_TYPES, strongEnough } from '../sim/data/fences';
 import { DINO_RESALE, FEEDER_TYPES } from '../sim/data/feeders';
 import { SPECIES, type SpeciesId } from '../sim/data/species';
 import { findFenceGaps, gapCost } from '../sim/gaps';
@@ -73,6 +73,9 @@ export class ParkScene extends Phaser.Scene {
   private touch!: TouchController;
   private drawnRevision = -1;
   private drag: Drag | null = null;
+  /** The terrain tile layer, and the terrain it was last drawn with (ponds get dug and filled). */
+  private ground!: Phaser.Tilemaps.TilemapLayer;
+  private drawnTerrain!: Uint8Array;
   private selectedParcel: Point | null = null;
 
   constructor() {
@@ -98,7 +101,8 @@ export class ParkScene extends Phaser.Scene {
     const tilemap = this.make.tilemap({ data, tileWidth: TILE, tileHeight: TILE });
     const tileset = tilemap.addTilesetImage(TILESET_KEY, TILESET_KEY, TILE, TILE, 0, 0);
     if (!tileset) throw new Error('Tileset failed to load');
-    tilemap.createLayer(0, tileset, 0, 0);
+    this.ground = tilemap.createLayer(0, tileset, 0, 0)!;
+    this.drawnTerrain = Uint8Array.from(map.tiles);
     this.terrainFx = new TerrainFx(this, map);
     this.scenery = new SceneryLayer(this, this.sim);
 
@@ -168,15 +172,36 @@ export class ParkScene extends Phaser.Scene {
 
   private redrawWorld(): void {
     this.drawnRevision = this.sim.worldRevision;
+    this.syncTerrain();
     this.layers.drawFences();
     this.layers.drawPaths();
     this.scenery?.refresh();
     this.layers.drawOverlay(this.ui.mode === 'land', this.selectedParcel);
   }
 
+  /** Updates any map tiles whose terrain changed (a pond dug or filled in). */
+  private syncTerrain(): void {
+    const { tiles, width } = this.sim.state.map;
+    let changed = false;
+    for (let i = 0; i < tiles.length; i++) {
+      if (this.drawnTerrain[i] === tiles[i]) continue;
+      this.drawnTerrain[i] = tiles[i];
+      const x = i % width;
+      const y = Math.floor(i / width);
+      this.ground.putTileAt(tileIndex(tiles[i], x, y), x, y);
+      changed = true;
+    }
+    if (changed) this.terrainFx.rebuild();
+  }
+
+  /** Garden tool with Pond picked: tap or drag to dig. */
+  private get digging(): boolean {
+    return this.ui.mode === 'decor' && this.ui.decorKind === 'pond';
+  }
+
   private onModeChange(): void {
     const mode = this.ui.mode;
-    this.touch.drawMode = mode === 'fence' || mode === 'demolish' || mode === 'path';
+    this.touch.drawMode = mode === 'fence' || mode === 'demolish' || mode === 'path' || this.digging;
     this.cancelDrag();
     if (mode !== 'select') {
       this.cursor.setVisible(false);
@@ -244,12 +269,17 @@ export class ParkScene extends Phaser.Scene {
         const decor = this.sim.state.decor.find((d) => d.x === tx && d.y === ty);
         if (decor) return this.report(this.sim.dispatch({ type: 'removeDecor', id: decor.id }));
         const w = this.sim.state.map.width;
-        if (this.sim.state.paths[ty * w + tx]) this.report(this.sim.dispatch({ type: 'removePaths', tiles: [ty * w + tx] }));
+        if (this.sim.state.paths[ty * w + tx]) return this.report(this.sim.dispatch({ type: 'removePaths', tiles: [ty * w + tx] }));
+        if (this.sim.state.map.tiles[ty * w + tx] === Terrain.Pond) this.report(this.sim.dispatch({ type: 'fillPonds', tiles: [ty * w + tx] }));
         return;
       }
-      case 'decor':
-        this.report(this.sim.dispatch({ type: 'placeDecor', kind: this.ui.decorKind, x: Math.floor(wx / TILE), y: Math.floor(wy / TILE) }));
+      case 'decor': {
+        const x = Math.floor(wx / TILE);
+        const y = Math.floor(wy / TILE);
+        if (this.ui.decorKind === 'pond') return this.report(this.sim.dispatch({ type: 'digPonds', tiles: [y * this.sim.state.map.width + x] }));
+        this.report(this.sim.dispatch({ type: 'placeDecor', kind: this.ui.decorKind, x, y }));
         return;
+      }
       case 'path':
         return this.commitTiles([Math.floor(wy / TILE) * this.sim.state.map.width + Math.floor(wx / TILE)]);
       case 'building':
@@ -378,12 +408,12 @@ export class ParkScene extends Phaser.Scene {
   private afterRelease(species: SpeciesId, x: number, y: number): void {
     const sp = SPECIES[species];
     const { regions, tileRegion } = this.sim.regions();
-    const weakest = regions[tileRegion[y * this.sim.state.map.width + x]].weakestFence;
-    if (weakest !== 0 && weakest < sp.fenceNeeded) {
+    const weakest = regions[tileRegion[y * this.sim.state.map.width + x]]?.weakestFence ?? 0;
+    if (weakest !== 0 && !strongEnough(weakest, sp.fenceNeeded)) {
       this.hud.toast(`Careful: ${sp.name} needs ${FENCE_TYPES[sp.fenceNeeded].name.toLowerCase()} fences or stronger`, 'error');
     }
     if (!this.sim.state.feeders.some((f) => FEEDER_TYPES[f.kind].diet === sp.diet)) {
-      this.hud.toast(`Tip: build a ${sp.diet === 'carnivore' ? 'meat' : 'plant'} feeder so it can eat`);
+      this.hud.toast(`Tip: build a ${sp.diet === 'carnivore' ? 'meat' : sp.diet === 'piscivore' ? 'fish' : 'plant'} feeder so it can eat`);
     }
     this.ui.setMode('select');
     this.entities.selection = { kind: 'dino', id: this.sim.state.dinos[this.sim.state.dinos.length - 1].id };
@@ -701,12 +731,18 @@ export class ParkScene extends Phaser.Scene {
       const dy = wy - d.startWorld.y;
       if (Math.hypot(dx, dy) > TILE / 2) d.horizontalFirst = Math.abs(dx) >= Math.abs(dy);
     }
-    if (this.ui.mode === 'path' || this.ui.mode === 'demolish') {
+    if (this.ui.mode === 'path' || this.ui.mode === 'demolish' || this.digging) {
       const end = this.tileAt(wx, wy);
       const w = this.sim.state.map.width;
       d.tiles = tileLine(d.startTile.x, d.startTile.y, end.x, end.y, d.horizontalFirst ?? true).map(([x, y]) => y * w + x);
       if (this.ui.mode === 'path') {
         this.previewTiles(d.tiles);
+        return;
+      }
+      if (this.digging) {
+        const ok = d.tiles.filter((i) => !pondDigBlocker(this.sim.state, i % w, Math.floor(i / w)));
+        this.layers.drawTileGhost(d.tiles.map((i) => ({ x: i % w, y: Math.floor(i / w), style: ok.includes(i) ? 'build' : 'blocked' })));
+        this.hud.showInfo(`Dig ${ok.length} tile${ok.length === 1 ? '' : 's'} of pond · ${formatMoney(ok.length * POND_COST)}`);
         return;
       }
     }
@@ -721,6 +757,8 @@ export class ParkScene extends Phaser.Scene {
     this.cancelDrag();
     if (this.ui.mode === 'path') {
       if (tiles.length > 0) this.commitTiles(tiles);
+    } else if (this.digging) {
+      if (tiles.length > 0) this.report(this.sim.dispatch({ type: 'digPonds', tiles }));
     } else if (this.ui.mode === 'demolish') {
       this.commitDemolish(edges, tiles);
     } else if (edges.length > 0) this.commitEdges(edges);
@@ -729,11 +767,13 @@ export class ParkScene extends Phaser.Scene {
   /** Remove tool drag: fences along the line and any path tiles under it. */
   private commitDemolish(edges: Edge[], tiles: number[]): void {
     const pathTiles = tiles.filter((i) => this.sim.state.paths[i]);
+    const pondTiles = tiles.filter((i) => this.sim.state.map.tiles[i] === Terrain.Pond);
     const hasFence = edges.some((e) => fenceTypeAt(this.sim.state, e));
-    if (!hasFence && pathTiles.length === 0) return this.report({ ok: false, message: 'Nothing to remove there' });
+    if (!hasFence && pathTiles.length === 0 && pondTiles.length === 0) return this.report({ ok: false, message: 'Nothing to remove there' });
     const results = [];
     if (hasFence) results.push(this.sim.dispatch({ type: 'removeFences', edges }));
     if (pathTiles.length) results.push(this.sim.dispatch({ type: 'removePaths', tiles: pathTiles }));
+    if (pondTiles.length) results.push(this.sim.dispatch({ type: 'fillPonds', tiles: pondTiles }));
     const ok = results.filter((r) => r.ok);
     this.report(ok.length ? { ok: true, message: ok.map((r) => r.message).join(' · ') } : results[0]);
   }

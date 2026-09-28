@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { migrate, newGame, STARTING_MONEY, type GameState } from '../src/sim/GameState';
 import { applyCommand } from '../src/sim/commands';
-import { SPECIES, SPECIES_IDS } from '../src/sim/data/species';
+import { SPECIES, SPECIES_IDS, habitatOf } from '../src/sim/data/species';
 import { FEEDER_TYPES } from '../src/sim/data/feeders';
 import { pathEdges, type Edge } from '../src/sim/grid';
 import { parcelGrid } from '../src/sim/land';
@@ -36,8 +36,8 @@ function runHours(sim: Simulation, hours: number): void {
 const inPaddock = (d: { x: number; y: number }) => d.x >= 2 && d.x < 10 && d.y >= 2 && d.y < 8;
 
 describe('species data', () => {
-  it('has 12 species, 6 at the start, and every one has art', () => {
-    expect(SPECIES_IDS).toHaveLength(12);
+  it('has 16 species, 6 at the start, and every one has art', () => {
+    expect(SPECIES_IDS).toHaveLength(16);
     expect(SPECIES_IDS.filter((id) => SPECIES[id].starter)).toHaveLength(6);
     for (const id of SPECIES_IDS) expect(dinoShape(SPECIES[id]).length).toBeGreaterThan(0);
   });
@@ -46,7 +46,8 @@ describe('species data', () => {
     for (const id of SPECIES_IDS) {
       const a = dinoShape(SPECIES[id], 0);
       const b = dinoShape(SPECIES[id], 1);
-      expect(a[a.length - 1].some((k) => k), `${id} feet`).toBe(true);
+      // Walkers and swimmers sit on the bottom row; flyers are drawn in the air.
+      if (habitatOf(id) !== 'air') expect(a[a.length - 1].some((k) => k), `${id} feet`).toBe(true);
       const painted = a.flat().filter((k) => k).length;
       expect(painted, `${id} size`).toBeGreaterThan(60);
       expect(JSON.stringify(a), `${id} walk frame`).not.toBe(JSON.stringify(b));

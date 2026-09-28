@@ -1,6 +1,6 @@
 import type { Simulation } from '../sim/Simulation';
 import { FENCE_TYPES } from '../sim/data/fences';
-import { SPECIES, SPECIES_IDS, type SpeciesId } from '../sim/data/species';
+import { SPECIES, SPECIES_IDS, type SpeciesId, DIET_LABELS, HABITAT_LABELS, habitatOf } from '../sim/data/species';
 import { paintDino } from '../render/dinoArt';
 import { formatMoney } from './hud';
 import type { UiState } from './uiState';
@@ -22,9 +22,10 @@ export function mountCatalog(sim: Simulation, ui: UiState): { open(): void } {
     card.innerHTML = `
       <header>
         <h3>${sp.name}</h3>
-        <span class="diet ${sp.diet}">${sp.diet === 'carnivore' ? '🥩 Carnivore' : '🌿 Herbivore'}</span>
+        <span class="diet ${sp.diet}">${DIET_LABELS[sp.diet]}</span>
       </header>
       <dl>
+        <dt>Lives in</dt><dd>${HABITAT_LABELS[habitatOf(sp.id)]}</dd>
         <dt>Fence</dt><dd>${FENCE_TYPES[sp.fenceNeeded].name}+</dd>
         <dt>Space</dt><dd>${sp.space} tiles</dd>
         <dt>Size</dt><dd>${sp.lengthM} m</dd>

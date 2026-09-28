@@ -372,7 +372,7 @@ export function paintDigSite(): HTMLCanvasElement {
 }
 
 /** Feeding trough seen in 3/4: a wooden box whose top shows greens or meat. */
-export function paintTrough(kind: 'plants' | 'meat', full: boolean): HTMLCanvasElement {
+export function paintTrough(kind: 'plants' | 'meat' | 'fish', full: boolean): HTMLCanvasElement {
   return paintSprite(20, 14, (px) => {
     for (let x = 2; x < 18; x++) {
       px(x, 5, '#b07a3f'); // back rim
@@ -382,9 +382,17 @@ export function paintTrough(kind: 'plants' | 'meat', full: boolean): HTMLCanvasE
       for (let x = 2; x < 18; x++) {
         const edge = x === 2 || x === 17;
         const h = hash2(x, y, kind === 'plants' ? 3 : 4);
-        px(x, y, edge ? '#8a5a2b' : !full ? '#4a3018' : kind === 'plants' ? (h > 0.5 ? '#6fb34f' : '#4e8a33') : h > 0.7 ? '#f4ecd2' : h > 0.35 ? '#d9454d' : '#a8323a');
+        const water = h > 0.5 ? '#3f86c0' : '#5ba3d6';
+        const food = kind === 'plants' ? (h > 0.5 ? '#6fb34f' : '#4e8a33') : kind === 'fish' ? water : h > 0.7 ? '#f4ecd2' : h > 0.35 ? '#d9454d' : '#a8323a';
+        px(x, y, edge ? '#8a5a2b' : !full ? (kind === 'fish' ? '#2f5a7a' : '#4a3018') : food);
       }
     if (full && kind === 'plants') for (const x of [5, 9, 13]) px(x, 4, '#86c25c');
+    // Silver fish in the water, a tail flicking out of one.
+    if (full && kind === 'fish') for (const x of [5, 10, 14]) {
+      px(x, 7, '#dfe6ea');
+      px(x + 1, 7, '#b8c4cc');
+    }
+    if (full && kind === 'fish') px(11, 5, '#dfe6ea');
     for (const x of [3, 16]) px(x, 12, '#4a3018');
   });
 }

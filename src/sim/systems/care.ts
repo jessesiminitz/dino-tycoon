@@ -42,7 +42,8 @@ export function treatDino(state: GameState, id: number): CommandResult {
   d.lastTreatHour = state.hours;
   d.happiness = Math.min(100, d.happiness + TREAT_JOY);
   d.hunger = Math.max(0, d.hunger - 5);
-  const yum = SPECIES[d.species].diet === 'carnivore' ? 'gobbled up a meaty treat' : 'munched a crunchy treat';
+  const diet = SPECIES[d.species].diet;
+  const yum = diet === 'carnivore' ? 'gobbled up a meaty treat' : diet === 'piscivore' ? 'snapped up a fishy treat' : 'munched a crunchy treat';
   return { ok: true, cost: TREAT_COST, message: `${dinoLabel(d)} ${yum}!`, effect: 'hearts' };
 }
 

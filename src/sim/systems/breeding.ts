@@ -1,5 +1,5 @@
 import { NEVER, type Dino, type GameState } from '../GameState';
-import { DINO_NAMES, SPECIES } from '../data/species';
+import { DINO_NAMES, habitatOf, SPECIES } from '../data/species';
 import { pickName } from '../commands';
 import type { RegionMap } from '../regions';
 import type { SimContext } from './context';
@@ -102,8 +102,14 @@ export function hourlyBreeding(ctx: SimContext): void {
       const pairs = Math.floor(parents.length / 2);
       if (pairs === 0 || !rng.chance(1 - (1 - LAY_CHANCE) ** pairs)) continue;
       const mum = parents[rng.int(0, parents.length - 1)];
-      state.eggs.push({ id: state.nextId++, species: mum.species, x: mum.x, y: mum.y, laidHour: state.hours });
-      ctx.emit({ text: `🥚 ${dinoLabel(mum)} laid an egg! It should hatch in 2 days.`, kind: 'good' });
+      if (habitatOf(mum.species) === 'water') {
+        // Plesiosaurs and mosasaurs gave birth to live young at sea: no egg, straight to a baby.
+        state.eggs.push({ id: state.nextId++, species: mum.species, x: mum.x, y: mum.y, laidHour: state.hours - HATCH_HOURS });
+        ctx.emit({ text: `🌊 ${dinoLabel(mum)} is about to give birth! Sea reptiles have live young.`, kind: 'good' });
+      } else {
+        state.eggs.push({ id: state.nextId++, species: mum.species, x: mum.x, y: mum.y, laidHour: state.hours });
+        ctx.emit({ text: `🥚 ${dinoLabel(mum)} laid an egg! It should hatch in 2 days.`, kind: 'good' });
+      }
       break; // one egg per paddock at a time
     }
   }

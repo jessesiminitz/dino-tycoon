@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { newGame, type GameState } from '../src/sim/GameState';
 import { applyCommand } from '../src/sim/commands';
 import { MUSEUM_PRICE } from '../src/sim/data/economy';
-import { SPECIES, SPECIES_IDS, STARTER_SPECIES } from '../src/sim/data/species';
+import { SPECIES, SPECIES_IDS, STARTER_SPECIES, habitatOf } from '../src/sim/data/species';
 import { fenceHp, setFenceHp } from '../src/sim/fences';
 import { pathEdges, type Edge } from '../src/sim/grid';
 import { parcelGrid } from '../src/sim/land';
@@ -121,7 +121,8 @@ describe('fossil digs', () => {
     applyCommand(s, { type: 'placeBuilding', kind: 'digsite', x: 16, y: 3 });
     const c = ctxFor(s);
     atMidnight(s);
-    for (let night = 0; night < 200 && lockedSpecies(s).length === 6; night++) hourlyFossils(c);
+    const lockedAtStart = lockedSpecies(s).length;
+    for (let night = 0; night < 200 && lockedSpecies(s).length === lockedAtStart; night++) hourlyFossils(c);
     const unlocked = s.unlockedSpecies.filter((id) => !STARTER_SPECIES.includes(id));
     expect(unlocked).toHaveLength(1);
     expect(s.fossils[unlocked[0]]).toBe(SPECIES[unlocked[0]].fossilsNeeded);
@@ -134,8 +135,10 @@ describe('fossil digs', () => {
     const last = finds.filter((e) => e.fossil!.species === unlocked[0]).at(-1)!.fossil!;
     expect(last).toMatchObject({ species: unlocked[0], unlocked: true, have: SPECIES[unlocked[0]].fossilsNeeded, needed: SPECIES[unlocked[0]].fossilsNeeded });
     expect(finds.every((e) => e.fossil!.bone.length > 0 && e.fossil!.have <= e.fossil!.needed)).toBe(true);
-    // The new species can now be bought.
-    expect(applyCommand(s, { type: 'buyDino', species: unlocked[0], x: 4, y: 4 }).ok).toBe(true);
+    // The new species can now be bought (sea and flying reptiles need a lagoon or aviary instead of a plain paddock).
+    const bought = applyCommand(s, { type: 'buyDino', species: unlocked[0], x: 4, y: 4 });
+    if (habitatOf(unlocked[0]) === 'land') expect(bought.ok).toBe(true);
+    else expect(bought.message).toMatch(/water|aviary/);
   });
 
   it('common species turn up more often than rare ones', () => {

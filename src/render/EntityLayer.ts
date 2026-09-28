@@ -5,7 +5,7 @@ import { BUILDING_TYPES, type BuildingKind } from '../sim/data/economy';
 import { hash2 } from '../sim/rng';
 import type { Simulation } from '../sim/Simulation';
 import { FEEDER_TYPES, type FeederKind } from '../sim/data/feeders';
-import { SPECIES, SPECIES_IDS, type SpeciesId } from '../sim/data/species';
+import { habitatOf, SPECIES, SPECIES_IDS, type SpeciesId } from '../sim/data/species';
 import { paintDino, paintEgg } from './dinoArt';
 import { hoursToHatch, WOBBLE_HOURS } from '../sim/systems/breeding';
 import type { CareEffect } from '../sim/systems/care';
@@ -16,6 +16,10 @@ import { paintDigSite, paintRestaurant, paintRestroom, paintSnackStall, paintSou
 const dinoKey = (id: SpeciesId, frame: 0 | 1 = 0, baby = false) => `dino-${id}-${frame}${baby ? '-baby' : ''}`;
 const eggKey = (id: SpeciesId) => `egg-${id}`;
 const feederKey = (kind: FeederKind, full: boolean) => `feeder-${kind}-${full ? 'full' : 'empty'}`;
+/** Share of a swimmer's sprite that shows above the water. */
+const WATERLINE = 0.62;
+/** How high flying reptiles hover, in world pixels. */
+const FLY_HEIGHT = 14;
 /** How long hearts or a "Nope!" stay up, in ms. */
 const EFFECT_MS = 1100;
 const HEART = ['.X.X.', 'XXXXX', '.XXX.', '..X..'];
@@ -367,9 +371,25 @@ export class EntityLayer {
       // A one-pixel bob while walking (babies hop); idle animals breathe slowly.
       const hop = d.baby ? -2 : -1;
       const bob = moving ? (this.sim.stepProgress < 0.5 ? hop : 0) : Math.sin(time / 600 + d.id) > 0.9 ? -1 : 0;
-      img.setTexture(dinoKey(d.species, moving && this.sim.stepProgress >= 0.5 ? 1 : 0, d.baby));
-      img.setPosition(Math.round(x), Math.round(y) + bob + (hops.get(d.id) ?? 0));
-      sh.fillEllipse(Math.round(x), Math.round(y) - 1, img.width * 0.7, Math.max(4, img.height * 0.14));
+      const habitat = habitatOf(d.species);
+      if (habitat === 'water') {
+        // Swimming: flippers keep stroking; only the top of the animal shows above the water.
+        img.setTexture(dinoKey(d.species, Math.floor(time / 450 + d.id) % 2 === 0 ? 0 : 1, d.baby));
+        const shown = Math.round(img.height * WATERLINE);
+        img.setCrop(0, 0, img.width, shown);
+        img.setPosition(Math.round(x), Math.round(y) - 2 + (img.height - shown) + (Math.sin(time / 700 + d.id) > 0.6 ? 1 : 0));
+        sh.lineStyle(1, 0xe8f6fb, 0.75).strokeEllipse(Math.round(x), Math.round(y) - 2, img.width * 0.8, 4);
+      } else if (habitat === 'air') {
+        // Flying: always flapping, bobbing about a tile up, with a shadow on the ground below.
+        img.setTexture(dinoKey(d.species, Math.floor(time / 240 + d.id) % 2 === 0 ? 0 : 1, d.baby));
+        const lift = FLY_HEIGHT + Math.round(Math.sin(time / 520 + d.id) * 2);
+        img.setPosition(Math.round(x), Math.round(y) - lift);
+        sh.fillEllipse(Math.round(x), Math.round(y) - 1, img.width * 0.45, 3);
+      } else {
+        img.setTexture(dinoKey(d.species, moving && this.sim.stepProgress >= 0.5 ? 1 : 0, d.baby));
+        img.setPosition(Math.round(x), Math.round(y) + bob + (hops.get(d.id) ?? 0));
+        sh.fillEllipse(Math.round(x), Math.round(y) - 1, img.width * 0.7, Math.max(4, img.height * 0.14));
+      }
       img.setFlipX(this.facingLeft.get(d.id) ?? false);
       img.setDepth(4 + y / 10000);
 

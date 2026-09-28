@@ -510,6 +510,102 @@ const ART: Record<SpeciesId, Painter> = {
     return s;
   },
 
+  // Sea reptile: broad body, long neck and small head, four paddle flippers that "fly" through the water.
+  plesiosaurus: (f) => {
+    const s = new Sprite(54, 22);
+    const stroke = f === 0 ? 0 : 1;
+    // Far-side flippers first, in shadow.
+    s.limb([[31, 14, 1.8], [36 - stroke * 3, 18 + stroke, 1.1], [39 - stroke * 5, 19 + stroke * 2, 0.5]], 'F');
+    s.limb([[15, 14, 1.6], [19 - stroke * 3, 18 + stroke, 1], [21 - stroke * 5, 19 + stroke, 0.5]], 'F');
+    s.limb([[12, 14, 3], [5, 15, 1.6], [1, 16, 0.6]], 'B'); // short tail
+    s.ellipse(22, 14, 12, 5, 'B');
+    s.limb([[31, 12, 3.2], [38, 8, 2.3], [44, 5, 1.8]], 'B'); // long neck
+    s.ellipse(46.5, 4, 3.2, 2.3, 'B');
+    s.poly([[47, 3], [53, 4], [53, 5.5], [47, 6]], 'B'); // snout
+    s.line(49, 5, 53, 5, 'M', ['B']);
+    for (const x of [50, 52]) s.set(x, 6, 'W');
+    s.set(47, 3, 'E');
+    s.ellipse(23, 17, 10, 2.5, 'D', ['B']);
+    // Near-side flippers.
+    s.limb([[29, 16, 2.2], [34 + stroke * 3, 20 - stroke, 1.3], [38 + stroke * 4, 21 - stroke * 2, 0.5]], 'B');
+    s.limb([[14, 16, 2], [18 + stroke * 3, 20 - stroke, 1.2], [21 + stroke * 4, 21 - stroke, 0.5]], 'B');
+    return s;
+  },
+
+  // Giant sea lizard: long powerful body, big toothy jaws, paddle flippers and a shark-like tail fin.
+  mosasaurus: (f) => {
+    const s = new Sprite(64, 22);
+    const sweep = f === 0 ? 0 : 1.5;
+    s.limb([[40, 14, 2], [44, 18, 1.2], [46, 19, 0.5]], 'F');
+    s.limb([[20, 14, 1.8], [23, 18, 1], [24, 19, 0.5]], 'F');
+    // Tail and its fin, swinging between frames.
+    s.limb([[16, 11, 4.5], [7, 12 + sweep * 0.5, 2.4], [3, 13 + sweep, 1.2]], 'B');
+    s.poly([[0, 7 + sweep], [5, 12 + sweep], [1, 19 + sweep]], 'A');
+    s.limb([[16, 11, 4.8], [34, 10, 6.5], [46, 10, 5]], 'B');
+    // Head: long jaws.
+    s.poly([[44, 5], [55, 6], [63, 9], [62, 11], [55, 13], [46, 14]], 'B');
+    s.line(49, 10, 62, 10, 'M', ['B']);
+    for (let x = 51; x <= 61; x += 2) {
+      s.set(x, 9, 'W');
+      s.set(x + 1, 11, 'W');
+    }
+    s.set(52, 7, 'E');
+    s.limb([[20, 14, 3], [44, 13, 3]], 'D', ['B']);
+    s.limb([[38, 15, 2.2], [43, 19, 1.3], [46, 21, 0.5]], 'B');
+    s.limb([[19, 15, 2], [22, 19, 1.1], [24, 21, 0.5]], 'B');
+    return s;
+  },
+
+  // Great glider: long toothless beak, swept-back crest, wings of skin that flap between frames.
+  pteranodon: (f) => {
+    const s = new Sprite(58, 28);
+    const up = f === 0;
+    // Far wing, behind the body.
+    s.poly(up ? [[31, 14], [44, 2], [39, 8], [26, 16]] : [[31, 17], [42, 27], [37, 22], [26, 18]], 'F');
+    s.ellipse(28, 17, 5.5, 3, 'B');
+    s.limb([[24, 18, 1.2], [17, 19, 0.4]], 'B'); // stubby tail and legs
+    s.limb([[26, 19, 0.9], [22, 22, 0.5]], 'F');
+    // Head: long beak forward, crest sweeping back.
+    s.limb([[32, 14, 2.4], [35, 12, 2]], 'B');
+    s.poly([[34, 10.5], [50, 13], [57, 14], [50, 14.5], [34, 14]], 'B');
+    s.line(38, 13.5, 55, 14, 'M', ['B']);
+    s.limb([[33, 11, 1.6], [26, 7, 1], [20, 5, 0.4]], 'A');
+    s.set(36, 11, 'E');
+    s.ellipse(28, 18, 4, 1.5, 'D', ['B']);
+    // Near wing: a leading edge of bone, a membrane of skin.
+    // Near wing: skin stretched from a long finger bone (the leading edge) back to the body.
+    const tip: Pt = up ? [6, 1] : [5, 27];
+    const shoulder: Pt = up ? [31, 14] : [31, 17];
+    s.poly([shoulder, tip, up ? [13, 9] : [13, 21], [22, up ? 17 : 18]], 'D');
+    s.line(shoulder[0], shoulder[1], tip[0], tip[1], 'B');
+    s.line(shoulder[0], shoulder[1] + 1, tip[0] + 1, tip[1] + (up ? 1 : -1), 'B');
+    return s;
+  },
+
+  // Small, big-headed flyer with fangs up front and a long tail ending in a little vane.
+  dimorphodon: (f) => {
+    const s = new Sprite(38, 22);
+    const up = f === 0;
+    s.poly(up ? [[22, 10], [30, 1], [27, 6], [18, 12]] : [[22, 13], [29, 21], [25, 17], [18, 13]], 'F');
+    s.limb([[16, 12, 1], [5, 13, 0.4]], 'B'); // long stiff tail
+    s.poly([[0, 13], [3, 10.5], [6, 13], [3, 15.5]], 'A'); // tail vane
+    s.ellipse(19, 12, 4, 2.5, 'B');
+    s.limb([[20, 13, 0.8], [18, 17, 0.4]], 'F');
+    // Big, deep head with a short beak.
+    s.ellipse(27, 8, 4.5, 4, 'B');
+    s.poly([[29, 6], [36, 8], [36, 10], [29, 11]], 'B');
+    s.line(30, 9, 36, 9, 'M', ['B']);
+    s.set(33, 10, 'W');
+    s.set(35, 10, 'W');
+    s.set(27, 6, 'E');
+    s.ellipse(19, 13, 3, 1.2, 'D', ['B']);
+    const tip: Pt = up ? [5, 1] : [4, 21];
+    const shoulder: Pt = up ? [22, 10] : [22, 13];
+    s.poly([shoulder, tip, up ? [9, 7] : [9, 16], [15, up ? 13 : 14]], 'D');
+    s.line(shoulder[0], shoulder[1], tip[0], tip[1], 'B');
+    return s;
+  },
+
   // Front legs longer than the back, neck held high like a giraffe, bump over the nose.
   brachiosaurus: (f) => {
     const s = new Sprite(66, 66);

@@ -136,6 +136,7 @@ export class SceneryLayer {
     for (let i = 0; i < state.paths.length; i++) if (state.paths[i]) busy.add(i);
     for (const o of [...state.buildings, ...state.feeders, ...state.decor]) busy.add(o.y * w + o.x);
     busy.add(state.entrance.y * w + state.entrance.x);
+    for (let i = 0; i < state.map.tiles.length; i++) if (state.map.tiles[i] === Terrain.Pond) busy.add(i); // dug ponds
     for (const [i, img] of this.trees) img.setVisible(!busy.has(i));
 
     const live = new Set<number>();

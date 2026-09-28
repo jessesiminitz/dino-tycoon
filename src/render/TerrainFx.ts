@@ -12,12 +12,20 @@ const SPARKLE_MS = 1600;
  */
 export class TerrainFx {
   private sparkle: Phaser.GameObjects.Graphics;
+  private surf: Phaser.GameObjects.Graphics;
   private water: number[] = [];
 
   constructor(scene: Phaser.Scene, private map: TerrainMap) {
-    const surf = scene.add.graphics().setDepth(0.3);
+    this.surf = scene.add.graphics().setDepth(0.3);
     this.sparkle = scene.add.graphics().setDepth(0.35);
-    const { width, height, tiles } = map;
+    this.rebuild();
+  }
+
+  /** Redraws the shoreline foam (after a pond is dug or filled in). */
+  rebuild(): void {
+    const surf = this.surf.clear();
+    this.water = [];
+    const { width, height, tiles } = this.map;
     const land = (x: number, y: number) => x >= 0 && y >= 0 && x < width && y < height && isLand(tiles[y * width + x]);
 
     for (let y = 0; y < height; y++) {

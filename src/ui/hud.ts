@@ -2,7 +2,8 @@ import { calendar, type GameState } from '../sim/GameState';
 import type { Simulation, Speed } from '../sim/Simulation';
 import { FENCE_TYPE_IDS, FENCE_TYPES } from '../sim/data/fences';
 import { FEEDER_TYPES, type FeederKind } from '../sim/data/feeders';
-import { SPECIES } from '../sim/data/species';
+import { habitatOf, SPECIES } from '../sim/data/species';
+import { POND_COST } from '../sim/commands';
 import { BUILDING_TYPES, PATH_COST, type BuildingKind } from '../sim/data/economy';
 import { mountCatalog } from './catalog';
 import { mountParkPanel } from './parkPanel';
@@ -88,6 +89,9 @@ function modeHint(ui: UiState): string | null {
         ? 'Drag over paths to remove them'
         : `Drag to lay a path (${formatMoney(PATH_COST)} a tile) · connect it to the gate`;
     case 'decor': {
+      if (ui.decorKind === 'pond') {
+        return `Tap or drag over grass or sand to dig a pond (${formatMoney(POND_COST)} a tile). A pond inside a paddock makes a lagoon for sea reptiles`;
+      }
       const t = DECOR_TYPES[ui.decorKind];
       return `Tap your land to add a ${t.name.toLowerCase()} (${formatMoney(t.cost)}${t.upkeep ? `, ${formatMoney(t.upkeep)}/day` : ''}). Visitors nearby are happier`;
     }
@@ -98,7 +102,11 @@ function modeHint(ui: UiState): string | null {
     }
     case 'place-dino': {
       const sp = ui.placing ? SPECIES[ui.placing] : null;
-      return sp ? `Tap inside a paddock to release your ${sp.name} (${formatMoney(sp.price)})` : null;
+      if (!sp) return null;
+      const where = { land: 'inside a paddock', water: 'the water of a lagoon (a pond inside a paddock)', air: 'inside an aviary (a paddock fenced with aviary net)' }[
+        habitatOf(sp.id)
+      ];
+      return `Tap ${where} to release your ${sp.name} (${formatMoney(sp.price)})`;
     }
   }
 }
@@ -198,7 +206,8 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
   }
   for (const kind of Object.keys(FEEDER_TYPES) as FeederKind[]) {
     const t = FEEDER_TYPES[kind];
-    const b = pickButton(kind === 'plants' ? '#73b44f' : '#d9454d', kind === 'plants' ? 'Plants' : 'Meat', `$${t.cost}`);
+    const look = { plants: ['#73b44f', 'Plants'], meat: ['#d9454d', 'Meat'], fish: ['#5ba3d6', 'Fish'] }[kind];
+    const b = pickButton(look[0], look[1], `$${t.cost}`);
     b.dataset.feeder = kind;
     b.addEventListener('click', () => ui.setFeederKind(kind));
     feederPicker.appendChild(b);
@@ -217,6 +226,13 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
     const b = pickButton(swatch, t.name.replace(' tree', ''), formatMoney(t.cost));
     b.dataset.decor = kind;
     b.addEventListener('click', () => ui.setDecorKind(kind));
+    decorPicker.appendChild(b);
+  }
+  {
+    // Not a decoration: digs water into the ground, for lagoons.
+    const b = pickButton('#3f86c0', 'Pond', `${formatMoney(POND_COST)}/tile`);
+    b.dataset.decor = 'pond';
+    b.addEventListener('click', () => ui.setDecorKind('pond'));
     decorPicker.appendChild(b);
   }
   for (const erase of [false, true]) {

@@ -1,4 +1,7 @@
-export type FenceTypeId = 1 | 2 | 3 | 4;
+export type FenceTypeId = 1 | 2 | 3 | 4 | 5;
+
+/** Netting: as strong as steel, and a paddock fenced all round with it is an aviary for flying reptiles. */
+export const NET: FenceTypeId = 5;
 
 export interface FenceType {
   id: FenceTypeId;
@@ -19,7 +22,13 @@ export const FENCE_TYPES: Record<FenceTypeId, FenceType> = {
   2: { id: 2, name: 'Steel', cost: 60, strength: 2, decayPerDay: 2.5, rail: 0xb8c0c8, post: 0x5d6770 },
   3: { id: 3, name: 'Electric', cost: 120, strength: 3, decayPerDay: 3, rail: 0xf2d24e, post: 0x3b3b3b },
   4: { id: 4, name: 'Concrete', cost: 200, strength: 4, decayPerDay: 1, rail: 0xd9d4c7, post: 0x8a8373 },
+  5: { id: 5, name: 'Aviary net', cost: 90, strength: 2, decayPerDay: 2.5, rail: 0xdfe3d6, post: 0x5d6770 },
 };
+
+/** Whether a fence type is strong enough for a species that needs `needed`. */
+export function strongEnough(fence: FenceTypeId, needed: FenceTypeId): boolean {
+  return FENCE_TYPES[fence].strength >= FENCE_TYPES[needed].strength;
+}
 
 export const FENCE_TYPE_IDS = Object.keys(FENCE_TYPES).map(Number) as FenceTypeId[];
 

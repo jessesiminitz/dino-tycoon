@@ -1,5 +1,5 @@
 import { FENCE_TYPES } from '../data/fences';
-import { SPECIES } from '../data/species';
+import { habitatOf, SPECIES } from '../data/species';
 import { allFenceEdges, fenceAt, fenceHp, fenceTypeAt, setFenceHp, tileEdges } from '../fences';
 import type { SimContext } from './context';
 import { dinoLabel, isRestless } from './dinos';
@@ -56,7 +56,9 @@ export function hourlyFences(ctx: SimContext): void {
 export function stepEscapes(ctx: SimContext): void {
   const { state, regions } = ctx;
   for (const d of state.dinos) {
-    const loose = regions.regions[regions.tileRegion[d.y * state.map.width + d.x]]?.kind !== 'paddock';
+    const region = regions.regions[regions.tileRegion[d.y * state.map.width + d.x]];
+    // Flyers are only held by an aviary: a paddock netted all round.
+    const loose = region?.kind !== 'paddock' || (habitatOf(d.species) === 'air' && !region.covered);
     if (loose && !d.escaped) {
       d.escaped = true;
       state.stats.escapes++;

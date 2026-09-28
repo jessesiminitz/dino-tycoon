@@ -91,6 +91,14 @@ Always bump `SAVE_VERSION` and add a step to `migrate()` when the state shape ch
   - Finds queue behind a pulsing "🦴 Dig!" button (top right).
   - The pit is a 128×96 pixel canvas: the species' shape rendered as bone in dirt, under dithered sand. A finger brush clears the sand, and 70% uncovered triggers the reveal with sparkles and a caption.
   - The game pauses while digging, and there's a Skip button. The Settings switch "Fossil dig mini-game" (`digGame`) turns it off.
+- **Lagoons and aviaries** (roadmap #6; no save change):
+  - 16 species. Four have `habitat`: Plesiosaurus and Mosasaurus live in water; Pteranodon and Dimorphodon fly. All four eat fish (diet `piscivore`).
+  - **Lagoon:** a Pond whose whole shore is one paddock joins that paddock's region (`regions.ts`). Garden → Pond digs grass or sand ($250 a tile, drag to dig). Remove fills ponds in.
+  - **Aviary:** a paddock fenced all round with fence type 5, "Aviary net" (steel strength), with no open water at its edge: `Region.covered`.
+  - Fence strength comparisons use `strongEnough()`, since ids no longer equal strength.
+  - Fish feeders can float on pond water.
+  - Movement per habitat uses `enterFor(d)`. Swimmers make no dung and have live young (no egg wait). A flyer escapes if its net is breached.
+  - Rendering: swimmers are cropped at the waterline with ripples; flyers hover 14 px up, always flapping, with a ground shadow.
 - **Placing dinos:** a fence gap is circled in red with a "Close gap · $x" button that fences or repairs it and releases the dino.
 - **Panels:** 👥 People, 🔔 alert log (newest first, filters, unread badge), 🏆 Goals medal track, 📖 Dino Guide.
 - **Scenarios:** First Steps (tutorial), Fossil Fever, Storm Coast, Rex Rising, each with 3 rounds of milestones; plus Sandbox. You can keep playing after winning or losing.

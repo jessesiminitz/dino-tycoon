@@ -1,7 +1,7 @@
 import type { Dino, GameState, Staff } from './GameState';
 import { FEEDER_TYPES } from './data/feeders';
-import { SPECIES } from './data/species';
-import { FENCE_TYPES } from './data/fences';
+import { habitatOf, SPECIES } from './data/species';
+import { FENCE_TYPES, strongEnough } from './data/fences';
 import { REFILL_BELOW, REPAIR_BELOW } from './data/staff';
 import { ADVICE, TOPICS, type Topic } from './data/thoughts';
 import { allFenceEdges, fenceHp } from './fences';
@@ -33,7 +33,7 @@ export function dinoConcerns(state: GameState, regions: RegionMap, d: Dino): Con
     const tiles = new Set(region.tiles);
     const diet = sp.diet;
     const feeders = state.feeders.filter((f) => FEEDER_TYPES[f.kind].diet === diet && tiles.has(f.y * w + f.x));
-    if (feeders.length === 0) out.push({ text: `There's no ${diet === 'herbivore' ? 'plant' : 'meat'} feeder in my paddock.`, good: false, tag: 'feeder' });
+    if (feeders.length === 0) out.push({ text: `There's no ${diet === 'herbivore' ? 'plant' : diet === 'piscivore' ? 'fish' : 'meat'} feeder in my ${habitatOf(d.species) === 'water' ? 'lagoon' : habitatOf(d.species) === 'air' ? 'aviary' : 'paddock'}.`, good: false, tag: 'feeder' });
     else if (feeders.every((f) => f.stock === 0)) out.push({ text: 'My feeder is empty.', good: false, tag: 'feeder' });
     else if (feeders.every((f) => f.stock < FEEDER_TYPES[f.kind].capacity * REFILL_BELOW))
       out.push({ text: 'My feeder is running low.', good: false, tag: 'feeder' });
@@ -47,7 +47,7 @@ export function dinoConcerns(state: GameState, regions: RegionMap, d: Dino): Con
     if (predator) out.push({ text: `There's a ${SPECIES[predator.species].name} in here with me!`, good: false, tag: 'danger' });
     const dung = state.messes.filter((m) => m.kind === 'dung' && regions.tileRegion[m.y * w + m.x] === regionId).length;
     if (paddockIsFilthy(dung, group.length)) out.push({ text: 'Our paddock is full of dung. A worker could tidy it up.', good: false, tag: 'dung' });
-    if (region.weakestFence !== 0 && region.weakestFence < sp.fenceNeeded)
+    if (region.weakestFence !== 0 && !strongEnough(region.weakestFence, sp.fenceNeeded))
       out.push({ text: `${FENCE_TYPES[region.weakestFence].name} fences can't hold me. I need ${FENCE_TYPES[sp.fenceNeeded].name.toLowerCase()} or stronger.`, good: false, tag: 'fence' });
   }
   if (out.length === 0) {

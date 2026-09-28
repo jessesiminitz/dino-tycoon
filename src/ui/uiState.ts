@@ -14,7 +14,8 @@ export class UiState {
   fenceType: FenceTypeId = 1;
   feederKind: FeederKind = 'plants';
   buildingKind: BuildingKind = 'restaurant';
-  decorKind: DecorKind = 'tree';
+  /** A garden item, or 'pond' to dig water (for lagoons). */
+  decorKind: DecorKind | 'pond' = 'tree';
   /** Path tool erases instead of building. */
   pathErase = false;
   /** Species being released while in 'place-dino' mode. */
@@ -45,7 +46,7 @@ export class UiState {
     this.emit();
   }
 
-  setDecorKind(kind: DecorKind): void {
+  setDecorKind(kind: DecorKind | 'pond'): void {
     this.decorKind = kind;
     this.emit();
   }

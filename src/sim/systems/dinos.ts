@@ -1,7 +1,8 @@
 import type { Dino, Feeder, GameState } from '../GameState';
 import { FEEDER_TYPES } from '../data/feeders';
-import { SPECIES } from '../data/species';
-import { canStep, findPath, walkableNeighbours } from '../pathfind';
+import { habitatOf, SPECIES } from '../data/species';
+import { isLand, Terrain } from '../terrain';
+import { canStep, findPath, onLand, walkableNeighbours, type CanEnter } from '../pathfind';
 import { fenceAt, tileEdges } from '../fences';
 import type { SimContext } from './context';
 import type { RegionMap } from '../regions';
@@ -46,6 +47,16 @@ const DUNG_UNHAPPY = 8;
 export function isRestless(d: Dino): boolean {
   return d.hunger >= 80 || d.happiness < 40;
 }
+
+/** Where an animal can move: land walkers on land, swimmers in pond water, flyers over either. */
+export function enterFor(d: Dino): CanEnter {
+  const habitat = habitatOf(d.species);
+  if (habitat === 'water') return swims;
+  if (habitat === 'air') return flies;
+  return onLand;
+}
+const swims: CanEnter = (state, i) => state.map.tiles[i] === Terrain.Pond;
+const flies: CanEnter = (state, i) => isLand(state.map.tiles[i]) || state.map.tiles[i] === Terrain.Pond;
 
 export const dinoLabel = (d: Dino) => `${d.name} the ${d.baby ? 'baby ' : ''}${SPECIES[d.species].name}`;
 
@@ -136,7 +147,7 @@ export function stepDinos(ctx: SimContext): void {
     if (d.path.length === 0) d.path = plan(d, here) ?? [];
     const next = d.path.shift();
     if (next === undefined) continue;
-    if (!canStep(state, here, next)) {
+    if (!canStep(state, here, next, enterFor(d))) {
       d.path = []; // a fence went up across the route
       continue;
     }
@@ -147,7 +158,7 @@ export function stepDinos(ctx: SimContext): void {
   function plan(d: Dino, here: number): number[] | null {
     const sp = SPECIES[d.species];
     if (d.hunger >= HUNGRY) {
-      const toFood = findPath(state, here, (i) => feederFor(state, i, d) !== undefined, FOOD_SEARCH);
+      const toFood = findPath(state, here, (i) => feederFor(state, i, d) !== undefined, FOOD_SEARCH, enterFor(d));
       if (toFood) return toFood;
       if (sp.diet === 'carnivore') {
         const preyTiles = new Set(state.dinos.filter((p) => canEat(d, p)).map((p) => tileIndex(state, p.x, p.y)));
@@ -160,7 +171,7 @@ export function stepDinos(ctx: SimContext): void {
       const w = state.map.width;
       const atFence = (i: number) => tileEdges(i % w, Math.floor(i / w)).some((e) => fenceAt(state, e) !== 0);
       if (atFence(here)) return null;
-      const toFence = findPath(state, here, atFence, FENCE_SEARCH);
+      const toFence = findPath(state, here, atFence, FENCE_SEARCH, enterFor(d));
       if (toFence) return toFence;
     }
     if (!rng.chance(WANDER_CHANCE)) return null;
@@ -168,7 +179,7 @@ export function stepDinos(ctx: SimContext): void {
     const tx = Math.min(width - 1, Math.max(0, d.x + rng.int(-WANDER_RADIUS, WANDER_RADIUS)));
     const ty = Math.min(height - 1, Math.max(0, d.y + rng.int(-WANDER_RADIUS, WANDER_RADIUS)));
     const target = tileIndex(state, tx, ty);
-    return findPath(state, here, (i) => i === target, WANDER_RADIUS * 3);
+    return findPath(state, here, (i) => i === target, WANDER_RADIUS * 3, enterFor(d));
   }
 }
 
@@ -206,6 +217,7 @@ export function hourlyDinos(ctx: SimContext): void {
     if (regions.regions[regionId]?.kind !== 'paddock') continue;
     for (const d of group) {
       if ((dung.get(regionId) ?? 0) >= group.length * MAX_DUNG_PER_DINO) break;
+      if (habitatOf(d.species) === 'water') continue; // it all washes away
       const every = DUNG_HOURS_SMALL - (SPECIES[d.species].size - 1) * DUNG_HOURS_PER_SIZE;
       if (!ctx.rng.chance(1 / every)) continue;
       state.messes.push({ id: state.nextId++, kind: 'dung', x: d.x, y: d.y, hour: state.hours });

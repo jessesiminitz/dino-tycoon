@@ -11,7 +11,7 @@ const PADDOCK_TINTS = [0xf2c14e, 0x6ec6ff, 0xff8fb1, 0xb28dff, 0x7ee0b5, 0xffa25
 const FOR_SALE = 0xff9f43;
 
 /** How tall each fence type stands, in world pixels. */
-const FENCE_H: Record<FenceTypeId, number> = { 1: 8, 2: 9, 3: 9, 4: 10 };
+const FENCE_H: Record<FenceTypeId, number> = { 1: 8, 2: 9, 3: 9, 4: 10, 5: 13 };
 
 /** Mixes a 0xRRGGBB colour toward white (amount > 0) or black (< 0). */
 function lighten(color: number, amount: number): number {
@@ -278,6 +278,17 @@ export class WorldLayers {
     };
 
     switch (f) {
+      case 5: // Aviary net: a tall, pale diamond mesh
+        if (horizontal) {
+          for (let x = 0; x < TILE; x++)
+            for (let y = 1; y < H; y++) {
+              if (gap && x >= (TILE - gap) / 2 && x < (TILE + gap) / 2) continue;
+              if ((x + y) % 4 === 0 || (x - y + 64) % 4 === 0) g.fillStyle(t.rail, 0.7).fillRect(x0 + x, y0 - y, 1, 1);
+            }
+        } else band(H - 1, H - 1, t.rail, 0.35);
+        band(H, 1, light);
+        band(1, 1, dark);
+        break;
       case 1: // Wooden: two plank rails
         band(H - 1, 2, t.rail);
         band(H - 2, 1, light);
