@@ -38,6 +38,10 @@ export function goalLabel(g: Goal): string {
       return 'Survive the eruption';
     case 'noLosses':
       return 'Lose no dinosaurs';
+    case 'floodsSurvived':
+      return `Get through ${g.target} flood${g.target === 1 ? '' : 's'}`;
+    case 'floodProof':
+      return 'A flood that reaches no path, building or dino';
   }
 }
 
@@ -75,6 +79,8 @@ export function goalShown(state: GameState, g: Goal, value: number): string {
     }
     case 'noLosses':
       return value >= 1 ? 'all safe' : `${state.stats.dinosLost} lost`;
+    case 'floodProof':
+      return value >= 1 ? 'done!' : 'not yet';
     case 'profitStreak':
     case 'calmDays':
       return `${value}/${g.target} days`;
@@ -115,6 +121,10 @@ export function goalValue(state: GameState, g: Goal): number {
       return state.eruption?.stage === 'over' ? 1 : 0;
     case 'noLosses':
       return state.stats.dinosLost === 0 ? 1 : 0;
+    case 'floodsSurvived':
+      return state.flood?.survived ?? 0;
+    case 'floodProof':
+      return state.flood?.lastDry && state.flood.survived > 0 ? 1 : 0;
   }
 }
 

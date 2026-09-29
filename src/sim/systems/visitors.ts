@@ -22,6 +22,7 @@ import type { SimContext } from './context';
 import { perStep } from './dinos';
 import { tryAttractions } from './rides';
 import { ASH_ARRIVALS } from './eruption';
+import { isFlooded } from './flood';
 
 /** Tiles (Chebyshev distance) within which a visitor can see a dinosaur. */
 const VIEW_RADIUS = 4;
@@ -234,8 +235,10 @@ export function expectedArrivals(state: GameState, regions: RegionMap): number {
   return (2 + appeal * 0.25) * (0.5 + state.reputation / 100) * priceFactor * weather * ash;
 }
 
+/** An open building of this kind beside (x, y): a flooded one is closed. */
 function buildingNear(state: GameState, x: number, y: number, kind: BuildingKind): Building | undefined {
-  return state.buildings.find((b) => b.kind === kind && Math.abs(b.x - x) + Math.abs(b.y - y) <= 1);
+  const w = state.map.width;
+  return state.buildings.find((b) => b.kind === kind && Math.abs(b.x - x) + Math.abs(b.y - y) <= 1 && !isFlooded(state, b.y * w + b.x));
 }
 
 /** Each departing visitor's review nudges reputation toward it: a slow moving average of what people say. */

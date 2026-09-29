@@ -1,4 +1,4 @@
-export type BuildingKind = 'restaurant' | 'snackstall' | 'giftshop' | 'restroom' | 'trashcan' | 'station' | 'tower' | 'petting' | 'digsite';
+export type BuildingKind = 'restaurant' | 'snackstall' | 'giftshop' | 'restroom' | 'trashcan' | 'station' | 'tower' | 'petting' | 'digsite' | 'pump';
 
 export interface BuildingType {
   kind: BuildingKind;
@@ -45,6 +45,10 @@ export const BUILDING_TYPES: Record<BuildingKind, BuildingType> = {
   petting: {
     kind: 'petting', name: 'Petting pen', cost: 3000, upkeep: 30, salePrice: 4, needsPath: true,
     description: 'Little dinosaurs to pat. Kids adore it. Needs a worker on staff as keeper.',
+  },
+  pump: {
+    kind: 'pump', name: 'Pump house', cost: 2500, upkeep: 25, salePrice: 0, needsPath: false,
+    description: 'Pumps flood water away: the ground around it (4 tiles each way) stays dry when the river rises.',
   },
   digsite: {
     kind: 'digsite', name: 'Dig site', cost: 2500, upkeep: 150, salePrice: 0, needsPath: false,

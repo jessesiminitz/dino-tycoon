@@ -604,6 +604,28 @@ export function paintBasketShop(): HTMLCanvasElement {
   });
 }
 
+/** Pump house: a little brick house with a big pipe spouting water back into the river. */
+export function paintPumpHouse(): HTMLCanvasElement {
+  return paintSprite(26, 26, (px) => {
+    // Brick walls and a slate roof.
+    for (let y = 10; y < 23; y++) for (let x = 3; x < 17; x++) px(x, y, (y % 3 === 0 || (x + (y % 6 < 3 ? 0 : 2)) % 4 === 0) ? '#8a3a2a' : x < 5 ? '#c8604a' : '#b24a36');
+    for (let y = 4; y < 10; y++) {
+      const half = 2 + (y - 4) * 1.4;
+      for (let x = Math.round(10 - half); x <= Math.round(10 + half); x++) px(x, y, y === 9 ? '#3a4a5a' : '#5a6a7a');
+    }
+    for (let y = 16; y < 23; y++) for (let x = 8; x < 12; x++) px(x, y, x === 8 ? '#4a3018' : '#6b4a2a'); // door
+    px(11, 19, '#f2c14e');
+    // The big pipe out of the side, and its splash.
+    for (let x = 17; x < 23; x++) for (let y = 13; y < 16; y++) px(x, y, y === 13 ? '#b0b8c0' : '#7a8a96');
+    for (let y = 16; y < 23; y++) px(22, y, y % 2 ? '#8fd3ea' : '#e8f6fb');
+    for (const x of [20, 21, 23, 24]) px(x, 23, '#bfe6f2');
+    // A dial on the wall.
+    px(5, 13, '#f4ecd2');
+    px(6, 13, '#f4ecd2');
+    px(5, 14, '#1b1b14');
+  });
+}
+
 /** Each building is shaped like what it offers, so it's obvious at a glance. */
 export function paintBuilding(kind: BuildingKind): HTMLCanvasElement {
   switch (kind) {
@@ -625,6 +647,8 @@ export function paintBuilding(kind: BuildingKind): HTMLCanvasElement {
       return paintPettingPen();
     case 'digsite':
       return paintDigSite();
+    case 'pump':
+      return paintPumpHouse();
   }
 }
 

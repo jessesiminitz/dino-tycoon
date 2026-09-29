@@ -5,6 +5,7 @@ import { earn } from '../finance';
 import { findPath, walkableNeighbours, type CanEnter } from '../pathfind';
 import type { SimContext } from './context';
 import { perStep } from './dinos';
+import { isFlooded } from './flood';
 
 /** Seats in a jeep. */
 export const JEEP_SEATS = 4;
@@ -155,7 +156,9 @@ export function stepJeeps(ctx: SimContext): void {
 }
 
 const near = (state: GameState, v: Visitor, kind: Building['kind']) =>
-  state.buildings.find((b) => b.kind === kind && Math.abs(b.x - v.x) + Math.abs(b.y - v.y) <= 1);
+  state.buildings.find(
+    (b) => b.kind === kind && Math.abs(b.x - v.x) + Math.abs(b.y - v.y) <= 1 && !isFlooded(state, b.y * state.map.width + b.x),
+  );
 
 /**
  * A visitor beside an attraction may give it a go (each once per visit):

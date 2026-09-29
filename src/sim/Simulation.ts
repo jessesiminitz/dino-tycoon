@@ -16,6 +16,7 @@ import { hourlyEvents } from './systems/events';
 import { hourlyFossils } from './systems/fossils';
 import { hourlyScenario } from './goals';
 import { hourlyEruption } from './systems/eruption';
+import { hourlyFlood } from './systems/flood';
 
 /** Real-time milliseconds per game-hour at 1× speed: a game day takes a minute. */
 /** Real milliseconds per game-hour at 1× speed: a game day lasts four minutes. */
@@ -96,6 +97,7 @@ export class Simulation {
       hourlyFences(ctx);
       hourlyEvents(ctx);
       hourlyEruption(ctx);
+      hourlyFlood(ctx);
       hourlyVisitors(ctx);
       hourlyFossils(ctx);
       hourlyEconomy(ctx);

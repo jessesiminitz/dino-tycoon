@@ -1,7 +1,10 @@
-export type FenceTypeId = 1 | 2 | 3 | 4 | 5;
+export type FenceTypeId = 1 | 2 | 3 | 4 | 5 | 6;
 
 /** Netting: as strong as steel, and a paddock fenced all round with it is an aviary for flying reptiles. */
 export const NET: FenceTypeId = 5;
+
+/** A low wall of sandbags: holds back flood water (see systems/flood.ts), and small dinosaurs. */
+export const SANDBAGS: FenceTypeId = 6;
 
 export interface FenceType {
   id: FenceTypeId;
@@ -23,6 +26,7 @@ export const FENCE_TYPES: Record<FenceTypeId, FenceType> = {
   3: { id: 3, name: 'Electric', cost: 120, strength: 3, decayPerDay: 3, rail: 0xf2d24e, post: 0x3b3b3b },
   4: { id: 4, name: 'Concrete', cost: 200, strength: 4, decayPerDay: 1, rail: 0xd9d4c7, post: 0x8a8373 },
   5: { id: 5, name: 'Aviary net', cost: 90, strength: 2, decayPerDay: 2.5, rail: 0xdfe3d6, post: 0x5d6770 },
+  6: { id: 6, name: 'Sandbags', cost: 15, strength: 1, decayPerDay: 1, rail: 0xc9a86a, post: 0x8a6a3e },
 };
 
 /** Whether a fence type is strong enough for a species that needs `needed`. */

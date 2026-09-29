@@ -39,7 +39,7 @@ function buyOne(s: GameState, species: SpeciesId): void {
 function play(s: GameState, days: number, each?: (s: GameState) => void) {
   const sim = new Simulation(s);
   const events: string[] = [];
-  sim.onEvent((e) => { if (e.outcome || /helicopter|died|starved|caught/.test(e.text)) events.push(`day ${calendar(s).day} h${calendar(s).hour}: ${e.text}`); });
+  sim.onEvent((e) => { if (e.outcome || /helicopter|died|starved|caught|chill|escaped|Outbreak/.test(e.text)) events.push(`day ${calendar(s).day} h${calendar(s).hour}: ${e.text}`); });
   for (let h = 0; h < days * 24; h++) {
     for (let i = 0; i < STEPS_PER_HOUR; i++) sim.step();
     each?.(s);
@@ -116,6 +116,36 @@ it('Fire Mountain: doing nothing loses dinosaurs to the lava; moving them to saf
       expect(s.scenario.round).toBeGreaterThanOrEqual(1);
     } else {
       expect(s.stats.dinosLost).toBeGreaterThan(0);
+      expect(s.scenario.round).toBe(0);
+    }
+  }
+}, 600000);
+it('Flood Season: doing nothing leaves dinosaurs in the water; high ground, sandbags, a pump and a vet win', () => {
+  for (const mode of ['do nothing', 'sensible']) {
+    const s = newPark('flood-season', 1);
+    if (mode === 'sensible') {
+      const { x, y } = s.entrance;
+      applyCommand(s, { type: 'hireStaff', role: 'vet' });
+      applyCommand(s, { type: 'hireStaff', role: 'guard' });
+      // Sandbags along both banks, leaving the bridge path open, and a pump house by the bridge.
+      const edges = [];
+      for (let dx = -13; dx <= 13; dx++) if (dx !== 0) edges.push({ dir: 'h' as const, x: x + dx, y: y - 12 }, { dir: 'h' as const, x: x + dx, y: y - 10 });
+      expect(applyCommand(s, { type: 'buildFences', edges, fence: 6 }).ok).toBe(true);
+      expect(applyCommand(s, { type: 'placeBuilding', kind: 'pump', x: x + 1, y: y - 14 }).ok).toBe(true);
+    }
+    const ev = play(s, 40, (st) => {
+      if (mode !== 'sensible') return;
+      const { hour } = calendar(st);
+      if (hour === 10 && st.money > 20000 && st.flood!.survived >= 3) {
+        buyOne(st, st.dinos.length % 2 ? 'parasaurolophus' : 'protoceratops');
+        applyCommand(st, { type: 'setTicketPrice', price: Math.round(fairPrice(parkAppeal(st, computeRegions(st)))) });
+      }
+    });
+    if (mode === 'sensible') {
+      expect(ev.filter((e) => /died|starved|caught|helicopter/.test(e))).toEqual([]);
+      expect(s.stats.dinosLost).toBe(0);
+      expect(s.scenario.round).toBeGreaterThanOrEqual(2);
+    } else {
       expect(s.scenario.round).toBe(0);
     }
   }

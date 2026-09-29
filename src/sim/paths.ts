@@ -3,6 +3,7 @@ import { isTileOwned } from './land';
 import { isOccupiedPaddock, type RegionMap } from './regions';
 import { isLand, Terrain } from './terrain';
 import type { CanEnter } from './pathfind';
+import { isFlooded } from './systems/flood';
 
 export function isPath(state: GameState, i: number): boolean {
   return state.paths[i] === 1;
@@ -10,7 +11,7 @@ export function isPath(state: GameState, i: number): boolean {
 
 /** Visitors walk on paths and the gate tile. */
 export const onWalkway: CanEnter = (state, i) =>
-  state.paths[i] === 1 || i === state.entrance.y * state.map.width + state.entrance.x;
+  (state.paths[i] === 1 && !isFlooded(state, i)) || i === state.entrance.y * state.map.width + state.entrance.x;
 
 /** Something already standing on a tile (feeder or building), if any. */
 export function tileOccupant(state: GameState, x: number, y: number): string | null {

@@ -181,7 +181,51 @@ function fireMountain(b: ParkBuilder): void {
   b.finish(40_000, 60);
 }
 
+/**
+ * Flood Season: a riverside park. The river runs right through the middle
+ * (with a bridge); three paddocks sit on low meadows that flood, one high
+ * paddock is empty and safe, and the shops are up on the dry terrace by the gate.
+ */
+function floodSeason(b: ParkBuilder): void {
+  b.prepare(-13, -20, 13, -1);
+  b.setHeight(-13, -20, 13, -1, 5);
+  b.riverAcross(-12);
+  // Low meadows along both banks (these flood); everything else is high and dry.
+  b.setHeight(-13, -10, 13, -7, 2);
+  b.setHeight(-13, -16, 0, -13, 2);
+  b.setHeight(1, -14, 13, -13, 2);
+  b.path([0, -1], [0, -20]); // crosses the river by a bridge
+  b.path([-12, -7], [12, -7]); // the riverside walk
+  b.paddock(-12, -10, 0, -7, 1);
+  b.paddock(1, -10, 13, -7, 2);
+  b.paddock(-12, -16, 0, -13, 2);
+  b.paddock(1, -20, 13, -15, 2); // high ground, empty
+  b.paddock(-12, -6, -2, -1, 1);
+  for (const [x, y] of [[-10, -9], [-7, -8], [-4, -9]] as const) b.dino('protoceratops', x, y);
+  b.dino('triceratops', 6, -9);
+  b.dino('stegosaurus', -6, -15);
+  for (const [x, y] of [[-10, -4], [-6, -3]] as const) b.dino('parasaurolophus', x, y);
+  b.feeder('plants', -2, -9);
+  b.feeder('plants', 10, -8);
+  b.feeder('plants', -9, -15);
+  b.feeder('plants', 7, -18);
+  b.feeder('plants', -8, -4);
+  b.building('restaurant', -1, -4);
+  b.building('restroom', -1, -2);
+  b.building('giftshop', 1, -4);
+  b.building('snackstall', 1, -2);
+  b.building('snackstall', 1, -13); // down by the river
+  b.building('giftshop', -1, -13); // the riverside shop, just north of the bridge
+  b.building('tower', -1, -17);
+  for (const [x, y] of [[-12, -6], [12, -6]] as const) b.decor('bench', x, y);
+  b.hire('worker', 2);
+  b.hire('janitor');
+  b.state.flood = { level: 0, wet: [], survived: 0, damage: 0, lastDry: false, soaked: [] };
+  b.finish(35_000, 60);
+}
+
 const SETUPS: Partial<Record<ScenarioId, (b: ParkBuilder) => void>> = {
+  'flood-season': floodSeason,
   'fire-mountain': fireMountain,
   'great-escape': greatEscape,
   'money-pit': moneyPit,

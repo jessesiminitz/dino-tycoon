@@ -21,7 +21,7 @@ export const BIG_MAP_WIDTH = 96;
 export const BIG_MAP_HEIGHT = 72;
 export const STARTING_MONEY = 50_000;
 export const START_HOUR = 8;
-export const SAVE_VERSION = 20;
+export const SAVE_VERSION = 21;
 
 export interface Dino {
   id: number;
@@ -306,6 +306,22 @@ export interface Eruption {
   ashUntil: number;
 }
 
+/** The rainy season's floods (Flood Season): see systems/flood.ts. */
+export interface FloodState {
+  /** Current water level above the river (0 = no flood). */
+  level: number;
+  /** Tiles under flood water right now. */
+  wet: number[];
+  /** Floods that have come and gone. */
+  survived: number;
+  /** Paths, buildings and dinosaurs the current (or last) flood reached. */
+  damage: number;
+  /** The last finished flood reached nothing that matters. */
+  lastDry: boolean;
+  /** Buildings under water this flood (cleaned up when it drains). */
+  soaked: number[];
+}
+
 /** Single serializable state tree. Everything the game needs to resume lives here. */
 export interface GameState {
   version: typeof SAVE_VERSION;
@@ -369,6 +385,8 @@ export interface GameState {
   pendingChoice: PendingChoice | null;
   /** The volcano's eruption, if one has begun (Fire Mountain). */
   eruption: Eruption | null;
+  /** Floods in the rainy season (Flood Season), or null. */
+  flood: FloodState | null;
   /** Next id for dinos, feeders and other entities. */
   nextId: number;
 }
@@ -436,6 +454,7 @@ export function newGame(seed: number, island: IslandOptions = {}): GameState {
     jeeps: [],
     pendingChoice: null,
     eruption: null,
+    flood: null,
     nextId: 1,
   };
   state.fossilBeds = bedsFor(state);
@@ -607,6 +626,10 @@ export function migrate(raw: { version?: number } & Record<string, unknown>): Ga
   if (raw.version === 19) {
     (raw as unknown as GameState).eruption = null;
     raw.version = 20;
+  }
+  if (raw.version === 20) {
+    (raw as unknown as GameState).flood = null;
+    raw.version = 21;
   }
   return raw.version === SAVE_VERSION ? (raw as unknown as GameState) : null;
 }

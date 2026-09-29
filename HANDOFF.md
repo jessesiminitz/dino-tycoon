@@ -279,3 +279,33 @@ The ten fun and engagement features the owner approved are all built and deploye
   - The goal tracker shows "🌋 erupts in ~Nh", "ERUPTING!" or "lava cooling".
 - **Tests:** `tests/eruption.test.ts`, plus a Fire Mountain case in `tests/challengeBalance.test.ts` (doing nothing loses dinos; moving everyone out of threatened paddocks, adding feeders and a vet wins Bronze with no losses).
 - **Check:** `scripts/checks/fire-ui.mjs [WxH]`.
+
+## Flood Season (Phase 3, part 2; done 2026-09-29)
+- **Challenge order:** Great Escape (★) → Fire Mountain (★★) → Flood Season (★★) → Money Pit (now ★★★).
+- **Flood Season** (classic island seed 6107):
+  - **Setup:** `ParkBuilder.riverAcross(-12)` paints a 2-wide river east–west through the park, out to the sea both ways, crossed by the main path as a bridge. Low meadows either side are height 2; the rest of the park is 5.
+  - **Paddocks:** three in the meadows (they flood); one empty high paddock (top right, safe); one on the terrace by the gate.
+  - **Buildings:** the shops are on the dry terrace, with a gift shop and snack stall by the river that flood. The park has no vet.
+  - **Floods:** starting at hours 30, 100, 170 … 660 (about every 3 days). Water rises to level 3 over 3 h, holds 6 h, drains over 3 h.
+  - **Bronze:** 3 floods survived, no dinos lost, within 10 days.
+  - **Silver:** a flood-proof flood and 60 visitors in a day, within 20 days.
+  - **Gold:** 16 dinos and reputation 70, within 35 days.
+  - **Lost** if more than 2 dinos are lost.
+- **Floods** (`src/sim/systems/flood.ts`, state `GameState.flood`, save v21):
+  - `scheduledLevel()` gives the water level each hour.
+  - `floodTiles(state, level)`: water spreads from River, Pond and Waterfall tiles over connected land with `height <= level`. It is blocked by standing **sandbag** fence edges (`SANDBAGS`, fence type 6, $15) and by ground within `PUMP_RADIUS` (4) of a **pump house** (building `pump`, $2,500). Bridges (River + path) count as wet unless pumped.
+  - `floodForecast()` gives the blue stripes 12 h before a flood. A storm starts 1 h before.
+  - **While wet:**
+    - `onLand` and `onWalkway` refuse wet tiles, and wet buildings are closed (`buildingNear` in visitors, `near` in rides).
+    - Feeders spoil, and fences rot at 3/h ÷ strength (sandbags are immune).
+    - Visitors in the water go home, and staff go back to the gate.
+    - Dinos wade to dry ground (fences respected). If they can't, they lose happiness and have a 4%/h chance of catching a chill (sick).
+  - **Afterwards:** `survived++`; `lastDry` is set if nothing that matters got wet (paths, buildings, dinos); soaked buildings cost $250 each to clean.
+  - **Goals:** `floodsSurvived`, `floodProof`.
+- **Solving it:** sandbags along both banks (skipping the bridge column) plus one pump beside the bridge at (+1, −14) keeps the whole park dry. That's what the balance test does, along with hiring a vet and a guard.
+- **UI:**
+  - Solid blue water with ripples while flooded; blue stripes for the forecast.
+  - The goal tracker shows "🌧️ flood in ~Nh" and "🌊 FLOOD!".
+  - The fence screen has Sandbags; the build screen has the Pump house (brick house with a spouting pipe).
+- **Perf test:** p99 limit raised to 40 ms. It spiked to about 27 ms only when the whole suite ran in parallel; alone it's about 2.3 ms.
+- **Checks:** `scripts/checks/flood-ui.mjs [WxH]`; tests in `tests/flood.test.ts` and `tests/challengeBalance.test.ts`.

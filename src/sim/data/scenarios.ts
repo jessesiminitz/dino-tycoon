@@ -22,7 +22,11 @@ export type GoalKind =
   /** The eruption has run its course and the lava has cooled (target 1). */
   | 'eruptionOver'
   /** No dinosaurs lost (target 1). */
-  | 'noLosses';
+  | 'noLosses'
+  /** Floods that have come and gone. */
+  | 'floodsSurvived'
+  /** A flood that reached no path, building or dinosaur (target 1). */
+  | 'floodProof';
 
 export interface Goal {
   kind: GoalKind;
@@ -31,7 +35,7 @@ export interface Goal {
   species?: SpeciesId;
 }
 
-export type ScenarioId = 'first-steps' | 'fossil-fever' | 'storm-coast' | 'rex-rising' | 'sandbox' | 'great-escape' | 'money-pit' | 'fire-mountain';
+export type ScenarioId = 'first-steps' | 'fossil-fever' | 'storm-coast' | 'rex-rising' | 'sandbox' | 'great-escape' | 'money-pit' | 'fire-mountain' | 'flood-season';
 
 /** What finishing a round of milestones earns. */
 export interface Reward {
@@ -89,6 +93,8 @@ export interface Scenario {
   timeline?: StoryEvent[];
   /** A volcanic eruption: when it starts, how much lava in all, and how many tiles it covers an hour. */
   eruption?: { eruptAtHour: number; volume: number; perHour: number };
+  /** The rainy season: when each flood starts (hours), how high the water rises, and how long each phase lasts. */
+  floods?: { starts: number[]; peak: number; rise: number; hold: number; drain: number };
   /** Extra ways to lose, checked at midnight. */
   loseIf?: { reputationBelow?: number; dinosLostAbove?: number };
 }
@@ -342,12 +348,59 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
       },
     ],
   },
+  'flood-season': {
+    id: 'flood-season',
+    category: 'challenge',
+    name: 'Flood Season',
+    blurb: 'A lovely riverside park, just as the rainy season begins. Every few days the river bursts its banks. Keep your dinosaurs dry!',
+    difficulty: 2,
+    startMoney: 35_000,
+    seed: 6107,
+    briefing: {
+      icon: '🌊',
+      story:
+        'The park is built on both banks of a river, and the rainy season has begun. Every few days heavy rain makes the river flood the low meadows, right where three of your paddocks are. Dinosaurs stuck in the water catch chills, and you have no vet!',
+      tip: 'Blue stripes show where the next flood will reach. Lay 🌊 sandbags (🚧 Fence) along the riverbank, build a 🚰 pump house (🏪 Build) to keep ground dry, move dinosaurs up to the high paddock, and hire a 🩺 vet.',
+    },
+    floods: { starts: [30, 100, 170, 240, 310, 380, 450, 520, 590, 660], peak: 3, rise: 3, hold: 6, drain: 3 },
+    timeline: [
+      { hour: 4, text: '📻 River warden: “The meadows by the river flood first. The high ground by the gate stays dry.”', kind: 'info' },
+      { hour: 50, text: '📻 River warden: “Sandbags along the bank hold the water back, but mind the bridge: water gets in round its ends.”', kind: 'info' },
+    ],
+    loseIf: { dinosLostAbove: 2 },
+    rounds: [
+      {
+        goals: [
+          { kind: 'floodsSurvived', target: 3 },
+          { kind: 'noLosses', target: 1 },
+        ],
+        days: 10,
+        reward: { money: 15_000 },
+      },
+      {
+        goals: [
+          { kind: 'floodProof', target: 1 },
+          { kind: 'dayVisitors', target: 60 },
+        ],
+        days: 20,
+        reward: { unlock: ['ankylosaurus'], money: 20_000 },
+      },
+      {
+        goals: [
+          { kind: 'dinos', target: 16 },
+          { kind: 'reputation', target: 70 },
+        ],
+        days: 35,
+        reward: { money: 40_000 },
+      },
+    ],
+  },
   'money-pit': {
     id: 'money-pit',
     category: 'challenge',
     name: 'The Money Pit',
     blurb: 'A grand old park that loses money every single day. Cut the waste, win back the crowds, and pay off the bank.',
-    difficulty: 2,
+    difficulty: 3,
     startMoney: 12_000,
     seed: 8014,
     big: true,
@@ -400,7 +453,7 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
 
 export const SCENARIO_IDS = Object.keys(SCENARIOS) as ScenarioId[];
 /** Challenges in unlock order, easiest first: any medal on one opens the next. */
-export const CHALLENGE_IDS: ScenarioId[] = ['great-escape', 'fire-mountain', 'money-pit'];
+export const CHALLENGE_IDS: ScenarioId[] = ['great-escape', 'fire-mountain', 'flood-season', 'money-pit'];
 export const BUILD_IDS = SCENARIO_IDS.filter((id) => SCENARIOS[id].category !== 'challenge');
 
 /** A scenario is lost when cash sits below this at midnight (the bank steps in). */

@@ -1,6 +1,6 @@
 # Plan: richer islands, prebuilt challenge parks, and a split New Game menu
 
-Status: **approved** (2026-09-28). Phases 2 (islands) and 1 (challenge framework, Great Escape, Money Pit) are done; Phase 3 part 1 (Fire Mountain) is done; Flood Season is next. Each phase ends with something playable and deployed.
+Status: **approved** (2026-09-28). Phases 2 (islands) and 1 (challenge framework, Great Escape, Money Pit) are done; Phase 3 (Fire Mountain and Flood Season) is done; Phase 4 (staff mood and the Staff Strike) is next. Each phase ends with something playable and deployed.
 
 ## Where things stand
 
@@ -185,7 +185,7 @@ Status: **approved** (2026-09-28). Phases 2 (islands) and 1 (challenge framework
 | --- | --- | --- |
 | 1 ✅ | Menu folders, challenge framework (setup scripts, new goals, timeline, briefing, tracker, best medals), **Money Pit**, **Great Escape** | large |
 | 2 ✅ | Height map, island shapes, rivers and bridges, lakes, marsh, cliffs, lava rock, hot springs, scenery bonus, map previews, Sandbox island picker | large |
-| 3 | **Fire Mountain** (lava, moving dinos) and **Flood Season** (floods, sandbags, pumps, boardwalks) | large |
+| 3 ✅ | **Fire Mountain** (lava, moving dinos) and **Flood Season** (floods, sandbags, pumps, boardwalks) | large |
 | 4 | Staff mood, wages and staff room; **Staff Strike** | medium |
 | 5 | Baby Boom, Dino Flu, Grand Opening, Heatwave, Clean-Up Crew, Island Hop | medium each |
 

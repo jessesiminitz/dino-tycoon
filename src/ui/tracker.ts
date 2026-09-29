@@ -1,5 +1,5 @@
 import type { Simulation } from '../sim/Simulation';
-import { MEDALS } from '../sim/data/scenarios';
+import { MEDALS, SCENARIOS } from '../sim/data/scenarios';
 import { daysLeft, goalProgress, goalShown } from '../sim/goals';
 
 /**
@@ -41,10 +41,22 @@ export function mountTracker(sim: Simulation, openGoals: () => void): void {
         : e.stage === 'erupting'
           ? '<small class="volcano urgent">🌋 ERUPTING!</small>'
           : '<small class="volcano">🌋 lava cooling</small>';
+    // The river's mood, in the rainy season.
+    const f = state.flood;
+    const cfg = SCENARIOS[state.scenario.id].floods;
+    const nextFlood = f && cfg ? cfg.starts[f.survived] : undefined;
+    const river = !f || !cfg
+      ? ''
+      : f.level > 0
+        ? '<small class="volcano urgent">🌊 FLOOD!</small>'
+        : nextFlood !== undefined
+          ? `<small class="volcano ${nextFlood - state.hours <= 12 ? 'urgent' : ''}">🌧️ flood in ~${Math.max(1, nextFlood - state.hours)}h</small>`
+          : '';
+    const extra = volcano + river;
     el.hidden = false;
-    if (html + volcano !== last) {
-      el.innerHTML = html + volcano;
-      last = html + volcano;
+    if (html + extra !== last) {
+      el.innerHTML = html + extra;
+      last = html + extra;
     }
   };
   sim.onChange(render);

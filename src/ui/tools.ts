@@ -24,6 +24,7 @@ const BUILDING_TAGS: Record<BuildingKind, string> = {
   tower: '🔭 Fun',
   petting: '💗 Fun',
   digsite: '🦴 Fossils',
+  pump: '🌊 Floods',
 };
 
 function buildingItems(): ShopItem[] {
@@ -71,6 +72,7 @@ const FENCE_BLURBS: Record<FenceTypeId, string> = {
   3: 'A zappy fence that keeps most hunters inside.',
   4: 'Thick walls for the biggest, fiercest dinosaurs. Hardly wears out.',
   5: 'Fence a whole paddock with netting to make an aviary for flying reptiles.',
+  6: 'A low wall of sandbags. Lay it along a riverbank to keep flood water out. Only holds small dinosaurs.',
 };
 
 const wear = (perDay: number) => (perDay <= 1 ? 'very slowly' : perDay <= 2.5 ? 'slowly' : perDay <= 3 ? 'steadily' : 'quickly');
@@ -83,7 +85,7 @@ function fenceItems(): ShopItem[] {
       id: String(id),
       art: paintFenceSample(id),
       name: t.name,
-      tag: id === NET ? '🪽 Aviary' : undefined,
+      tag: id === NET ? '🪽 Aviary' : id === 6 ? '🌊 Floods' : undefined,
       facts: [
         ['Price', `${$(t.cost)} a section`],
         ['Strength', stars(t.strength, strongest)],

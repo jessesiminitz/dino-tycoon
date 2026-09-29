@@ -11,7 +11,7 @@ import { allFenceEdges, fenceAt, setFenceHp } from './fences';
 import { boxEdges, tileLine } from './grid';
 import { parcelGrid, PARCEL } from './land';
 import { Rng } from './rng';
-import { Terrain } from './terrain';
+import { isSea, Terrain } from './terrain';
 
 /**
  * Builds a prebuilt park for a challenge with the same commands a player
@@ -92,6 +92,25 @@ export class ParkBuilder {
     };
     for (let y = v.y + 2; y <= end.y; y++) carve(v.x, y);
     for (let x = Math.min(v.x, end.x); x <= Math.max(v.x, end.x); x++) carve(x, end.y);
+  }
+
+  /**
+   * A river two tiles wide running east–west through the park at row dy
+   * (and dy + 1), out to the sea on both sides, `h` high (its banks decide what floods).
+   */
+  riverAcross(dy: number, h = 1): void {
+    const { state } = this;
+    const { width } = state.map;
+    for (const row of [this.gy + dy, this.gy + dy + 1])
+      for (const dir of [-1, 1])
+        for (let x = this.gx; x >= 0 && x < width; x += dir) {
+          const i = row * width + x;
+          const t = state.map.tiles[i];
+          if (isSea(t)) break;
+          if (t === Terrain.Volcano) throw new Error('Park builder: a river through the volcano');
+          if (t !== Terrain.Mountain) state.map.tiles[i] = Terrain.River;
+          state.map.heights[i] = Math.min(state.map.heights[i], h);
+        }
   }
 
   /** A fenced paddock with corners at vertices (dx0, dy0) and (dx1, dy1). */

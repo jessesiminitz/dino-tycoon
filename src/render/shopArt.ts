@@ -14,6 +14,16 @@ export function paintFenceSample(id: FenceTypeId): HTMLCanvasElement {
   const rail = hex(t.rail);
   const post = hex(t.post);
   return paintSprite(34, 20, (px) => {
+    if (id === 6) {
+      // Sandbags: two staggered rows of bags.
+      for (let y = 8; y < 17; y++)
+        for (let x = 2; x < 32; x++) {
+          const row = y < 12 ? 0 : 1;
+          const seam = (x + row * 3) % 6 === 0 || y === 12;
+          px(x, y, y === 8 ? '#e0c890' : seam ? post : rail);
+        }
+      return;
+    }
     if (id === 4) {
       // Concrete: a solid block wall with mortar lines.
       for (let y = 5; y < 17; y++) for (let x = 2; x < 32; x++) px(x, y, y === 5 ? '#ece8dc' : (y - 5) % 4 === 0 || (x + ((y - 5) >> 2) * 3) % 8 === 0 ? post : rail);

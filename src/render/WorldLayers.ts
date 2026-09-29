@@ -7,13 +7,14 @@ import { formatMoney } from '../ui/hud';
 import { hash2 } from '../sim/rng';
 import { Terrain } from '../sim/terrain';
 import { lavaPreview } from '../sim/systems/eruption';
+import { floodForecast } from '../sim/systems/flood';
 import { TILE } from './tileset';
 
 const PADDOCK_TINTS = [0xf2c14e, 0x6ec6ff, 0xff8fb1, 0xb28dff, 0x7ee0b5, 0xffa257];
 const FOR_SALE = 0xff9f43;
 
 /** How tall each fence type stands, in world pixels. */
-const FENCE_H: Record<FenceTypeId, number> = { 1: 8, 2: 9, 3: 9, 4: 10, 5: 13 };
+const FENCE_H: Record<FenceTypeId, number> = { 1: 8, 2: 9, 3: 9, 4: 10, 5: 13, 6: 6 };
 
 /** Mixes a 0xRRGGBB colour toward white (amount > 0) or black (< 0). */
 function lighten(color: number, amount: number): number {
@@ -125,6 +126,27 @@ export class WorldLayers {
         const x0 = (i % width) * TILE;
         const y0 = Math.floor(i / width) * TILE;
         g.lineBetween(x0, y0 + TILE, x0 + TILE, y0);
+      }
+    }
+
+    // Flood water now (solid blue with ripples), or where the next flood will reach (blue stripes).
+    const wet = state.flood?.wet ?? [];
+    if (wet.length) {
+      g.fillStyle(0x3f86c0, 0.62);
+      for (const i of wet) g.fillRect((i % width) * TILE, Math.floor(i / width) * TILE, TILE, TILE);
+      g.fillStyle(0xbfe6f2, 0.7);
+      for (const i of wet) if ((i * 7) % 3 === 0) g.fillRect((i % width) * TILE + 3, Math.floor(i / width) * TILE + 6, 6, 1);
+    } else {
+      const forecast = floodForecast(state);
+      if (forecast.size) {
+        g.fillStyle(0x2f7fd0, 0.3);
+        for (const i of forecast) g.fillRect((i % width) * TILE, Math.floor(i / width) * TILE, TILE, TILE);
+        g.lineStyle(2, 0x9fd6ff, 0.85);
+        for (const i of forecast) {
+          const x0 = (i % width) * TILE;
+          const y0 = Math.floor(i / width) * TILE;
+          g.lineBetween(x0, y0 + TILE, x0 + TILE, y0);
+        }
       }
     }
 
@@ -385,8 +407,19 @@ export class WorldLayers {
           g.fillStyle(dark, 0.6).fillRect(x0, y0 - Math.round(H / 2), TILE, 1);
         }
         break;
+      case 6: // Sandbags: two rows of plump bags, staggered like bricks
+        band(H, H, t.rail);
+        band(H, 1, light);
+        band(1, 1, dark);
+        if (horizontal && !gap) {
+          g.fillStyle(dark, 0.7);
+          for (const x of [5, 11]) g.fillRect(x0 + x, y0 - H + 1, 1, Math.ceil(H / 2) - 1);
+          for (const x of [2, 8, 14]) g.fillRect(x0 + x, y0 - Math.floor(H / 2), 1, Math.floor(H / 2));
+          g.fillRect(x0, y0 - Math.round(H / 2), TILE, 1);
+        }
+        break;
     }
-    if (f !== 4) {
+    if (f !== 4 && f !== 6) {
       post(x0, y0);
       post(x1, y1);
       if (f === 1 && !gap) post(horizontal ? x0 + TILE / 2 : x0, horizontal ? y0 : y0 + TILE / 2, H - 1);
