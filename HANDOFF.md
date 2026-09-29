@@ -1,6 +1,26 @@
 # Dino Tycoon: handoff notes
 
-Everything a fresh session needs to carry on. Last updated 2026-09-28 (islands update) plus this file.
+Everything a fresh session needs to carry on. Last updated 2026-09-29, after Flood Season (commit `5cb253b`).
+
+## Where things stand (read this first)
+
+- **Live and working:**
+  - four challenges (The Great Escape, Fire Mountain, Flood Season, The Money Pit), in the 🧩 Challenges folder, unlocking in that order
+  - six island shapes, with the Sandbox island picker
+  - the Tropical lagoon UI theme
+  - picture build screens
+  - honest reviews
+  - one-drag fence boxes
+- **Plan in progress:** `docs/PLAN-challenges.md`. Phases 1–3 are done.
+- **Next:** **Phase 4, the Staff Strike.** It needs staff mood, wages per role, a staff room, negotiation cards (built on `choices.ts`), and doing a job yourself. Then Phase 5: Baby Boom, Dino Flu, Grand Opening, Heatwave, Clean-Up Crew and Island Hop. The owner said "start on that one" for each challenge in turn, so ask before starting Phase 4.
+- **Every new challenge follows the same recipe:**
+  1. A `SCENARIOS` entry with `category: 'challenge'`, a briefing, a timeline and `loseIf`.
+  2. A `ParkBuilder` setup in `src/sim/challenges.ts`.
+  3. An entry in `CHALLENGE_IDS`.
+  4. A case in `tests/challengeBalance.test.ts` where doing nothing fails and sensible play wins.
+  5. A `scripts/checks/<name>-ui.mjs` screenshot tour.
+  6. Bump the sticker medal count in `tests/stickers.test.ts`.
+- **Auto-mode note:** the harness's safety classifier sometimes fails for a while ("no verdict"). When it does, stop cleanly, tell the owner what's saved, and wait for "continue".
 
 ## What this is
 
@@ -16,7 +36,7 @@ A touch-first spiritual successor to *DinoPark Tycoon* (1993) for iPhone (and iP
 
 ```sh
 npm run dev            # dev server (usually already running on :5173); /?quickstart skips the menu
-npm test               # all sim tests, then the perf benchmark separately (129 + 1 tests)
+npm test               # all tests (220), including the challenge balance runs (~7 s)
 npm run build          # tsc --noEmit + vite build
 npm run icons          # regenerate Home Screen icons (dev server must be running)
 node scripts/checks/<name>.mjs   # browser checks (headless Chrome via puppeteer-core); see below
@@ -31,7 +51,7 @@ gh run list -R jessesiminitz/dino-tycoon --limit 1      # then gh run watch <id>
 
 End commit messages with the Co-Authored-By / Claude-Session trailers the harness supplies. Commit and deploy after each round of changes: the owner tests on the live site.
 
-**Dev hooks** (dev builds only): `window.__dino = { game, sim, ui, slot, audioDebug, playSfx }`; `/?quickstart` starts a fresh park.
+**Dev hooks** (dev builds only): `window.__dino = { game, sim, ui, slot, audioDebug, playSfx }`. `/?quickstart` starts a fresh park (`&shape=river&seed=7&big` picks the island). Challenge checks start parks through the menu and set `localStorage['dino-tycoon-challenges']` to unlock them.
 
 ## Architecture (see README for the overview)
 
@@ -46,9 +66,9 @@ End commit messages with the Co-Authored-By / Claude-Session trailers the harnes
 - `src/audio/`: `audio.ts` (sfx, rain, piano synth, shuffled playlist), `ragNotes.ts` (decoder and alphabet), `rags.ts` (generated, lazy-loaded chunk).
 - `src/save/storage.ts`: 3 IndexedDB slots plus a localStorage mirror, and a boot directive (used to return to the park after an update reload).
 
-### Save format: **v17**
+### Save format: **v21**
 
-Always bump `SAVE_VERSION` and add a step to `migrate()` when the state shape changes, then update the version assertions in the tests (`tests/{dinos,island,visitorlife,mess}.test.ts` check `toBe(17)`). Recent steps:
+Always bump `SAVE_VERSION` and add a step to `migrate()` when the state shape changes, then update the version assertions in the tests (`grep -rn "toBe(21)" tests`: babies, care, choices, dinos, island, mess, requests, rides, visitorlife). Recent steps:
 - v10 added the log.
 - v11 added visitor names, thoughts and thirst, soda and snack fields, plus `messes` and `reviews`.
 - v12 added scenario `round`, `roundStart` and `earned`. Saves that had already won carry on into Silver.
@@ -57,10 +77,14 @@ Always bump `SAVE_VERSION` and add a step to `migrate()` when the state shape ch
 - v15 added `requests` and `stats.requestsDone`.
 - v16 added `tracks`, `jeeps`, and `Visitor.rode` and `Visitor.riding`, plus the `rides` income category.
 - v17 added `pendingChoice` and `stats.closedDay`.
+- v18 added `map.heights` (0–15) and `map.shape`. Old maps get heights from `DEFAULT_HEIGHT`.
+- v19 added `Dino.huntRestUntil`, `scenario.briefed`, `scenario.timeline`, and `stats.profitStreak`, `lastEscapeHour` and `dinosLost`.
+- v20 added `eruption` (Fire Mountain).
+- v21 added `flood` (Flood Season).
 
 ## Features in place (all deployed)
 
-- **Core:** land parcels, drag-to-build fences (4 types, wear, repair), paddocks, 12 species (6 starters, the rest from fossil digs on visible fossil beds), feeders, hunger and hunting, escapes and guards, disease and vets, storms, volcano rumbles, inspections, school trips, loans and ledger, monthly reports.
+- **Core:** land parcels, drag-to-build fences (6 types including aviary net and sandbags; wear, repair), paddocks, 16 species (land, lagoon and aviary) (6 starters, the rest from fossil digs on visible fossil beds), feeders, hunger and hunting, escapes and guards, disease and vets, storms, volcano rumbles, inspections, school trips, loans and ledger, monthly reports.
 - **Island:** procedural terrain with mountains, a volcano, ponds, beaches and trees, plus gardens (decor) that visitors enjoy.
 - **Visitors:**
   - Needs: hunger, thirst, restroom.
@@ -160,17 +184,22 @@ Headless Chrome against the dev server (`http://localhost:5173`), using `puppete
 | `ipad-check.mjs` | iPad layouts, landscape and portrait |
 | `ipad-portrait.mjs` | iPads upright: HUD fits, panels open; iPhone upright shows the rotate screen |
 | `ui-tour.mjs [WxH]` | opens every sheet (build screens, Dinos, Book, Park, People, News, Requests), reports size and sideways scrolling |
-| `shaped-buildings.mjs` | all nine building sprites, enlarged |
-| `dino-gallery.mjs` | all 12 species, both walk frames, at 4× |
+| `shaped-buildings.mjs` | the building sprites, enlarged |
+| `dino-gallery.mjs` | all species, both walk frames, at 4× |
+| `island-gallery.mjs [n] [big]`, `islands-ui.mjs`, `terrain-closeups.mjs`, `big-island-perf.mjs` | island shapes, the picker, new terrain, big-island speed |
+| `fixes-check.mjs` | top buttons light only while their panel is open; one-drag fence box |
+| `challenges-ui.mjs`, `tracker-overlap.mjs` | challenge folders, story card, goal tracker (vs. tutorial and HUD), money report |
+| `fire-ui.mjs [WxH]`, `flood-ui.mjs [WxH]` | Fire Mountain and Flood Season from the menu to the disaster and after |
 | `icon-preview.mjs` | icon at full size, real size and maskable |
 | `items-check.mjs` | carried items, pee and poop, litter, dung, janitor, trash can |
 | `log-check.mjs`, `rag-check.mjs`, `repro-place.mjs` | alert log, music playback, place a dino and delete paths |
 
 Scripts that step the sim by hand should use 16 steps per game-hour.
 
-## Roadmap: `docs/ROADMAP.md` (all ten features done)
+## Roadmaps
 
-The ten fun and engagement features the owner approved are all built and deployed (2026-09-28). Ask the owner what's next; the ideas below are still open.
+- `docs/ROADMAP.md`: the ten fun and engagement features, all done (2026-09-28).
+- `docs/PLAN-challenges.md`: islands, challenges and disasters. Phases 1–3 are done; Phase 4 (Staff Strike) is next. It also records the owner's decisions: challenges unlock in order, meat-eaters may rarely catch prey (leaving a fossil), and big islands are fine for challenges.
 
 ## Other ideas not done yet (ask before starting)
 
