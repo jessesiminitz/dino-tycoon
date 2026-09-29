@@ -21,7 +21,7 @@ export const BIG_MAP_WIDTH = 96;
 export const BIG_MAP_HEIGHT = 72;
 export const STARTING_MONEY = 50_000;
 export const START_HOUR = 8;
-export const SAVE_VERSION = 18;
+export const SAVE_VERSION = 19;
 
 export interface Dino {
   id: number;
@@ -52,6 +52,8 @@ export interface Dino {
   /** Game-hours of the last treat and the last pat that cheered it up (see systems/care.ts). */
   lastTreatHour: number;
   lastPatHour: number;
+  /** A meat-eater won't hunt again before this game-hour (it rests after every pounce, longest after a catch). */
+  huntRestUntil: number;
 }
 
 export type RequestKind = 'see' | 'food' | 'visitors' | 'review' | 'photo' | 'treats' | 'clean' | 'feeders';
@@ -262,6 +264,10 @@ export interface ScenarioState {
   roundStart: number;
   /** What each finished round actually paid out, in words. */
   earned: string[][];
+  /** The challenge's story card has been read. */
+  briefed: boolean;
+  /** How many of the scenario's scripted story events have happened. */
+  timeline: number;
 }
 
 export interface Stats {
@@ -281,6 +287,12 @@ export interface Stats {
   /** Last game day the park was warned about accidents, and about litter. */
   messDay: number;
   litterDay: number;
+  /** Days in a row that ended in profit (reset by a loss). */
+  profitStreak: number;
+  /** Game-hour of the last escape (NEVER if none yet). */
+  lastEscapeHour: number;
+  /** Dinosaurs lost: caught by a meat-eater, starved or died of illness. */
+  dinosLost: number;
 }
 
 /** Single serializable state tree. Everything the game needs to resume lives here. */
@@ -382,8 +394,22 @@ export function newGame(seed: number, island: IslandOptions = {}): GameState {
     staff: [],
     fossils: {},
     stormHours: 0,
-    scenario: { id: 'sandbox', status: 'free', round: 0, roundStart: 1, earned: [] },
-    stats: { bestDayVisitors: 0, escapes: 0, inspectionsPassed: 0, restroomComplaintDay: 0, hatched: 0, photos: 0, requestsDone: 0, closedDay: 0, messDay: 0, litterDay: 0 },
+    scenario: { id: 'sandbox', status: 'free', round: 0, roundStart: 1, earned: [], briefed: true, timeline: 0 },
+    stats: {
+      bestDayVisitors: 0,
+      escapes: 0,
+      inspectionsPassed: 0,
+      restroomComplaintDay: 0,
+      hatched: 0,
+      photos: 0,
+      requestsDone: 0,
+      closedDay: 0,
+      messDay: 0,
+      litterDay: 0,
+      profitStreak: 0,
+      lastEscapeHour: NEVER,
+      dinosLost: 0,
+    },
     tutorialStep: null,
     fossilBeds: [],
     decor: [],
@@ -412,10 +438,10 @@ function bedsFor(state: GameState): FossilBed[] {
 /** A fresh park set up for a scenario: its island, budget, unlocked species and tutorial. */
 export function startScenario(id: ScenarioId, randomSeed: number, island: IslandOptions = {}): GameState {
   const sc = SCENARIOS[id];
-  const state = newGame(sc.seed ?? randomSeed, { shape: sc.island, ...island });
+  const state = newGame(sc.seed ?? randomSeed, { shape: sc.island, big: sc.big, ...island });
   state.money = sc.startMoney;
   if (sc.unlocked) state.unlockedSpecies = [...sc.unlocked];
-  state.scenario = { id, status: sc.rounds.length > 0 ? 'playing' : 'free', round: 0, roundStart: 1, earned: [] };
+  state.scenario = { id, status: sc.rounds.length > 0 ? 'playing' : 'free', round: 0, roundStart: 1, earned: [], briefed: !sc.briefing, timeline: 0 };
   state.tutorialStep = sc.tutorial ? 0 : null;
   return state;
 }
@@ -555,6 +581,14 @@ export function migrate(raw: { version?: number } & Record<string, unknown>): Ga
     map.heights = map.tiles.map((t) => DEFAULT_HEIGHT[t]);
     map.shape = 'classic';
     raw.version = 18;
+  }
+  if (raw.version === 18) {
+    // Challenges: story cards and timelines, profit streaks, escape and loss tracking, hunter cooldowns.
+    const state = raw as unknown as GameState;
+    Object.assign(state.scenario, { briefed: true, timeline: 0 });
+    Object.assign(state.stats, { profitStreak: 0, lastEscapeHour: NEVER, dinosLost: 0 });
+    for (const d of state.dinos) d.huntRestUntil = NEVER;
+    raw.version = 19;
   }
   return raw.version === SAVE_VERSION ? (raw as unknown as GameState) : null;
 }

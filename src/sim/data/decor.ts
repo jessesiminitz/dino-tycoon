@@ -1,4 +1,4 @@
-export type DecorKind = 'tree' | 'palm' | 'flowers' | 'fountain' | 'bench' | 'lamp';
+export type DecorKind = 'tree' | 'palm' | 'flowers' | 'fountain' | 'bench' | 'lamp' | 'skeleton';
 
 export interface DecorType {
   kind: DecorKind;
@@ -9,6 +9,8 @@ export interface DecorType {
   /** How much it lifts the mood of visitors within DECOR_RADIUS tiles each hour. */
   charm: number;
   description: string;
+  /** Left behind by events rather than bought (not in the Garden shop). */
+  natural?: boolean;
 }
 
 export const DECOR_TYPES: Record<DecorKind, DecorType> = {
@@ -18,9 +20,13 @@ export const DECOR_TYPES: Record<DecorKind, DecorType> = {
   bench: { kind: 'bench', name: 'Bench', cost: 80, upkeep: 0, charm: 1, description: 'Somewhere to rest tired feet.' },
   fountain: { kind: 'fountain', name: 'Fountain', cost: 900, upkeep: 10, charm: 3, description: 'A splashing centrepiece visitors love.' },
   lamp: { kind: 'lamp', name: 'Path lamp', cost: 60, upkeep: 1, charm: 1, description: 'Lights up the paths after dark.' },
+  skeleton: { kind: 'skeleton', name: 'Fossil skeleton', cost: 0, upkeep: 0, charm: 1, description: 'All that’s left of a dinosaur a hunter caught. Visitors find it fascinating.', natural: true },
 };
 
-export const DECOR_KINDS = Object.keys(DECOR_TYPES) as DecorKind[];
+/** Every decoration, including ones you can't buy (for drawing them). */
+export const ALL_DECOR_KINDS = Object.keys(DECOR_TYPES) as DecorKind[];
+/** The ones in the Garden shop. */
+export const DECOR_KINDS = ALL_DECOR_KINDS.filter((k) => !DECOR_TYPES[k].natural);
 /** Tiles (Chebyshev) within which visitors enjoy a decoration. */
 export const DECOR_RADIUS = 2;
 /** Most a visitor's mood can rise per hour from scenery, however much there is. */

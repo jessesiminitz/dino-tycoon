@@ -11,6 +11,8 @@ import { showMenu } from './ui/menu';
 import { mountPauseMenu, offerUpdate, showOutcome } from './ui/overlays';
 import { UiState } from './ui/uiState';
 import { mountTutorial } from './ui/tutorial';
+import { mountBriefing } from './ui/briefing';
+import { recordMedals } from './ui/challengeRecords';
 import { audioDebug, initAudio, onSong, playSfx, type Sfx } from './audio/audio';
 import { getSettings } from './ui/settings';
 
@@ -51,7 +53,10 @@ function startGame(state: GameState, slot: SlotId): void {
     // The crowd cheers for new babies, medals and birthdays.
     if (/^(🐣|🎂 Happy birthday)/.test(e.text) || e.outcome === 'milestone' || e.outcome === 'won') playSfx('cheer');
     if (e.outcome) showOutcome(sim, e.outcome, toMainMenu, e.text);
+    // Challenge medals are remembered on this device (they unlock the next challenge).
+    if (e.outcome === 'milestone' || e.outcome === 'won') recordMedals(sim.state.scenario.id, sim.state.scenario.round);
   });
+  mountBriefing(sim);
   document.body.classList.add('in-park');
 
   const game = new Phaser.Game({
@@ -104,6 +109,7 @@ const updateSW = registerSW({
 /** Which sound (if any) a park event makes. */
 function eventSound(text: string, kind: string, outcome?: 'won' | 'lost' | 'milestone'): Sfx | null {
   if (outcome) return outcome === 'lost' ? 'sad' : 'fanfare';
+  if (/caught .* fossil skeleton/.test(text)) return 'sad';
   if (/^(🦴|🥚|🐣|📋 A new|📋 [0-9])/.test(text)) return 'chime';
   if (/^✅/.test(text)) return 'cash';
   if (/^(⛈️ A storm|🌋)/.test(text)) return 'thunder';

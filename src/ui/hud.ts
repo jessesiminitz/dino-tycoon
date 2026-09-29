@@ -13,6 +13,7 @@ import { mountRequests } from './requests';
 import { mountDig } from './dig';
 import { mountStickers } from './stickers';
 import { mountTools } from './tools';
+import { mountTracker } from './tracker';
 import { mountChoice } from './choice';
 import { DECOR_TYPES } from '../sim/data/decor';
 import type { UiState } from './uiState';
@@ -304,6 +305,7 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
 
   const parkPanel = mountParkPanel(sim, hud);
   $('btn-park').addEventListener('click', () => parkPanel.open());
+  mountTracker(sim, () => parkPanel.open('goals'));
   mountLog(sim);
   mountPeople(sim, ui);
   mountRequests(sim);

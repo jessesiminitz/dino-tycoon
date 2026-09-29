@@ -62,6 +62,7 @@ export function stepEscapes(ctx: SimContext): void {
     if (loose && !d.escaped) {
       d.escaped = true;
       state.stats.escapes++;
+      state.stats.lastEscapeHour = state.hours;
       ctx.emit({ text: `🚨 ${dinoLabel(d)} has escaped!`, kind: 'bad' });
     } else if (!loose) {
       d.escaped = false;

@@ -200,7 +200,7 @@ it('migrates v15 saves: no tracks or jeeps, no rides yet', () => {
     delete v.riding;
   }
   const m = migrate(raw)!;
-  expect(m.version).toBe(18);
+  expect(m.version).toBe(19);
   expect(m.tracks.every((t) => t === 0)).toBe(true);
   expect(m.jeeps).toEqual([]);
   expect(m.visitors.every((v) => v.rode.length === 0 && v.riding === null)).toBe(true);

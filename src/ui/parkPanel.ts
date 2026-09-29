@@ -16,8 +16,10 @@ import { expectedArrivals, fairPrice, parkAppeal } from '../sim/systems/visitors
 import { STAFF_ROLES, STAFF_TYPES } from '../sim/data/staff';
 import { dailyWages, describeTask } from '../sim/systems/staff';
 import { MEDALS, SCENARIOS } from '../sim/data/scenarios';
-import { daysLeft, describeReward, goalProgress } from '../sim/goals';
+import { daysLeft, describeReward, goalProgress, goalShown } from '../sim/goals';
 import { formatMoney, type Hud } from './hud';
+import { dailyCosts } from '../sim/moneyAdvice';
+import { calendar } from '../sim/GameState';
 import { playSfx } from '../audio/audio';
 
 type Tab = 'goals' | 'overview' | 'staff' | 'finances' | 'bank';
@@ -87,6 +89,15 @@ export function mountParkPanel(sim: Simulation, hud: Hud): { open(tab?: Tab): vo
         </div>
         <p class="note">Visitors think about <b>${formatMoney(fair)}</b> is fair for what’s on show, ${priceNote}
           Expect about <b>${perHour.toFixed(1)}</b> new visitors an hour while open (08:00–18:00).</p>
+      </section>
+      <section class="panel-section">
+        <h3>Gates</h3>
+        ${
+          state.stats.closedDay === calendar(state).day
+            ? '<p class="note">🚪 Closed for the rest of today. The gates open again tomorrow morning.</p>'
+            : `<button class="action-btn secondary" data-close>🚪 Close the park for today</button>
+               <p class="note">Sends every visitor home and lets nobody in until tomorrow. Handy in an emergency.</p>`
+        }
       </section>
       <section class="panel-section">
         <p class="note">Weather: <b>${state.stormHours > 0 ? `⛈️ storm (about ${state.stormHours}h left)` : '🌤️ clear'}</b> ·
@@ -172,7 +183,22 @@ export function mountParkPanel(sim: Simulation, hud: Hud): { open(tab?: Tab): vo
   function finances(): string {
     const { history, month } = sim.state.finance;
     const last = history[history.length - 1];
+    const { lines, tips } = dailyCosts(sim.state, sim.regions());
+    const biggest = Math.max(1, ...lines.map((l) => l.perDay));
+    const costs = lines.length
+      ? `<section class="panel-section">
+          <h3>Where the money goes (each day)</h3>
+          <ul class="cost-lines">${lines
+            .map(
+              (l) => `<li class="${l.hint ? 'waste' : ''}"><span>${esc(l.label)}</span><b>${formatMoney(l.perDay)}</b>
+                <span class="meter"><span style="width:${(100 * l.perDay) / biggest}%"></span></span></li>`,
+            )
+            .join('')}</ul>
+          ${tips.length ? `<ul class="money-tips">${tips.map((t) => `<li>💡 ${esc(t)}</li>`).join('')}</ul>` : '<p class="note">👍 Nothing looks wasteful right now.</p>'}
+        </section>`
+      : '';
     return `
+      ${costs}
       ${profitChart()}
       <table class="ledger">
         <thead><tr><th></th><th scope="col">This month</th><th scope="col">${last ? `Month ${last.month}` : 'Last month'}</th></tr></thead>
@@ -206,7 +232,7 @@ export function mountParkPanel(sim: Simulation, hud: Hud): { open(tab?: Tab): vo
     const rows = goalProgress(state)
       .map((g) => {
         const pct = Math.min(100, (100 * Math.max(0, g.value)) / g.goal.target);
-        const shown = g.goal.kind === 'cash' ? formatMoney(g.value) : `${g.value}/${g.goal.target}`;
+        const shown = goalShown(state, g.goal, g.value);
         return `<li class="goal ${g.done ? 'done' : ''}">
           <span>${g.done ? '✅' : '⬜'} ${g.label}</span><span class="goal-value">${shown}</span>
           <span class="meter"><span style="width:${pct}%"></span></span>
@@ -297,9 +323,10 @@ export function mountParkPanel(sim: Simulation, hud: Hud): { open(tab?: Tab): vo
   }
 
   body.addEventListener('click', (e) => {
-    const el = (e.target as HTMLElement).closest<HTMLElement>('[data-price],[data-loan],[data-repay],[data-hire],[data-fire],.bar');
+    const el = (e.target as HTMLElement).closest<HTMLElement>('[data-price],[data-loan],[data-repay],[data-hire],[data-fire],[data-close],.bar');
     if (!el) return;
-    if (el.dataset.price) act(sim.dispatch({ type: 'setTicketPrice', price: sim.state.ticketPrice + Number(el.dataset.price) }));
+    if ('close' in el.dataset) act(sim.dispatch({ type: 'closePark' }));
+    else if (el.dataset.price) act(sim.dispatch({ type: 'setTicketPrice', price: sim.state.ticketPrice + Number(el.dataset.price) }));
     else if (el.dataset.loan) act(sim.dispatch({ type: 'takeLoan', amount: Number(el.dataset.loan) }));
     else if (el.dataset.repay) act(sim.dispatch({ type: 'repayLoan', id: Number(el.dataset.repay) }));
     else if (el.dataset.hire) act(sim.dispatch({ type: 'hireStaff', role: el.dataset.hire as (typeof STAFF_ROLES)[number] }));

@@ -41,6 +41,8 @@
       </div>
     </div>
 
+    <button id="goal-tracker" class="goal-tracker" hidden aria-label="Current goal (tap for all goals)"></button>
+
     <div id="info" class="info hidden" aria-live="polite">
       <span id="info-text"></span>
       <span id="info-actions" class="info-actions"><button id="info-action" class="action-btn hidden"></button></span>
@@ -118,6 +120,10 @@
           <button class="action-btn dig-done hidden">Wonderful!</button>
         </div>
       </div>
+    </div>
+
+    <div id="briefing" class="modal hidden" role="dialog" aria-label="Challenge briefing">
+      <div class="modal-card outcome-card briefing-card"><div class="briefing-body"></div></div>
     </div>
 
     <div id="stickers" class="modal hidden" role="dialog" aria-label="Sticker book">

@@ -54,7 +54,7 @@ describe('sticker book', () => {
       expect(ids).toContain(`dino:${id}`);
       expect(ids).toContain(`baby:${id}`);
     }
-    expect(STICKERS.filter((s) => s.group === 'medals')).toHaveLength(4 * 3);
+    expect(STICKERS.filter((s) => s.group === 'medals')).toHaveLength(6 * 3);
     for (const s of STICKERS) expect(s.hint.length).toBeGreaterThan(10);
   });
 
@@ -73,7 +73,7 @@ describe('sticker book', () => {
 
   it('medals follow the milestones reached', () => {
     const s = openPark();
-    s.scenario = { id: 'first-steps', status: 'playing', round: 2, roundStart: 1, earned: [[], []] };
+    s.scenario = { id: 'first-steps', status: 'playing', round: 2, roundStart: 1, earned: [[], []], briefed: true, timeline: 0 };
     const got = earnedStickers(s);
     expect(got).toEqual(expect.arrayContaining(['medal:first-steps:0', 'medal:first-steps:1']));
     expect(got).not.toContain('medal:first-steps:2');

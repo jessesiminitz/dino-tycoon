@@ -76,6 +76,7 @@ export function hourlyBreeding(ctx: SimContext): void {
       baby: true,
       lastTreatHour: NEVER,
       lastPatHour: NEVER,
+      huntRestUntil: NEVER,
     };
     state.dinos.push(baby);
     state.stats.hatched++;

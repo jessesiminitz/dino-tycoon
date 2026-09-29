@@ -1,7 +1,9 @@
-import { newGame, startScenario, type GameState } from '../sim/GameState';
+import { newGame, type GameState } from '../sim/GameState';
+import { newPark } from '../sim/challenges';
+import { challengeUnlocked, bestMedals } from './challengeRecords';
 import { ISLAND_SHAPE_IDS, ISLAND_SHAPES, type IslandShape } from '../sim/island';
-import { paintMinimap } from '../render/minimap';
-import { SCENARIO_IDS, SCENARIOS, type ScenarioId } from '../sim/data/scenarios';
+import { paintMinimap, paintParkMinimap } from '../render/minimap';
+import { BUILD_IDS, CHALLENGE_IDS, MEDALS, SCENARIOS, type ScenarioId } from '../sim/data/scenarios';
 import { SPECIES, SPECIES_IDS } from '../sim/data/species';
 import { goalLabel } from '../sim/goals';
 import { paintDino } from '../render/dinoArt';
@@ -61,7 +63,15 @@ export function showMenu(handlers: MenuHandlers): void {
   let confirmDelete: SlotId | null = null;
   /** The Sandbox island being chosen: its shape, size and seed (🎲 picks a new seed). */
   const island = { shape: 'classic' as IslandShape, big: false, seed: (Math.random() * 2 ** 32) >>> 0 };
+  /** Which folder the New Park screen shows. */
+  let folder: 'builds' | 'challenges' = 'builds';
   const previews = new Map<string, string>();
+  /** A challenge's prebuilt park, as a map preview. */
+  const parkPreview = (id: ScenarioId) => {
+    const key = `park:${id}`;
+    if (!previews.has(key)) previews.set(key, paintParkMinimap(newPark(id, 1)).toDataURL());
+    return previews.get(key)!;
+  };
   /** A map preview as an image URL (cached: generating an island takes a few milliseconds). */
   const preview = (seed: number, shape: IslandShape, big = false) => {
     const key = `${seed}:${shape}:${big}`;
@@ -114,9 +124,31 @@ export function showMenu(handlers: MenuHandlers): void {
         </div>
         <p class="note version">Version ${__APP_VERSION__} · ${__BUILD_DATE__}</p>`;
     } else if (screen === 'new') {
-      body.innerHTML = `
-        <h2>Choose a scenario</h2>
-        <div class="scenario-grid">${SCENARIO_IDS.map((id) => {
+      const tabs = `<div class="folder-tabs" role="tablist">
+          <button class="folder-tab ${folder === 'builds' ? 'active' : ''}" data-folder="builds" role="tab">🏗️ New builds<small>Start from an empty island</small></button>
+          <button class="folder-tab ${folder === 'challenges' ? 'active' : ''}" data-folder="challenges" role="tab">🧩 Challenges<small>Fix a park in trouble</small></button>
+        </div>`;
+      if (folder === 'challenges') {
+        body.innerHTML = `${tabs}
+          <div class="scenario-grid">${CHALLENGE_IDS.map((id, i) => {
+            const sc = SCENARIOS[id];
+            const open = challengeUnlocked(id);
+            const best = bestMedals(id);
+            const medals = best ? `Best: ${MEDALS.slice(0, best).map((m) => m.icon).join('')}` : 'Not won yet';
+            const lock = open ? '' : `<span class="tag locked-tag">🔒 Earn a medal in ${SCENARIOS[CHALLENGE_IDS[i - 1]].name} to unlock</span>`;
+            return `<button class="scenario-card ${open ? '' : 'locked'}" ${open ? `data-scenario="${id}"` : 'disabled'}>
+              <img class="map-preview" alt="" src="${parkPreview(id)}">
+              <span class="scenario-head"><b>${sc.briefing?.icon ?? ''} ${sc.name}</b><span class="stars">${stars(sc.difficulty)}</span></span>
+              <span class="note">${sc.blurb}</span>
+              ${lock || `<span class="note">${medals} · start with ${money.format(sc.startMoney)}</span>`}
+            </button>`;
+          }).join('')}</div>
+          <p class="note">More challenges are on the way: floods, a volcano waking up and a staff strike.</p>
+          <button class="menu-btn back" data-go="main">Back</button>`;
+        return;
+      }
+      body.innerHTML = `${tabs}
+        <div class="scenario-grid">${BUILD_IDS.map((id) => {
           const sc = SCENARIOS[id];
           const first = sc.rounds[0];
           const goals = first ? first.goals.map((g) => `<li>${goalLabel(g)}</li>`).join('') : '';
@@ -198,9 +230,12 @@ export function showMenu(handlers: MenuHandlers): void {
       island.seed = (Math.random() * 2 ** 32) >>> 0;
       render('island');
     } else if ('startSandbox' in d) {
-      placeNew(startScenario('sandbox', island.seed, { shape: island.shape, big: island.big }));
+      placeNew(newPark('sandbox', island.seed, { shape: island.shape, big: island.big }));
+    } else if (d.folder) {
+      folder = d.folder as typeof folder;
+      render('new');
     } else if (d.scenario) {
-      placeNew(startScenario(d.scenario as ScenarioId, (Math.random() * 2 ** 32) >>> 0));
+      placeNew(newPark(d.scenario as ScenarioId, (Math.random() * 2 ** 32) >>> 0));
     } else if (d.use && pendingState) {
       begin(pendingState, Number(d.use) as SlotId);
     } else if (d.play) {

@@ -21,6 +21,7 @@ export function hourlyEconomy(ctx: SimContext): void {
   for (const d of state.decor) if (DECOR_TYPES[d.kind].upkeep) spend(state, 'upkeep', DECOR_TYPES[d.kind].upkeep);
   state.stats.bestDayVisitors = Math.max(state.stats.bestDayVisitors, finance.today.visitors);
   const dayProfit = operatingProfit(finance.today);
+  state.stats.profitStreak = dayProfit > 0 ? state.stats.profitStreak + 1 : 0;
   ctx.emit({
     text: `Day ${day - 1}: ${finance.today.visitors} visitor${finance.today.visitors === 1 ? '' : 's'}, profit ${usd(dayProfit)}`,
     kind: dayProfit >= 0 ? 'good' : 'bad',

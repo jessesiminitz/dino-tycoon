@@ -75,12 +75,16 @@ export function mountStickers(sim: Simulation, toast: (text: string) => void): {
   };
 
   const check = () => {
-    for (const id of earnedStickers(sim.state)) {
-      if (!award(id)) continue;
-      const s = STICKERS.find((x) => x.id === id)!;
-      toast(`📒 New sticker: ${s.name}${/[!?.]$/.test(s.name) ? '' : '!'}`);
-      playSfx('chime');
-    }
+    const fresh = earnedStickers(sim.state).filter((id) => award(id));
+    if (fresh.length === 0) return;
+    // A handful at once (say, starting in a prebuilt park) makes one message, not a pile.
+    if (fresh.length > 2) toast(`📒 ${fresh.length} new stickers! Open the 📖 Book to see them.`);
+    else
+      for (const id of fresh) {
+        const s = STICKERS.find((x) => x.id === id)!;
+        toast(`📒 New sticker: ${s.name}${/[!?.]$/.test(s.name) ? '' : '!'}`);
+      }
+    playSfx('chime');
   };
 
   const render = () => {

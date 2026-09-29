@@ -1,4 +1,5 @@
-import { calendar, type GameState } from './GameState';
+import { calendar, NEVER, type GameState } from './GameState';
+import { allFenceEdges, fenceAt, fenceHp } from './fences';
 import { BANKRUPT_BELOW, MEDALS, SCENARIOS, type Goal, type Reward, type Round } from './data/scenarios';
 import { earn } from './finance';
 import { SPECIES } from './data/species';
@@ -23,6 +24,52 @@ export function goalLabel(g: Goal): string {
       return `Unlock ${g.target} species`;
     case 'own':
       return `Own ${g.target === 1 ? 'a' : g.target} ${SPECIES[g.species!].name}`;
+    case 'profitStreak':
+      return `Make a profit ${g.target} days in a row`;
+    case 'debtFree':
+      return 'Pay off every bank loan';
+    case 'dinosHome':
+      return 'Every dinosaur back in its paddock';
+    case 'calmDays':
+      return `${g.target} days in a row with no escapes`;
+    case 'fencesOk':
+      return g.target >= 100 ? 'Every fence in good repair' : `${g.target}% of fences in good repair`;
+  }
+}
+
+/** Fence sections this worn count as needing repair. */
+export const FENCE_OK_HP = 60;
+
+/** Percent of fence sections in good repair (100 with no fences at all). */
+export function fencesOkPercent(state: GameState): number {
+  let all = 0;
+  let ok = 0;
+  for (const e of allFenceEdges(state)) {
+    if (!fenceAt(state, e)) continue;
+    all++;
+    if (fenceHp(state, e) >= FENCE_OK_HP) ok++;
+  }
+  return all === 0 ? 100 : Math.floor((100 * ok) / all);
+}
+
+/** How a goal's progress reads next to it, e.g. "7/12 home" or "$40,000 of loans left". */
+export function goalShown(state: GameState, g: Goal, value: number): string {
+  switch (g.kind) {
+    case 'cash':
+      return usd(value);
+    case 'fencesOk':
+      return `${value}%`;
+    case 'dinosHome': {
+      const home = state.dinos.filter((d) => !d.escaped).length;
+      return `${home}/${state.dinos.length} home`;
+    }
+    case 'debtFree':
+      return value >= 1 ? 'paid off' : `${usd(totalDebt(state))} owed`;
+    case 'profitStreak':
+    case 'calmDays':
+      return `${value}/${g.target} days`;
+    default:
+      return `${value}/${g.target}`;
   }
 }
 
@@ -42,6 +89,18 @@ export function goalValue(state: GameState, g: Goal): number {
       return state.unlockedSpecies.length;
     case 'own':
       return state.dinos.filter((d) => d.species === g.species).length;
+    case 'profitStreak':
+      return state.stats.profitStreak;
+    case 'debtFree':
+      return state.finance.loans.length === 0 ? 1 : 0;
+    case 'dinosHome':
+      return state.dinos.length === 0 ? 100 : Math.floor((100 * state.dinos.filter((d) => !d.escaped).length) / state.dinos.length);
+    case 'calmDays': {
+      const since = state.stats.lastEscapeHour === NEVER ? state.hours : state.hours - state.stats.lastEscapeHour;
+      return Math.floor(since / 24);
+    }
+    case 'fencesOk':
+      return fencesOkPercent(state);
   }
 }
 
@@ -104,6 +163,13 @@ export function hourlyScenario(ctx: SimContext): void {
   const round = currentRound(state);
   if (!round) return;
 
+  // Scripted story beats, once each.
+  const story = sc.timeline ?? [];
+  while (state.scenario.timeline < story.length && story[state.scenario.timeline].hour <= state.hours) {
+    const beat = story[state.scenario.timeline++];
+    ctx.emit({ text: beat.text, kind: beat.kind });
+  }
+
   if (goalProgress(state).every((g) => g.done)) {
     const medal = MEDALS[state.scenario.round];
     const reward = grant(state, round.reward);
@@ -129,5 +195,16 @@ export function hourlyScenario(ctx: SimContext): void {
   if (daysLeft(state) === 0) {
     state.scenario.status = 'lost';
     ctx.emit({ text: `Out of time: ${sc.name} is over.`, kind: 'bad', outcome: 'lost' });
+    return;
+  }
+  const lose = sc.loseIf;
+  if (lose?.dinosLostAbove !== undefined && state.stats.dinosLost > lose.dinosLostAbove) {
+    state.scenario.status = 'lost';
+    ctx.emit({ text: `Too many dinosaurs were lost: ${sc.name} is over.`, kind: 'bad', outcome: 'lost' });
+    return;
+  }
+  if (lose?.reputationBelow !== undefined && state.reputation < lose.reputationBelow) {
+    state.scenario.status = 'lost';
+    ctx.emit({ text: `The park’s reputation fell too low: ${sc.name} is over.`, kind: 'bad', outcome: 'lost' });
   }
 }

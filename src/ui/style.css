@@ -366,6 +366,90 @@ button {
   display: none;
 }
 
+/* The current goal, under the money. */
+.goal-tracker {
+  position: fixed;
+  top: calc(var(--safe-top) + 70px);
+  left: calc(var(--safe-left) + 8px);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* Leaves room for the tutorial card top right (44vw). */
+  max-width: min(52vw, 520px);
+  min-height: 36px;
+  padding: 3px 10px;
+  font-size: 13px;
+  text-align: left;
+  background: var(--panel);
+  border: 2px solid;
+  border-color: var(--bevel);
+  border-radius: 4px;
+}
+
+.goal-tracker[hidden] {
+  display: none;
+}
+
+.goal-tracker .tracker-medal {
+  font-size: 18px;
+}
+
+.goal-tracker .tracker-goal {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.goal-tracker b,
+.goal-tracker small {
+  white-space: nowrap;
+}
+
+.goal-tracker small.urgent {
+  color: var(--bad);
+  font-weight: bold;
+}
+
+/* Alerts drop below the goal tracker when it's showing. */
+body.has-tracker .toasts {
+  top: calc(var(--safe-top) + 112px);
+}
+
+.outcome-card.briefing-card {
+  width: min(100%, 640px);
+  gap: 4px;
+  text-align: left;
+}
+
+.briefing-card h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.briefing-card p,
+.briefing-card h3 {
+  margin: 4px 0;
+}
+
+.briefing-card .outcome-actions {
+  position: sticky;
+  bottom: -14px;
+  padding: 6px 0 2px;
+  background: var(--panel);
+}
+
+.briefing-icon {
+  font-size: 30px;
+}
+
+.briefing-tip {
+  padding: 6px 8px;
+  background: var(--tint);
+  border-left: 4px solid var(--accent);
+}
+
 .modal {
   position: fixed;
   inset: 0;
@@ -710,6 +794,37 @@ button {
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
   font-size: 13px;
+}
+
+.cost-lines {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cost-lines li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0 8px;
+  padding: 3px 0;
+}
+
+.cost-lines li .meter {
+  grid-column: 1 / -1;
+}
+
+.cost-lines li.waste span:first-child::after {
+  content: ' ⚠️';
+}
+
+.money-tips {
+  margin: 8px 0 0;
+  padding-left: 4px;
+  list-style: none;
+}
+
+.money-tips li {
+  margin: 3px 0;
 }
 
 .stat-grid {
@@ -1310,6 +1425,53 @@ body:not(.in-park) #info {
 .stars {
   color: var(--accent-ink);
   white-space: nowrap;
+}
+
+.folder-tabs {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin: 0 0 10px;
+}
+
+.folder-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 160px;
+  min-height: var(--tap);
+  padding: 6px 14px;
+  font-size: 16px;
+  font-weight: bold;
+  background: var(--panel);
+  border: 3px solid;
+  border-color: var(--bevel);
+  border-radius: 4px;
+}
+
+.folder-tab small {
+  font-size: 11px;
+  font-weight: normal;
+  color: var(--muted);
+}
+
+.folder-tab.active {
+  color: var(--head-ink);
+  background: var(--head);
+  border-color: var(--head-ink);
+}
+
+.folder-tab.active small {
+  color: var(--head-active);
+}
+
+.scenario-card.locked {
+  opacity: 0.6;
+  filter: grayscale(0.7);
+}
+
+.locked-tag {
+  background: var(--muted);
 }
 
 .map-preview {

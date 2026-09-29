@@ -224,3 +224,32 @@ The ten fun and engagement features the owner approved are all built and deploye
 - **Fences:** a Fence-tool drag builds the whole box from corner to corner (`boxEdges` in `grid.ts`), or a single line if the drag stays straight. The Remove tool still clears along an L.
 - **Top bar:** buttons are plain, and light up only while their panel is open (MutationObserver in `hud.ts`).
 - Check: `scripts/checks/fixes-check.mjs`.
+
+## Challenges (Phase 1 of `docs/PLAN-challenges.md`, done 2026-09-29)
+- **Menu:** New park → two folders. 🏗️ New builds (`BUILD_IDS`) and 🧩 Challenges (`CHALLENGE_IDS`, in unlock order). A challenge unlocks with any medal on the one before; best medals are kept per device in localStorage `dino-tycoon-challenges` (`src/ui/challengeRecords.ts`) and recorded on milestone/won events in `main.ts`. Cards show a preview of the prebuilt park (`paintParkMinimap`).
+- **Prebuilt parks:** `src/sim/challenges.ts` has one setup per challenge, built with `ParkBuilder` (`src/sim/parkBuilder.ts`). Coordinates are relative to the gate. Construction goes through the normal commands, so a failure throws, and the tests build every challenge. `newPark(id, seed, island)` is how every park now starts, builds included.
+- **Scenario additions** (`src/sim/data/scenarios.ts`): `category`, `big`, `briefing` (story card), `timeline` (story beats by hour, tracked in `scenario.timeline`), `loseIf` (`dinosLostAbove`, `reputationBelow`).
+- **New goal kinds:** `profitStreak`, `debtFree`, `dinosHome`, `calmDays`, `fencesOk`. Progress text comes from `goalShown()`.
+- **New stats:** `profitStreak` (midnight), `lastEscapeHour`, `dinosLost`.
+- **Screens:**
+  - story card on first start (`briefing.ts`; `scenario.briefed`)
+  - goal tracker under the money (`tracker.ts`); alerts move down when it shows
+  - Park → Overview "🚪 Close the park for today" (`closePark` command)
+  - Park → Finances "Where the money goes" (`dailyCosts()` in `src/sim/moneyAdvice.ts`), with waste warnings
+- **The Great Escape** (★, unlocked first; normal island seed 4242):
+  - **Setup:** 14 dinos all loose, fences battered with 18 sections broken, 1 guard, no worker.
+  - **Bronze:** everyone home in 2 days.
+  - **Silver:** 90% of fences in repair and 5 calm days, within 15 days.
+  - **Gold:** reputation 65 and 60 visitors in a day.
+  - **Lost** if more than 3 dinos are lost.
+- **The Money Pit** (★★; big island seed 8014):
+  - **Setup:** 8 dinos left, 5 empty paddocks, 45 staff, unreachable restaurant and gift shop, safari stations with no track, $60 tickets (more than twice fair, so nobody comes), reputation 35, $150k of loans.
+  - **Bronze:** profit 3 days running within 14 days.
+  - **Silver:** debt-free and reputation 65 within 75 days.
+  - **Gold:** $250k and 30 dinos within 90 days.
+- **Balance test** (`tests/challengeBalance.test.ts`): plays each challenge doing nothing (must fail) and as a sensible player (must win).
+- **Hunting:** a hungry carnivore that reaches prey gets one pounce (`POUNCE_SUCCESS` 0.2). A miss makes the prey bolt and the hunter rests `MISS_REST_HOURS` (5); a catch makes it rest `CATCH_REST_HOURS` (72) and leaves a `skeleton` decoration (natural, not in the Garden shop). Measured: an always-hungry raptor in a crowded paddock averages about 20 h to its first catch.
+- **Save v19:** `Dino.huntRestUntil`, `scenario.briefed` and `timeline`, stats `profitStreak`, `lastEscapeHour`, `dinosLost`.
+- **Checks:**
+  - `challenges-ui.mjs [WxH]`: folders, story card, tracker, loose dinos, money report
+  - `tracker-overlap.mjs`: tracker vs. tutorial vs. HUD on every size

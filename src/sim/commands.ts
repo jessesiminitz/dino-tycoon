@@ -1,7 +1,7 @@
 import { patDino, treatDino, type CareEffect } from './systems/care';
 import { noteRequestAction } from './systems/requests';
 import { answerChoice } from './systems/choices';
-import { NEVER } from './GameState';
+import { calendar, NEVER } from './GameState';
 import type { GameState } from './GameState';
 import { FENCE_REFUND, FENCE_TYPES, type FenceTypeId } from './data/fences';
 import { fenceAt, fenceBlocker, fenceHp, fenceTypeAt, setFence, setFenceHp } from './fences';
@@ -33,6 +33,7 @@ export type Command =
   | { type: 'placeBuilding'; kind: BuildingKind; x: number; y: number }
   | { type: 'removeBuilding'; id: number }
   | { type: 'setTicketPrice'; price: number }
+  | { type: 'closePark' }
   | { type: 'takeLoan'; amount: number }
   | { type: 'repayLoan'; id: number }
   | { type: 'hireStaff'; role: StaffRole }
@@ -252,6 +253,7 @@ export function applyCommand(state: GameState, cmd: Command): CommandResult {
         baby: false,
         lastTreatHour: NEVER,
         lastPatHour: NEVER,
+        huntRestUntil: NEVER,
       });
       spend(state, 'dinosaurs', sp.price);
       const note = cleared ? ` (cleared ${cleared} path tile${cleared === 1 ? '' : 's'} from inside the paddock)` : '';
@@ -354,6 +356,14 @@ export function applyCommand(state: GameState, cmd: Command): CommandResult {
       state.buildings.splice(state.buildings.indexOf(b), 1);
       earn(state, 'sales', refund);
       return { ok: true, cost: -refund, message: `Demolished ${BUILDING_TYPES[b.kind].name.toLowerCase()}, salvaged ${usd(refund)}` };
+    }
+
+    case 'closePark': {
+      const { day } = calendar(state);
+      if (state.stats.closedDay === day) return { ok: false, message: 'The park is already closed for today' };
+      state.stats.closedDay = day;
+      for (const v of state.visitors) v.leaveHour = Math.min(v.leaveHour, state.hours);
+      return { ok: true, cost: 0, message: '🚪 Gates closed for the rest of today: visitors are heading home' };
     }
 
     case 'setTicketPrice': {

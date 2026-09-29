@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import type { Simulation } from '../sim/Simulation';
-import { DECOR_KINDS, type DecorKind } from '../sim/data/decor';
+import { ALL_DECOR_KINDS, type DecorKind } from '../sim/data/decor';
 import { hash2 } from '../sim/rng';
 import { isLand, Terrain } from '../sim/terrain';
 import {
@@ -65,7 +65,7 @@ export class SceneryLayer {
     for (let v = 0; v < 3; v++) tex(`bush-${v}`, () => paintBush(v));
     for (let v = 0; v < 3; v++) tex(`reeds-${v}`, () => paintReeds(v * 7 + 1));
     tex('volcano', paintVolcano);
-    for (const kind of DECOR_KINDS) tex(decorKey(kind), () => paintDecor(kind));
+    for (const kind of ALL_DECOR_KINDS) tex(decorKey(kind), () => paintDecor(kind));
 
     const { map } = sim.state;
     const { width, height, tiles } = map;

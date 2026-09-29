@@ -27,6 +27,16 @@ const WANDER_CHANCE = 0.35;
 const WANDER_RADIUS = 5;
 const FOOD_SEARCH = 80;
 const HUNT_SEARCH = 40;
+/**
+ * Meat-eaters rarely manage a catch. A hungry one that reaches its prey gets
+ * one pounce: usually it misses, the prey bolts, and the hunter rests a few
+ * hours before trying again; after a catch it rests for days. So one hungry
+ * raptor can't work its way through a whole park, and there's time to step in.
+ */
+export const POUNCE_SUCCESS = 0.2;
+export const MISS_REST_HOURS = 5;
+export const CATCH_REST_HOURS = 72;
+export const canHunt = (state: GameState, d: Dino) => state.hours >= d.huntRestUntil;
 /** Chase routes are cut short so the hunter re-targets as the prey moves. */
 const CHASE_LOOKAHEAD = 3;
 const FENCE_SEARCH = 40;
@@ -140,15 +150,18 @@ export function stepDinos(ctx: SimContext): void {
         eatFromFeeder(ctx, d, f);
         continue;
       }
-      if (sp.diet === 'carnivore') {
+      if (sp.diet === 'carnivore' && canHunt(state, d)) {
         const reach = new Set([here, ...walkableNeighbours(state, here)]);
         const prey = state.dinos.find((p) => p !== d && canEat(d, p) && reach.has(tileIndex(state, p.x, p.y)));
-        if (prey) {
-          state.dinos.splice(state.dinos.indexOf(prey), 1);
-          d.hunger = 0;
-          d.path = [];
-          ctx.emit({ text: `${dinoLabel(d)} ate ${dinoLabel(prey)}!`, kind: 'bad' });
+        if (prey && rng.chance(POUNCE_SUCCESS)) {
+          catchPrey(ctx, d, prey);
           continue;
+        }
+        if (prey) {
+          // A miss: the prey bolts and the hunter needs a rest.
+          flee(prey, d);
+          d.huntRestUntil = state.hours + MISS_REST_HOURS;
+          d.path = [];
         }
       }
     }
@@ -170,12 +183,22 @@ export function stepDinos(ctx: SimContext): void {
     d.y = Math.floor(next / state.map.width);
   }
 
+  /** The prey bolts one step away from the hunter (if it can). */
+  function flee(prey: Dino, hunter: Dino): void {
+    const from = tileIndex(state, prey.x, prey.y);
+    const w = state.map.width;
+    const away = walkableNeighbours(state, from, enterFor(prey))
+      .map((i) => ({ i, d: Math.abs((i % w) - hunter.x) + Math.abs(Math.floor(i / w) - hunter.y) }))
+      .sort((a, b) => b.d - a.d)[0];
+    if (away) prey.path = [away.i];
+  }
+
   function plan(d: Dino, here: number): number[] | null {
     const sp = SPECIES[d.species];
     if (d.hunger >= HUNGRY) {
       const toFood = findPath(state, here, (i) => feederFor(state, i, d) !== undefined, FOOD_SEARCH, enterFor(d));
       if (toFood) return toFood;
-      if (sp.diet === 'carnivore') {
+      if (sp.diet === 'carnivore' && canHunt(state, d)) {
         const preyTiles = new Set(state.dinos.filter((p) => canEat(d, p)).map((p) => tileIndex(state, p.x, p.y)));
         const chase = preyTiles.size ? findPath(state, here, (i) => preyTiles.has(i), HUNT_SEARCH) : null;
         if (chase) return chase.slice(0, CHASE_LOOKAHEAD);
@@ -198,6 +221,24 @@ export function stepDinos(ctx: SimContext): void {
   }
 }
 
+/**
+ * A rare catch: the prey is gone, and a fossil skeleton lies where it fell.
+ * The hunter is full and rests for a few days.
+ */
+function catchPrey(ctx: SimContext, hunter: Dino, prey: Dino): void {
+  const { state } = ctx;
+  state.dinos.splice(state.dinos.indexOf(prey), 1);
+  state.stats.dinosLost++;
+  hunter.hunger = 0;
+  hunter.path = [];
+  hunter.huntRestUntil = state.hours + CATCH_REST_HOURS;
+  const taken = state.decor.some((o) => o.x === prey.x && o.y === prey.y) || state.paths[prey.y * state.map.width + prey.x] === 1;
+  if (!taken && isLand(state.map.tiles[prey.y * state.map.width + prey.x])) {
+    state.decor.push({ id: state.nextId++, kind: 'skeleton', x: prey.x, y: prey.y });
+  }
+  ctx.emit({ text: `🦴 ${dinoLabel(hunter)} caught ${dinoLabel(prey)}! All that’s left is a fossil skeleton.`, kind: 'bad' });
+}
+
 /** Hourly needs: hunger, health, starvation and happiness. */
 export function hourlyDinos(ctx: SimContext): void {
   const { state, regions } = ctx;
@@ -214,6 +255,7 @@ export function hourlyDinos(ctx: SimContext): void {
     if (d.sick) d.health -= SICK_HEALTH_LOSS;
     if (d.health <= 0) {
       state.dinos.splice(state.dinos.indexOf(d), 1);
+      state.stats.dinosLost++;
       ctx.emit({ text: `${dinoLabel(d)} ${d.hunger >= 100 ? 'starved to death' : 'died of illness'}`, kind: 'bad' });
     }
   }

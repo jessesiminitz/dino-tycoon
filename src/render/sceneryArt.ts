@@ -628,6 +628,24 @@ export function paintBuilding(kind: BuildingKind): HTMLCanvasElement {
   }
 }
 
+/** A dinosaur skeleton lying on the ground: skull, spine, ribs and a tail. */
+export function paintSkeleton(): HTMLCanvasElement {
+  return paintSprite(22, 12, (px) => {
+    const bone = '#f4ecd2';
+    const shade = '#cfc4a6';
+    // Spine from tail (left) to neck (right), with a gentle curve.
+    for (let x = 2; x < 16; x++) px(x, 7 - Math.round(Math.sin((x / 16) * Math.PI) * 2), x % 2 ? bone : shade);
+    // Ribs hanging from the middle of the spine.
+    for (const x of [7, 9, 11]) for (let y = 7; y < 10; y++) px(x, y, y === 9 ? shade : bone);
+    // Skull with an eye socket and a jaw.
+    for (let y = 4; y < 8; y++) for (let x = 16; x < 20; x++) if (!(y === 4 && x === 19)) px(x, y, y === 7 ? shade : bone);
+    px(17, 5, '#5a4a38');
+    px(20, 6, bone);
+    // Leg bones.
+    for (const x of [5, 12]) for (let y = 8; y < 11; y++) px(x, y, shade);
+  });
+}
+
 /** Garden decorations, as placed in the park. */
 export function paintDecor(kind: DecorKind): HTMLCanvasElement {
   switch (kind) {
@@ -643,5 +661,7 @@ export function paintDecor(kind: DecorKind): HTMLCanvasElement {
       return paintBench();
     case 'lamp':
       return paintLamp();
+    case 'skeleton':
+      return paintSkeleton();
   }
 }

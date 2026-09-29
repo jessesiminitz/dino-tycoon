@@ -143,17 +143,49 @@ describe('behaviour', () => {
     expect(events.some((e) => /starved to death/.test(e.text))).toBe(true);
   });
 
-  it('a hungry carnivore with no meat hunts a smaller herbivore', () => {
-    const s = parkWithPaddock();
-    applyCommand(s, { type: 'buyDino', species: 'dilophosaurus', x: 3, y: 3 });
-    applyCommand(s, { type: 'buyDino', species: 'protoceratops', x: 8, y: 6 });
-    s.dinos[0].hunger = 70;
-    const sim = new Simulation(s);
-    const events: GameEvent[] = [];
-    sim.onEvent((e) => events.push(e));
-    runHours(sim, 24);
-    expect(s.dinos.map((d) => d.species)).toEqual(['dilophosaurus']);
-    expect(events.some((e) => / ate /.test(e.text))).toBe(true);
+  it('a hungry carnivore can catch a smaller herbivore, which leaves a fossil skeleton', () => {
+    // Rare, so give it a few days and a few seeds.
+    let caught = 0;
+    for (const seed of [1, 2, 3, 4]) {
+      const s = parkWithPaddock();
+      s.rngState = seed * 7919;
+      applyCommand(s, { type: 'buyDino', species: 'dilophosaurus', x: 3, y: 3 });
+      applyCommand(s, { type: 'buyDino', species: 'protoceratops', x: 8, y: 6 });
+      s.dinos[0].hunger = 70;
+      const sim = new Simulation(s);
+      const events: GameEvent[] = [];
+      sim.onEvent((e) => events.push(e));
+      runHours(sim, 72);
+      if (s.dinos.length === 1) {
+        caught++;
+        expect(events.some((e) => /caught .* fossil skeleton/.test(e.text))).toBe(true);
+        expect(s.decor.some((d) => d.kind === 'skeleton')).toBe(true);
+        expect(s.stats.dinosLost).toBe(1);
+      }
+    }
+    expect(caught).toBeGreaterThan(0);
+  });
+
+  it('a hunter rests for days after a catch, so it can’t run through the park', () => {
+    let lost = 0;
+    for (const seed of [1, 2, 3]) {
+      const s = parkWithPaddock();
+      s.rngState = seed * 104729;
+      applyCommand(s, { type: 'buyDino', species: 'dilophosaurus', x: 3, y: 3 });
+      for (const [x, y] of [[8, 6], [7, 6], [8, 5], [6, 6]]) applyCommand(s, { type: 'buyDino', species: 'protoceratops', x, y });
+      applyCommand(s, { type: 'placeFeeder', kind: 'plants', x: 5, y: 5 });
+      const sim = new Simulation(s);
+      for (let h = 0; h < 60; h++) {
+        const hunter = s.dinos.find((d) => d.species === 'dilophosaurus')!;
+        hunter.hunger = 70; // always hungry, but never starving
+        for (const f of s.feeders) f.stock = 100; // the plant-eaters are fed
+        runHours(sim, 1);
+      }
+      const caught = 4 - s.dinos.filter((d) => d.species === 'protoceratops').length;
+      lost += caught;
+      expect(caught).toBeLessThanOrEqual(1);
+    }
+    expect(lost).toBeLessThanOrEqual(3);
   });
 
   it('carnivores prefer a stocked meat feeder, and never hunt bigger prey', () => {
@@ -210,9 +242,9 @@ describe('determinism and saves', () => {
     } = current;
     const v2 = JSON.parse(JSON.stringify({ ...rest, version: 2 }));
     const migrated = migrate(v2)!;
-    expect(migrated.version).toBe(18);
+    expect(migrated.version).toBe(19);
     expect(migrated.fossilBeds.length).toBeGreaterThan(0);
-    expect(migrated.scenario).toEqual({ id: 'sandbox', status: 'free', round: 0, roundStart: 1, earned: [] });
+    expect(migrated.scenario).toEqual({ id: 'sandbox', status: 'free', round: 0, roundStart: 1, earned: [], briefed: true, timeline: 0 });
     expect(migrated.tutorialStep).toBeNull();
     expect(migrated.fossils).toEqual({});
     expect(migrated.stormHours).toBe(0);
