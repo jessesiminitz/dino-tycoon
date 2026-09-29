@@ -1,6 +1,6 @@
 # Plan: richer islands, prebuilt challenge parks, and a split New Game menu
 
-Status: **approved** (2026-09-28). Phases 2 (islands) and 1 (challenge framework, Great Escape, Money Pit) are done; Phase 3 (Fire Mountain, Flood Season) is next. Each phase ends with something playable and deployed.
+Status: **approved** (2026-09-28). Phases 2 (islands) and 1 (challenge framework, Great Escape, Money Pit) are done; Phase 3 part 1 (Fire Mountain) is done; Flood Season is next. Each phase ends with something playable and deployed.
 
 ## Where things stand
 

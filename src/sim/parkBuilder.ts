@@ -64,6 +64,36 @@ export class ParkBuilder {
       }
   }
 
+  /** Sets the ground height (0–15) over a rectangle relative to the gate: shapes where water and lava run. */
+  setHeight(dx0: number, dy0: number, dx1: number, dy1: number, h: number): void {
+    const { width } = this.state.map;
+    for (let y = this.gy + dy0; y <= this.gy + dy1; y++)
+      for (let x = this.gx + dx0; x <= this.gx + dx1; x++) this.state.map.heights[y * width + x] = h;
+  }
+
+  /**
+   * A gully from the volcano's crater straight down to (dx, dy) relative to
+   * the gate, `h` high: the way lava will come.
+   */
+  gully(dx: number, dy: number, h: number): void {
+    const { state } = this;
+    const v = state.map.volcano;
+    if (!v) throw new Error('Park builder: no volcano for a gully');
+    const { width } = state.map;
+    const end = this.at(dx, dy);
+    const carve = (x: number, y: number) => {
+      for (let k = -1; k <= 1; k++) {
+        const i = y * width + x + k;
+        const t = state.map.tiles[i];
+        if (t === Terrain.Volcano) continue;
+        if (t !== Terrain.Mountain && t !== Terrain.Cliff) state.map.tiles[i] = Terrain.LavaRock; // old flows have been here before
+        state.map.heights[i] = h;
+      }
+    };
+    for (let y = v.y + 2; y <= end.y; y++) carve(v.x, y);
+    for (let x = Math.min(v.x, end.x); x <= Math.max(v.x, end.x); x++) carve(x, end.y);
+  }
+
   /** A fenced paddock with corners at vertices (dx0, dy0) and (dx1, dy1). */
   paddock(dx0: number, dy0: number, dx1: number, dy1: number, fence: FenceTypeId): void {
     const a = this.at(dx0, dy0);

@@ -25,6 +25,7 @@ export type Command =
   | { type: 'buyParcel'; px: number; py: number }
   | { type: 'buyDino'; species: SpeciesId; x: number; y: number }
   | { type: 'sellDino'; id: number }
+  | { type: 'moveDino'; id: number; x: number; y: number }
   | { type: 'placeFeeder'; kind: FeederKind; x: number; y: number }
   | { type: 'removeFeeder'; id: number }
   | { type: 'refillFeeder'; id: number }
@@ -131,6 +132,29 @@ export function pondDigBlocker(state: GameState, x: number, y: number): string |
   return tileOccupant(state, x, y);
 }
 
+/** Crating a dinosaur and carrying it to another paddock. */
+export const MOVE_DINO_COST = 500;
+
+/** Why a dinosaur of this species can't live at (x, y), or null if it can: a paddock, lagoon or aviary as it needs. */
+export function dinoSpotBlocker(state: GameState, species: SpeciesId, x: number, y: number): string | null {
+  const sp = SPECIES[species];
+  const habitat = habitatOf(species);
+  if (habitat === 'water') {
+    const blocker = pondBlocker(state, x, y);
+    if (blocker) return `${sp.name} lives in water. ${blocker}.`;
+  } else {
+    const blocker = tileBlocker(state, x, y);
+    if (blocker) return blocker;
+  }
+  const { regions, tileRegion } = computeRegions(state);
+  const home = regions[tileRegion[y * state.map.width + x]];
+  if (home?.kind !== 'paddock') {
+    return habitat === 'water' ? 'This pond needs to be inside a fenced paddock to be a lagoon' : 'Dinosaurs must go inside a fenced paddock';
+  }
+  if (habitat === 'air' && !home.covered) return `${sp.name} flies! It needs an aviary: a paddock fenced all the way round with aviary net`;
+  return null;
+}
+
 /** Why this tile can't be drained, or null if it's marsh you own. */
 export function drainBlocker(state: GameState, x: number, y: number): string | null {
   if (terrainAt(state.map, x, y) !== Terrain.Marsh) return 'Only marsh can be drained';
@@ -197,28 +221,25 @@ export function applyCommand(state: GameState, cmd: Command): CommandResult {
       return { ok: true, cost: price, message: `Bought land for ${usd(price)}` };
     }
 
+    case 'moveDino': {
+      const d = state.dinos.find((o) => o.id === cmd.id);
+      if (!d) return { ok: false, message: 'That dinosaur is gone' };
+      const blocker = dinoSpotBlocker(state, d.species, cmd.x, cmd.y);
+      if (blocker) return { ok: false, message: blocker };
+      if (MOVE_DINO_COST > state.money) return { ok: false, message: `Not enough money: need ${usd(MOVE_DINO_COST)}` };
+      Object.assign(d, { x: cmd.x, y: cmd.y, px: cmd.x, py: cmd.y, homeX: cmd.x, homeY: cmd.y, path: [], escaped: false });
+      // Anyone out catching it can stand down.
+      for (const m of state.staff) if (m.task && 'dinoId' in m.task && m.task.dinoId === d.id && m.task.kind === 'recapture') m.task = null;
+      spend(state, 'maintenance', MOVE_DINO_COST);
+      return { ok: true, cost: MOVE_DINO_COST, message: `📦 ${d.name} was crated up and moved to a new paddock (${usd(MOVE_DINO_COST)})` };
+    }
+
     case 'buyDino': {
       const sp = SPECIES[cmd.species];
       if (!state.unlockedSpecies.includes(cmd.species)) return { ok: false, message: `${sp.name} isn't available yet` };
-      const habitat = habitatOf(cmd.species);
-      if (habitat === 'water') {
-        const blocker = pondBlocker(state, cmd.x, cmd.y);
-        if (blocker) return { ok: false, message: `${sp.name} lives in water. ${blocker}.` };
-      } else {
-        const blocker = tileBlocker(state, cmd.x, cmd.y);
-        if (blocker) return { ok: false, message: blocker };
-      }
+      const blocker = dinoSpotBlocker(state, cmd.species, cmd.x, cmd.y);
+      if (blocker) return { ok: false, message: blocker };
       const { regions, tileRegion } = computeRegions(state);
-      const home = regions[tileRegion[cmd.y * state.map.width + cmd.x]];
-      if (home?.kind !== 'paddock') {
-        return {
-          ok: false,
-          message: habitat === 'water' ? 'This pond needs to be inside a fenced paddock to be a lagoon' : 'Dinosaurs must go inside a fenced paddock',
-        };
-      }
-      if (habitat === 'air' && !home.covered) {
-        return { ok: false, message: `${sp.name} flies! It needs an aviary: a paddock fenced all the way round with aviary net` };
-      }
       if (sp.price > state.money) return { ok: false, message: `Not enough money: need ${usd(sp.price)}` };
       // Paths left inside the paddock (laid while it was empty) are cleared: visitors can't reach them anyway.
       const region = tileRegion[cmd.y * state.map.width + cmd.x];

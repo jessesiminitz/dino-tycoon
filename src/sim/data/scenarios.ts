@@ -18,7 +18,11 @@ export type GoalKind =
   /** Days since the last escape. */
   | 'calmDays'
   /** Percent of fence sections in good repair. */
-  | 'fencesOk';
+  | 'fencesOk'
+  /** The eruption has run its course and the lava has cooled (target 1). */
+  | 'eruptionOver'
+  /** No dinosaurs lost (target 1). */
+  | 'noLosses';
 
 export interface Goal {
   kind: GoalKind;
@@ -27,7 +31,7 @@ export interface Goal {
   species?: SpeciesId;
 }
 
-export type ScenarioId = 'first-steps' | 'fossil-fever' | 'storm-coast' | 'rex-rising' | 'sandbox' | 'great-escape' | 'money-pit';
+export type ScenarioId = 'first-steps' | 'fossil-fever' | 'storm-coast' | 'rex-rising' | 'sandbox' | 'great-escape' | 'money-pit' | 'fire-mountain';
 
 /** What finishing a round of milestones earns. */
 export interface Reward {
@@ -83,6 +87,8 @@ export interface Scenario {
   briefing?: { icon: string; story: string; tip: string };
   /** Scripted story messages, in hour order. */
   timeline?: StoryEvent[];
+  /** A volcanic eruption: when it starts, how much lava in all, and how many tiles it covers an hour. */
+  eruption?: { eruptAtHour: number; volume: number; perHour: number };
   /** Extra ways to lose, checked at midnight. */
   loseIf?: { reputationBelow?: number; dinosLostAbove?: number };
 }
@@ -287,6 +293,55 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
       },
     ],
   },
+  'fire-mountain': {
+    id: 'fire-mountain',
+    category: 'challenge',
+    name: 'Fire Mountain',
+    blurb: 'The volcano above the park is waking up. Get every dinosaur out of the lava’s way, then rebuild on the new black rock.',
+    difficulty: 2,
+    startMoney: 40_000,
+    seed: 3303,
+    island: 'fire',
+    briefing: {
+      icon: '🌋',
+      story:
+        'The volcano above the park has started to rumble. The scientists say it will erupt in about two days, and the red stripes on the map show where the lava is likely to flow. Some of your paddocks are right in its path!',
+      tip: 'Tap a dinosaur and use 📦 Move to carry it to a safe paddock. Lava burns through wood and steel, but 🧱 concrete fences hold it back. Close the park (📊 Park → Overview) while the lava flows.',
+    },
+    eruption: { eruptAtHour: 54, volume: 230, perHour: 12 },
+    timeline: [
+      { hour: 3, text: '🔬 Volcano scientist: “The red stripes show where lava will flow. Anything there will be lost!”', kind: 'info' },
+      { hour: 20, text: '🔬 Volcano scientist: “A wall of concrete fence across the flow can turn the lava aside.”', kind: 'info' },
+      { hour: 90, text: '🔬 Volcano scientist: “Once the lava cools, the black rock is solid ground to build on again.”', kind: 'info' },
+    ],
+    loseIf: { dinosLostAbove: 2 },
+    rounds: [
+      {
+        goals: [
+          { kind: 'eruptionOver', target: 1 },
+          { kind: 'noLosses', target: 1 },
+        ],
+        days: 6,
+        reward: { money: 20_000 },
+      },
+      {
+        goals: [
+          { kind: 'fencesOk', target: 90 },
+          { kind: 'dayVisitors', target: 70 },
+        ],
+        days: 20,
+        reward: { unlock: ['allosaurus'], money: 20_000 },
+      },
+      {
+        goals: [
+          { kind: 'dinos', target: 20 },
+          { kind: 'reputation', target: 75 },
+        ],
+        days: 40,
+        reward: { money: 40_000 },
+      },
+    ],
+  },
   'money-pit': {
     id: 'money-pit',
     category: 'challenge',
@@ -345,7 +400,7 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
 
 export const SCENARIO_IDS = Object.keys(SCENARIOS) as ScenarioId[];
 /** Challenges in unlock order, easiest first: any medal on one opens the next. */
-export const CHALLENGE_IDS: ScenarioId[] = ['great-escape', 'money-pit'];
+export const CHALLENGE_IDS: ScenarioId[] = ['great-escape', 'fire-mountain', 'money-pit'];
 export const BUILD_IDS = SCENARIO_IDS.filter((id) => SCENARIOS[id].category !== 'challenge');
 
 /** A scenario is lost when cash sits below this at midnight (the bank steps in). */

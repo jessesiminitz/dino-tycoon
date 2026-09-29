@@ -21,6 +21,7 @@ import type { RegionMap } from '../regions';
 import type { SimContext } from './context';
 import { perStep } from './dinos';
 import { tryAttractions } from './rides';
+import { ASH_ARRIVALS } from './eruption';
 
 /** Tiles (Chebyshev distance) within which a visitor can see a dinosaur. */
 const VIEW_RADIUS = 4;
@@ -228,7 +229,9 @@ export function expectedArrivals(state: GameState, regions: RegionMap): number {
   const appeal = parkAppeal(state, regions);
   const priceFactor = Math.max(0, Math.min(1.5, 2 - state.ticketPrice / fairPrice(appeal)));
   const weather = state.stormHours > 0 ? STORM_ARRIVALS : 1;
-  return (2 + appeal * 0.25) * (0.5 + state.reputation / 100) * priceFactor * weather;
+  // Ash from an eruption keeps people away.
+  const ash = state.eruption && state.hours < state.eruption.ashUntil ? ASH_ARRIVALS : 1;
+  return (2 + appeal * 0.25) * (0.5 + state.reputation / 100) * priceFactor * weather * ash;
 }
 
 function buildingNear(state: GameState, x: number, y: number, kind: BuildingKind): Building | undefined {

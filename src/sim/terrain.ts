@@ -23,9 +23,11 @@ export enum Terrain {
   Cliff = 13,
   /** A river dropping over a cliff. */
   Waterfall = 14,
+  /** Fresh, glowing lava from an eruption. Nothing crosses it; it cools into lava rock. */
+  Lava = 15,
 }
 
-export const TERRAIN_COUNT = 15;
+export const TERRAIN_COUNT = 16;
 
 export const TERRAIN_NAMES: Record<Terrain, string> = {
   [Terrain.DeepWater]: 'Deep water',
@@ -43,6 +45,7 @@ export const TERRAIN_NAMES: Record<Terrain, string> = {
   [Terrain.HotSpring]: 'Hot spring',
   [Terrain.Cliff]: 'Cliff',
   [Terrain.Waterfall]: 'Waterfall',
+  [Terrain.Lava]: 'Hot lava',
 };
 
 /** Ground you can walk on (and fence). Mountains, cliffs, the volcano and water are not. */
@@ -142,4 +145,5 @@ export const DEFAULT_HEIGHT: Record<Terrain, number> = {
   [Terrain.HotSpring]: 8,
   [Terrain.Cliff]: 9,
   [Terrain.Waterfall]: 8,
+  [Terrain.Lava]: 8,
 };

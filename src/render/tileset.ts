@@ -155,6 +155,16 @@ const PAINTERS: Record<Terrain, Painter> = {
         else if (r(x, y) < 0.15) px(x, y, '#9c8c70');
       }
   },
+  [Terrain.Lava]: (px, r) => {
+    // Glowing molten rock under a cracked dark crust.
+    fill(px, '#e8501a');
+    speckle(px, r, ['#ff9a2a', '#ffd04a', '#c83a14'], 0.35);
+    for (let k = 0; k < 3; k++) {
+      const x0 = Math.floor(r(k, 90) * 12);
+      const y0 = Math.floor(r(90, k) * 12);
+      for (let j = 0; j < 4; j++) for (let i = 0; i < 4; i++) if ((i + j) % 3 !== 0) px(x0 + i, y0 + j, j === 0 ? '#5a2a1a' : '#3a1a12');
+    }
+  },
   [Terrain.Waterfall]: (px, r) => {
     // Water tumbling down a rock face: white streaks over blue.
     fill(px, '#5fb0e0');

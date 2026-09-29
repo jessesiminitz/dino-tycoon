@@ -152,7 +152,7 @@ describe('decisions', () => {
     delete raw.pendingChoice;
     delete raw.stats.closedDay;
     const m = migrate(raw)!;
-    expect(m.version).toBe(19);
+    expect(m.version).toBe(20);
     expect(m.pendingChoice).toBeNull();
     expect(m.stats.closedDay).toBe(0);
   });

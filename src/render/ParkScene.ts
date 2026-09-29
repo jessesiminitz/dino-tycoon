@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import type { Simulation } from '../sim/Simulation';
-import { drainBlocker, planFences, planPaths, planTracks, pondDigBlocker, POND_COST, refillCost, repairCost } from '../sim/commands';
+import { drainBlocker, MOVE_DINO_COST, planFences, planPaths, planTracks, pondDigBlocker, POND_COST, refillCost, repairCost } from '../sim/commands';
 import { DRAIN_COST } from '../sim/data/economy';
 import { stationStatus } from '../sim/systems/rides';
 import { STAFF_TYPES } from '../sim/data/staff';
@@ -312,6 +312,14 @@ export class ParkScene extends Phaser.Scene {
         return;
       case 'place-dino':
         return this.releaseDino(wx, wy);
+      case 'move-dino': {
+        const id = this.ui.moving;
+        if (id === null) return;
+        const r = this.sim.dispatch({ type: 'moveDino', id, x: Math.floor(wx / TILE), y: Math.floor(wy / TILE) });
+        this.report(r, 'build');
+        if (r.ok) this.ui.setMode('select');
+        return;
+      }
     }
   }
 
@@ -548,6 +556,7 @@ export class ParkScene extends Phaser.Scene {
       }
       this.hud.showInfo(`${dinoLabel(d)}${status ? ` · ${status}` : ''} · ${stats}`, [
         ...care,
+        { label: '📦', title: `Move ${d.name} to another paddock (${formatMoney(MOVE_DINO_COST)})`, small: true, disabled: state.money < MOVE_DINO_COST, onClick: () => this.ui.startMoving(d.id) },
         { label: `Sell ${formatMoney(value)}`, onClick: () => this.report(this.sim.dispatch({ type: 'sellDino', id: d.id })) },
       ]);
     } else if (sel.kind === 'egg') {

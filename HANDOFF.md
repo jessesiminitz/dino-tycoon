@@ -253,3 +253,29 @@ The ten fun and engagement features the owner approved are all built and deploye
 - **Checks:**
   - `challenges-ui.mjs [WxH]`: folders, story card, tracker, loose dinos, money report
   - `tracker-overlap.mjs`: tracker vs. tutorial vs. HUD on every size
+
+## Fire Mountain (Phase 3, part 1; done 2026-09-29)
+- **Challenge order** (`CHALLENGE_IDS`): Great Escape → Fire Mountain → Money Pit.
+- **Fire Mountain** (★★; fire island seed 3303):
+  - **Setup:** the park sits below the volcano. The script carves an old lava gully from the crater to the top of the park (`ParkBuilder.gully`) and a hollow over the upper paddocks (`setHeight`), so the lava heads there. The bottom-right paddock is empty and safe.
+  - Erupts at hour 54 (day 3, 14:00), with 230 tiles of lava at 12 an hour.
+  - **Bronze:** survive the eruption with no dinos lost, within 6 days.
+  - **Silver:** 90% of fences in repair and 70 visitors in a day, within 20 days.
+  - **Gold:** 20 dinos and reputation 75, within 40 days.
+  - **Lost** if more than 2 dinos are lost.
+- **Eruption** (`src/sim/systems/eruption.ts`, state `GameState.eruption`, save v20):
+  - **Stages:** rumbling (warnings at 24 h and 6 h, rumbles every 12 h), erupting, cooling, over.
+  - **`nextLava()` is the flow model.** Lava pours from the crater and always takes the lowest frontier tile (height plus a little hash noise). It passes unseen through Mountain, Volcano and Cliff tiles, stops at water, and is blocked by standing concrete fence edges (`LAVA_PROOF_FENCE`).
+  - **`lavaPreview()`** gives the rest of the flow as the red-striped danger zone (drawn in `WorldLayers.drawOverlay`).
+  - **What lava does to a tile:** it becomes `Terrain.Lava` and cools to LavaRock after `LAVA_COOL_HOURS` (30). Paths, tracks, buildings, feeders, decor and eggs there are lost. Fences round it are left broken (hp 0), so workers mend them after it cools.
+  - **People:** visitors within 1 tile leave, and staff there go back to the gate.
+  - **Dinos:** a dino bolts up to 8 steps to a safe tile, respecting fences. If it's trapped, a rescue helicopter lifts it out and it counts as lost (`stats.dinosLost`).
+  - **Ash:** visitor arrivals ×0.25 until 48 h after the flow stops.
+  - While erupting, `volcanoActivity` is kept up for the glow and smoke.
+- **Move a dino:** 📦 in the dino's info panel → `UiState.startMoving` → mode `move-dino` → tap a paddock → `moveDino` command ($500 `MOVE_DINO_COST`). It uses the same placement rules as buying (`dinoSpotBlocker`).
+- **Visuals:**
+  - Lava tile art, plus a pulsing glow and sparks in `TerrainFx`.
+  - Trees on lava are hidden (`SceneryLayer.refresh`).
+  - The goal tracker shows "🌋 erupts in ~Nh", "ERUPTING!" or "lava cooling".
+- **Tests:** `tests/eruption.test.ts`, plus a Fire Mountain case in `tests/challengeBalance.test.ts` (doing nothing loses dinos; moving everyone out of threatened paddocks, adding feeders and a vet wins Bronze with no losses).
+- **Check:** `scripts/checks/fire-ui.mjs [WxH]`.

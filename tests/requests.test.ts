@@ -172,7 +172,7 @@ describe('park requests', () => {
     delete raw.requests;
     delete raw.stats.requestsDone;
     const m = migrate(raw)!;
-    expect(m.version).toBe(19);
+    expect(m.version).toBe(20);
     expect(m.requests).toEqual([]);
     expect(m.stats.requestsDone).toBe(0);
   });

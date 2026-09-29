@@ -19,6 +19,7 @@ const COLORS: Record<Terrain, string> = {
   [Terrain.HotSpring]: '#6fd0c8',
   [Terrain.Cliff]: '#4a3f33',
   [Terrain.Waterfall]: '#e8f6fb',
+  [Terrain.Lava]: '#ff6a1a',
 };
 
 /** A preview of a built park: the island, with paths, fences, buildings and dinosaurs marked. */

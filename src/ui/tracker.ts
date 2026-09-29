@@ -32,10 +32,19 @@ export function mountTracker(sim: Simulation, openGoals: () => void): void {
       <b>${goalShown(state, next.goal, next.value)}</b>
       ${goals.length > 1 ? `<small>${done}/${goals.length} done</small>` : ''}
       ${left !== null ? `<small class="${left <= 2 ? 'urgent' : ''}">⏳ ${left} day${left === 1 ? '' : 's'}</small>` : ''}`;
+    // The volcano's mood, when one is waking.
+    const e = state.eruption;
+    const volcano = !e || e.stage === 'over'
+      ? ''
+      : e.stage === 'rumbling'
+        ? `<small class="volcano ${e.eruptHour - state.hours <= 12 ? 'urgent' : ''}">🌋 erupts in ~${Math.max(1, e.eruptHour - state.hours)}h</small>`
+        : e.stage === 'erupting'
+          ? '<small class="volcano urgent">🌋 ERUPTING!</small>'
+          : '<small class="volcano">🌋 lava cooling</small>';
     el.hidden = false;
-    if (html !== last) {
-      el.innerHTML = html;
-      last = html;
+    if (html + volcano !== last) {
+      el.innerHTML = html + volcano;
+      last = html + volcano;
     }
   };
   sim.onChange(render);

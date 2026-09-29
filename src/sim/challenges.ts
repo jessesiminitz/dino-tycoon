@@ -139,7 +139,50 @@ function moneyPit(b: ParkBuilder): void {
   b.finish(15_000, 35);
 }
 
+/**
+ * Fire Mountain: a pleasant park on the slopes below a volcano that's about
+ * to erupt. The top paddocks sit in the lava's path; the bottom-right one is
+ * empty and safe, ready for anyone who needs moving.
+ */
+function fireMountain(b: ParkBuilder): void {
+  b.prepare(-13, -17, 13, -1);
+  // The lie of the land: an old lava gully runs from the crater down to the
+  // top of the park, and the upper paddocks sit in a hollow below it.
+  b.setHeight(-13, -17, 13, -1, 6);
+  b.setHeight(-13, -16, 13, -8, 1);
+  b.gully(0, -18, 2);
+  b.path([0, -1], [0, -16]);
+  b.path([-12, -8], [12, -8]);
+  b.paddock(-12, -16, 0, -8, 1);
+  b.paddock(1, -16, 13, -8, 2);
+  b.paddock(-12, -7, -2, -1, 1);
+  b.paddock(2, -7, 11, -1, 2);
+  for (const [x, y] of [[-10, -14], [-7, -12], [-4, -14]] as const) b.dino('protoceratops', x, y);
+  b.dino('parasaurolophus', -8, -10);
+  b.dino('triceratops', 4, -13);
+  b.dino('stegosaurus', 9, -11);
+  b.dino('parasaurolophus', 6, -10);
+  for (const [x, y] of [[-10, -4], [-6, -3]] as const) b.dino('parasaurolophus', x, y);
+  b.feeder('plants', -6, -12);
+  b.feeder('plants', 7, -13);
+  b.feeder('plants', -8, -4);
+  b.feeder('plants', 7, -4);
+  b.building('restaurant', -1, -5);
+  b.building('restroom', -1, -3);
+  b.building('giftshop', 1, -5);
+  b.building('snackstall', 1, -3);
+  b.building('tower', 0, -17);
+  for (const [x, y] of [[-12, -9], [12, -9]] as const) b.decor('bench', x, y);
+  b.hire('worker', 2);
+  b.hire('guard');
+  b.hire('janitor');
+  const cfg = { eruptAtHour: 54 };
+  b.state.eruption = { stage: 'rumbling', eruptHour: cfg.eruptAtHour, lava: [], ashUntil: 0 };
+  b.finish(40_000, 60);
+}
+
 const SETUPS: Partial<Record<ScenarioId, (b: ParkBuilder) => void>> = {
+  'fire-mountain': fireMountain,
   'great-escape': greatEscape,
   'money-pit': moneyPit,
 };

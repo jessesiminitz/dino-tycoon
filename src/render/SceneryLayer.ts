@@ -140,8 +140,10 @@ export class SceneryLayer {
     for (const o of [...state.buildings, ...state.feeders, ...state.decor]) busy.add(o.y * w + o.x);
     busy.add(state.entrance.y * w + state.entrance.x);
     for (let i = 0; i < state.map.tiles.length; i++) if (state.map.tiles[i] === Terrain.Pond) busy.add(i); // dug ponds
-    // Reeds go when their marsh is drained.
-    for (const [i, img] of this.trees) img.setVisible(!busy.has(i) && (img.texture.key.startsWith('reeds') ? state.map.tiles[i] === Terrain.Marsh : true));
+    // Reeds go when their marsh is drained; trees burn when lava reaches them.
+    const scorched = (i: number) => state.map.tiles[i] === Terrain.Lava || state.map.tiles[i] === Terrain.LavaRock;
+    for (const [i, img] of this.trees)
+      img.setVisible(!busy.has(i) && !scorched(i) && (img.texture.key.startsWith('reeds') ? state.map.tiles[i] === Terrain.Marsh : true));
 
     const live = new Set<number>();
     for (const d of state.decor) {

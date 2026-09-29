@@ -4,7 +4,7 @@ import type { SpeciesId } from '../sim/data/species';
 import type { BuildingKind } from '../sim/data/economy';
 import type { DecorKind } from '../sim/data/decor';
 
-export type Mode = 'select' | 'fence' | 'demolish' | 'land' | 'feeder' | 'place-dino' | 'path' | 'building' | 'decor';
+export type Mode = 'select' | 'fence' | 'demolish' | 'land' | 'feeder' | 'place-dino' | 'move-dino' | 'path' | 'building' | 'decor';
 
 type Listener = (ui: UiState) => void;
 
@@ -22,6 +22,8 @@ export class UiState {
   pathTrack = false;
   /** Species being released while in 'place-dino' mode. */
   placing: SpeciesId | null = null;
+  /** The dinosaur being carried to a new paddock in 'move-dino' mode. */
+  moving: number | null = null;
   /** Someone the camera should jump to and select (set by the People panel, consumed by the park scene). */
   focusTarget: { kind: 'visitor' | 'dino' | 'staff' | 'egg'; id: number } | null = null;
   private listeners = new Set<Listener>();
@@ -30,6 +32,7 @@ export class UiState {
     if (mode === this.mode) return;
     this.mode = mode;
     if (mode !== 'place-dino') this.placing = null;
+    if (mode !== 'move-dino') this.moving = null;
     this.emit();
   }
 
@@ -62,6 +65,12 @@ export class UiState {
   startPlacing(species: SpeciesId): void {
     this.placing = species;
     this.mode = 'place-dino';
+    this.emit();
+  }
+
+  startMoving(dinoId: number): void {
+    this.moving = dinoId;
+    this.mode = 'move-dino';
     this.emit();
   }
 

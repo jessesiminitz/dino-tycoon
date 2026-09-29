@@ -21,7 +21,7 @@ export const BIG_MAP_WIDTH = 96;
 export const BIG_MAP_HEIGHT = 72;
 export const STARTING_MONEY = 50_000;
 export const START_HOUR = 8;
-export const SAVE_VERSION = 19;
+export const SAVE_VERSION = 20;
 
 export interface Dino {
   id: number;
@@ -295,6 +295,17 @@ export interface Stats {
   dinosLost: number;
 }
 
+/** A volcanic eruption in progress (Fire Mountain): see systems/eruption.ts. */
+export interface Eruption {
+  stage: 'rumbling' | 'erupting' | 'cooling' | 'over';
+  /** Game-hour the lava starts to flow. */
+  eruptHour: number;
+  /** Lava tiles and the hour each was covered, in the order the lava arrived. */
+  lava: { tile: number; hour: number }[];
+  /** Visitors stay away while ash hangs in the air, until this hour. */
+  ashUntil: number;
+}
+
 /** Single serializable state tree. Everything the game needs to resume lives here. */
 export interface GameState {
   version: typeof SAVE_VERSION;
@@ -356,6 +367,8 @@ export interface GameState {
   jeeps: Jeep[];
   /** A decision card waiting for an answer, or null. */
   pendingChoice: PendingChoice | null;
+  /** The volcano's eruption, if one has begun (Fire Mountain). */
+  eruption: Eruption | null;
   /** Next id for dinos, feeders and other entities. */
   nextId: number;
 }
@@ -422,6 +435,7 @@ export function newGame(seed: number, island: IslandOptions = {}): GameState {
     tracks: new Array<number>(map.width * map.height).fill(0),
     jeeps: [],
     pendingChoice: null,
+    eruption: null,
     nextId: 1,
   };
   state.fossilBeds = bedsFor(state);
@@ -589,6 +603,10 @@ export function migrate(raw: { version?: number } & Record<string, unknown>): Ga
     Object.assign(state.stats, { profitStreak: 0, lastEscapeHour: NEVER, dinosLost: 0 });
     for (const d of state.dinos) d.huntRestUntil = NEVER;
     raw.version = 19;
+  }
+  if (raw.version === 19) {
+    (raw as unknown as GameState).eruption = null;
+    raw.version = 20;
   }
   return raw.version === SAVE_VERSION ? (raw as unknown as GameState) : null;
 }

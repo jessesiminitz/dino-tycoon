@@ -54,7 +54,7 @@ describe('sticker book', () => {
       expect(ids).toContain(`dino:${id}`);
       expect(ids).toContain(`baby:${id}`);
     }
-    expect(STICKERS.filter((s) => s.group === 'medals')).toHaveLength(6 * 3);
+    expect(STICKERS.filter((s) => s.group === 'medals')).toHaveLength(7 * 3);
     for (const s of STICKERS) expect(s.hint.length).toBeGreaterThan(10);
   });
 

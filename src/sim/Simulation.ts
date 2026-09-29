@@ -15,6 +15,7 @@ import { stepStaff } from './systems/staff';
 import { hourlyEvents } from './systems/events';
 import { hourlyFossils } from './systems/fossils';
 import { hourlyScenario } from './goals';
+import { hourlyEruption } from './systems/eruption';
 
 /** Real-time milliseconds per game-hour at 1× speed: a game day takes a minute. */
 /** Real milliseconds per game-hour at 1× speed: a game day lasts four minutes. */
@@ -94,6 +95,7 @@ export class Simulation {
       hourlyHealth(ctx);
       hourlyFences(ctx);
       hourlyEvents(ctx);
+      hourlyEruption(ctx);
       hourlyVisitors(ctx);
       hourlyFossils(ctx);
       hourlyEconomy(ctx);

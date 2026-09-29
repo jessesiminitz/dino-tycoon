@@ -20,6 +20,7 @@ export class TerrainFx {
   private water: number[] = [];
   private springs: number[] = [];
   private falls: number[] = [];
+  private lava: number[] = [];
   private fx: Phaser.GameObjects.Graphics;
 
   constructor(scene: Phaser.Scene, private map: TerrainMap) {
@@ -36,6 +37,7 @@ export class TerrainFx {
     this.water = [];
     this.springs = [];
     this.falls = [];
+    this.lava = [];
     const { width, height, tiles } = this.map;
     const land = (x: number, y: number) => x >= 0 && y >= 0 && x < width && y < height && isLand(tiles[y * width + x]);
 
@@ -44,6 +46,7 @@ export class TerrainFx {
         const t = tiles[y * width + x];
         if (t === Terrain.HotSpring) this.springs.push(y * width + x);
         if (t === Terrain.Waterfall) this.falls.push(y * width + x);
+        if (t === Terrain.Lava) this.lava.push(y * width + x);
         if (!isWater(t)) continue;
         if (t !== Terrain.Pond && t !== Terrain.HotSpring && t !== Terrain.Waterfall) this.water.push(y * width + x);
         if (!FOAMY.has(t)) continue;
@@ -101,6 +104,17 @@ export class TerrainFx {
         const y = by - phase * 22;
         const size = 2 + Math.floor(phase * 3);
         g.fillStyle(0xffffff, 0.85 * (1 - phase)).fillRect(Math.round(x), Math.round(y), size + 1, size);
+      }
+    }
+    // Hot lava pulses and spits sparks.
+    for (const tile of this.lava) {
+      const bx = (tile % width) * TILE;
+      const by = Math.floor(tile / width) * TILE;
+      const pulse = 0.5 + 0.5 * Math.sin(time / 400 + hash2(tile, 1, 8) * 6);
+      g.fillStyle(0xffb040, 0.18 + 0.22 * pulse).fillRect(bx, by, TILE, TILE);
+      const phase = (time / 900 + hash2(tile, 2, 9)) % 1;
+      if (hash2(tile, Math.floor(time / 900), 5) < 0.25) {
+        g.fillStyle(0xffe070, 1 - phase).fillRect(bx + 3 + Math.floor(hash2(tile, 3, 1) * 10), by + 8 - Math.round(phase * 10), 1, 2);
       }
     }
     for (const tile of this.falls) {

@@ -6,6 +6,7 @@ import { isParcelOwned, parcelBuyBlocker, parcelGrid, parcelPrice, PARCEL, type 
 import { formatMoney } from '../ui/hud';
 import { hash2 } from '../sim/rng';
 import { Terrain } from '../sim/terrain';
+import { lavaPreview } from '../sim/systems/eruption';
 import { TILE } from './tileset';
 
 const PADDOCK_TINTS = [0xf2c14e, 0x6ec6ff, 0xff8fb1, 0xb28dff, 0x7ee0b5, 0xffa257];
@@ -111,6 +112,19 @@ export class WorldLayers {
             .setOrigin(0.5)
             .setDepth(6),
         );
+      }
+    }
+
+    // The lava's danger zone: red stripes where the rest of the eruption will flow.
+    const danger = lavaPreview(state);
+    if (danger.size) {
+      g.fillStyle(0xff3b1f, 0.22);
+      for (const i of danger) g.fillRect((i % width) * TILE, Math.floor(i / width) * TILE, TILE, TILE);
+      g.lineStyle(2, 0xff3b1f, 0.6);
+      for (const i of danger) {
+        const x0 = (i % width) * TILE;
+        const y0 = Math.floor(i / width) * TILE;
+        g.lineBetween(x0, y0 + TILE, x0 + TILE, y0);
       }
     }
 

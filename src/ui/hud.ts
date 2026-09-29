@@ -2,7 +2,7 @@ import { calendar, type GameState } from '../sim/GameState';
 import type { Simulation, Speed } from '../sim/Simulation';
 import { FEEDER_TYPES } from '../sim/data/feeders';
 import { habitatOf, SPECIES } from '../sim/data/species';
-import { POND_COST } from '../sim/commands';
+import { MOVE_DINO_COST, POND_COST } from '../sim/commands';
 import { BUILDING_TYPES, DRAIN_COST, PATH_COST, TRACK_COST } from '../sim/data/economy';
 import { mountCatalog } from './catalog';
 import { mountParkPanel } from './parkPanel';
@@ -74,7 +74,7 @@ export interface Hud {
   toast(text: string, kind?: 'ok' | 'error'): void;
 }
 
-function modeHint(ui: UiState): string | null {
+function modeHint(ui: UiState, state: GameState): string | null {
   switch (ui.mode) {
     case 'select':
       return null;
@@ -107,6 +107,11 @@ function modeHint(ui: UiState): string | null {
       const t = BUILDING_TYPES[ui.buildingKind];
       const where = t.needsPath ? 'a spot next to a path' : 'a fossil bed on your land (the bone-strewn ground)';
       return `Tap ${where} to build a ${t.name.toLowerCase()} (${formatMoney(t.cost)}, ${formatMoney(t.upkeep)}/day)`;
+    }
+    case 'move-dino': {
+      const d = ui.moving !== null ? state.dinos.find((o) => o.id === ui.moving) : null;
+      if (!d) return null;
+      return `📦 Tap inside the paddock ${d.name} should move to (${formatMoney(MOVE_DINO_COST)}) · tap 📦 again or pick a tool to cancel`;
     }
     case 'place-dino': {
       const sp = ui.placing ? SPECIES[ui.placing] : null;
@@ -199,7 +204,7 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
 
   let prevHint: string | null = null;
   const renderTools = () => {
-    const hint = modeHint(ui);
+    const hint = modeHint(ui, sim.state);
     if (hint !== prevHint) {
       hud.showHint();
       prevHint = hint;
@@ -278,7 +283,7 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
       placeInfo();
     },
     showHint() {
-      hud.showInfo(modeHint(ui));
+      hud.showInfo(modeHint(ui, sim.state));
     },
     toast(text, kind = 'ok') {
       const el = document.createElement('div');

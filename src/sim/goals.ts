@@ -34,6 +34,10 @@ export function goalLabel(g: Goal): string {
       return `${g.target} days in a row with no escapes`;
     case 'fencesOk':
       return g.target >= 100 ? 'Every fence in good repair' : `${g.target}% of fences in good repair`;
+    case 'eruptionOver':
+      return 'Survive the eruption';
+    case 'noLosses':
+      return 'Lose no dinosaurs';
   }
 }
 
@@ -65,6 +69,12 @@ export function goalShown(state: GameState, g: Goal, value: number): string {
     }
     case 'debtFree':
       return value >= 1 ? 'paid off' : `${usd(totalDebt(state))} owed`;
+    case 'eruptionOver': {
+      const stage = state.eruption?.stage ?? 'rumbling';
+      return { rumbling: 'rumbling…', erupting: 'erupting!', cooling: 'cooling', over: 'over' }[stage];
+    }
+    case 'noLosses':
+      return value >= 1 ? 'all safe' : `${state.stats.dinosLost} lost`;
     case 'profitStreak':
     case 'calmDays':
       return `${value}/${g.target} days`;
@@ -101,6 +111,10 @@ export function goalValue(state: GameState, g: Goal): number {
     }
     case 'fencesOk':
       return fencesOkPercent(state);
+    case 'eruptionOver':
+      return state.eruption?.stage === 'over' ? 1 : 0;
+    case 'noLosses':
+      return state.stats.dinosLost === 0 ? 1 : 0;
   }
 }
 
