@@ -124,7 +124,7 @@ describe('visitors', () => {
   it('a park with nothing to see and pricey tickets loses reputation', () => {
     const s = openPark();
     s.dinos = [];
-    applyCommand(s, { type: 'setTicketPrice', price: 12 }); // fair price with nothing to see is $8
+    applyCommand(s, { type: 'setTicketPrice', price: 8 }); // fair price with nothing to see is $5
     const sim = new Simulation(s);
     runHours(sim, 16);
     expect(s.reputation).toBeLessThan(50);

@@ -16,7 +16,7 @@ export const EVENT_CHANCES = {
   schoolTrip: 1 / (11 * 8), // per open hour: roughly every 8 days
   inspection: 1 / (11 * 15), // per open hour: roughly every 15 days
 };
-export const INSPECTION_AWARD = 2000;
+export const INSPECTION_AWARD = 1000;
 export const FINE_PER_ISSUE = 1000;
 const MAX_FINE = 5000;
 /** Dirt that fails an inspection. */

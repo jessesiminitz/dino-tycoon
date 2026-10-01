@@ -112,17 +112,19 @@ describe('souvenirs', () => {
   });
 
   it('kids come on school trips and love balloons', () => {
-    // Summed over a few trips: one busload is a small sample.
+    // Summed over a dozen trips: one busload is a small sample.
     let balloons = 0;
     let hats = 0;
-    for (const seed of [3, 4, 5, 6]) {
+    for (const seed of [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]) {
       const s = openPark();
       const ctx = { state: s, rng: new Rng(seed), regions: computeRegions(s), emit() {}, invalidateWorld() {} };
       schoolTrip(ctx);
       expect(s.visitors.every((v) => v.kid)).toBe(true);
       run(new Simulation(s), 5);
-      balloons += s.visitors.filter((x) => x.items.includes('balloon')).length;
-      hats += s.visitors.filter((x) => x.items.includes('hat')).length;
+      // Each kid's first pick (they can go on to buy more), and only kids: grown-ups prefer caps.
+      const first = (x: (typeof s.visitors)[number]) => x.items.find((i) => i !== 'poncho' && i !== 'umbrella');
+      balloons += s.visitors.filter((x) => x.kid && first(x) === 'balloon').length;
+      hats += s.visitors.filter((x) => x.kid && first(x) === 'hat').length;
     }
     expect(balloons).toBeGreaterThan(hats);
   });

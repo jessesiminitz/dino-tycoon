@@ -183,6 +183,7 @@ describe('baby dinosaurs', () => {
     const s = openPark();
     s.dinos = s.dinos.filter((d) => d.species === 'protoceratops');
     applyCommand(s, { type: 'hireStaff', role: 'worker' });
+    applyCommand(s, { type: 'hireStaff', role: 'vet' }); // so a chance illness can't leave one lonely parent
     const sim = new Simulation(s);
     run(sim, 24 * 30);
     const hatched = s.stats.hatched;

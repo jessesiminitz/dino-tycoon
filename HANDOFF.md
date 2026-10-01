@@ -360,3 +360,27 @@ An outside audit (`docs/BUG_AUDIT-2026-09-30.md`, evidence in `docs/bug-audit-20
 - **B08–B10 pausing:** every pausing popup (☰, decision, outcome, dig, briefing) uses `holdPause`/`releasePause` in `src/ui/pause.ts`: the park stays paused until the last popup closes, then returns to its earlier speed (still paused if the player paused). Also fixed: the ☰ button used to set the speed to NaN (it has `.speed-btn` but no `data-speed`). Check: `scripts/checks/pause-check.mjs` (exits non-zero on failure).
 - **B12 (owner decision: selling is not rescuing):** escaped dinosaurs can't be sold ("bring it home first"), so the Great Escape rescue medal needs real recaptures.
 - The audit's test-script problems are fixed too: shared `lib.mjs` (real paths, waits for the park, exit codes), shop-based selectors, current unlock and visitor fixtures, named shop sheets in `sheet-scroll`, and assertions in `care-check`, `repro-place`, `habitats-check`, `attractions-check`, `challenges-ui` and `sheet-scroll`. The balance tests now require a **Gold win** for Fire Mountain (sensible play rebuilds the paddocks the lava burned) and Flood Season.
+
+## Economy rebalance (2026-10-01)
+
+The owner found money too easy to pile up and chose a **"moderate"** squeeze. Measured on a tidy standard park at fair prices (`tests/economyBalance.test.ts`, which guards the curve):
+
+| Park | Net profit per day, before | After |
+| --- | --- | --- |
+| 4 dinos | ~$3.4k | ~$2.2k |
+| 16 dinos | ~$10.5k | ~$4.8k |
+| 40 dinos | ~$28k | ~$11k (best case: reputation ~90, few staff) |
+
+Earning back a whole park's cost now takes 20–40 days, against 9–13 before.
+- **Why it snowballed:** the fair ticket price was `8 + 0.6 × appeal` with no ceiling, while visitors are capped at 150 in the park at once (about 330 a day). Running costs were only 5–10% of income.
+- **Fair price** is now `5 + 2.2 × √appeal`: about $16 at 4 dinos, $24 at 16, $32 at 40. The square root, rather than a log, keeps each extra dinosaur earning slightly more than it eats once the visitor cap is reached. With a log curve, big parks lost money on every new dino.
+- **Running costs:**
+  - wages ×2.5: worker $150, guard $200, vet $250, janitor $100, guide $125, mascot $110
+  - building upkeep ×2 (dig site unchanged)
+  - feed per unit: plants $5, meat $10, fish $9 (was $3 / $6 / $5)
+- **Prizes halved:** request rewards and the inspection award ($1,000). Fines are unchanged.
+- **Default ticket** is now $15, so new parks don't start overpriced.
+- **Cash goals are unchanged.** The deadlines (90–200 days) still leave room at the new profit rates. Money Pit's balance run clears its debt by about day 70 and reaches $250k around day 105.
+- **Tests made robust along the way:**
+  - the babies month now has a vet, so a chance illness can't leave a lone parent
+  - the school-trip balloon test counts kids' first picks over 12 trips

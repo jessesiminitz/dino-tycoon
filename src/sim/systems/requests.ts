@@ -66,7 +66,7 @@ const TEMPLATES: Record<RequestKind, (state: GameState, regions: RegionMap, rng:
       target: 1,
       text: `A school group wants to see a ${SPECIES[species].name} from the path before ${clock(state, state.hours + hours)}`,
       expiresHour: state.hours + hours,
-      reward: { money: Math.round(600 + SPECIES[species].price * 0.1), reputation: 2 },
+      reward: { money: Math.round(300 + SPECIES[species].price * 0.05), reputation: 2 },
     };
   },
   food(state) {
@@ -79,7 +79,7 @@ const TEMPLATES: Record<RequestKind, (state: GameState, regions: RegionMap, rng:
       target,
       text: `A food critic is coming: have ${target} places to eat (restaurants or snack stalls) by ${clock(state, state.hours + hours)}`,
       expiresHour: state.hours + hours,
-      reward: { money: 900, reputation: 1 },
+      reward: { money: 450, reputation: 1 },
     };
   },
   visitors(state, regions) {
@@ -96,7 +96,7 @@ const TEMPLATES: Record<RequestKind, (state: GameState, regions: RegionMap, rng:
       target,
       text: `Welcome ${target} visitors today`,
       expiresHour: state.hours + hoursToClosing(state),
-      reward: { money: extra * 20, reputation: 0 },
+      reward: { money: extra * 10, reputation: 0 },
     };
   },
   review(state) {
@@ -109,13 +109,13 @@ const TEMPLATES: Record<RequestKind, (state: GameState, regions: RegionMap, rng:
       text: `Get a ${stars}-star review from a visitor before closing`,
       stars,
       expiresHour: state.hours + hoursToClosing(state),
-      reward: { money: stars === 5 ? 1200 : 700, reputation: 0 },
+      reward: { money: stars === 5 ? 600 : 350, reputation: 0 },
     };
   },
   photo(state, _regions, rng) {
     if (state.dinos.length === 0) return null;
     const hours = 6;
-    const base = { kind: 'photo' as const, icon: '📷', target: 1, expiresHour: state.hours + hours, reward: { money: 500, reputation: 1 } };
+    const base = { kind: 'photo' as const, icon: '📷', target: 1, expiresHour: state.hours + hours, reward: { money: 250, reputation: 1 } };
     if (state.dinos.some((d) => d.baby)) {
       return { ...base, baby: true, text: `A magazine wants a photo of a baby dinosaur by ${clock(state, state.hours + hours)}` };
     }
@@ -133,7 +133,7 @@ const TEMPLATES: Record<RequestKind, (state: GameState, regions: RegionMap, rng:
       target,
       text: `Spoil your dinosaurs: give out ${target} treats by ${clock(state, state.hours + hours)}`,
       expiresHour: state.hours + hours,
-      reward: { money: 150 + target * 50, reputation: 1 },
+      reward: { money: 75 + target * 25, reputation: 1 },
     };
   },
   clean(state) {
@@ -146,7 +146,7 @@ const TEMPLATES: Record<RequestKind, (state: GameState, regions: RegionMap, rng:
       progress: pathDirt(state),
       text: `The mayor is visiting at ${clock(state, state.hours + hours)}: make the paths spotless (no litter or messes)`,
       expiresHour: state.hours + hours,
-      reward: { money: 1000, reputation: 2 },
+      reward: { money: 500, reputation: 2 },
     };
   },
   feeders(state) {
@@ -158,7 +158,7 @@ const TEMPLATES: Record<RequestKind, (state: GameState, regions: RegionMap, rng:
       target: state.feeders.length,
       text: `A vet is checking the animals at ${clock(state, state.hours + hours)}: have every feeder at least half full`,
       expiresHour: state.hours + hours,
-      reward: { money: 600, reputation: 1 },
+      reward: { money: 300, reputation: 1 },
     };
   },
 };

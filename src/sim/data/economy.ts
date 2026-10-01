@@ -15,39 +15,39 @@ export interface BuildingType {
 
 export const BUILDING_TYPES: Record<BuildingKind, BuildingType> = {
   restaurant: {
-    kind: 'restaurant', name: 'Restaurant', cost: 3000, upkeep: 40, salePrice: 8, needsPath: true,
+    kind: 'restaurant', name: 'Restaurant', cost: 3000, upkeep: 80, salePrice: 8, needsPath: true,
     description: 'Hungry visitors buy meals here.',
   },
   snackstall: {
-    kind: 'snackstall', name: 'Snack stall', cost: 1200, upkeep: 15, salePrice: 4, needsPath: true,
+    kind: 'snackstall', name: 'Snack stall', cost: 1200, upkeep: 30, salePrice: 4, needsPath: true,
     description: 'Ice cream, popcorn, hot dogs and sodas. Peckish or thirsty visitors grab one as they pass.',
   },
   giftshop: {
-    kind: 'giftshop', name: 'Souvenir shop', cost: 2000, upkeep: 25, salePrice: 0, needsPath: true,
+    kind: 'giftshop', name: 'Souvenir shop', cost: 2000, upkeep: 50, salePrice: 0, needsPath: true,
     description: 'Sells dino plushes, caps, balloons, and ponchos and umbrellas (a hit in storms).',
   },
   restroom: {
-    kind: 'restroom', name: 'Restrooms', cost: 1500, upkeep: 20, salePrice: 0, needsPath: true,
+    kind: 'restroom', name: 'Restrooms', cost: 1500, upkeep: 40, salePrice: 0, needsPath: true,
     description: 'Visitors need the bathroom, especially after eating. Unhappy without one nearby.',
   },
   trashcan: {
-    kind: 'trashcan', name: 'Trash can', cost: 100, upkeep: 2, salePrice: 0, needsPath: true,
+    kind: 'trashcan', name: 'Trash can', cost: 100, upkeep: 4, salePrice: 0, needsPath: true,
     description: 'Visitors nearby bin their cups and wrappers instead of dropping them on the path.',
   },
   station: {
-    kind: 'station', name: 'Safari station', cost: 4000, upkeep: 40, salePrice: 8, needsPath: true,
+    kind: 'station', name: 'Safari station', cost: 4000, upkeep: 80, salePrice: 8, needsPath: true,
     description: 'A jeep takes visitors round a track you lay (Path tool: Track) to see dinosaurs up close. Build it next to a path and a track.',
   },
   tower: {
-    kind: 'tower', name: 'Viewing tower', cost: 2500, upkeep: 20, salePrice: 3, needsPath: true,
+    kind: 'tower', name: 'Viewing tower', cost: 2500, upkeep: 40, salePrice: 3, needsPath: true,
     description: 'Visitors climb it to spot every dinosaur within 8 tiles.',
   },
   petting: {
-    kind: 'petting', name: 'Petting pen', cost: 3000, upkeep: 30, salePrice: 4, needsPath: true,
+    kind: 'petting', name: 'Petting pen', cost: 3000, upkeep: 60, salePrice: 4, needsPath: true,
     description: 'Little dinosaurs to pat. Kids adore it. Needs a worker on staff as keeper.',
   },
   pump: {
-    kind: 'pump', name: 'Pump house', cost: 2500, upkeep: 25, salePrice: 0, needsPath: false,
+    kind: 'pump', name: 'Pump house', cost: 2500, upkeep: 50, salePrice: 0, needsPath: false,
     description: 'Pumps flood water away: the ground around it (4 tiles each way) stays dry when the river rises.',
   },
   digsite: {
@@ -73,7 +73,7 @@ export const CLOSE_HOUR = 20;
 
 export const DAYS_PER_MONTH = 30;
 
-export const DEFAULT_TICKET_PRICE = 20;
+export const DEFAULT_TICKET_PRICE = 15;
 export const MAX_TICKET_PRICE = 100;
 export const TICKET_STEP = 5;
 

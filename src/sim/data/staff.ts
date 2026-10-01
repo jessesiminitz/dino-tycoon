@@ -9,15 +9,15 @@ export interface StaffType {
 }
 
 export const STAFF_TYPES: Record<StaffRole, StaffType> = {
-  worker: { role: 'worker', name: 'Worker', wage: 60, description: 'Refills feeders that run low, repairs worn or broken fences, and shovels dino dung.' },
-  guard: { role: 'guard', name: 'Guard', wage: 80, description: 'Tracks down escaped dinosaurs and returns them to their paddock.' },
-  vet: { role: 'vet', name: 'Vet', wage: 100, description: 'Treats sick and injured dinosaurs before illness spreads.' },
-  janitor: { role: 'janitor', name: 'Janitor', wage: 40, description: 'Sweeps up litter and cleans up accidents on the paths, messes first.' },
-  guide: { role: 'guide', name: 'Tour guide', wage: 50, description: 'Walks the paths telling visitors about the dinosaurs, keeping them happier.' },
+  worker: { role: 'worker', name: 'Worker', wage: 150, description: 'Refills feeders that run low, repairs worn or broken fences, and shovels dino dung.' },
+  guard: { role: 'guard', name: 'Guard', wage: 200, description: 'Tracks down escaped dinosaurs and returns them to their paddock.' },
+  vet: { role: 'vet', name: 'Vet', wage: 250, description: 'Treats sick and injured dinosaurs before illness spreads.' },
+  janitor: { role: 'janitor', name: 'Janitor', wage: 100, description: 'Sweeps up litter and cleans up accidents on the paths, messes first.' },
+  guide: { role: 'guide', name: 'Tour guide', wage: 125, description: 'Walks the paths telling visitors about the dinosaurs, keeping them happier.' },
   mascot: {
     role: 'mascot',
     name: 'Mascot',
-    wage: 45,
+    wage: 110,
     description: 'A friendly dino costume on the paths. Visitors love it (kids most of all), and souvenirs sell better nearby.',
   },
 };

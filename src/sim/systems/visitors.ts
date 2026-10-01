@@ -220,9 +220,13 @@ export function sceneryCharm(state: GameState, x: number, y: number): number {
   return Math.min(MAX_DECOR_CHARM, charm + nature);
 }
 
-/** The ticket price visitors consider fair for what's on show. */
+/**
+ * The ticket price visitors consider fair for what's on show. It grows with the square root of appeal
+ * (about $16 at 4 dinos, $24 at 16, $32 at 40), so a big park's takings can't snowball, but each new
+ * dinosaur still earns a little more than it eats.
+ */
 export function fairPrice(appeal: number): number {
-  return Math.round(8 + appeal * 0.6);
+  return Math.round(5 + 2.2 * Math.sqrt(Math.max(0, appeal)));
 }
 
 /** Expected new visitors per open hour. */
