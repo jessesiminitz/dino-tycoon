@@ -1,6 +1,7 @@
 // Close-ups of each new kind of land, on islands known to have them. Usage: node terrain-closeups.mjs
 import puppeteer from 'puppeteer-core';
-const OUT = new URL('.', import.meta.url).pathname + 'tour/';
+import { HERE, finish, ready } from './lib.mjs';
+const OUT = HERE + 'tour/';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage();
@@ -14,7 +15,7 @@ const fallSeed = await page.evaluate(async () => {
   return 1;
 });
 for (const [shape, seed, terrain, name] of [['river', fallSeed, 14, 'waterfall'], ['fire', 1000, 12, 'springs'], ['fire', 1000, 11, 'lava'], ['crescent', 1000, 13, 'cliffs']]) {
-  await page.goto(`http://localhost:5173/?quickstart&shape=${shape}&seed=${seed}`, { waitUntil: 'load' });
+  await page.goto(`http://localhost:5173/?quickstart&shape=${shape}&seed=${seed}`, { waitUntil: 'load' }); await ready(page);
   await sleep(1300);
   const p = await page.evaluate((t) => {
     const { sim, game } = window.__dino; sim.setSpeed(0);
@@ -28,5 +29,5 @@ for (const [shape, seed, terrain, name] of [['river', fallSeed, 14, 'waterfall']
   await sleep(900);
   await page.screenshot({ path: `${OUT}closeup-${name}.png` });
 }
-console.log('errors:', errors.length ? errors : 'none');
+finish(errors);
 await browser.close();

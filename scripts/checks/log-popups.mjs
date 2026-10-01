@@ -1,6 +1,7 @@
 // The park log open while alerts keep arriving and a dino is selected: what shows on top, and where?
 import puppeteer from 'puppeteer-core';
-const OUT = new URL('.', import.meta.url).pathname;
+import { HERE, finish, ready } from './lib.mjs';
+const OUT = HERE;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const [W, H] = (process.argv[2] ?? '667x375').split('x').map(Number);
 const tag = process.argv[3] ?? 'before';
@@ -8,7 +9,7 @@ const browser = await puppeteer.launch({ executablePath: '/Applications/Google C
 const page = await browser.newPage();
 const errors = []; page.on('pageerror', (e) => errors.push(e.message));
 await page.setViewport({ width: W, height: H, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
-await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'load' });
+await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'load' }); await ready(page);
 await sleep(1200);
 await page.evaluate(() => {
   const { sim, game } = window.__dino; const s = sim.state; s.money = 1e6;
@@ -50,5 +51,5 @@ const layers = await page.evaluate(() => {
 });
 console.log(JSON.stringify(layers, null, 1));
 await page.screenshot({ path: `${OUT}log-popups-${tag}-${W}.png` });
-console.log('errors:', errors.length ? errors : 'none');
+finish(errors);
 await browser.close();

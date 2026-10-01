@@ -173,6 +173,8 @@ Always bump `SAVE_VERSION` and add a step to `migrate()` when the state shape ch
 
 Headless Chrome against the dev server (`http://localhost:5173`), using `puppeteer-core` (a dev dependency) and the installed Google Chrome. Screenshots land next to each script (git-ignored).
 
+Shared helpers are in `scripts/checks/lib.mjs`: `HERE` (the folder as a real path, safe with spaces), `ready(page)` (waits for a `?quickstart` park), `shopPick(page, mode, id)` (opens a tool's picture shop and picks an item), `toScreen(page, x, y)`, `check(label, ok, detail)` and `finish(errors)`. **Every check exits non-zero on a page error or a failed `check()`**, so a run's exit code means something. New checks should use these, and assert results with `check()` rather than only printing them. To tap something on the map, centre the camera on it first: the info panel covers the bottom of the screen.
+
 | Script | What it checks |
 | --- | --- |
 | `hud-check.mjs` | ☰ visible and nothing clipped on 7 iPhone sizes with notch insets |
@@ -192,7 +194,9 @@ Headless Chrome against the dev server (`http://localhost:5173`), using `puppete
 | `fire-ui.mjs [WxH]`, `flood-ui.mjs [WxH]` | Fire Mountain and Flood Season from the menu to the disaster and after |
 | `icon-preview.mjs` | icon at full size, real size and maskable |
 | `items-check.mjs` | carried items, pee and poop, litter, dung, janitor, trash can |
-| `log-check.mjs`, `rag-check.mjs`, `repro-place.mjs` | alert log, music playback, place a dino and delete paths |
+| `log-check.mjs`, `rag-check.mjs`, `repro-place.mjs` | alert log, music playback, build a paddock, feeder and dino by touch, and delete paths |
+| `pause-check.mjs` | popups keep a paused park paused; overlapping popups resume only when both close |
+| `care-check.mjs`, `habitats-check.mjs`, `attractions-check.mjs` | treat, pat ("Nope!") and photo; lagoon, aviary and dragging a pond; safari and the Paths shop |
 
 Scripts that step the sim by hand should use 16 steps per game-hour.
 
@@ -351,4 +355,4 @@ An outside audit (`docs/BUG_AUDIT-2026-09-30.md`, evidence in `docs/bug-audit-20
 - **B07 medals vs losses:** `fatalLoss()` (bankruptcy, `loseIf`) blocks medals at any hour; the game still ends at midnight. The deadline is unchanged: meeting goals in the last hour still counts.
 - **B08–B10 pausing:** every pausing popup (☰, decision, outcome, dig, briefing) uses `holdPause`/`releasePause` in `src/ui/pause.ts`: the park stays paused until the last popup closes, then returns to its earlier speed (still paused if the player paused). Also fixed: the ☰ button used to set the speed to NaN (it has `.speed-btn` but no `data-speed`). Check: `scripts/checks/pause-check.mjs` (exits non-zero on failure).
 - **B12 (owner decision: selling is not rescuing):** escaped dinosaurs can't be sold ("bring it home first"), so the Great Escape rescue medal needs real recaptures.
-- Not done from the audit: its "test-script problems" list (stale selectors and fixtures in older `scripts/checks/`, `%20` paths). `choice-check` can flake at startup on this iMac; rerun it.
+- The audit's test-script problems are fixed too: shared `lib.mjs` (real paths, waits for the park, exit codes), shop-based selectors, current unlock and visitor fixtures, named shop sheets in `sheet-scroll`, and assertions in `care-check`, `repro-place`, `habitats-check`, `attractions-check`, `challenges-ui` and `sheet-scroll`. The balance tests now require a **Gold win** for Fire Mountain (sensible play rebuilds the paddocks the lava burned) and Flood Season.

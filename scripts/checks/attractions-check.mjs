@@ -1,13 +1,14 @@
 // A safari track loop past a paddock, a station, a tower and a petting pen, with visitors riding.
 import puppeteer from 'puppeteer-core';
-const OUT = new URL('.', import.meta.url).pathname;
+import { HERE, check, finish, ready } from './lib.mjs';
+const OUT = HERE;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const [W, H] = (process.argv[2] ?? '844x390').split('x').map(Number);
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage();
 const errors = []; page.on('pageerror', (e) => errors.push(e.message));
 await page.setViewport({ width: W, height: H, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
-await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'load' });
+await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'load' }); await ready(page);
 await sleep(1200);
 const setup = await page.evaluate(() => {
   const { sim, game } = window.__dino; const s = sim.state; s.money = 1e7; sim.setSpeed(0);
@@ -50,10 +51,19 @@ const setup = await page.evaluate(() => {
 console.log(JSON.stringify(setup, null, 1));
 await sleep(1500);
 await page.screenshot({ path: `${OUT}attractions-${W}.png` });
-// The Path picker with its four buttons.
+check('a jeep has set off or taken riders', setup.jeeps.some((j) => j.riders > 0 || j.steps > 0), setup.jeeps);
+// The Paths & tracks shop with its four choices (after tucking away any decision card that popped up).
+if (await page.$eval('#choice', (m) => !m.classList.contains('hidden'))) await (await page.$('.choice-later')).tap();
 await (await page.$('.tool-btn[data-mode="path"]')).tap(); await sleep(300);
-const picker = await page.evaluate(() => { const p = document.getElementById('path-picker').getBoundingClientRect(); return { left: Math.round(p.left), right: Math.round(p.right), vw: innerWidth }; });
-console.log('path picker:', picker);
+const picker = await page.evaluate(() => {
+  const shop = [...document.querySelectorAll('.modal:not(.hidden)')].find((m) => m.querySelector('.shop-card'));
+  if (!shop) return { open: [...document.querySelectorAll('.modal:not(.hidden)')].map((m) => m.id || m.getAttribute('aria-label')), left: -1, right: 0, vw: 0, cards: [] };
+  const sheet = shop.querySelector('.modal-card');
+  const p = sheet.getBoundingClientRect();
+  return { left: Math.round(p.left), right: Math.round(p.right), vw: innerWidth, cards: [...sheet.querySelectorAll('.shop-card')].map((c) => c.dataset.id) };
+});
+check('path shop fits the screen', picker.left >= 0 && picker.right <= picker.vw, picker);
+check('path shop offers paths and tracks', ['path', 'path-erase', 'track', 'track-erase'].every((id) => picker.cards.includes(id)), picker.cards);
 await page.screenshot({ path: `${OUT}attractions-picker-${W}.png` });
-console.log('errors:', errors.length ? errors : 'none');
+finish(errors);
 await browser.close();

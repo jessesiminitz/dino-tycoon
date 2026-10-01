@@ -1,6 +1,7 @@
 // All 12 species: grown-up, baby and egg side by side, at 4x.
 import puppeteer from 'puppeteer-core';
-const OUT = new URL('.', import.meta.url).pathname;
+import { HERE, finish } from './lib.mjs';
+const OUT = HERE;
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true });
 const page = await browser.newPage();
 const errors = []; page.on('pageerror', (e) => errors.push(e.message));
@@ -20,5 +21,5 @@ await page.evaluate(async () => {
   }
 });
 await page.screenshot({ path: `${OUT}babies-gallery.png`, fullPage: true });
-console.log('errors:', errors.length ? errors : 'none');
+finish(errors);
 await browser.close();

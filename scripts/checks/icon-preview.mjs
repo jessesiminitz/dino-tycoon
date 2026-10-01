@@ -1,6 +1,7 @@
 import puppeteer from 'puppeteer-core';
+import { HERE, finish } from './lib.mjs';
 import { writeFileSync } from 'fs';
-const OUT = new URL('.', import.meta.url).pathname;
+const OUT = HERE;
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true });
 const page = await browser.newPage();
 const errors = []; page.on('pageerror', (e) => errors.push(e.message));
@@ -18,5 +19,5 @@ await page.setContent(`<body style="margin:0;background:#1c2a3a;display:flex;gap
     <img src="${urls.mask}" width=160 style="border-radius:50%"><span>maskable (circle)</span>
   </div></body>`);
 await page.screenshot({ path: `${OUT}icon-preview.png` });
-console.log('errors:', errors.length ? errors : 'none');
+finish(errors);
 await browser.close();

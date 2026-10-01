@@ -1,13 +1,14 @@
 // Measures whether menus and alerts fit on phone screens and don't collide with buttons.
 import puppeteer from 'puppeteer-core';
-const OUT = new URL('.', import.meta.url).pathname;
+import { HERE, ready } from './lib.mjs';
+const OUT = HERE;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage();
 const tag = process.argv[2] ?? 'before';
 for (const [w, h] of [[667, 375], [844, 390]]) {
   await page.setViewport({ width: w, height: h, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
-  await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'networkidle0' });
+  await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'networkidle0' }); await ready(page);
   await sleep(600);
   // Pause menu with settings open.
   await (await page.$('#btn-menu')).tap(); await sleep(200);

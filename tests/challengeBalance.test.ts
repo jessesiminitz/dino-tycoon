@@ -8,6 +8,7 @@ import { fairPrice, parkAppeal } from '../src/sim/systems/visitors';
 import { computeRegions } from '../src/sim/regions';
 import { touchesWalkway } from '../src/sim/paths';
 import { totalDebt } from '../src/sim/finance';
+import { boxEdges } from '../src/sim/grid';
 import { lavaPreview } from '../src/sim/systems/eruption';
 import type { SpeciesId } from '../src/sim/data/species';
 
@@ -25,11 +26,11 @@ function moveInto(s: GameState, dinoId: number, px: number, py: number): boolean
 }
 
 /** Buys a cheap dinosaur into any paddock with room (one a call). */
-function buyOne(s: GameState, species: SpeciesId): void {
+function buyOne(s: GameState, species: SpeciesId, perPaddock = 4): void {
   const regions = computeRegions(s);
   const w = s.map.width;
   for (const r of regions.regions.filter((o) => o.kind === 'paddock')) {
-    if (s.dinos.filter((d) => regions.tileRegion[d.y * w + d.x] === r.id).length >= 4) continue;
+    if (s.dinos.filter((d) => regions.tileRegion[d.y * w + d.x] === r.id).length >= perPaddock) continue;
     if (!s.feeders.some((f) => regions.tileRegion[f.y * w + f.x] === r.id)) continue; // nothing to eat there
     const tile = r.tiles.find((i) => !s.feeders.some((f) => f.y * w + f.x === i) && !s.dinos.some((d) => d.y * w + d.x === i));
     if (tile !== undefined && applyCommand(s, { type: 'buyDino', species, x: tile % w, y: Math.floor(tile / w) }).ok) return;
@@ -71,7 +72,7 @@ it('The Great Escape: doing nothing fails; hiring guards and workers (and closin
     }
   }
 });
-it('Fire Mountain: doing nothing loses dinosaurs to the lava; moving them to safety wins', () => {
+it('Fire Mountain: doing nothing loses dinosaurs to the lava; moving them to safety and rebuilding wins Gold', () => {
   for (const mode of ['do nothing', 'sensible']) {
     const s = newPark('fire-mountain', 1);
     if (mode === 'sensible') {
@@ -95,6 +96,7 @@ it('Fire Mountain: doing nothing loses dinosaurs to the lava; moving them to saf
         for (const [dx, dy] of [[2, 1], [-2, 1], [1, -1], [-1, -1]])
           if (applyCommand(s, { type: 'placeFeeder', kind: 'plants', x: p.x + dx, y: p.y + dy }).ok) break;
     }
+    let rebuilt = false;
     const ev = play(s, 45, (st) => {
       if (mode !== 'sensible') return;
       const { day, hour } = calendar(st);
@@ -106,21 +108,30 @@ it('Fire Mountain: doing nothing loses dinosaurs to the lava; moving them to saf
         for (const d of st.dinos.filter((o) => danger.has(o.y * w + o.x))) moveInto(st, d.id, st.entrance.x + 6, st.entrance.y - 4);
       }
       if (st.eruption?.stage === 'over' && hour === 10 && st.money > 20000 && day > 0) {
-        buyOne(st, st.dinos.length % 2 ? 'parasaurolophus' : 'protoceratops');
+        // Rebuild the paddocks the lava burned (cooled lava is solid ground), with a feeder each.
+        if (!rebuilt) {
+          rebuilt = true;
+          const { x, y } = st.entrance;
+          applyCommand(st, { type: 'buildFences', edges: boxEdges(x - 12, y - 16, x, y - 8), fence: 1 });
+          applyCommand(st, { type: 'buildFences', edges: boxEdges(x + 1, y - 16, x + 13, y - 8), fence: 2 });
+          for (const [fx, fy] of [[x - 6, y - 12], [x + 7, y - 12]])
+            for (const dx of [0, 1, -1, 2]) if (applyCommand(st, { type: 'placeFeeder', kind: 'plants', x: fx + dx, y: fy }).ok) break;
+        }
+        for (let k = 0; k < 3; k++) buyOne(st, st.dinos.length % 2 ? 'parasaurolophus' : 'protoceratops', 5);
         applyCommand(st, { type: 'setTicketPrice', price: Math.round(fairPrice(parkAppeal(st, computeRegions(st)))) });
       }
     });
     if (mode === 'sensible') {
       expect(ev.filter((e) => /helicopter|died|starved|caught/.test(e))).toEqual([]);
       expect(s.stats.dinosLost).toBe(0);
-      expect(s.scenario.round).toBeGreaterThanOrEqual(1);
+      expect(s.scenario.status).toBe('won');
     } else {
       expect(s.stats.dinosLost).toBeGreaterThan(0);
       expect(s.scenario.round).toBe(0);
     }
   }
 }, 600000);
-it('Flood Season: doing nothing leaves dinosaurs in the water; high ground, sandbags, a pump and a vet win', () => {
+it('Flood Season: doing nothing leaves dinosaurs in the water; high ground, sandbags, a pump and a vet win Gold', () => {
   for (const mode of ['do nothing', 'sensible']) {
     const s = newPark('flood-season', 1);
     if (mode === 'sensible') {
@@ -144,7 +155,7 @@ it('Flood Season: doing nothing leaves dinosaurs in the water; high ground, sand
     if (mode === 'sensible') {
       expect(ev.filter((e) => /died|starved|caught|helicopter/.test(e))).toEqual([]);
       expect(s.stats.dinosLost).toBe(0);
-      expect(s.scenario.round).toBeGreaterThanOrEqual(2);
+      expect(s.scenario.status).toBe('won');
     } else {
       expect(s.scenario.round).toBe(0);
     }

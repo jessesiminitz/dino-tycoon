@@ -1,14 +1,16 @@
 import puppeteer from 'puppeteer-core';
-const OUT = new URL('.', import.meta.url).pathname;
+import { HERE, check, finish, ready } from './lib.mjs';
+const OUT = HERE;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage();
 const errors = []; page.on('pageerror', (e) => errors.push(e.message));
 await page.setViewport({ width: 844, height: 390, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
-await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'networkidle0' });
+await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'networkidle0' }); await ready(page);
 await sleep(500);
 const setup = await page.evaluate(() => {
   const { sim, game, ui } = window.__dino; const s = sim.state; s.money = 100000; sim.setSpeed(0);
+  s.parcelsOwned = s.parcelsOwned.map(() => true); // the island is random: make sure the paddock is on our land
   const { x: ex, y: ey } = s.entrance;
   const A = { x: ex - 4, y: ey - 10 }, C = { x: ex + 3, y: ey - 4 };
   const edges = [];
@@ -30,11 +32,11 @@ const toScreen = (vx, vy) => page.evaluate((vx, vy) => { const c = window.__dino
 const p = await toScreen(setup.A.x + 4.5, setup.tapY + 0.5);
 await page.touchscreen.tap(p.x, p.y); await sleep(400);
 const info = await page.evaluate(() => ({ text: document.getElementById('info-text').textContent, action: document.getElementById('info-action').textContent, hidden: document.getElementById('info-action').classList.contains('hidden') }));
-console.log('after tap:', info, '| dinos', await page.evaluate(() => window.__dino.sim.state.dinos.length));
+check('a gap in the paddock is offered for closing', !info.hidden && /gap/i.test(info.text), info);
 await page.screenshot({ path: `${OUT}gap-1-offer.png` });
 await (await page.$('#info-action')).tap(); await sleep(500);
 const after = await page.evaluate(() => ({ dinos: window.__dino.sim.state.dinos.map((d) => d.species), money: window.__dino.sim.state.money, toasts: [...document.querySelectorAll('.toast')].map((t) => t.textContent) }));
-console.log('after close:', after);
+check('closing the gap places the dinosaur', after.dinos.includes('triceratops'), after.toasts);
 await page.screenshot({ path: `${OUT}gap-2-done.png` });
-console.log('errors:', errors.length ? errors : 'none');
+finish(errors);
 await browser.close();

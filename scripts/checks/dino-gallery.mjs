@@ -1,5 +1,6 @@
 import puppeteer from 'puppeteer-core';
-const OUT = new URL('.', import.meta.url).pathname;
+import { HERE, finish } from './lib.mjs';
+const OUT = HERE;
 const tag = process.argv[2] ?? 'new';
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true });
 const page = await browser.newPage();
@@ -26,5 +27,5 @@ await page.evaluate(async () => {
   }
 });
 await page.screenshot({ path: `${OUT}dinos-${tag}.png`, fullPage: true });
-console.log('errors:', errors.length ? errors : 'none');
+finish(errors);
 await browser.close();

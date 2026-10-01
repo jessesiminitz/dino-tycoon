@@ -1,6 +1,7 @@
 // New park → scenario previews → Sandbox island picker → start a River Valley and look at waterfalls, bridges, marsh and springs up close.
 import puppeteer from 'puppeteer-core';
-const OUT = new URL('.', import.meta.url).pathname + 'tour/';
+import { HERE, finish } from './lib.mjs';
+const OUT = HERE + 'tour/';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const [w, h] = (process.argv[2] ?? '844x390').split('x').map(Number);
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
@@ -42,5 +43,5 @@ const look = async (p, name) => {
   await page.screenshot({ path: `${OUT}${w}-islands-2-${name}.png` });
 };
 await look(spots.fall, 'waterfall'); await look(spots.bridge, 'bridge'); await look(spots.marsh, 'marsh'); await look(spots.spring, 'spring');
-console.log('errors:', errors.length ? errors : 'none');
+finish(errors);
 await browser.close();

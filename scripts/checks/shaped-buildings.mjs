@@ -1,6 +1,7 @@
 // Every building, blown up on a grass background.
 import puppeteer from 'puppeteer-core';
-const OUT = new URL('.', import.meta.url).pathname;
+import { HERE } from './lib.mjs';
+const OUT = HERE;
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true });
 const page = await browser.newPage();
 await page.setViewport({ width: 1500, height: 300 });

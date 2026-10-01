@@ -1,13 +1,14 @@
 // A lagoon and an aviary in the park, and digging a pond with the Garden tool.
 import puppeteer from 'puppeteer-core';
-const OUT = new URL('.', import.meta.url).pathname;
+import { HERE, check, finish, ready, shopPick, toScreen } from './lib.mjs';
+const OUT = HERE;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const [W, H] = (process.argv[2] ?? '844x390').split('x').map(Number);
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage();
 const errors = []; page.on('pageerror', (e) => errors.push(e.message));
 await page.setViewport({ width: W, height: H, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
-await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'load' });
+await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'load' }); await ready(page);
 await sleep(1200);
 const setup = await page.evaluate(() => {
   const { sim, game } = window.__dino; const s = sim.state; s.money = 1e7; sim.setSpeed(0);
@@ -21,7 +22,7 @@ const setup = await page.evaluate(() => {
     return sim.dispatch({ type: 'buildFences', edges, fence }).message;
   };
   // Level both building sites to plain grass first (the island has rocks and water about).
-  for (let y = ey - 13; y < ey - 4; y++) for (let x = ex - 11; x < ex + 10; x++) s.map.tiles[y * w + x] = 3;
+  for (let y = ey - 13; y < ey - 3; y++) for (let x = ex - 11; x < ex + 10; x++) s.map.tiles[y * w + x] = 3;
   sim.dispatch({ type: 'photoDino', id: -1 }); // bump the world so the map redraws
   const out = [];
   const L = { x: ex - 10, y: ey - 12 };
@@ -39,22 +40,26 @@ const setup = await page.evaluate(() => {
   sim.worldRevision++;
   sim.setSpeed(1);
   const cam = game.scene.getScene('park').cameras.main; cam.setZoom(2); cam.centerOn((ex - 1) * 16, (ey - 8) * 16);
-  return { out, dinos: s.dinos.map((d) => d.species) };
+  return { out, dinos: s.dinos.map((d) => d.species), ex, ey };
 });
 console.log(JSON.stringify(setup, null, 1));
 await sleep(2500);
 await page.screenshot({ path: `${OUT}habitats-1-park-${W}.png` });
-// Dig a pond by dragging with Garden → Pond.
-await (await page.$('.tool-btn[data-mode="decor"]')).tap(); await sleep(200);
-await (await page.$('[data-decor="pond"]')).tap(); await sleep(200);
+check('lagoon and aviary animals bought', ['plesiosaurus', 'mosasaurus', 'pteranodon', 'dimorphodon'].every((sp) => setup.dinos.includes(sp)), setup.dinos);
+// Dig a pond by dragging with Garden → Pond, along the strip of grass levelled below the paddocks.
+await shopPick(page, 'decor', 'pond');
 console.log('hint:', await page.$eval('#info-text', (e) => e.textContent));
 const before = await page.evaluate(() => window.__dino.sim.state.map.tiles.filter((t) => t === 8).length);
-const p = { x: W * 0.45, y: H * 0.8 };
+// Scroll the strip to the middle of the screen, clear of the hint panel.
+await page.evaluate(({ ex, ey }) => window.__dino.game.scene.getScene('park').cameras.main.centerOn((ex - 7) * 16, (ey - 3.5) * 16), setup);
+await sleep(200);
+const p = await toScreen(page, setup.ex - 9.5, setup.ey - 3.5);
+const q = await toScreen(page, setup.ex - 4.5, setup.ey - 3.5);
 await page.touchscreen.touchStart(p.x, p.y);
-for (let i = 1; i <= 8; i++) await page.touchscreen.touchMove(p.x + i * 12, p.y);
+for (let i = 1; i <= 8; i++) await page.touchscreen.touchMove(p.x + ((q.x - p.x) * i) / 8, p.y);
 await page.touchscreen.touchEnd(); await sleep(400);
 const after = await page.evaluate(() => window.__dino.sim.state.map.tiles.filter((t) => t === 8).length);
-console.log('pond tiles dug by dragging:', after - before, '| toast:', await page.$$eval('.toast', (t) => t.at(-1)?.textContent));
+check('dragging digs pond tiles', after > before, `${after - before} dug | ${await page.$$eval('.toast', (t) => t.at(-1)?.textContent)}`);
 await page.screenshot({ path: `${OUT}habitats-2-dig-${W}.png` });
-console.log('errors:', errors.length ? errors : 'none');
+finish(errors);
 await browser.close();

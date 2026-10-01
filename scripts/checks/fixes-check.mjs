@@ -1,12 +1,13 @@
 // Top buttons (plain, lit only while their panel is open) and a fence box drawn with one drag.
 import puppeteer from 'puppeteer-core';
-const OUT = new URL('.', import.meta.url).pathname + 'tour/';
+import { HERE, finish, ready } from './lib.mjs';
+const OUT = HERE + 'tour/';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage();
 const errors = []; page.on('pageerror', (e) => errors.push(e.message));
 await page.setViewport({ width: 844, height: 390, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
-await page.goto('http://localhost:5173/?quickstart&seed=20231', { waitUntil: 'load' });
+await page.goto('http://localhost:5173/?quickstart&seed=20231', { waitUntil: 'load' }); await ready(page);
 await page.evaluate(() => document.fonts.ready); await sleep(1300);
 await page.evaluate(() => window.__dino.sim.setSpeed(0));
 const lit = () => page.evaluate(() => [...document.querySelectorAll('.hud-btn')].filter((b) => b.classList.contains('active')).map((b) => b.id));
@@ -35,5 +36,5 @@ const result = await page.evaluate(() => {
 });
 console.log('fences after one drag:', JSON.stringify(result));
 await page.screenshot({ path: `${OUT}fix-fence-built.png` });
-console.log('errors:', errors.length ? errors : 'none');
+finish(errors);
 await browser.close();

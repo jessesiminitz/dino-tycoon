@@ -1,11 +1,12 @@
 // Rough frame-time comparison: a normal and a big island, zoomed out, at 8× speed with a busy park.
 import puppeteer from 'puppeteer-core';
+import { ready } from './lib.mjs';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 for (const big of [false, true]) {
   const page = await browser.newPage();
   await page.setViewport({ width: 1180, height: 820, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
-  await page.goto(`http://localhost:5173/?quickstart&shape=river&seed=7${big ? '&big' : ''}`, { waitUntil: 'load' });
+  await page.goto(`http://localhost:5173/?quickstart&shape=river&seed=7${big ? '&big' : ''}`, { waitUntil: 'load' }); await ready(page);
   await sleep(1500);
   const r = await page.evaluate(async () => {
     const { sim, game } = window.__dino;

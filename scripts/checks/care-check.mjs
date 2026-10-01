@@ -1,13 +1,14 @@
 // Tap a dino: treat (hearts), pat a hungry carnivore ("Nope!"), take a photo.
 import puppeteer from 'puppeteer-core';
-const OUT = new URL('.', import.meta.url).pathname;
+import { HERE, check, finish, ready } from './lib.mjs';
+const OUT = HERE;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const [W, H] = (process.argv[2] ?? '844x390').split('x').map(Number);
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage();
 const errors = []; page.on('pageerror', (e) => errors.push(e.message));
 await page.setViewport({ width: W, height: H, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
-await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'load' });
+await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'load' }); await ready(page);
 await sleep(1200);
 const ids = await page.evaluate(() => {
   const { sim, game } = window.__dino; const s = sim.state; s.money = 1e6; sim.setSpeed(0);
@@ -26,24 +27,32 @@ const ids = await page.evaluate(() => {
 });
 await sleep(600);
 const tapDino = async (id) => {
+  // Bring the dinosaur to the middle of the screen first, clear of the info panel.
+  await page.evaluate((id) => { const sc = window.__dino.game.scene.getScene('park'); const q = sc.entities.dinoPosition(window.__dino.sim.state.dinos.find((x) => x.id === id)); sc.cameras.main.centerOn(q.x, q.y); }, id);
+  await sleep(200);
   const p = await page.evaluate((id) => { const sc = window.__dino.game.scene.getScene('park'); const d = window.__dino.sim.state.dinos.find((x) => x.id === id); const q = sc.entities.dinoPosition(d); const c = sc.cameras.main; const cx = c.width / 2, cy = c.height / 2; return { x: (q.x - c.scrollX - cx) * c.zoom + cx, y: (q.y - 10 - c.scrollY - cy) * c.zoom + cy }; }, id);
   await page.touchscreen.tap(p.x, p.y); await sleep(350);
+  const sel = await page.evaluate(() => window.__dino.game.scene.getScene('park').entities.selection);
+  check(`tapping selects dino ${id}`, sel?.kind === 'dino' && sel.id === id, sel);
 };
+const lastToast = () => page.$$eval('.toast', (t) => t.at(-1)?.textContent ?? '');
 const buttons = () => page.$$eval('#info-actions button:not([hidden]):not(.hidden)', (b) => b.map((x) => `${x.textContent}${x.disabled ? '(off)' : ''}`));
 await tapDino(ids.trike);
 console.log('trike buttons:', await buttons());
 const smalls = await page.$$('#info-actions .action-btn.small');
 await smalls[0].tap(); await sleep(250);
 await page.screenshot({ path: `${OUT}care-1-treat-${W}.png` });
-console.log('after treat:', await buttons(), '| toast:', await page.$$eval('.toast', (t) => t.at(-1)?.textContent));
+const treated = await page.evaluate((id) => { const s = window.__dino.sim.state; return s.dinos.find((d) => d.id === id).lastTreatHour === s.hours; }, ids.trike);
+check('treating the triceratops', treated, await lastToast());
 await tapDino(ids.dilo);
 await (await page.$$('#info-actions .action-btn.small'))[1].tap(); await sleep(250);
 await page.screenshot({ path: `${OUT}care-2-nope-${W}.png` });
-console.log('pat hungry dilo toast:', await page.$$eval('.toast', (t) => t.at(-1)?.textContent));
+const nope = await lastToast();
+check('patting the hungry dilophosaurus gets a Nope', /^Nope!/.test(nope), nope);
 await tapDino(ids.trike);
 await (await page.$$('#info-actions .action-btn.small'))[2].tap(); await sleep(1200);
 const photo = await page.evaluate(() => { const m = document.getElementById('photo'); const img = m.querySelector('.photo-img'); return { open: !m.classList.contains('hidden'), w: img.naturalWidth, h: img.naturalHeight, photos: window.__dino.sim.state.stats.photos }; });
-console.log('photo:', photo);
+check('photo taken', photo.open && photo.w > 0 && photo.photos === 1, photo);
 await page.screenshot({ path: `${OUT}care-3-photo-${W}.png` });
-console.log('errors:', errors.length ? errors : 'none');
+finish(errors);
 await browser.close();

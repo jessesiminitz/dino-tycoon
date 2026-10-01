@@ -1,6 +1,7 @@
 // A tour of the main screens on an iPhone: top bar, each build screen, the chip, Dinos, Book and Park.
 import puppeteer from 'puppeteer-core';
-const OUT = new URL('.', import.meta.url).pathname + 'tour/';
+import { HERE, finish, ready } from './lib.mjs';
+const OUT = HERE + 'tour/';
 import { mkdirSync } from 'fs';
 mkdirSync(OUT, { recursive: true });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -9,7 +10,7 @@ const browser = await puppeteer.launch({ executablePath: '/Applications/Google C
 const page = await browser.newPage();
 const errors = []; page.on('pageerror', (e) => errors.push(e.message));
 await page.setViewport({ width: w, height: h, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
-await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'load' });
+await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'load' }); await ready(page);
 await page.evaluate(() => document.fonts.ready); await sleep(1300);
 await page.evaluate(() => window.__dino.sim.setSpeed(0));
 const shot = (name) => page.screenshot({ path: `${OUT}${w}-${name}.png` });
@@ -34,5 +35,5 @@ for (const [btn, name] of [['#btn-catalog', 'dinos'], ['#btn-book', 'book'], ['#
   if (name === 'book') { await tap('#guide .book-tabs [data-book="stickers"]'); console.log('stickers tab ->', await page.evaluate(() => [...document.querySelectorAll('.modal:not(.hidden)')].map((m) => m.id).join())); await shot('3-book-stickers'); }
   await closeAll();
 }
-console.log('errors:', errors.length ? errors : 'none');
+finish(errors);
 await browser.close();

@@ -1,11 +1,12 @@
 import puppeteer from 'puppeteer-core';
-const OUT = new URL('.', import.meta.url).pathname;
+import { HERE, finish, ready } from './lib.mjs';
+const OUT = HERE;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage();
 const errors = []; page.on('pageerror', (e) => errors.push(e.message));
 await page.setViewport({ width: 844, height: 390, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
-await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'networkidle0' });
+await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'networkidle0' }); await ready(page);
 await sleep(500);
 await page.evaluate(async () => {
   window.__accident = await import('/src/sim/GameState.ts');
@@ -17,7 +18,7 @@ await page.evaluate(async () => {
   sim.dispatch({ type: 'hireStaff', role: 'janitor' });
   s.staff[0].x = s.staff[0].px = ex + 1; s.staff[0].y = s.staff[0].py = ey - 2; s.staff[0].task = { kind: 'clean', messId: 999999 }; s.staff[0].progress = 1;
   s.stormHours = 4; s.hours += 1;
-  const base = { from: -1, path: [], hunger: 0, satisfaction: 60, seen: [], leaveHour: s.hours + 5, items: [], snack: null, snackUntil: s.hours + 3, sodaUntil: 0, thirst: 0, bladder: 0, kid: false, thoughts: [], name: 'X' };
+  const base = { from: -1, path: [], hunger: 0, satisfaction: 60, seen: [], rode: [], riding: null, leaveHour: s.hours + 5, items: [], snack: null, snackUntil: s.hours + 3, sodaUntil: 0, thirst: 0, bladder: 0, kid: false, thoughts: [], name: 'X' };
   const add = (dx, extra, look) => s.visitors.push({ ...base, ...extra, id: 90000 + dx + 10, look, x: ex + dx, y: ey - 2, px: ex + dx, py: ey - 2 });
   add(-4, { items: ['umbrella'] }, 0);
   add(-3, { snack: 'popcorn', sodaUntil: s.hours + 3 }, 1);
@@ -36,5 +37,5 @@ await page.evaluate(async () => {
 });
 await sleep(900);
 await page.screenshot({ path: `${OUT}items-1.png` });
-console.log('errors:', errors.length ? errors : 'none');
+finish(errors);
 await browser.close();

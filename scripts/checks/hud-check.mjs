@@ -1,5 +1,6 @@
 import puppeteer from 'puppeteer-core';
-const OUT = new URL('.', import.meta.url).pathname;
+import { HERE, ready } from './lib.mjs';
+const OUT = HERE;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const tag = process.argv[2] ?? 'before';
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
@@ -8,7 +9,7 @@ const phones = [[667, 375, 0, 0, 'SE'], [812, 375, 44, 21, 'mini/11Pro'], [844, 
 for (const [w, h, side, bottom, name] of phones) {
   const page = await browser.newPage();
   await page.setViewport({ width: w, height: h, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
-  await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'load', timeout: 60000 });
+  await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'load', timeout: 60000 }); await ready(page);
   await page.addStyleTag({ content: `:root{--safe-left:${side}px !important;--safe-right:${side}px !important;--safe-bottom:${bottom}px !important}` });
   await sleep(1200);
   // Worst case: lots of money, a busy park and an unread-alerts badge.

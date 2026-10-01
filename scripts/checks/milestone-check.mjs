@@ -1,5 +1,6 @@
 import puppeteer from 'puppeteer-core';
-const OUT = new URL('.', import.meta.url).pathname;
+import { HERE, finish } from './lib.mjs';
+const OUT = HERE;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage();
@@ -28,5 +29,5 @@ await (await page.$('[data-outcome="keep"]')).tap(); await sleep(300);
 await (await page.$('#btn-park')).tap(); await sleep(400);
 await page.screenshot({ path: `${OUT}ms-2-goals.png` });
 console.log('unlocked:', await page.evaluate(() => window.__dino.sim.state.unlockedSpecies.join(',')));
-console.log('errors:', errors.length ? errors : 'none');
+finish(errors);
 await browser.close();

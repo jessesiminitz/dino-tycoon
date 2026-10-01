@@ -1,12 +1,13 @@
 // A paddock with grown-ups, a baby and an egg about to hatch; the People panel's Babies & eggs filter.
 import puppeteer from 'puppeteer-core';
-const OUT = new URL('.', import.meta.url).pathname;
+import { HERE, finish, ready } from './lib.mjs';
+const OUT = HERE;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage();
 const errors = []; page.on('pageerror', (e) => errors.push(e.message));
 await page.setViewport({ width: 844, height: 390, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
-await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'load' });
+await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'load' }); await ready(page);
 await sleep(1200);
 const setup = await page.evaluate(() => {
   const { sim, game } = window.__dino; const s = sim.state; s.money = 1e6; sim.setSpeed(0);
@@ -43,5 +44,5 @@ const hatched = await page.evaluate(() => { const { sim } = window.__dino; for (
 console.log('after hatching:', hatched);
 await sleep(600);
 await page.screenshot({ path: `${OUT}babies-3-hatched.png` });
-console.log('errors:', errors.length ? errors : 'none');
+finish(errors);
 await browser.close();

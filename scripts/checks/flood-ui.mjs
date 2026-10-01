@@ -1,6 +1,7 @@
 // Flood Season: the card, story card, forecast stripes, a flood in progress, and sandbags + pump holding it back.
 import puppeteer from 'puppeteer-core';
-const OUT = new URL('.', import.meta.url).pathname + 'tour/';
+import { HERE, finish } from './lib.mjs';
+const OUT = HERE + 'tour/';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const [w, h] = (process.argv[2] ?? '844x390').split('x').map(Number);
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
@@ -45,5 +46,5 @@ console.log(await page.evaluate(() => {
 }));
 await until(36); await look(); await sleep(700);
 await shot('4-protected');
-console.log('errors:', errors.length ? errors : 'none');
+finish(errors);
 await browser.close();

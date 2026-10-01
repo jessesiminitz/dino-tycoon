@@ -1,11 +1,12 @@
 // Every species' call, the cheer, splash and flap, and the ambience switching, with no errors.
 import puppeteer from 'puppeteer-core';
+import { finish, ready } from './lib.mjs';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--autoplay-policy=user-gesture-required'] });
 const page = await browser.newPage();
 const errors = []; page.on('pageerror', (e) => errors.push(e.message)); page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
 await page.setViewport({ width: 844, height: 390, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
-await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'load' });
+await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'load' }); await ready(page);
 await sleep(1200);
 await page.touchscreen.tap(420, 250); // unlock audio
 await sleep(500);
@@ -32,5 +33,5 @@ const result = await page.evaluate(async () => {
   return { played: played.length, state: window.__dino.audioDebug()?.state };
 });
 console.log(result);
-console.log('errors:', errors.length ? errors : 'none');
+finish(errors);
 await browser.close();

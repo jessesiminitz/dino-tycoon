@@ -1,13 +1,14 @@
 // A decision card: pops up and pauses; "Decide later" leaves a ❓ button; answering logs the result.
 import puppeteer from 'puppeteer-core';
-const OUT = new URL('.', import.meta.url).pathname;
+import { HERE, finish, ready } from './lib.mjs';
+const OUT = HERE;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const [W, H] = (process.argv[2] ?? '667x375').split('x').map(Number);
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage();
 const errors = []; page.on('pageerror', (e) => errors.push(e.message));
 await page.setViewport({ width: W, height: H, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
-await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'load' });
+await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'load' }); await ready(page);
 await sleep(1200);
 await page.evaluate(() => {
   const { sim } = window.__dino; const s = sim.state; s.money = 1e6; sim.setSpeed(1);
@@ -36,5 +37,5 @@ await page.screenshot({ path: `${OUT}choice-2-button-${W}.png` });
 await (await page.$('#choice-btn')).tap(); await sleep(300);
 await (await page.$('[data-option="0"]')).tap(); await sleep(400);
 console.log('answered:', await page.evaluate(() => ({ pending: window.__dino.sim.state.pendingChoice, log: window.__dino.sim.state.log.at(-1)?.text, button: !document.getElementById('choice-btn').classList.contains('hidden'), running: window.__dino.sim.speed > 0 })));
-console.log('errors:', errors.length ? errors : 'none');
+finish(errors);
 await browser.close();

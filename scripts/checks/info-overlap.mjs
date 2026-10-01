@@ -1,5 +1,6 @@
 import puppeteer from 'puppeteer-core';
-const OUT = new URL('.', import.meta.url).pathname;
+import { HERE, ready } from './lib.mjs';
+const OUT = HERE;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage();
@@ -7,7 +8,7 @@ const tag = process.argv[2] ?? 'before';
 const long = 'Gap in the fence (2 missing, 1 broken, circled in red). Close it to let your Triceratops in.';
 for (const [w, h, safe] of [[667, 375, 0], [812, 375, 44], [844, 390, 47], [932, 430, 59], [1180, 820, 0]]) {
   await page.setViewport({ width: w, height: h, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
-  await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'networkidle0' });
+  await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'networkidle0' }); await ready(page);
   await page.addStyleTag({ content: `:root{--safe-left:${safe}px !important;--safe-right:${safe}px !important;--safe-bottom:${safe ? 21 : 0}px !important}` });
   await sleep(400);
   const results = [];

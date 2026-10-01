@@ -1,13 +1,14 @@
 // A fossil find: the Dig! button, the sand pit, brushing it clear, the reveal.
 import puppeteer from 'puppeteer-core';
-const OUT = new URL('.', import.meta.url).pathname;
+import { HERE, finish, ready } from './lib.mjs';
+const OUT = HERE;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const [W, H] = (process.argv[2] ?? '667x375').split('x').map(Number);
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage();
 const errors = []; page.on('pageerror', (e) => errors.push(e.message));
 await page.setViewport({ width: W, height: H, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
-await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'load' });
+await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'load' }); await ready(page);
 await sleep(1200);
 // Fake a find the way the dig site reports one.
 await page.evaluate(() => {
@@ -40,5 +41,5 @@ console.log('revealed:', revealed, '| caption:', await page.$eval('.dig-caption'
 await page.screenshot({ path: `${OUT}dig-3-reveal-${W}.png` });
 await (await page.$('.dig-done')).tap(); await sleep(300);
 console.log('closed & resumed:', await page.evaluate(() => ({ hidden: document.getElementById('dig').classList.contains('hidden'), speed: window.__dino.sim.speed, btn: document.getElementById('dig-btn').classList.contains('hidden') })));
-console.log('errors:', errors.length ? errors : 'none');
+finish(errors);
 await browser.close();

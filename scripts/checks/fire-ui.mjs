@@ -1,6 +1,7 @@
 // Fire Mountain: the card, story card, danger zone, moving a dino, the eruption and the cooled lava.
 import puppeteer from 'puppeteer-core';
-const OUT = new URL('.', import.meta.url).pathname + 'tour/';
+import { HERE, finish } from './lib.mjs';
+const OUT = HERE + 'tour/';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const [w, h] = (process.argv[2] ?? '844x390').split('x').map(Number);
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
@@ -46,5 +47,5 @@ await shot('4-erupting');
 await page.evaluate(() => { const { sim } = window.__dino; while (sim.state.eruption.stage !== 'over') sim.step(); });
 await look(-12); await sleep(900);
 await shot('5-cooled');
-console.log('errors:', errors.length ? errors : 'none');
+finish(errors);
 await browser.close();

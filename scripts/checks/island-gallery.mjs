@@ -1,6 +1,7 @@
 // A sheet of generated islands: every shape, several seeds each. Usage: node island-gallery.mjs [seeds=5] [big]
 import puppeteer from 'puppeteer-core';
-const OUT = new URL('.', import.meta.url).pathname;
+import { HERE } from './lib.mjs';
+const OUT = HERE;
 const seeds = Number(process.argv[2] ?? 5);
 const big = process.argv[3] === 'big';
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true });
