@@ -293,8 +293,9 @@ Scripts that step the sim by hand should use 16 steps per game-hour.
   - **Setup:** the park sits below the volcano. The script carves an old lava gully from the crater to the top of the park (`ParkBuilder.gully`) and a hollow over the upper paddocks (`setHeight`), so the lava heads there. The bottom-right paddock is empty and safe.
   - Erupts at hour 54 (day 3, 14:00), with 230 tiles of lava at 12 an hour.
   - **Bronze:** survive the eruption with no dinos lost, within 6 days.
-  - **Silver:** 90% of fences in repair and 70 visitors in a day, within 20 days.
-  - **Gold:** 20 dinos and reputation 75, within 40 days.
+  - **Silver:** every fence in good repair and 14 dinos, within 20 days. That means rebuilding the burned upper paddocks and restocking.
+  - **Gold:** 22 dinos and an allosaurus (Silver's reward), within 40 days. That needs an electric-fenced meat paddock, and more land: the park only owns a thin strip round its four paddocks.
+  - **Rebalanced 2026-10-01:** the old Silver and Gold goals were met before the player did anything. "Visitors in a day" counts the best day ever, the prebuilt park had 265 on day 2, and reputation sits at 85–100. Money is deliberately not the constraint: income is about $10k a day.
   - **Lost** if more than 2 dinos are lost.
 - **Eruption** (`src/sim/systems/eruption.ts`, state `GameState.eruption`, save v20):
   - **Stages:** rumbling (warnings at 24 h and 6 h, rumbles every 12 h), erupting, cooling, over.
@@ -310,7 +311,10 @@ Scripts that step the sim by hand should use 16 steps per game-hour.
   - Lava tile art, plus a pulsing glow and sparks in `TerrainFx`.
   - Trees on lava are hidden (`SceneryLayer.refresh`).
   - The goal tracker shows "🌋 erupts in ~Nh", "ERUPTING!" or "lava cooling".
-- **Tests:** `tests/eruption.test.ts`, plus a Fire Mountain case in `tests/challengeBalance.test.ts` (doing nothing loses dinos; moving everyone out of threatened paddocks, adding feeders and a vet wins Bronze with no losses).
+- **Tests:** `tests/eruption.test.ts`, plus a Fire Mountain case in `tests/challengeBalance.test.ts`, which plays three ways:
+  - doing nothing loses dinos
+  - evacuating only earns exactly Bronze
+  - sensible play wins Gold by about day 11: rebuild, repair, allosaurus paddock, then buy land for new paddocks (`buyRoomy`, `newPaddock`, `buyLand`)
 - **Check:** `scripts/checks/fire-ui.mjs [WxH]`.
 
 ## Flood Season (Phase 3, part 2; done 2026-09-29)

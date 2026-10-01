@@ -8,6 +8,10 @@ import { fairPrice, parkAppeal } from '../src/sim/systems/visitors';
 import { computeRegions } from '../src/sim/regions';
 import { touchesWalkway } from '../src/sim/paths';
 import { totalDebt } from '../src/sim/finance';
+import { allFenceEdges, fenceHp } from '../src/sim/fences';
+import { SPECIES } from '../src/sim/data/species';
+import { isTileOwned, parcelBuyBlocker, parcelGrid, PARCEL } from '../src/sim/land';
+import { isBuildable } from '../src/sim/terrain';
 import { boxEdges } from '../src/sim/grid';
 import { lavaPreview } from '../src/sim/systems/eruption';
 import type { SpeciesId } from '../src/sim/data/species';
@@ -35,6 +39,57 @@ function buyOne(s: GameState, species: SpeciesId, perPaddock = 4): void {
     const tile = r.tiles.find((i) => !s.feeders.some((f) => f.y * w + f.x === i) && !s.dinos.some((d) => d.y * w + d.x === i));
     if (tile !== undefined && applyCommand(s, { type: 'buyDino', species, x: tile % w, y: Math.floor(tile / w) }).ok) return;
   }
+}
+
+/** Buys into a paddock with the right food and room to spare (by the game's own space rule). */
+function buyRoomy(s: GameState, species: SpeciesId): boolean {
+  const regions = computeRegions(s); const w = s.map.width; const sp = SPECIES[species];
+  const food = sp.diet === 'herbivore' ? 'plants' : 'meat';
+  for (const r of regions.regions.filter((o) => o.kind === 'paddock')) {
+    const feeders = s.feeders.filter((f) => regions.tileRegion[f.y * w + f.x] === r.id);
+    if (!feeders.length || feeders.some((f) => f.kind !== food)) continue;
+    const here = s.dinos.filter((d) => regions.tileRegion[d.y * w + d.x] === r.id);
+    if (here.reduce((a, d) => a + SPECIES[d.species].space, 0) + sp.space > r.tiles.length) continue;
+    const tile = r.tiles.find((i) => !s.feeders.some((f) => f.y * w + f.x === i) && !s.dinos.some((d) => d.y * w + d.x === i));
+    if (tile !== undefined && applyCommand(s, { type: 'buyDino', species, x: tile % w, y: Math.floor(tile / w) }).ok) return true;
+  }
+  return false;
+}
+/** Fences a new W×H paddock on clear, owned, buildable land near the gate, with a feeder. */
+function newPaddock(s: GameState, W: number, H: number, fence: 1 | 2 | 3 | 4, kind: 'plants' | 'meat', anywhere = false): boolean {
+  const w = s.map.width; const { x: ex, y: ey } = s.entrance;
+  const regions = computeRegions(s);
+  const spots: { x: number; y: number; d: number }[] = [];
+  for (let y = 1; y < s.map.height - H - 1; y++) for (let x = 1; x < w - W - 1; x++) spots.push({ x, y, d: Math.abs(x - ex) + Math.abs(y - ey) });
+  spots.sort((a, b) => a.d - b.d);
+  for (const { x, y } of spots) {
+    let clear = true;
+    for (let yy = y; yy < y + H && clear; yy++) for (let xx = x; xx < x + W && clear; xx++) {
+      const i = yy * w + xx;
+      clear = isTileOwned(s, xx, yy) && isBuildable(s.map.tiles[i]) && !s.paths[i] && !s.tracks[i] && regions.regions[regions.tileRegion[i]]?.kind === 'public'
+        && !s.buildings.some((b) => b.x === xx && b.y === yy) && !s.decor.some((d) => d.x === xx && d.y === yy);
+    }
+    if (!clear) continue;
+    // Next to a path, so visitors can see in.
+    let byPath = false;
+    for (let xx = x - 1; xx <= x + W; xx++) for (const yy of [y - 1, y + H]) if (s.paths[yy * w + xx]) byPath = true;
+    for (let yy = y; yy < y + H; yy++) for (const xx of [x - 1, x + W]) if (s.paths[yy * w + xx]) byPath = true;
+    if (!byPath && !anywhere) continue;
+    if (!applyCommand(s, { type: 'buildFences', edges: boxEdges(x, y, x + W, y + H), fence }).ok) continue;
+    applyCommand(s, { type: 'placeFeeder', kind, x: x + 1, y: y + 1 });
+    return true;
+  }
+  return false;
+}
+
+/** Buys the owned-land-adjacent parcel nearest the gate. */
+function buyLand(s: GameState): boolean {
+  const { cols, rows } = parcelGrid(s.map); const { x: ex, y: ey } = s.entrance;
+  const options: { px: number; py: number; d: number }[] = [];
+  for (let py = 0; py < rows; py++) for (let px = 0; px < cols; px++)
+    if (!parcelBuyBlocker(s, px, py)) options.push({ px, py, d: Math.abs(px * PARCEL + 4 - ex) + Math.abs(py * PARCEL + 4 - ey) });
+  options.sort((a, b) => a.d - b.d);
+  return options.some((o) => applyCommand(s, { type: 'buyParcel', px: o.px, py: o.py }).ok);
 }
 
 function play(s: GameState, days: number, each?: (s: GameState) => void) {
@@ -72,10 +127,10 @@ it('The Great Escape: doing nothing fails; hiring guards and workers (and closin
     }
   }
 });
-it('Fire Mountain: doing nothing loses dinosaurs to the lava; moving them to safety and rebuilding wins Gold', () => {
-  for (const mode of ['do nothing', 'sensible']) {
+it('Fire Mountain: doing nothing loses dinosaurs to the lava; saving them earns Bronze; rebuilding and growing wins Gold', () => {
+  for (const mode of ['do nothing', 'evacuate only', 'sensible']) {
     const s = newPark('fire-mountain', 1);
-    if (mode === 'sensible') {
+    if (mode !== 'do nothing') {
       const danger = lavaPreview(s);
       const w = s.map.width;
       // The empty bottom-right paddock is safe (and so is the bottom-left one).
@@ -98,7 +153,7 @@ it('Fire Mountain: doing nothing loses dinosaurs to the lava; moving them to saf
     }
     let rebuilt = false;
     const ev = play(s, 45, (st) => {
-      if (mode !== 'sensible') return;
+      if (mode === 'do nothing') return;
       const { day, hour } = calendar(st);
       if (st.eruption?.stage === 'erupting' && hour === 9) applyCommand(st, { type: 'closePark' });
       // Keep anything the lava is still heading for out of the way.
@@ -107,17 +162,23 @@ it('Fire Mountain: doing nothing loses dinosaurs to the lava; moving them to saf
         const w = st.map.width;
         for (const d of st.dinos.filter((o) => danger.has(o.y * w + o.x))) moveInto(st, d.id, st.entrance.x + 6, st.entrance.y - 4);
       }
-      if (st.eruption?.stage === 'over' && hour === 10 && st.money > 20000 && day > 0) {
-        // Rebuild the paddocks the lava burned (cooled lava is solid ground), with a feeder each.
+      // Afterwards: rebuild on the cooled rock, keep the fences mended, add an allosaurus once it's
+      // unlocked, and grow the herds, buying land for new paddocks when there's no room left.
+      if (mode === 'sensible' && st.eruption?.stage === 'over' && hour === 10 && day > 0) {
         if (!rebuilt) {
           rebuilt = true;
           const { x, y } = st.entrance;
           applyCommand(st, { type: 'buildFences', edges: boxEdges(x - 12, y - 16, x, y - 8), fence: 1 });
-          applyCommand(st, { type: 'buildFences', edges: boxEdges(x + 1, y - 16, x + 13, y - 8), fence: 2 });
-          for (const [fx, fy] of [[x - 6, y - 12], [x + 7, y - 12]])
-            for (const dx of [0, 1, -1, 2]) if (applyCommand(st, { type: 'placeFeeder', kind: 'plants', x: fx + dx, y: fy }).ok) break;
+          applyCommand(st, { type: 'buildFences', edges: boxEdges(x + 1, y - 16, x + 13, y - 8), fence: 3 });
+          for (const dx of [0, 1, -1, 2]) if (applyCommand(st, { type: 'placeFeeder', kind: 'plants', x: x - 6 + dx, y: y - 12 }).ok) break;
+          for (const dx of [0, 1, -1, 2]) if (applyCommand(st, { type: 'placeFeeder', kind: 'meat', x: x + 7 + dx, y: y - 12 }).ok) break;
         }
-        for (let k = 0; k < 3; k++) buyOne(st, st.dinos.length % 2 ? 'parasaurolophus' : 'protoceratops', 5);
+        for (const e of allFenceEdges(st)) if (fenceHp(st, e) < 60) applyCommand(st, { type: 'repairFence', edge: e });
+        if (st.unlockedSpecies.includes('allosaurus') && !st.dinos.some((d) => d.species === 'allosaurus') && st.money > 30000) buyRoomy(st, 'allosaurus');
+        for (let k = 0; k < 3 && st.money > 15000; k++) {
+          const sp: SpeciesId = st.dinos.length % 2 ? 'parasaurolophus' : 'protoceratops';
+          if (!buyRoomy(st, sp) && st.money > 25000 && !newPaddock(st, 8, 6, 1, 'plants') && !newPaddock(st, 8, 6, 1, 'plants', true)) buyLand(st);
+        }
         applyCommand(st, { type: 'setTicketPrice', price: Math.round(fairPrice(parkAppeal(st, computeRegions(st)))) });
       }
     });
@@ -125,6 +186,10 @@ it('Fire Mountain: doing nothing loses dinosaurs to the lava; moving them to saf
       expect(ev.filter((e) => /helicopter|died|starved|caught/.test(e))).toEqual([]);
       expect(s.stats.dinosLost).toBe(0);
       expect(s.scenario.status).toBe('won');
+    } else if (mode === 'evacuate only') {
+      // Saving everyone is Bronze; Silver needs the burned paddocks rebuilt and restocked.
+      expect(s.stats.dinosLost).toBe(0);
+      expect(s.scenario.round).toBe(1);
     } else {
       expect(s.stats.dinosLost).toBeGreaterThan(0);
       expect(s.scenario.round).toBe(0);

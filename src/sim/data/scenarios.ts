@@ -332,16 +332,16 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
       },
       {
         goals: [
-          { kind: 'fencesOk', target: 90 },
-          { kind: 'dayVisitors', target: 70 },
+          { kind: 'fencesOk', target: 100 },
+          { kind: 'dinos', target: 14 },
         ],
         days: 20,
         reward: { unlock: ['allosaurus'], money: 20_000 },
       },
       {
         goals: [
-          { kind: 'dinos', target: 20 },
-          { kind: 'reputation', target: 75 },
+          { kind: 'dinos', target: 22 },
+          { kind: 'own', species: 'allosaurus', target: 1 },
         ],
         days: 40,
         reward: { money: 40_000 },

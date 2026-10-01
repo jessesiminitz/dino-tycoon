@@ -23,7 +23,7 @@ export function goalLabel(g: Goal): string {
     case 'unlocked':
       return `Unlock ${g.target} species`;
     case 'own':
-      return `Own ${g.target === 1 ? 'a' : g.target} ${SPECIES[g.species!].name}`;
+      return `Own ${g.target === 1 ? (/^[AEIOU]/.test(SPECIES[g.species!].name) ? 'an' : 'a') : g.target} ${SPECIES[g.species!].name}`;
     case 'profitStreak':
       return `Make a profit ${g.target} days in a row`;
     case 'debtFree':
