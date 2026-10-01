@@ -1,0 +1,59 @@
+667x375 hud: 46x46 50x46 64x46 46x46 46x46 44x44 44x44 44x44 56x44 44x44
+  catalog    651x359    
+  choice     520x73     
+  dig        450x318    
+  briefing   640x32     
+  stickers   651x359    
+  requests   651x359    
+  photo      521x120    
+  people     651x359    
+  log        651x359    
+  guide      651x359    
+  park       651x359    
+  pause      420x205    
+  outcome    420x32     
+  audit-modal-13 651x359    
+  audit-modal-14 651x359    
+  audit-modal-15 651x359    
+  audit-modal-16 651x359    
+  audit-modal-17 651x359    
+844x390 hud: 52x46 54x46 68x46 52x46 52x46 44x44 44x44 44x44 56x44 44x44
+  catalog    828x374    
+  choice     520x73     
+  dig        450x333    
+  briefing   640x32     
+  stickers   828x374    
+  requests   828x374    
+  photo      521x120    
+  people     828x374    
+  log        828x374    
+  guide      828x374    
+  park       828x374    
+  pause      420x205    
+  outcome    420x32     
+  audit-modal-13 828x374    
+  audit-modal-14 828x374    
+  audit-modal-15 828x374    
+  audit-modal-16 828x374    
+  audit-modal-17 828x374    
+1180x820 hud: 52x46 54x46 68x46 52x46 52x46 44x44 44x44 44x44 56x44 44x44
+  catalog    980x760    
+  choice     520x100    
+  dig        644x593    
+  briefing   640x32     
+  stickers   980x760    
+  requests   980x760    
+  photo      521x120    
+  people     980x760    
+  log        980x760    
+  guide      980x760    
+  park       980x760    
+  pause      420x276    
+  outcome    420x32     
+  audit-modal-13 980x760    
+  audit-modal-14 980x760    
+  audit-modal-15 980x760    
+  audit-modal-16 980x760    
+  audit-modal-17 980x760    
+
+EXIT 0 ERROR none

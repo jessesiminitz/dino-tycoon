@@ -1,0 +1,24 @@
+{
+ "out": [
+  "Built 32 electric fence segments for $3,840",
+  "Dug 35 tiles of pond for $8,750",
+  "Built a fish feeder for $450",
+  "Welcome Hazel the Plesiosaurus!",
+  "Welcome Gus the Mosasaurus!",
+  "Built 30 aviary net fence segments for $2,700",
+  "Built a fish feeder for $450",
+  "Welcome Rocco the Pteranodon!",
+  "Welcome Ziggy the Dimorphodon!"
+ ],
+ "dinos": [
+  "plesiosaurus",
+  "mosasaurus",
+  "pteranodon",
+  "dimorphodon"
+ ]
+}
+hint: Tap or drag over grass or sand to dig a pond ($250 a tile). A pond inside a paddock makes a lagoon for sea reptiles
+pond tiles dug by dragging: 0 | toast: 🎹 Now playing: Sugar Cane (Scott Joplin, 1908)
+errors: none
+
+EXIT 0 ERROR none

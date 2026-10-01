@@ -1,0 +1,13 @@
+{
+ "requests": [
+  "🎟️ active 1/17: Welcome 17 visitors today",
+  "⭐ active 0/1: Get a 4-star review from a visitor before closing",
+  "🚌 active 0/1: A school group wants to see a Triceratops from the path before 16:00"
+ ],
+ "done": 1
+}
+badge: { text: '3', hidden: false }
+panel: { top: 8, bottom: 367, vh: 375, cards: 3 }
+errors: none
+
+EXIT 0 ERROR none

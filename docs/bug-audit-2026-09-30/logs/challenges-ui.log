@@ -1,0 +1,6 @@
+briefing: tracker [8,70,439,43] card [102,8,640,374] fits true
+park: tracker [8,70,439,43] card null fits -
+finances: tracker [8,70,400,43] card [8,8,828,374] fits true
+errors: none
+
+EXIT 0 ERROR none

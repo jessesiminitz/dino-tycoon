@@ -135,7 +135,7 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
   const smallButtons: HTMLButtonElement[] = [];
   const toasts = $('toasts');
   const guestsEl = $('hud-guests');
-  const speedButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('.speed-btn'));
+  const speedButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('.speed-btn[data-speed]'));
   const catalog = mountCatalog(sim, ui);
 
   // --- money, clock, speed ---

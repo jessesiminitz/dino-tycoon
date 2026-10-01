@@ -1,0 +1,6 @@
+667x375 pause+settings: {"vh":375,"cardTop":8,"cardBottom":367,"lastButtonBottom":371,"scrollable":true} -> OK
+667x375 alerts: {"alerts":4,"clashes":[]}
+844x390 pause+settings: {"vh":390,"cardTop":9,"cardBottom":382,"lastButtonBottom":372,"scrollable":false} -> OK
+844x390 alerts: {"alerts":4,"clashes":[]}
+
+EXIT 0 ERROR none

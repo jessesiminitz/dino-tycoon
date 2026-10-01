@@ -1,0 +1,13 @@
+egg info: 🥚 Stegosaurus egg · hatching any minute now!
+cards: [
+  'Stegosaurus egg / Hatching any minute!',
+  'Pip / Baby Stegosaurus · grows up in 4 days'
+]
+after hatching: {
+  babies: [ 'Pip', 'Thistle' ],
+  eggs: 0,
+  log: [ '🐣 A baby Stegosaurus hatched! Say hello to Thistle.' ]
+}
+errors: none
+
+EXIT 0 ERROR none

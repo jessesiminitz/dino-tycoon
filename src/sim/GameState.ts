@@ -2,7 +2,7 @@ import { hEdgeCount, vEdgeCount } from './grid';
 import { findEntrance, initialParcels, type Point } from './land';
 import { DEFAULT_HEIGHT, type TerrainMap } from './terrain';
 import { generateIsland, type IslandShape } from './island';
-import { STARTER_SPECIES, type SpeciesId } from './data/species';
+import { SPECIES, STARTER_SPECIES, type SpeciesId } from './data/species';
 import type { FeederKind } from './data/feeders';
 import { DEFAULT_TICKET_PRICE, type BuildingKind, type ItemKind } from './data/economy';
 import { newFinance, normalizeFinance, type Finance } from './finance';
@@ -479,8 +479,48 @@ export function startScenario(id: ScenarioId, randomSeed: number, island: Island
   return state;
 }
 
-/** Upgrades older saves in place. Returns null for saves too old to carry over. */
+/**
+ * Upgrades older saves in place. Returns null for saves too old (or new) to carry over, and for
+ * files that are damaged or incomplete, so a bad save never reaches the simulation.
+ */
 export function migrate(raw: { version?: number } & Record<string, unknown>): GameState | null {
+  try {
+    const state = upgrade(raw);
+    return state && !stateProblem(state) ? state : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Why a save can't be played (a missing or misshapen part), or null if it looks whole. */
+export function stateProblem(state: GameState): string | null {
+  const s = state as unknown as Record<string, unknown>;
+  const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
+  const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+  const isPoint = (v: unknown) => isObj(v) && isNum(v.x) && isNum(v.y);
+  const sized = (v: unknown, n: number) => Array.isArray(v) && v.length === n;
+
+  for (const k of ['seed', 'rngState', 'hours', 'stepInHour', 'money', 'ticketPrice', 'reputation', 'stormHours', 'volcanoActivity', 'nextId'])
+    if (!isNum(s[k])) return `missing ${k}`;
+  const map = s.map;
+  if (!isObj(map) || !Number.isInteger(map.width) || !Number.isInteger(map.height)) return 'missing map';
+  const { width, height } = map as unknown as TerrainMap;
+  if (width < 1 || height < 1) return 'missing map';
+  if (!sized(map.tiles, width * height) || !sized(map.heights, width * height)) return 'map is the wrong size';
+  if (!isPoint(s.entrance)) return 'missing entrance';
+  for (const k of ['paths', 'tracks', 'hFences', 'vFences', 'hFenceHp', 'vFenceHp', 'parcelsOwned', 'dinos', 'feeders', 'unlockedSpecies', 'buildings', 'visitors', 'staff', 'fossilBeds', 'decor', 'log', 'messes', 'reviews', 'eggs', 'requests', 'jeeps'])
+    if (!Array.isArray(s[k])) return `missing ${k}`;
+  for (const k of ['finance', 'stats', 'fossils']) if (!isObj(s[k])) return `missing ${k}`;
+  const sc = s.scenario;
+  if (!isObj(sc) || !(String(sc.id) in SCENARIOS) || !isNum(sc.round) || !Array.isArray(sc.earned)) return 'missing scenario';
+  if (!state.unlockedSpecies.every((id) => id in SPECIES)) return 'unknown species';
+  for (const list of [state.dinos, state.feeders, state.buildings, state.eggs, state.decor] as unknown[][])
+    if (!list.every(isPoint)) return 'something is off the map';
+  if (!state.dinos.every((d) => d.species in SPECIES)) return 'unknown species';
+  return null;
+}
+
+function upgrade(raw: { version?: number } & Record<string, unknown>): GameState | null {
   if (raw.version === 2) {
     Object.assign(raw, {
       version: 3,

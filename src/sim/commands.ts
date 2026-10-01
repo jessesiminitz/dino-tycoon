@@ -145,6 +145,7 @@ export function dinoSpotBlocker(state: GameState, species: SpeciesId, x: number,
   } else {
     const blocker = tileBlocker(state, x, y);
     if (blocker) return blocker;
+    if (state.buildings.some((b) => b.x === x && b.y === y)) return 'There is a building here';
   }
   const { regions, tileRegion } = computeRegions(state);
   const home = regions[tileRegion[y * state.map.width + x]];
@@ -153,6 +154,25 @@ export function dinoSpotBlocker(state: GameState, species: SpeciesId, x: number,
   }
   if (habitat === 'air' && !home.covered) return `${sp.name} flies! It needs an aviary: a paddock fenced all the way round with aviary net`;
   return null;
+}
+
+/**
+ * Paths left inside the paddock at (x, y), laid while it was empty, are cleared (with a small refund)
+ * before an animal moves in: visitors can't reach them anyway. Returns how many tiles were cleared.
+ */
+function clearPaddockPaths(state: GameState, x: number, y: number): number {
+  const { regions, tileRegion } = computeRegions(state);
+  const at = y * state.map.width + x;
+  if (!regionHasPaths(state, { regions, tileRegion }, at)) return 0;
+  let cleared = 0;
+  for (let i = 0; i < state.paths.length; i++) {
+    if (state.paths[i] && tileRegion[i] === tileRegion[at]) {
+      state.paths[i] = 0;
+      cleared++;
+    }
+  }
+  earn(state, 'sales', Math.floor(cleared * PATH_COST * PATH_REFUND));
+  return cleared;
 }
 
 /** Why this tile can't be drained, or null if it's marsh you own. */
@@ -227,11 +247,13 @@ export function applyCommand(state: GameState, cmd: Command): CommandResult {
       const blocker = dinoSpotBlocker(state, d.species, cmd.x, cmd.y);
       if (blocker) return { ok: false, message: blocker };
       if (MOVE_DINO_COST > state.money) return { ok: false, message: `Not enough money: need ${usd(MOVE_DINO_COST)}` };
+      const cleared = clearPaddockPaths(state, cmd.x, cmd.y);
       Object.assign(d, { x: cmd.x, y: cmd.y, px: cmd.x, py: cmd.y, homeX: cmd.x, homeY: cmd.y, path: [], escaped: false });
       // Anyone out catching it can stand down.
       for (const m of state.staff) if (m.task && 'dinoId' in m.task && m.task.dinoId === d.id && m.task.kind === 'recapture') m.task = null;
       spend(state, 'maintenance', MOVE_DINO_COST);
-      return { ok: true, cost: MOVE_DINO_COST, message: `📦 ${d.name} was crated up and moved to a new paddock (${usd(MOVE_DINO_COST)})` };
+      const note = cleared ? ` and cleared ${cleared} path tile${cleared === 1 ? '' : 's'} from inside it` : '';
+      return { ok: true, cost: MOVE_DINO_COST, message: `📦 ${d.name} was crated up and moved to a new paddock${note} (${usd(MOVE_DINO_COST)})` };
     }
 
     case 'buyDino': {
@@ -239,20 +261,8 @@ export function applyCommand(state: GameState, cmd: Command): CommandResult {
       if (!state.unlockedSpecies.includes(cmd.species)) return { ok: false, message: `${sp.name} isn't available yet` };
       const blocker = dinoSpotBlocker(state, cmd.species, cmd.x, cmd.y);
       if (blocker) return { ok: false, message: blocker };
-      const { regions, tileRegion } = computeRegions(state);
       if (sp.price > state.money) return { ok: false, message: `Not enough money: need ${usd(sp.price)}` };
-      // Paths left inside the paddock (laid while it was empty) are cleared: visitors can't reach them anyway.
-      const region = tileRegion[cmd.y * state.map.width + cmd.x];
-      let cleared = 0;
-      if (regionHasPaths(state, { regions, tileRegion }, cmd.y * state.map.width + cmd.x)) {
-        for (let i = 0; i < state.paths.length; i++) {
-          if (state.paths[i] && tileRegion[i] === region) {
-            state.paths[i] = 0;
-            cleared++;
-          }
-        }
-        earn(state, 'sales', Math.floor(cleared * PATH_COST * PATH_REFUND));
-      }
+      const cleared = clearPaddockPaths(state, cmd.x, cmd.y);
       const name = pickName(state, DINO_NAMES, state.dinos.map((d) => d.name));
       state.dinos.push({
         id: state.nextId++,
@@ -285,6 +295,7 @@ export function applyCommand(state: GameState, cmd: Command): CommandResult {
       const d = state.dinos.find((d) => d.id === cmd.id);
       if (!d) return { ok: false, message: 'That dinosaur is gone' };
       if (d.baby) return { ok: false, message: `${d.name} is too little to leave home yet` };
+      if (d.escaped) return { ok: false, message: `${d.name} has escaped! Bring it home before selling it` };
       const value = Math.floor(SPECIES[d.species].price * DINO_RESALE);
       state.dinos.splice(state.dinos.indexOf(d), 1);
       earn(state, 'sales', value);

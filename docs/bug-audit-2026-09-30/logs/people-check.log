@@ -1,0 +1,25 @@
+{
+ "visitors": 40,
+ "reviews": 19,
+ "messes": "",
+ "held": {
+  "snack": 10,
+  "soda": 6,
+  "umbrella": 0
+ },
+ "log": [
+  "📋 3 new park requests: Take a photo of a Parasaurolophus for the park brochure by 18:00 …and more",
+  "💩 A visitor couldn't find a restroom in time and pooped on the path! Build restrooms.",
+  "🚻 Visitors are desperate for restrooms! Build some next to your paths."
+ ]
+}
+fit { top: 8, bottom: 382, vh: 390, scrolls: true, docW: 844, vw: 844 }
+gross chip: 0
+renamed: 1
+after locate: {
+  hidden: true,
+  info: 'Spike the Triceratops · Hunger 34% · Health 100% · Happy 81%'
+}
+errors: none
+
+EXIT 0 ERROR none

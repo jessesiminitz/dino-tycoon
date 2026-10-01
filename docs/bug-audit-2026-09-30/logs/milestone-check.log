@@ -1,0 +1,8 @@
+popup: {
+  visible: true,
+  text: "🥉 Bronze milestone! | You reached the bronze milestone in First Steps on day 1. | 🎁 Pachycephalosaurus unlocked, $5,000 prize | Next up: 🥈 Silver · 60 days | ⬜ Have 8 dinosaurs | ⬜ Show 4 different species | ⬜ Welcome 80 visitors in one day | ⬜ Reach a reputation of 65 | Let's go!"
+}
+unlocked: protoceratops,parasaurolophus,stegosaurus,triceratops,compsognathus,dilophosaurus,pachycephalosaurus
+errors: none
+
+EXIT 0 ERROR none

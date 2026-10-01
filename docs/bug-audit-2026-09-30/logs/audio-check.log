@@ -1,0 +1,7 @@
+before any tap: null
+after tap: {"state":"running","sfx":0.699999988079071,"music":0.2056051790714264,"rain":0,"song":{"title":"The Entertainer","index":0,"note":8}}
+storm: {"state":"running","sfx":0.699999988079071,"music":0.17499999701976776,"rain":0.020904839038848877,"song":{"title":"The Entertainer","index":0,"note":26}}
+music off: {"state":"running","sfx":0.699999988079071,"music":0.00009512514225207269,"rain":0.0015823999419808388,"song":{"title":"The Entertainer","index":0,"note":34}} | saved: {"sfx":true,"sfxVolume":0.7,"music":false,"musicVolume":0.35,"digGame":true,"nightDarkness":1,"ambience":true}
+errors: none
+
+EXIT 0 ERROR none

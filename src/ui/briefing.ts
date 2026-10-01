@@ -1,4 +1,5 @@
-import type { Simulation, Speed } from '../sim/Simulation';
+import type { Simulation } from '../sim/Simulation';
+import { holdPause, releasePause } from './pause';
 import { MEDALS, SCENARIOS } from '../sim/data/scenarios';
 import { goalLabel } from '../sim/goals';
 
@@ -16,12 +17,11 @@ export function mountBriefing(sim: Simulation): void {
     <ul class="outcome-goals">${round.goals.map((g) => `<li>⬜ ${goalLabel(g)}</li>`).join('')}</ul>
     <p class="briefing-tip">💡 ${sc.briefing.tip}</p>
     <div class="outcome-actions"><button class="action-btn" data-go>Let’s go!</button></div>`;
-  const resume: Speed = sim.speed || 1;
-  sim.setSpeed(0);
+  holdPause(sim, modal);
   modal.classList.remove('hidden');
   modal.querySelector('[data-go]')!.addEventListener('click', () => {
     state.scenario.briefed = true;
     modal.classList.add('hidden');
-    sim.setSpeed(resume);
+    releasePause(sim, modal);
   });
 }

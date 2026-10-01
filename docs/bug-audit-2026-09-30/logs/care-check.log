@@ -1,0 +1,7 @@
+trike buttons: [ '🍖', '✋', '📷', '📦', 'Sell $6,000' ]
+after treat: [ '🍖(off)', '✋', '📷', '📦', 'Sell $6,000' ] | toast: Chomp the Triceratops munched a crunchy treat!
+pat hungry dilo toast: Chomp loves that!
+photo: { open: true, w: 1105, h: 983, photos: 1 }
+errors: none
+
+EXIT 0 ERROR none

@@ -1,0 +1,7 @@
+dig button: { hidden: false, rect: [ 557, 70, 98 ] }
+paused: true
+revealed: true | caption: It's a Triceratops thigh bone! (3 of 5 found)
+closed & resumed: { hidden: true, speed: 1, btn: true }
+errors: none
+
+EXIT 0 ERROR none

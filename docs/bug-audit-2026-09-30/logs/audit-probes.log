@@ -1,0 +1,66 @@
+fatal: not a git repository (or any parent up to mount point /Volumes)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+
+ RUN  v5.0.2 /Volumes/Apple HDD 2TB/dino-tycoon-gameplay-audit
+
+stdout | tests/audit-probes.test.ts > AUDIT B01 incomplete current-version save is accepted and crashes simulation
+B01 accepted {version:21}; step throws
+
+stdout | tests/audit-probes.test.ts > AUDIT B02 paths can overlap tracks, and buildings and ponds can consume track tiles
+B02 path track still= 1 terrain= 3 path= 1 buildings= 0
+B02 building track still= 1 terrain= 3 path= 0 buildings= 1
+B02 pond track still= 1 terrain= 8 path= 0 buildings= 0
+
+stdout | tests/audit-probes.test.ts > AUDIT B03 moving dinosaur into empty visitor paddock keeps public paths/buildings
+B03 moved dinosaur onto visitor path beside restaurant; all retained
+
+stdout | tests/audit-probes.test.ts > AUDIT B04 fence condition ignores broken fence segments
+B04 10 of 20 segments broken; fencesOkPercent= 100
+
+stdout | tests/audit-probes.test.ts > AUDIT B05 flood rot breaks fence without invalidating regions when wet count/level unchanged
+B05 fence broken by flood; world invalidations= 0
+
+stdout | tests/audit-probes.test.ts > AUDIT B06 jeep track remains driveable underwater
+B06 jeep moved onto flooded track at 11 10
+
+stdout | tests/audit-probes.test.ts > AUDIT B07 challenge can award medal before checking fatal loss threshold
+B07 Great Escape status= won lost dinos= 4 limit= 3
+
+stdout | tests/audit-probes.test.ts > AUDIT broad unattended scenarios remain finite and save roundtrip deterministic
+soak first-steps 1 10 days playing 0 50000
+soak first-steps 7 10 days playing 0 50000
+soak first-steps 42 10 days playing 0 50000
+soak fossil-fever 1 10 days playing 0 45000
+soak fossil-fever 7 10 days playing 0 45000
+soak fossil-fever 42 10 days playing 0 45000
+soak storm-coast 1 10 days playing 0 60000
+soak storm-coast 7 10 days playing 0 60000
+soak storm-coast 42 10 days playing 0 60000
+soak rex-rising 1 10 days playing 0 40000
+soak rex-rising 7 10 days playing 0 40000
+soak rex-rising 42 10 days playing 0 40000
+soak great-escape 1 10 days lost 0 33980
+soak great-escape 7 10 days lost 0 33980
+soak great-escape 42 10 days lost 0 33980
+soak fire-mountain 1 10 days lost 4 81325
+soak fire-mountain 7 10 days lost 4 81325
+soak fire-mountain 42 10 days lost 4 81325
+soak flood-season 1 10 days lost 6 58580
+soak flood-season 7 10 days lost 6 58580
+soak flood-season 42 10 days lost 6 58580
+soak money-pit 1 10 days playing 12 886
+soak money-pit 7 10 days playing 12 886
+soak money-pit 42 10 days playing 12 886
+soak sandbox 1 10 days free 0 100000
+soak sandbox 7 10 days free 0 100000
+soak sandbox 42 10 days free 0 100000
+
+stdout | tests/audit-probes.test.ts > AUDIT B12 selling every escaped animal awards rescue medal
+B12 sold all 14 animals; Bronze awarded; rescued zero
+
+
+ Test Files  1 passed (1)
+      Tests  11 passed (11)
+   Start at  08:07:45
+   Duration  16.98s (tests 98%, transform 2%)
+

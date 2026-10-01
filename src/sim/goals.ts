@@ -1,5 +1,5 @@
 import { calendar, NEVER, type GameState } from './GameState';
-import { allFenceEdges, fenceAt, fenceHp } from './fences';
+import { allFenceEdges, fenceHp } from './fences';
 import { BANKRUPT_BELOW, MEDALS, SCENARIOS, type Goal, type Reward, type Round } from './data/scenarios';
 import { earn } from './finance';
 import { SPECIES } from './data/species';
@@ -48,12 +48,11 @@ export function goalLabel(g: Goal): string {
 /** Fence sections this worn count as needing repair. */
 export const FENCE_OK_HP = 60;
 
-/** Percent of fence sections in good repair (100 with no fences at all). */
+/** Percent of fence sections in good repair (100 with no fences at all). Broken sections count as needing repair. */
 export function fencesOkPercent(state: GameState): number {
   let all = 0;
   let ok = 0;
   for (const e of allFenceEdges(state)) {
-    if (!fenceAt(state, e)) continue;
     all++;
     if (fenceHp(state, e) >= FENCE_OK_HP) ok++;
   }
@@ -194,7 +193,9 @@ export function hourlyScenario(ctx: SimContext): void {
     ctx.emit({ text: beat.text, kind: beat.kind });
   }
 
-  if (goalProgress(state).every((g) => g.done)) {
+  // A park that has already broken a hard rule can't earn a medal; the game ends at midnight.
+  const fatal = fatalLoss(state);
+  if (!fatal && goalProgress(state).every((g) => g.done)) {
     const medal = MEDALS[state.scenario.round];
     const reward = grant(state, round.reward);
     state.scenario.earned.push(reward);
@@ -211,24 +212,18 @@ export function hourlyScenario(ctx: SimContext): void {
     return;
   }
   if (calendar(state).hour !== 0) return;
-  if (state.money < BANKRUPT_BELOW) {
+  const reason = fatal ?? (daysLeft(state) === 0 ? 'Out of time' : null);
+  if (reason) {
     state.scenario.status = 'lost';
-    ctx.emit({ text: `The bank has stepped in: ${sc.name} is over.`, kind: 'bad', outcome: 'lost' });
-    return;
+    ctx.emit({ text: `${reason}: ${sc.name} is over.`, kind: 'bad', outcome: 'lost' });
   }
-  if (daysLeft(state) === 0) {
-    state.scenario.status = 'lost';
-    ctx.emit({ text: `Out of time: ${sc.name} is over.`, kind: 'bad', outcome: 'lost' });
-    return;
-  }
-  const lose = sc.loseIf;
-  if (lose?.dinosLostAbove !== undefined && state.stats.dinosLost > lose.dinosLostAbove) {
-    state.scenario.status = 'lost';
-    ctx.emit({ text: `Too many dinosaurs were lost: ${sc.name} is over.`, kind: 'bad', outcome: 'lost' });
-    return;
-  }
-  if (lose?.reputationBelow !== undefined && state.reputation < lose.reputationBelow) {
-    state.scenario.status = 'lost';
-    ctx.emit({ text: `The park’s reputation fell too low: ${sc.name} is over.`, kind: 'bad', outcome: 'lost' });
-  }
+}
+
+/** A hard rule the park has broken (bankruptcy, or the scenario's own limits), in words, or null. */
+function fatalLoss(state: GameState): string | null {
+  if (state.money < BANKRUPT_BELOW) return 'The bank has stepped in';
+  const lose = SCENARIOS[state.scenario.id].loseIf;
+  if (lose?.dinosLostAbove !== undefined && state.stats.dinosLost > lose.dinosLostAbove) return 'Too many dinosaurs were lost';
+  if (lose?.reputationBelow !== undefined && state.reputation < lose.reputationBelow) return 'The park’s reputation fell too low';
+  return null;
 }

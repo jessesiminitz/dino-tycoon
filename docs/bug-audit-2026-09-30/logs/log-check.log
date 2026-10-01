@@ -1,0 +1,12 @@
+badge: { text: '1', hidden: false } log size 1
+open: {
+  rows: 1,
+  first: 'Day 2 · 00:00Day 1: 0 visitors, profit $0',
+  card: 382,
+  vh: 390,
+  badgeHidden: true
+}
+reports: 1
+errors: none
+
+EXIT 0 ERROR none

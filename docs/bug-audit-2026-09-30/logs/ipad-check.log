@@ -1,0 +1,7 @@
+air-land 1180x820 {"rotateHint":false,"offscreen":false,"overlap":false,"scrollW":1180}
+air-port 820x1180 {"rotateHint":false,"offscreen":false,"overlap":false,"scrollW":820}
+ipad9-land 1024x768 {"rotateHint":false,"offscreen":false,"overlap":false,"scrollW":1024}
+mini-port 768x1024 {"rotateHint":false,"offscreen":false,"overlap":false,"scrollW":768}
+errors: none
+
+EXIT 0 ERROR none

@@ -1,0 +1,29 @@
+{
+ "out": [
+  "Built 26 steel fence segments for $1,560",
+  "Welcome Chomp the Triceratops!",
+  "Welcome Ember the Stegosaurus!",
+  "Welcome Buster the Parasaurolophus!",
+  "Built 18 path tiles for $180",
+  "Built 20 jeep track tiles for $300",
+  "Built a safari station for $4,000",
+  "Built a viewing tower for $2,500",
+  "Built a petting pen for $3,000"
+ ],
+ "jeeps": [
+  {
+   "riders": 3,
+   "steps": 0
+  }
+ ],
+ "rode": {
+  "tower": 15,
+  "petting": 21,
+  "jeep": 5
+ },
+ "rides": 177
+}
+path picker: { left: 8, right: 836, vw: 844 }
+errors: none
+
+EXIT 0 ERROR none

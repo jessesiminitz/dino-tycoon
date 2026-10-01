@@ -13,11 +13,12 @@ export function isPath(state: GameState, i: number): boolean {
 export const onWalkway: CanEnter = (state, i) =>
   (state.paths[i] === 1 && !isFlooded(state, i)) || i === state.entrance.y * state.map.width + state.entrance.x;
 
-/** Something already standing on a tile (feeder or building), if any. */
+/** Something already standing on a tile (feeder, building, decoration or jeep track), if any. */
 export function tileOccupant(state: GameState, x: number, y: number): string | null {
   if (state.feeders.some((f) => f.x === x && f.y === y)) return 'There is a feeder here';
   if (state.buildings.some((b) => b.x === x && b.y === y)) return 'There is a building here';
   if (state.decor.some((d) => d.x === x && d.y === y)) return 'There is a garden decoration here';
+  if (state.tracks[y * state.map.width + x]) return 'There is a jeep track here';
   return null;
 }
 

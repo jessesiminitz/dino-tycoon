@@ -1,0 +1,7 @@
+waterfall {"x":43,"y":21}
+springs {"x":34,"y":16}
+lava {"x":42,"y":13}
+cliffs {"x":42,"y":28}
+errors: none
+
+EXIT 0 ERROR none

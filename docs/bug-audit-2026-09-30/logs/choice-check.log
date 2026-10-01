@@ -1,0 +1,19 @@
+card: {
+  open: true,
+  title: 'Lights, camera, dinosaur!',
+  options: [ '🎬 Roll the cameras', 'No, thank you' ],
+  paused: true,
+  top: 55,
+  bottom: 320,
+  vh: 375
+}
+later: { cardHidden: true, button: true, running: true }
+answered: {
+  pending: null,
+  log: '📺 The park was on the news (+4 reputation), and Moss was a natural.',
+  button: false,
+  running: true
+}
+errors: none
+
+EXIT 0 ERROR none

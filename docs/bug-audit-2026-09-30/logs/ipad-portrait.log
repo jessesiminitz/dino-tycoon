@@ -1,0 +1,7 @@
+mini 744x1133 {"rotateHint":false,"offscreen":false,"overlap":false,"clipped":false,"panels":{"#people":true,"#guide":true,"#park":true}}
+air 820x1180 {"rotateHint":false,"offscreen":false,"overlap":false,"clipped":false,"panels":{"#people":true,"#guide":true,"#park":true}}
+pro13 1024x1366 {"rotateHint":false,"offscreen":false,"overlap":false,"clipped":false,"panels":{"#people":true,"#guide":true,"#park":true}}
+iphone-upright 390x844 {"rotateHint":true,"offscreen":false,"overlap":false,"clipped":true,"panels":{"#people":true,"#guide":true,"#park":true}}
+errors: none
+
+EXIT 0 ERROR none

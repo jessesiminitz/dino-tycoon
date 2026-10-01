@@ -1,4 +1,5 @@
-import type { Simulation, Speed } from '../sim/Simulation';
+import type { Simulation } from '../sim/Simulation';
+import { holdPause, releasePause } from './pause';
 import { MEDALS, SCENARIOS } from '../sim/data/scenarios';
 import { calendar } from '../sim/GameState';
 import { daysLeft, goalProgress } from '../sim/goals';
@@ -28,17 +29,14 @@ export interface PauseHandlers {
 export function mountPauseMenu(sim: Simulation, handlers: PauseHandlers): void {
   const modal = $('pause');
   const settings = modal.querySelector<HTMLElement>('.settings')!;
-  let resumeSpeed: Speed = 1;
-
   const open = () => {
-    resumeSpeed = sim.speed || 1;
-    sim.setSpeed(0);
+    holdPause(sim, modal);
     settings.hidden = true;
     modal.classList.remove('hidden');
   };
   const close = () => {
     modal.classList.add('hidden');
-    sim.setSpeed(resumeSpeed);
+    releasePause(sim, modal);
   };
 
   $('btn-menu').addEventListener('click', open);
@@ -100,8 +98,7 @@ export function showOutcome(sim: Simulation, outcome: 'won' | 'lost' | 'mileston
       </div>`;
   }
   modal.querySelector('.outcome-body')!.innerHTML = html;
-  const resume = sim.speed || 1;
-  sim.setSpeed(0);
+  holdPause(sim, modal);
   modal.classList.remove('hidden');
   modal.onclick = (e) => {
     const el = (e.target as HTMLElement).closest<HTMLElement>('[data-outcome]');
@@ -109,6 +106,6 @@ export function showOutcome(sim: Simulation, outcome: 'won' | 'lost' | 'mileston
     if (el.dataset.outcome === 'menu') return mainMenu();
     // Carry on as free play: the goals stay recorded as won or lost.
     modal.classList.add('hidden');
-    sim.setSpeed(resume as Speed);
+    releasePause(sim, modal);
   };
 }

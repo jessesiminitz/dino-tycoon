@@ -1,4 +1,5 @@
-import type { Simulation, Speed } from '../sim/Simulation';
+import type { Simulation } from '../sim/Simulation';
+import { holdPause, releasePause } from './pause';
 import { choiceEvent } from '../sim/systems/choices';
 import { playSfx } from '../audio/audio';
 
@@ -16,7 +17,6 @@ export function mountChoice(sim: Simulation, toast: (text: string, kind?: 'ok' |
   const options = modal.querySelector<HTMLElement>('.choice-options')!;
   const note = modal.querySelector<HTMLElement>('.choice-note')!;
   let shownFor: string | null = null;
-  let resume: Speed = 1;
 
   const key = () => {
     const c = sim.state.pendingChoice;
@@ -34,15 +34,14 @@ export function mountChoice(sim: Simulation, toast: (text: string, kind?: 'ok' |
     options.innerHTML = ev.options.map((o, i) => `<button class="action-btn ${i ? 'secondary' : ''}" data-option="${i}">${o.label}</button>`).join('');
     const left = c.expiresHour - sim.state.hours;
     note.textContent = `If you don't decide within ${left} hour${left === 1 ? '' : 's'}, "${ev.options[ev.options.length - 1].label}" will be chosen.`;
-    if (sim.speed) resume = sim.speed;
-    sim.setSpeed(0);
+    holdPause(sim, modal);
     modal.classList.remove('hidden');
     button.classList.add('hidden');
   };
 
   const close = () => {
     modal.classList.add('hidden');
-    if (sim.speed === 0) sim.setSpeed(resume);
+    releasePause(sim, modal);
     button.classList.toggle('hidden', !sim.state.pendingChoice);
   };
 

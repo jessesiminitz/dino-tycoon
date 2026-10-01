@@ -1,4 +1,5 @@
-import type { Simulation, Speed } from '../sim/Simulation';
+import type { Simulation } from '../sim/Simulation';
+import { holdPause, releasePause } from './pause';
 import type { GameEvent } from '../sim/systems/context';
 import { SPECIES } from '../sim/data/species';
 import { hash2 } from '../sim/rng';
@@ -90,7 +91,6 @@ export function mountDig(sim: Simulation): void {
   let total = 1;
   let cleared = new Set<number>();
   let finished = false;
-  let resume: Speed = 1;
   let last: { x: number; y: number } | null = null;
 
   const refreshButton = () => {
@@ -119,8 +119,7 @@ export function mountDig(sim: Simulation): void {
     bar.style.width = '0%';
     caption.textContent = 'Drag your finger over the sand to uncover the find.';
     done.classList.add('hidden');
-    resume = sim.speed || resume;
-    sim.setSpeed(0);
+    holdPause(sim, modal);
     modal.classList.remove('hidden');
   };
 
@@ -128,7 +127,7 @@ export function mountDig(sim: Simulation): void {
     modal.classList.add('hidden');
     current = null;
     last = null;
-    if (sim.speed === 0) sim.setSpeed(resume);
+    releasePause(sim, modal);
   };
 
   const reveal = () => {

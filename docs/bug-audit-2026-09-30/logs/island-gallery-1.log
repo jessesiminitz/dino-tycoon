@@ -1,0 +1,8 @@
+classic 0: 19ms river 32 falls 0 cliff 0 marsh 95 lava 7 spring 2 lake 26
+twin 0: 9ms river 13 falls 0 cliff 7 marsh 69 lava 0 spring 0 lake 29
+crescent 0: 5ms river 20 falls 0 cliff 1 marsh 54 lava 0 spring 2 lake 17
+river 0: 6ms river 69 falls 1 cliff 3 marsh 122 lava 3 spring 0 lake 23
+fire 0: 7ms river 22 falls 0 cliff 0 marsh 62 lava 113 spring 6 lake 20
+peninsula 0: 5ms river 10 falls 1 cliff 20 marsh 91 lava 5 spring 2 lake 26
+
+EXIT 0 ERROR none

@@ -1,6 +1,6 @@
 # Dino Tycoon: handoff notes
 
-Everything a fresh session needs to carry on. Last updated 2026-09-29, after Flood Season (commit `5cb253b`).
+Everything a fresh session needs to carry on. Last updated 2026-09-30, after the bug-audit fixes (see "Bug-audit fixes" below).
 
 ## Where things stand (read this first)
 
@@ -36,7 +36,7 @@ A touch-first spiritual successor to *DinoPark Tycoon* (1993) for iPhone (and iP
 
 ```sh
 npm run dev            # dev server (usually already running on :5173); /?quickstart skips the menu
-npm test               # all tests (220), including the challenge balance runs (~7 s)
+npm test               # all tests (235), including the challenge balance runs (~7 s)
 npm run build          # tsc --noEmit + vite build
 npm run icons          # regenerate Home Screen icons (dev server must be running)
 node scripts/checks/<name>.mjs   # browser checks (headless Chrome via puppeteer-core); see below
@@ -338,3 +338,17 @@ Scripts that step the sim by hand should use 16 steps per game-hour.
   - The fence screen has Sandbags; the build screen has the Pump house (brick house with a spouting pipe).
 - **Perf test:** p99 limit raised to 40 ms. It spiked to about 27 ms only when the whole suite ran in parallel; alone it's about 2.3 ms.
 - **Checks:** `scripts/checks/flood-ui.mjs [WxH]`; tests in `tests/flood.test.ts` and `tests/challengeBalance.test.ts`.
+
+## Bug-audit fixes (2026-09-30)
+
+An outside audit (`docs/BUG_AUDIT-2026-09-30.md`, evidence in `docs/bug-audit-2026-09-30/`) found B01–B12; all are fixed, with regression tests in `tests/auditFixes.test.ts`.
+- **B01 save files:** `migrate()` now catches upgrade errors and runs `stateProblem()` (map size, required arrays and objects, known scenario and species, finite numbers). Damaged imports get "damaged or incomplete"; bad slots read as empty instead of crashing.
+- **B02 tracks:** `tileOccupant()` counts a jeep track, so paths, buildings, feeders, decor and ponds can't go on one.
+- **B03 moving dinos:** `moveDino` clears paths inside the new paddock like `buyDino` (shared `clearPaddockPaths`); dinosaurs can't be put on a building tile.
+- **B04 fence repair %:** broken sections count as needing repair.
+- **B05/B11 flood rot:** each wet fence edge rots once per hour; a fence that rots through calls `invalidateWorld()`; wet-tile changes are compared tile by tile, not just by count.
+- **B06 safaris:** `onTrack` excludes flooded track; while any track is wet the safari is closed (`safariFlooded`): no boarding, parked riders get off, the station says why.
+- **B07 medals vs losses:** `fatalLoss()` (bankruptcy, `loseIf`) blocks medals at any hour; the game still ends at midnight. The deadline is unchanged: meeting goals in the last hour still counts.
+- **B08–B10 pausing:** every pausing popup (☰, decision, outcome, dig, briefing) uses `holdPause`/`releasePause` in `src/ui/pause.ts`: the park stays paused until the last popup closes, then returns to its earlier speed (still paused if the player paused). Also fixed: the ☰ button used to set the speed to NaN (it has `.speed-btn` but no `data-speed`). Check: `scripts/checks/pause-check.mjs` (exits non-zero on failure).
+- **B12 (owner decision: selling is not rescuing):** escaped dinosaurs can't be sold ("bring it home first"), so the Great Escape rescue medal needs real recaptures.
+- Not done from the audit: its "test-script problems" list (stale selectors and fixtures in older `scripts/checks/`, `%20` paths). `choice-check` can flake at startup on this iMac; rerun it.

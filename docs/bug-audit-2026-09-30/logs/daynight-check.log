@@ -1,0 +1,5 @@
+frame ms at night: median 33.4 p95 50.1 | at noon: median 33.3 p95 33.4
+asleep: [ 'triceratops', 'stegosaurus' ]
+errors: none
+
+EXIT 0 ERROR none

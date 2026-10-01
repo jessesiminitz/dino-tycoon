@@ -2,6 +2,7 @@ import type { GameState } from '../GameState';
 import { SCENARIOS } from '../data/scenarios';
 import { FENCE_TYPES, SANDBAGS } from '../data/fences';
 import { fenceAt, fenceHp, setFenceHp, tileEdges } from '../fences';
+import { edgeKey, type Edge } from '../grid';
 import { spend } from '../finance';
 import { isLand, Terrain } from '../terrain';
 import type { SimContext } from './context';
@@ -144,13 +145,15 @@ export function hourlyFlood(ctx: SimContext): void {
     f.soaked = [];
     ctx.emit({ text: '🌊 The river has burst its banks! Low ground is flooding.', kind: 'bad' });
   }
-  const before = f.wet.length;
+  const before = f.wet;
   f.wet = floodTiles(state, level);
-  if (f.wet.length !== before || was !== level) ctx.invalidateWorld();
+  if (was !== level || f.wet.length !== before.length || f.wet.some((t, k) => t !== before[k])) ctx.invalidateWorld();
 
   if (level > 0) {
     const wet = new Set(f.wet);
     let spoiled = 0;
+    // A fence between two wet tiles still only rots once an hour.
+    const soggy = new Map<string, Edge>();
     for (const i of f.wet) {
       const x = i % w;
       const y = Math.floor(i / w);
@@ -165,11 +168,17 @@ export function hourlyFlood(ctx: SimContext): void {
           feeder.stock = 0;
           spoiled++;
         }
-      for (const e of tileEdges(x, y)) {
-        const type = fenceAt(state, e);
-        if (type && type !== SANDBAGS) setFenceHp(state, e, fenceHp(state, e) - ROT_PER_HOUR / FENCE_TYPES[type].strength);
-      }
+      for (const e of tileEdges(x, y)) soggy.set(edgeKey(e), e);
     }
+    let broke = false;
+    for (const e of soggy.values()) {
+      const type = fenceAt(state, e);
+      if (!type || type === SANDBAGS) continue;
+      setFenceHp(state, e, fenceHp(state, e) - ROT_PER_HOUR / FENCE_TYPES[type].strength);
+      if (!fenceAt(state, e)) broke = true;
+    }
+    // A fence that rots through opens a paddock, so regions must be worked out again.
+    if (broke) ctx.invalidateWorld();
     if (spoiled) ctx.emit({ text: `🌊 Flood water spoiled the food in ${spoiled === 1 ? 'a feeder' : `${spoiled} feeders`}.`, kind: 'bad' });
     // Visitors caught by the water head home; staff retreat to the gate.
     state.visitors = state.visitors.filter((v) => v.riding !== null || !wet.has(v.y * w + v.x));

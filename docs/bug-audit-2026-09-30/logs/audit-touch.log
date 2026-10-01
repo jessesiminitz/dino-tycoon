@@ -1,0 +1,13 @@
+drag screen { x: 350, y: 123 } { x: 494, y: 243 }
+touch enclosure= paddock
+drag screen { x: 362, y: 159 } { x: 434, y: 159 }
+touch path tiles before dino= 4
+touch bought dinosaur= { dinos: 1, feeders: 0, paths: 0 }
+drag screen { x: 530, y: 159 } { x: 578, y: 159 }
+touch pond= 16
+drag screen { x: 530, y: 231 } { x: 578, y: 231 }
+drag screen { x: 530, y: 231 } { x: 578, y: 231 }
+touch path remove= 3 0
+errors= []
+
+EXIT 0 ERROR none

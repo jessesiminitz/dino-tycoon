@@ -24,8 +24,11 @@ const TRY_CHANCE = 0.5;
 const PETTING_KID = 12;
 const PETTING_ADULT = 5;
 
-/** Jeeps drive only on track, and fences stop them like everything else. */
-export const onTrack: CanEnter = (state, i) => state.tracks[i] === 1;
+/** Jeeps drive only on dry track, and fences stop them like everything else. */
+export const onTrack: CanEnter = (state, i) => state.tracks[i] === 1 && !isFlooded(state, i);
+
+/** Safaris are closed while flood water covers any of the track. */
+export const safariFlooded = (state: GameState): boolean => !!state.flood?.wet.some((i) => state.tracks[i] === 1);
 
 const w = (state: GameState) => state.map.width;
 /** Visitors keep their last few thoughts (as in the visitor system). */
@@ -52,6 +55,7 @@ export function stationStatus(state: GameState, b: Building): string {
   const jeep = state.jeeps.find((j) => j.stationId === b.id);
   if (!jeep) return stationBays(state, b).length ? 'the jeep is on its way' : 'needs a jeep track next to it (Path tool → Track)';
   if (jeep.steps > 0) return `jeep out on safari with ${jeep.riders.length} aboard`;
+  if (safariFlooded(state)) return 'safari closed: the track is flooded';
   return jeep.riders.length ? `jeep boarding (${jeep.riders.length}/${JEEP_SEATS})` : 'jeep waiting for riders';
 }
 
@@ -104,6 +108,7 @@ export function stepJeeps(ctx: SimContext): void {
     state.jeeps.push({ id: state.nextId++, stationId: b.id, x, y, px: x, py: y, from: -1, riders: [], steps: 0, waiting: 0, path: [] });
   }
 
+  const flooded = safariFlooded(state);
   for (const jeep of state.jeeps) {
     jeep.px = jeep.x;
     jeep.py = jeep.y;
@@ -113,6 +118,11 @@ export function stepJeeps(ctx: SimContext): void {
     if (jeep.steps === 0) {
       // Parked: set off when full, or when the first riders have waited long enough.
       if (jeep.riders.length === 0) continue;
+      // No tours while the track is under water: anyone aboard gets off again.
+      if (flooded) {
+        unload(state, jeep, false);
+        continue;
+      }
       jeep.waiting++;
       if (jeep.riders.length < JEEP_SEATS && jeep.waiting < DEPART_AFTER) continue;
     }
@@ -169,7 +179,7 @@ export function tryAttractions(ctx: SimContext, v: Visitor, leaving: boolean): b
   const { state, rng } = ctx;
   if (leaving) return false;
   const station = !v.rode.includes('jeep') && near(state, v, 'station');
-  if (station) {
+  if (station && !safariFlooded(state)) {
     const jeep = state.jeeps.find((j) => j.stationId === station.id && j.steps === 0 && j.riders.length < JEEP_SEATS);
     if (jeep && rng.chance(perStep(TRY_CHANCE))) {
       earn(state, 'rides', BUILDING_TYPES.station.salePrice);

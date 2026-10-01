@@ -1,0 +1,15 @@
+building 980x760 sideways:false
+feeder 980x760 sideways:false
+fence 980x760 sideways:false
+path 980x760 sideways:false
+decor 980x760 sideways:false
+dinos 980x760 sideways:false
+book 980x760 sideways:false
+stickers tab -> stickers
+park 980x760 sideways:false
+people 980x760 sideways:false
+news 980x760 sideways:false
+requests 980x760 sideways:false
+errors: none
+
+EXIT 0 ERROR none

@@ -1,0 +1,6 @@
+toasts right after tap: [ '🎹 Now playing: The Entertainer (Scott Joplin, 1902)' ]
+song { title: 'The Entertainer', index: 0, note: 4 } -> { title: 'The Entertainer', index: 0, note: 28 } | state running music gain 0.17
+toasts: []
+errors: none
+
+EXIT 0 ERROR none

@@ -1,0 +1,18 @@
+badge: { text: '5', hidden: false } | toasts: [ '📒 5 new stickers! Open the 📖 Book to see them.' ]
+book: {
+  count: '5 / 70',
+  earned: 5,
+  fresh: 5,
+  pages: [
+    'Dinosaurs 2 / 16',
+    'Babies 1 / 16',
+    'Trophy room 0 / 24',
+    'Park moments 2 / 14'
+  ],
+  cardBottom: 367,
+  vh: 375
+}
+badge after reading: cleared
+errors: none
+
+EXIT 0 ERROR none

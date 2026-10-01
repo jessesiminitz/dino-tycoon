@@ -1,4 +1,4 @@
-import { calendar, migrate, type GameState } from '../sim/GameState';
+import { calendar, migrate, SAVE_VERSION, type GameState } from '../sim/GameState';
 import type { ScenarioId } from '../sim/data/scenarios';
 
 /**
@@ -180,7 +180,10 @@ export function parseImport(text: string): { state: GameState } | { error: strin
     // Accept either a full record or a bare state.
     const rawState = (data.state ?? data) as Record<string, unknown>;
     const state = migrate(rawState);
-    return state ? { state } : { error: 'That file is from a version of the game this one can’t read.' };
+    if (state) return { state };
+    const v = rawState.version;
+    const readable = typeof v === 'number' && v >= 2 && v <= SAVE_VERSION;
+    return { error: readable ? 'That save file is damaged or incomplete, so it can’t be loaded.' : 'That file is from a version of the game this one can’t read.' };
   } catch {
     return { error: 'That isn’t a Dino Tycoon save file.' };
   }

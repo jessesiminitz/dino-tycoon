@@ -1,0 +1,24 @@
+setup {
+  built: 'Built 24 steel fence segments for $1,440',
+  A: { x: 28, y: 32 },
+  C: { x: 35, y: 38 },
+  tapY: 35,
+  money: 98560
+}
+after tap: {
+  text: 'Gap in the fence (2 missing, 1 broken, circled in red). Close it to let your Triceratops in.',
+  action: 'Close gap · $138',
+  hidden: false
+} | dinos 0
+after close: {
+  dinos: [ 'triceratops' ],
+  money: 86422,
+  toasts: [
+    '🎹 Now playing: Original Rags (Scott Joplin, 1899)',
+    'Welcome Buster the Triceratops!',
+    'Tip: build a plant feeder so it can eat'
+  ]
+}
+errors: none
+
+EXIT 0 ERROR none

@@ -1,0 +1,26 @@
+
+> dino-tycoon@0.1.0 test
+> vitest run --exclude tests/perf.test.ts && vitest run tests/perf.test.ts
+
+fatal: not a git repository (or any parent up to mount point /Volumes)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+
+ RUN  v5.0.2 /Volumes/Apple HDD 2TB/dino-tycoon-gameplay-audit
+
+
+ Test Files  28 passed (28)
+      Tests  219 passed (219)
+   Start at  21:30:21
+   Duration  18.07s (tests 90%, transform 5%, import 4%)
+
+fatal: not a git repository (or any parent up to mount point /Volumes)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+
+ RUN  v5.0.2 /Volumes/Apple HDD 2TB/dino-tycoon-gameplay-audit
+
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  21:30:39
+   Duration  1.29s (tests 64%, transform 31%, import 5%)
+

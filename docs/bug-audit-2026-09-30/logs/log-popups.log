@@ -1,0 +1,35 @@
+{
+ "toasts": [
+  {
+   "x": 8,
+   "y": 70,
+   "w": 280,
+   "h": 61,
+   "onTop": "CANVAS"
+  },
+  {
+   "x": 8,
+   "y": 135,
+   "w": 280,
+   "h": 61,
+   "onTop": "CANVAS"
+  }
+ ],
+ "info": {
+  "x": 8,
+  "y": 243,
+  "w": 560,
+  "h": 60,
+  "onTop": "info panel"
+ },
+ "card": {
+  "x": 0,
+  "y": 0,
+  "w": 0,
+  "h": 0,
+  "onTop": "CANVAS"
+ }
+}
+errors: none
+
+EXIT 0 ERROR none

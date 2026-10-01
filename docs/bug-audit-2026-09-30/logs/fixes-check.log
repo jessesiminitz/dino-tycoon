@@ -1,0 +1,7 @@
+lit at start: []
+lit with People open: [ 'btn-people' ]
+lit after closing: []
+fences after one drag: {"h":12,"v":10,"paddocks":1}
+errors: none
+
+EXIT 0 ERROR none

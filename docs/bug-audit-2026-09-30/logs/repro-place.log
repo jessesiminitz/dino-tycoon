@@ -1,0 +1,22 @@
+fences: Built 26 wooden fence segments for $650 | Already fenced
+inside the box: {"kind":"paddock","terrain":[3,5]}
+path into empty paddock: Already fenced | Built 4 path tiles for $40
+feeder: Built 4 path tiles for $40 | Built a plant feeder for $400
+placing hint: Tap inside a paddock to release your Protoceratops ($3,000)
+release: Built 4 path tiles for $40 | Built a plant feeder for $400 | Welcome Moss the Protoceratops! (cleared 4 path tiles from inside the paddock) | dinos: 1
+btn-catalog: [404,333 50x44] hit=self
+feeder: [457,333 56x44] hit=self
+building: [516,333 50x44] hit=self
+path: [569,333 44x44] hit=self
+decor: [616,333 56x44] hit=self
+fence: [675,333 50x44] hit=self
+demolish: [728,333 56x44] hit=self
+land: [787,333 44x44] hit=self
+mode after tapping Path: path
+paths laid: 4 | 📒 New sticker: Protoceratops! | 📒 New sticker: First dinosaur! | Built 4 path tiles for $40
+remove hint: Drag along fences or paths to remove them · tap a fence, path, building, feeder or garden item to remove it
+remove tool TAP on a path -> paths: 3 | Built 4 path tiles for $40 | Removed 1 path tile
+remove tool DRAG over paths -> paths: 0 | Built 4 path tiles for $40 | Removed 1 path tile | Removed 3 path tiles
+errors: none
+
+EXIT 0 ERROR none

@@ -1,0 +1,29 @@
+B08 paused before opening menu; speed after Resume= 1
+B09 paused before decision; speed after Decide later= 1
+stacked modal setup { speed: 0, choice: true, outcome: true }
+B10 choice still open after outcome dismissed= { speed: 1, choice: true }
+storage roundtrips= {
+  '1': { money: 12001, validImport: true },
+  '2': { money: 12002, validImport: true },
+  '3': { money: 12003, validImport: true },
+  deleted: true
+}
+loaded pending decision= {
+  pending: {
+    eventId: 'fundraiser',
+    amount: 1000,
+    createdHour: 0,
+    expiresHour: 4
+  },
+  choiceVisible: true,
+  buttonVisible: false,
+  speed: 0
+}
+B01 actual malformed import= { menuHidden: true, error: '', body: '' }
+page errors= [
+  "Cannot read properties of undefined (reading 'length')",
+  "Cannot read properties of undefined (reading 'length')",
+  "Cannot read properties of undefined (reading 'length')"
+]
+
+EXIT 0 ERROR none

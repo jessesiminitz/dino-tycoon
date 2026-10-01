@@ -1,0 +1,13 @@
+production sandbox saved= {
+  version: 21,
+  shape: 'river',
+  width: 96,
+  canvas: true,
+  devHook: false
+}
+SW controlled= true
+offline menu= { title: 'Dino Tycoon', continue: true, controller: true }
+offline park= { canvas: true, park: true }
+production errors= []
+
+EXIT 0 ERROR none
