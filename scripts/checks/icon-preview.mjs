@@ -1,12 +1,12 @@
 import puppeteer from 'puppeteer-core';
-import { HERE, finish } from './lib.mjs';
+import { HERE, finish, gameUrl } from './lib.mjs';
 import { writeFileSync } from 'fs';
 const OUT = HERE;
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true });
 const page = await browser.newPage();
 const errors = []; page.on('pageerror', (e) => errors.push(e.message));
 await page.setViewport({ width: 900, height: 600 });
-await page.goto('http://localhost:5173/', { waitUntil: 'networkidle0' });
+await page.goto(gameUrl('/'), { waitUntil: 'networkidle0' });
 const urls = await page.evaluate(async () => {
   const { paintIcon } = await import('/src/render/iconArt.ts');
   return { big: paintIcon(512).toDataURL(), small: paintIcon(180).toDataURL(), mask: paintIcon(512, 0.1).toDataURL() };

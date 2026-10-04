@@ -1,0 +1,9 @@
+# Add a Blender sprite pilot and reproducible pixel-art workflow
+
+The current dinosaur painters can merge shoulders, shins and feet into heavy silhouettes. This graphics branch adds Blender-authored T. rex and Triceratops silhouettes with four walk poses, plus a binocular viewing tower, while reusing the game's palette, outline, baby and fossil-mask painters. Other artwork keeps its procedural fallback. The pilot is available through a development comparison mode and a separate PWA preview; normal release builds keep original art.
+
+Source `.blend` files, the camera/material manifest, authoring/export scripts and repeatable cleanup patches regenerate nine identical frame hashes. Movement-driven pose selection and a shared animal clock freeze walking/idle/swimming/flying motion when paused. A local comparison page makes the native-size style and animation reviewable before expanding the art set.
+
+Validation: 241 tests passed, both build modes passed, all 13 existing browser tours passed with the prototype enabled, targeted artwork/layout/animation checks passed, and the cached prototype resumed a v21 park offline under `/dino-tycoon/`. The matched headless run showed equal 50 ms p95 frame intervals and about 1.2 ms p95 entity updates for 32 dinosaurs and 150 visitors. Local gzipped production files grew by 2,490 bytes. Headless timings are from software rendering on the development iMac and do not establish phone performance.
+
+Review: `npm run dev`, then `/scripts/art/review.html`; prototype park `/?quickstart&seed=7&art=blender`. Regeneration and preview instructions are in `assets-source/README.md`. Before integration, review the native-size art and verify it on physical iPhone/iPad Safari. Remaining-species conversion is queued behind that review gate. This document is a local PR draft; no PR or deployment has been published.

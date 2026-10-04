@@ -7,10 +7,17 @@
   "scripts": {
     "dev": "vite --host",
     "build": "tsc --noEmit && vite build",
+    "build:art": "tsc --noEmit && vite build --mode art-preview --outDir dist-art",
     "preview": "vite preview --host",
     "test": "vitest run --exclude tests/perf.test.ts && vitest run tests/perf.test.ts",
     "typecheck": "tsc --noEmit",
     "icons": "node scripts/make-icons.mjs",
+    "art:convert": "node scripts/art/convert_sprites.mjs",
+    "art:check": "node scripts/art/convert_sprites.mjs --check",
+    "art:review": "node scripts/checks/art-review.mjs",
+    "art:integration": "node scripts/checks/art-integration.mjs",
+    "art:ui": "node scripts/checks/art-ui.mjs",
+    "art:offline": "node scripts/checks/art-offline.mjs",
     "bench": "vitest run tests/perf.test.ts --silent=false"
   },
   "dependencies": {

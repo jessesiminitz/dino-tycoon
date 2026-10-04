@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "assets": {
+    "tyrannosaurus": { "all": [[57, 10, "E"], [56, 9, "D"], [57, 9, "D"], [58, 9, "D"]] },
+    "triceratops": { "all": [[49, 17, "E"]] },
+    "tower": { "all": [[6, 6, "E"], [15, 6, "E"]] }
+  }
+}

@@ -1,6 +1,6 @@
 // iPads held upright: no rotate screen, top bar and toolbar on screen and not overlapping, panels fit.
 import puppeteer from 'puppeteer-core';
-import { HERE, finish, ready } from './lib.mjs';
+import { HERE, finish, ready, gameUrl } from './lib.mjs';
 const OUT = HERE;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
@@ -9,7 +9,7 @@ for (const [w, h, name] of [[744, 1133, 'mini'], [820, 1180, 'air'], [1024, 1366
   const page = await browser.newPage();
   page.on('pageerror', (e) => errors.push(e.message));
   await page.setViewport({ width: w, height: h, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
-  await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'load' }); await ready(page);
+  await page.goto(gameUrl('/?quickstart'), { waitUntil: 'load' }); await ready(page);
   await sleep(1300);
   const r = await page.evaluate(() => {
     const hint = document.querySelector('.rotate-hint');

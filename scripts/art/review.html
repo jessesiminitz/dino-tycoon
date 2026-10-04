@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dino Tycoon · art comparison</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px; background: #14352d; color: #fff0c5; font: 16px system-ui,sans-serif; }
+  h1 { margin: 0 0 8px; font-size: 28px; }
+  p { margin: 0 0 24px; color: #c7dccb; }
+  .controls { display: flex; flex-wrap: wrap; gap: 16px; align-items: end; margin-bottom: 20px; }
+  label { display: grid; gap: 6px; }
+  label.check { display: flex; align-items: center; }
+  select, button { min-height: 40px; padding: 6px 12px; background: #e8edcf; color: #193e32; border: 0; border-radius: 4px; font: inherit; }
+  .pair { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
+  article { overflow: hidden; border: 1px solid #51775e; border-radius: 8px; }
+  h2 { font-size: 17px; margin: 0; padding: 12px 16px; background: #254d3d; }
+  .stage { height: 300px; display: grid; place-items: center; background: #79af5d; }
+  canvas { image-rendering: pixelated; }
+  nav { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 20px; }
+  a { color: #ffd67a; }
+  output { display: block; margin-top: 16px; color: #c7dccb; }
+</style>
+<h1>Dino Tycoon art comparison</h1>
+<p>Compare the silhouette, face and feet at game size, then enlarge to inspect the pixels.</p>
+<div class="controls">
+  <label>Asset<select id="asset"><option value="tyrannosaurus">T. rex</option><option value="triceratops">Triceratops</option><option value="tower">Viewing tower</option></select></label>
+  <label>Scale<select id="scale"><option value="1">1×</option><option value="2">2×</option><option value="4" selected>4×</option></select></label>
+  <label>Background<select id="background"><option value="#79af5d">Grass</option><option value="#cfbb7d">Sand</option><option value="#518da2">Water</option><option value="#253f46">Night</option></select></label>
+  <label>Pose<input id="pose" type="range" min="0" max="3" value="0"></label>
+  <label class="check"><input id="baby" type="checkbox">Baby</label>
+  <label class="check"><input id="left" type="checkbox">Face left</label>
+  <label class="check"><input id="animate" type="checkbox">Animate</label>
+</div>
+<div class="pair">
+  <article><h2>Original</h2><div class="stage"><canvas id="original"></canvas></div></article>
+  <article><h2>Blender prototype</h2><div class="stage"><canvas id="blender"></canvas></div></article>
+</div>
+<output id="detail"></output>
+<nav><a href="/?quickstart&seed=7&art=original">Original park</a><a href="/?quickstart&seed=7&art=blender">Prototype park</a><a href="/?quickstart&stress&art=blender">Busy prototype park</a></nav>
+<script type="module">
+  import { paintDino, dinoFrameCount } from '/src/render/dinoArt.ts';
+  import { SPECIES } from '/src/sim/data/species.ts';
+  import { paintTower } from '/src/render/sceneryArt.ts';
+  const controls = Object.fromEntries(['asset','scale','background','pose','baby','left','animate'].map((id) => [id, document.getElementById(id)]));
+  function draw() {
+    const asset = controls.asset.value, scale = Number(controls.scale.value), pose = Number(controls.pose.value);
+    controls.baby.disabled = controls.pose.disabled = controls.animate.disabled = asset === 'tower';
+    for (const style of ['original','blender']) {
+      const frame = asset === 'tower' ? 0 : Math.floor(pose * dinoFrameCount(asset,style) / 4);
+      const source = asset === 'tower' ? paintTower(style) : paintDino(SPECIES[asset], frame, controls.baby.checked, style);
+      const canvas = document.getElementById(style); canvas.width=source.width*scale; canvas.height=source.height*scale;
+      const ctx=canvas.getContext('2d'); ctx.imageSmoothingEnabled=false;
+      if (controls.left.checked) { ctx.translate(canvas.width,0); ctx.scale(-1,1); }
+      ctx.drawImage(source,0,0,canvas.width,canvas.height);
+      canvas.parentElement.style.background=controls.background.value;
+      if (style==='blender') document.getElementById('detail').textContent = `${source.width} × ${source.height} pixels · ${asset==='tower' ? 'static' : 'four walk poses'} · ${scale}× display`;
+    }
+  }
+  Object.values(controls).forEach((control) => control.addEventListener('input',draw));
+  setInterval(() => { if (controls.animate.checked && controls.asset.value!=='tower') { controls.pose.value=String((Number(controls.pose.value)+1)%4); draw(); } },180);
+  draw();
+</script>
+</html>

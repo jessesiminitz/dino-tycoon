@@ -1,0 +1,68 @@
+// Serve the prototype build under the same subpath as GitHub Pages and restart offline.
+import { createServer } from 'node:http';
+import { readFileSync, existsSync, mkdirSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { resolve, extname } from 'node:path';
+import puppeteer from 'puppeteer-core';
+import { check, finish } from './lib.mjs';
+const root=fileURLToPath(new URL('../../',import.meta.url));
+const dist=resolve(root,'dist-art');
+const out=resolve(root,'docs/art-review');
+mkdirSync(out,{recursive:true});
+const mime={'.html':'text/html','.js':'text/javascript','.json':'application/json','.webmanifest':'application/manifest+json','.css':'text/css','.png':'image/png'};
+const server=createServer((req,res)=>{
+  const path=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
+  if(!path.startsWith('/dino-tycoon/')) {res.writeHead(404);res.end();return;}
+  const file=resolve(dist,path.slice('/dino-tycoon/'.length)||'index.html');
+  if(!file.startsWith(dist+'/') || !existsSync(file)) {res.writeHead(404);res.end();return;}
+  res.writeHead(200,{'Content-Type':mime[extname(file)]??'application/octet-stream','Cache-Control':'no-cache'});
+  res.end(readFileSync(file));
+});
+await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(4175,'127.0.0.1',resolve);});
+let browser;
+const errors=[];
+try {
+  browser=await puppeteer.launch({executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true,
+    args:['--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+  const expectedPage=await browser.newPage();
+  await expectedPage.goto('http://localhost:5173/?art=blender',{waitUntil:'networkidle0'});
+  const expected=await expectedPage.evaluate(async()=>{
+    const {paintDino}=await import('/src/render/dinoArt.ts');
+    const {SPECIES}=await import('/src/sim/data/species.ts');
+    return ['tyrannosaurus','triceratops'].map(id=>paintDino(SPECIES[id]).toDataURL());
+  });
+  await expectedPage.close();
+  const page=await browser.newPage();
+  page.on('pageerror',e=>errors.push(e.message));
+  await page.setViewport({width:844,height:390,isMobile:true,hasTouch:true});
+  await page.goto('http://127.0.0.1:4175/dino-tycoon/',{waitUntil:'networkidle0'});
+  await page.waitForSelector('[data-go="new"]',{visible:true});
+  const active=await page.evaluate(expected=>{
+    const images=[...document.querySelectorAll('.menu-parade img')].map(i=>i.src);
+    return expected.every(src=>images.includes(src)) && !window.__dino;
+  },expected);
+  check('cached preview uses the new art with production dev hooks stripped',active);
+  const tap=async selector=>{await (await page.waitForSelector(selector,{visible:true})).tap();};
+  await tap('[data-go="new"]');await tap('[data-go="island"]');await tap('[data-start-sandbox]');
+  await page.waitForSelector('#game canvas');
+  const saved=await page.evaluate(()=>{
+    const rec=JSON.parse(localStorage.getItem('dino-tycoon:slot:1'));
+    return rec?.state.version===21 && document.body.classList.contains('in-park');
+  });
+  check('preview starts and saves a normal v21 park',saved);
+  await page.evaluate(async()=>{await navigator.serviceWorker.ready;});
+  await page.reload({waitUntil:'networkidle0'});
+  check('service worker controls the Pages subpath',await page.evaluate(()=>!!navigator.serviceWorker.controller));
+  await page.setOfflineMode(true);
+  await page.reload({waitUntil:'load'});
+  await page.waitForSelector('[data-play="1"]',{visible:true});
+  check('new menu art is present after offline restart',await page.evaluate(expected=>{
+    const images=[...document.querySelectorAll('.menu-parade img')].map(i=>i.src);
+    return expected.every(src=>images.includes(src));
+  },expected));
+  await tap('[data-play="1"]');
+  await page.waitForSelector('#game canvas');
+  check('saved park resumes offline',await page.evaluate(()=>document.body.classList.contains('in-park')));
+  await page.screenshot({path:`${out}/prototype-offline.png`});
+  finish(errors);
+} finally {if(browser) await browser.close();await new Promise(resolve=>server.close(resolve));}

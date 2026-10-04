@@ -1,6 +1,11 @@
 node_modules
 dist
+dist-art
 dev-dist
 .DS_Store
 scripts/checks/themes/*.png
 scripts/checks/tour/
+assets-source/renders/
+assets-source/blender/**/*.blend1
+assets-source/blender/**/*.blend2
+docs/art-review/

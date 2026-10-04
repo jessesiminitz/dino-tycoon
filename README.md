@@ -29,9 +29,11 @@ Pushing to `main` runs the tests, builds and deploys to GitHub Pages.
 
 ## How it's built
 
-- **TypeScript + Vite + Phaser 3.** No art or audio files: pixel art is painted in code and sound is synthesised with Web Audio.
+- **TypeScript + Vite + Phaser 3.** Pixel art is painted in code and sound is synthesised with Web Audio. The graphics branch also contains a Blender sprite pilot; its generated shape grids reuse the pixel painters.
 - `src/sim/`: the game rules, as pure TypeScript with no Phaser. One serializable `GameState`; a fixed-timestep `Simulation` (16 steps per game-hour; a game day is 4 real minutes at 1×) runs systems in `src/sim/systems/`; player actions go through `Simulation.dispatch(command)`. Seeded randomness makes runs reproducible.
 - `src/render/`: Phaser scenes that draw the state (terrain, fences, sprites, weather) and turn touches into commands.
 - `src/ui/`: DOM overlays: HUD, toolbar, panels, title screen, tutorial.
 - `src/save/`: save slots in IndexedDB with a synchronous localStorage mirror, and versioned migrations so old saves keep loading.
 - `tests/`: Vitest tests for the simulation, including a worst-case performance benchmark.
+
+The Blender graphics workflow and comparison URLs are documented in [assets-source/README.md](assets-source/README.md). Run `npm run dev` and open `/scripts/art/review.html` to compare the T. rex, Triceratops and viewing tower prototypes. The art track stays separate from the release until visual and device review.

@@ -2,6 +2,8 @@ import { hash2 } from '../sim/rng';
 import type { DecorKind } from '../sim/data/decor';
 import type { BuildingKind } from '../sim/data/economy';
 import { paintSprite, type Plot } from './pixels';
+import { ART_STYLE, type ArtStyle } from './artStyle';
+import { BLENDER_ART, BLENDER_BUILDING_COLORS } from './generated/blenderArt';
 
 /**
  * Scenery sprites painted in code: trees, palms, mountains, the volcano and
@@ -322,7 +324,15 @@ export function paintStation(): HTMLCanvasElement {
 }
 
 /** Viewing tower: a giant pair of binoculars on a tall stand, with a ladder up the post. */
-export function paintTower(): HTMLCanvasElement {
+export function paintTower(style: ArtStyle = ART_STYLE): HTMLCanvasElement {
+  if (style === 'blender') {
+    const { width, height, frames } = BLENDER_ART.tower;
+    return paintSprite(width, height, (px) => {
+      frames[0].forEach((row, y) => {
+        for (let x = 0; x < row.length; x++) if (row[x] !== '.') px(x, y, BLENDER_BUILDING_COLORS[row[x]]);
+      });
+    });
+  }
   return paintSprite(24, 42, (px) => {
     // Tripod legs and the post with ladder rungs.
     for (let y = 18; y < 41; y++) {

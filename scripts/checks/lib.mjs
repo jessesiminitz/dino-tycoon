@@ -4,6 +4,13 @@ import { fileURLToPath } from 'node:url';
 /** This folder, as a real path (works when the repo path has spaces). Screenshots go here. */
 export const HERE = fileURLToPath(new URL('.', import.meta.url));
 
+/** Run the same existing UI checks against either development art set. */
+export function gameUrl(path = '/') {
+  const url = new URL(path, process.env.BASE_URL ?? 'http://localhost:5173');
+  if (process.env.ART_STYLE) url.searchParams.set('art', process.env.ART_STYLE);
+  return url.href;
+}
+
 /** Waits until a ?quickstart park is running (on a slow machine that can take a while after "load"). */
 export async function ready(page) {
   await page.waitForFunction(() => window.__dino?.sim, { timeout: 60000 });

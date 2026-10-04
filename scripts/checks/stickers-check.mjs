@@ -1,6 +1,6 @@
 // Earn a few stickers in a park, see the badge and the pop-up, and open the book.
 import puppeteer from 'puppeteer-core';
-import { HERE, finish, ready } from './lib.mjs';
+import { HERE, finish, ready, gameUrl } from './lib.mjs';
 const OUT = HERE;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const [W, H] = (process.argv[2] ?? '667x375').split('x').map(Number);
@@ -8,9 +8,9 @@ const browser = await puppeteer.launch({ executablePath: '/Applications/Google C
 const page = await browser.newPage();
 const errors = []; page.on('pageerror', (e) => errors.push(e.message));
 await page.setViewport({ width: W, height: H, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
-await page.goto('http://localhost:5173/', { waitUntil: 'load' });
+await page.goto(gameUrl('/'), { waitUntil: 'load' });
 await page.evaluate(() => localStorage.removeItem('dino-tycoon:stickers'));
-await page.goto('http://localhost:5173/?quickstart', { waitUntil: 'load' }); await ready(page);
+await page.goto(gameUrl('/?quickstart'), { waitUntil: 'load' }); await ready(page);
 await sleep(1200);
 await page.evaluate(() => {
   const { sim } = window.__dino; const s = sim.state; s.money = 1e6;

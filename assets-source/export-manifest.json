@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "blenderVersion": "4.5.14",
+  "converterVersion": 1,
+  "engine": "CYCLES",
+  "device": "CPU",
+  "samples": 1,
+  "seed": 0,
+  "pixelFilterWidth": 0.01,
+  "viewTransform": "Standard",
+  "alphaThreshold": 0.5,
+  "camera": { "type": "ORTHO", "direction": [0, 1, 0], "up": [0, 0, 1], "depth": -100 },
+  "roles": {
+    "B": "#ff0000", "D": "#00ff00", "F": "#0000ff", "A": "#ffff00",
+    "G": "#00ffff", "W": "#ff00ff", "E": "#ffffff", "M": "#808080"
+  },
+  "buildingColors": {
+    "B": "#4a4a52", "D": "#2b2b30", "F": "#6e7880", "A": "#5fa8d0",
+    "G": "#8f9aa3", "W": "#c9d2d8", "E": "#ffffff", "M": "#8a6038"
+  },
+  "assets": {
+    "tyrannosaurus": { "width": 66, "height": 44, "frames": [0, 0.25, 0.5, 0.75], "kind": "dino", "grounded": true },
+    "triceratops": { "width": 60, "height": 34, "frames": [0, 0.25, 0.5, 0.75], "kind": "dino", "grounded": true },
+    "tower": { "width": 24, "height": 42, "frames": [0], "kind": "building", "grounded": false }
+  }
+}

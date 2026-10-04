@@ -4,6 +4,8 @@ Everything a fresh session needs to carry on. Last updated 2026-09-30, after the
 
 ## Where things stand (read this first)
 
+- **Graphics branch (2026-10-04):** `art/blender-pixel` in `/Volumes/Apple HDD 2TB/dino-tycoon-blender-art` has a Blender MCP exporter, shared-painter T. rex/Triceratops/tower pilot and four walk poses for the two land species. See `assets-source/README.md` for regeneration and review. Dev `?art=blender` enables the pilot; regular builds use original art. `npm run build:art` makes a separate cached preview in `dist-art/`. Keep this branch out of `main` until the pilot/device review gate; broader rollout is still queued in `docs/PLAN-blender-pixel-art.md`.
+
 - **Live and working:**
   - four challenges (The Great Escape, Fire Mountain, Flood Season, The Money Pit), in the 🧩 Challenges folder, unlocking in that order
   - six island shapes, with the Sandbox island picker

@@ -129,6 +129,17 @@ async function boot(): Promise<void> {
   // Optional: &shape=river&seed=123&big to pick the island.
   const params = new URLSearchParams(location.search);
   if (import.meta.env.DEV && params.has('quickstart')) {
+    if (params.has('stress')) {
+      const { stressPark } = await import('./dev/stressPark');
+      const state = stressPark();
+      state.hours = 4; // noon, because game hour zero is 08:00
+      state.visitors.forEach((v, i) => {
+        v.leaveHour = 99;
+        v.x = v.px = 15 * (1 + i % 3);
+        v.y = v.py = 13 + 14 * (Math.floor(i / 3) % 3);
+      });
+      return startGame(state, 3);
+    }
     const seed = params.has('seed') ? Number(params.get('seed')) : (Math.random() * 2 ** 32) >>> 0;
     return startGame(newGame(seed, { shape: (params.get('shape') ?? 'classic') as IslandShape, big: params.has('big') }), 3);
   }

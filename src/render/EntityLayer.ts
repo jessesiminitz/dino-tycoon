@@ -6,15 +6,16 @@ import { hash2 } from '../sim/rng';
 import type { Simulation } from '../sim/Simulation';
 import { FEEDER_TYPES, type FeederKind } from '../sim/data/feeders';
 import { habitatOf, SPECIES, SPECIES_IDS, type SpeciesId } from '../sim/data/species';
-import { paintDino, paintEgg } from './dinoArt';
+import { dinoFrameCount, paintDino, paintEgg } from './dinoArt';
 import { hoursToHatch, WOBBLE_HOURS } from '../sim/systems/breeding';
 import { isAsleep } from '../sim/systems/dinos';
 import type { CareEffect } from '../sim/systems/care';
 import { TILE } from './tileset';
 import { paintRows } from './pixels';
 import { paintBuilding, paintJeep, paintTrough } from './sceneryArt';
+import { walkFrame } from './dinoAnimation';
 
-const dinoKey = (id: SpeciesId, frame: 0 | 1 = 0, baby = false) => `dino-${id}-${frame}${baby ? '-baby' : ''}`;
+const dinoKey = (id: SpeciesId, frame = 0, baby = false) => `dino-${id}-${frame}${baby ? '-baby' : ''}`;
 const eggKey = (id: SpeciesId) => `egg-${id}`;
 const feederKey = (kind: FeederKind, full: boolean) => `feeder-${kind}-${full ? 'full' : 'empty'}`;
 /** Share of a swimmer's sprite that shows above the water. */
@@ -114,6 +115,9 @@ export class EntityLayer {
   private dirt: Phaser.GameObjects.Graphics;
   /** Soft ground shadows, under everything that stands. */
   private shadows: Phaser.GameObjects.Graphics;
+  /** Shared animation clock: freezes with the simulation, including flyers/idle motion. */
+  private animalTime = 0;
+  private lastUpdateTime?: number;
   selection: Selection = null;
 
   constructor(
@@ -121,7 +125,7 @@ export class EntityLayer {
     private sim: Simulation,
   ) {
     for (const id of SPECIES_IDS) {
-      for (const frame of [0, 1] as const)
+      for (let frame = 0; frame < dinoFrameCount(id); frame++)
         for (const baby of [false, true])
           if (!scene.textures.exists(dinoKey(id, frame, baby))) scene.textures.addCanvas(dinoKey(id, frame, baby), paintDino(SPECIES[id], frame, baby));
       if (!scene.textures.exists(eggKey(id))) scene.textures.addCanvas(eggKey(id), paintEgg(SPECIES[id]));
@@ -236,6 +240,10 @@ export class EntityLayer {
   }
 
   update(time: number): void {
+    const elapsed = this.lastUpdateTime === undefined ? 0 : Math.max(0, Math.min(250, time - this.lastUpdateTime));
+    this.lastUpdateTime = time;
+    if (this.sim.speed !== 0) this.animalTime += elapsed * this.sim.speed;
+    const animalTime = this.animalTime;
     const { state } = this.sim;
     const g = this.markers.clear();
     const sh = this.shadows.clear();
@@ -381,25 +389,26 @@ export class EntityLayer {
       const { x, y } = this.dinoPosition(d);
       // A one-pixel bob while walking (babies hop); idle animals breathe slowly.
       const hop = d.baby ? -2 : -1;
-      const bob = moving ? (this.sim.stepProgress < 0.5 ? hop : 0) : Math.sin(time / 600 + d.id) > 0.9 ? -1 : 0;
+      const walking = moving && this.sim.speed !== 0;
+      const bob = walking ? (this.sim.stepProgress < 0.5 ? hop : 0) : Math.sin(animalTime / 600 + d.id) > 0.9 ? -1 : 0;
       const habitat = habitatOf(d.species);
       const asleep = isAsleep(state, d);
       if (habitat === 'water') {
         // Swimming: flippers keep stroking; only the top of the animal shows above the water.
-        img.setTexture(dinoKey(d.species, Math.floor(time / 450 + d.id) % 2 === 0 ? 0 : 1, d.baby));
+        img.setTexture(dinoKey(d.species, Math.floor(animalTime / 450 + d.id) % 2 === 0 ? 0 : 1, d.baby));
         const shown = Math.round(img.height * WATERLINE);
         img.setCrop(0, 0, img.width, shown);
-        img.setPosition(Math.round(x), Math.round(y) - 2 + (img.height - shown) + (Math.sin(time / 700 + d.id) > 0.6 ? 1 : 0));
+        img.setPosition(Math.round(x), Math.round(y) - 2 + (img.height - shown) + (Math.sin(animalTime / 700 + d.id) > 0.6 ? 1 : 0));
         sh.lineStyle(1, 0xe8f6fb, 0.75).strokeEllipse(Math.round(x), Math.round(y) - 2, img.width * 0.8, 4);
       } else if (habitat === 'air') {
         // Flying: always flapping, bobbing about a tile up, with a shadow on the ground below (asleep: settled on the ground).
         const flapping = !asleep;
-        img.setTexture(dinoKey(d.species, flapping && Math.floor(time / 240 + d.id) % 2 === 1 ? 1 : 0, d.baby));
-        const lift = flapping ? FLY_HEIGHT + Math.round(Math.sin(time / 520 + d.id) * 2) : 0;
+        img.setTexture(dinoKey(d.species, flapping && Math.floor(animalTime / 240 + d.id) % 2 === 1 ? 1 : 0, d.baby));
+        const lift = flapping ? FLY_HEIGHT + Math.round(Math.sin(animalTime / 520 + d.id) * 2) : 0;
         img.setPosition(Math.round(x), Math.round(y) - lift);
         sh.fillEllipse(Math.round(x), Math.round(y) - 1, img.width * 0.45, 3);
       } else {
-        img.setTexture(dinoKey(d.species, moving && this.sim.stepProgress >= 0.5 ? 1 : 0, d.baby));
+        img.setTexture(dinoKey(d.species, walkFrame(dinoFrameCount(d.species), moving, this.sim.stepProgress, this.sim.speed === 0, asleep), d.baby));
         img.setPosition(Math.round(x), Math.round(y) + bob + (hops.get(d.id) ?? 0));
         sh.fillEllipse(Math.round(x), Math.round(y) - 1, img.width * 0.7, Math.max(4, img.height * 0.14));
       }

@@ -1,5 +1,7 @@
 import { hash2 } from '../sim/rng';
 import type { Species, SpeciesId } from '../sim/data/species';
+import { ART_STYLE, type ArtStyle } from './artStyle';
+import { BLENDER_ART } from './generated/blenderArt';
 
 /**
  * Dinosaur sprites, built per species from simple shapes (tapered limbs,
@@ -627,6 +629,30 @@ const ART: Record<SpeciesId, Painter> = {
 
 const OUTLINE = '#1b1b14';
 
+type BlenderDinoId = Exclude<keyof typeof BLENDER_ART, 'tower'>;
+
+function blenderDino(id: SpeciesId): (typeof BLENDER_ART)[BlenderDinoId] | undefined {
+  return id in BLENDER_ART ? BLENDER_ART[id as BlenderDinoId] : undefined;
+}
+
+/** Number of poses available in the active art set; procedural species keep two. */
+export function dinoFrameCount(id: SpeciesId, style: ArtStyle = ART_STYLE): number {
+  return style === 'blender' ? blenderDino(id)?.frames.length ?? 2 : 2;
+}
+
+/** One shape resolver keeps canvases, babies and fossil masks in agreement. */
+function shapeFor(species: Species, frame: number, style: ArtStyle): Sprite {
+  const candidate = style === 'blender' ? blenderDino(species.id) : undefined;
+  const count = candidate?.frames.length ?? 2;
+  if (!Number.isInteger(frame) || frame < 0 || frame >= count) throw new RangeError(`Invalid ${species.id} pose ${frame}`);
+  if (!candidate) return ART[species.id](frame as 0 | 1);
+  const sprite = new Sprite(candidate.width, candidate.height);
+  candidate.frames[frame].forEach((row, y) => {
+    for (let x = 0; x < row.length; x++) sprite.grid[y][x] = row[x] === '.' ? null : row[x] as Key;
+  });
+  return sprite;
+}
+
 /** Mixes a #rrggbb colour toward white (amount > 0) or black (amount < 0). */
 function tint(hex: string, amount: number): string {
   const n = parseInt(hex.slice(1), 16);
@@ -637,8 +663,8 @@ function tint(hex: string, amount: number): string {
 }
 
 /** The painted key grid for a species (for tests and tools). */
-export function dinoShape(species: Species, frame: 0 | 1 = 0, baby = false): (string | null)[][] {
-  const s = ART[species.id](frame);
+export function dinoShape(species: Species, frame = 0, baby = false, style: ArtStyle = ART_STYLE): (string | null)[][] {
+  const s = shapeFor(species, frame, style);
   return (baby ? babyGrid(s) : s).grid;
 }
 
@@ -712,8 +738,8 @@ export function paintEgg(species: Species): HTMLCanvasElement {
   return canvas;
 }
 
-export function paintDino(species: Species, frame: 0 | 1 = 0, baby = false): HTMLCanvasElement {
-  const grown = ART[species.id](frame);
+export function paintDino(species: Species, frame = 0, baby = false, style: ArtStyle = ART_STYLE): HTMLCanvasElement {
+  const grown = shapeFor(species, frame, style);
   const s = baby ? babyGrid(grown) : grown;
   const { w, h } = s;
   // Babies are a touch paler and softer.
