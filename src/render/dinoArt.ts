@@ -749,6 +749,22 @@ export function paintEgg(species: Species): HTMLCanvasElement {
 
 export function paintDino(species: Species, frame = 0, baby = false, style: ArtStyle = ART_STYLE): HTMLCanvasElement {
   const grown = shapeFor(species, frame, style);
+  return paintDinoSprite(species, grown, baby);
+}
+
+/** Paint additional Blender clips with the same palette, baby scale and outline. */
+export function paintDinoRows(species: Species, rows: readonly string[], baby = false): HTMLCanvasElement {
+  if (!rows.length || !rows[0].length || rows.some(row => row.length !== rows[0].length || /[^.BDFAGWEM]/.test(row))) {
+    throw new RangeError('Invalid dinosaur role grid');
+  }
+  const grown = new Sprite(rows[0].length, rows.length);
+  rows.forEach((row, y) => {
+    for (let x = 0; x < row.length; x++) grown.grid[y][x] = row[x] === '.' ? null : row[x] as Key;
+  });
+  return paintDinoSprite(species, grown, baby);
+}
+
+function paintDinoSprite(species: Species, grown: Sprite, baby: boolean): HTMLCanvasElement {
   const s = baby ? babyGrid(grown) : grown;
   const { w, h } = s;
   // Babies are a touch paler and softer.

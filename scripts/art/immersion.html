@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Dino Tycoon · Animation prototype</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#102e2b;color:#f7edce;font:16px system-ui,sans-serif;padding:24px}
+    main{max-width:1100px;margin:auto}h1{font-size:clamp(24px,4vw,36px);margin:10px 0}p{color:#bdd1c8;line-height:1.5;margin:8px 0 20px}
+    a{color:#ffda87}button,select{font:inherit;color:#14352d;background:#f3e8c6;border:0;border-radius:6px;padding:10px;min-height:44px}
+    button{cursor:pointer}label{display:grid;gap:6px}label.check{display:flex;align-items:center;gap:8px}input[type=checkbox]{width:20px;height:20px;accent-color:#ffd17a}
+    .controls{display:flex;gap:16px;align-items:end;flex-wrap:wrap;margin:20px 0}.world{overflow:hidden;border:1px solid #607466;border-radius:12px;background:#25453c}
+    canvas{image-rendering:pixelated;display:block}#world{width:100%;height:auto;aspect-ratio:768/480}.caption{padding:12px 16px;background:#193c33;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .clips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:24px 0}.card{border:1px solid #527361;border-radius:10px;background:#204736;padding:16px;overflow:hidden}.card h2{font-size:18px;margin:0 0 6px}.card p{font-size:14px;margin-bottom:8px}.clip-stage{height:160px;display:grid;place-items:center;background:#78965c;border-radius:6px;margin:12px 0}.clip-stage canvas{max-width:100%;height:auto}.card output{font-size:13px;color:#c7dacd}.controls button[aria-pressed=true]{background:#ffd17a}
+    @media(max-width:700px){body{padding:14px}.clips{grid-template-columns:1fr}.controls{gap:12px}.clip-stage{height:150px}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  </style>
+</head>
+<body><main>
+  <a href="./review.html">← Artwork review</a>
+  <h1>A little more life in the park</h1>
+  <p>Watch three dinosaurs wander, look around, eat and settle down. A shared breeze moves the plants; footsteps leave small puffs or wet ripples.</p>
+  <div class="controls">
+    <button id="pause" type="button" aria-pressed="false">Pause</button>
+    <label>Behavior<select id="behavior"><option value="natural">Natural behavior</option><option value="walk">Walk</option><option value="idle">Look around</option><option value="eat">Eat</option><option value="rest">Rest</option></select></label>
+    <label>Atmosphere<select id="atmosphere"><option value="dusk">Golden dusk</option><option value="day">Daylight</option><option value="rain">Rainy evening</option></select></label>
+    <label>Speed<select id="speed"><option value="1">1×</option><option value="0.5">½×</option><option value="2">2×</option></select></label>
+    <label class="check"><input id="wind" type="checkbox" checked>Breeze</label>
+    <label class="check"><input id="footsteps" type="checkbox" checked>Footsteps</label>
+  </div>
+  <div class="world"><canvas id="world" width="768" height="480" role="img" aria-label="Animated dinosaur enclosure with swaying plants and dusk lights"></canvas><div class="caption"><span id="world-status" aria-live="polite">Preparing the park…</span><span>Animation study · 3 dinosaurs</span></div></div>
+  <div class="controls"><label>Preview clip<select id="clip"><option value="walk">Walk</option><option value="idle">Idle</option><option value="eat">Eat</option><option value="rest">Rest</option></select></label><label class="check"><input id="baby" type="checkbox">Babies</label><label class="check"><input id="left" type="checkbox">Face left</label><label>Frame<input id="frame" type="range" min="0" max="7" value="0"></label></div>
+  <div class="clips" id="clips"></div>
+  <p>Blender motion study: eight poses per clip. The controls let you compare movement, inspect a paused frame, and try the scene on a phone or tablet.</p>
+</main><script type="module" src="/src/render/immersionPrototype.ts"></script></body>
+</html>

@@ -36,6 +36,14 @@ Regions `B D F A G W E M` mean body, belly, far limbs, accent, far accent, horn/
 
 ## Animation
 
+A separate [animation and immersion prototype](../docs/PLAN-animation-immersion.md)
+adds Carnotaurus, Diplodocus and Yutyrannus walk/idle/eat/rest clips: 96 additional
+frames with editable shape-key timelines in `blender/motion/`. Review at
+http://localhost:5173/scripts/art/immersion.html. Its generated data and sources
+are separate from the original 224 grids and are excluded from the regular game
+build. Use `art:motion:convert`, `art:motion:check` and `art:immersion`; the linked
+document gives the small-batch Blender MCP recipe.
+
 Right-facing land animals plant the near foot at the front, move it backward during stance, then lift it while swinging forward. Far legs alternate; quadrupeds alternate diagonal pairs. Mirroring the artwork handles left-facing movement without reversing the frame order. Regression tests check ground-contact pixels and mesh positions for all 24 land species in both directions. The park does not add a walk bob to these poses, which keeps planted feet on the ground. Swimming and flying select all four authored poses; the shared animal clock freezes when paused. Water cropping and sleeping flight retain their existing behavior.
 
 ## Regenerate through Blender MCP

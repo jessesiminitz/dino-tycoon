@@ -1,10 +1,12 @@
 # Dino Tycoon: handoff notes
 
-Everything a fresh session needs to carry on. Last updated 2026-10-04, after adding twelve Blender-authored dinosaurs and their review gallery.
+Everything a fresh session needs to carry on. Last updated 2026-10-04, after the Blender animation and immersion prototype.
 
 ## Where things stand (read this first)
 
 - **Graphics branch:** `art/blender-pixel` in `/Volumes/Apple HDD 2TB/dino-tycoon-blender-art`, now with the twelve-species expansion on top of environment commit `843f5d7`. The roster now has 28 species. Blender artwork covers all dinosaurs, park buildings, scenery and terrain; backward-looking walking is fixed. Validation passed. This work remains separate from `main` and has not been deployed; physical iPhone/iPad review and integration are still pending. See **Blender graphics work** below.
+
+- **Animation prototype:** http://localhost:5173/scripts/art/immersion.html, linked from artwork review. Carnotaurus, Diplodocus and Yutyrannus each have four eight-pose Blender clips (walk/idle/eat/rest), with 12 editable animated source files. A review enclosure adds natural feeding/resting sequences, rooted wind motion, pond/footstep effects and day/dusk/rain lighting. This is a standalone review fixture; simulation and saves remain v21. All 295 tests, build, art/motion checks, prototype browser checks and existing art integration passed. See [docs/PLAN-animation-immersion.md](docs/PLAN-animation-immersion.md) for regeneration, measurements and remaining transition/device review.
 
 - **Live and working:**
   - four challenges (The Great Escape, Fire Mountain, Flood Season, The Money Pit), in the 🧩 Challenges folder, unlocking in that order
@@ -72,7 +74,7 @@ Run browser tours and performance comparisons sequentially on this machine to av
 
 ```sh
 npm run dev            # dev server (usually already running on :5173); /?quickstart skips the menu
-npm test               # 288 tests + 1 separate performance test (289 total)
+npm test               # 294 tests + 1 separate performance test (295 total)
 npm run build          # tsc --noEmit + vite build
 npm run icons          # regenerate Home Screen icons (dev server must be running)
 node scripts/checks/<name>.mjs   # browser checks (headless Chrome via puppeteer-core); see below
