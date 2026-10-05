@@ -1,4 +1,4 @@
-// Integration assertions for experimental art, without altering personal saves.
+// Integration assertions for the complete Blender art set, without altering personal saves.
 import puppeteer from 'puppeteer-core';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -8,11 +8,12 @@ mkdirSync(out, { recursive: true });
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true,
   args: ['--use-angle=swiftshader','--enable-unsafe-swiftshader'] });
 const errors = [];
+const url = process.env.BASE_URL ?? 'http://localhost:5173';
 try {
   const page = await browser.newPage();
   page.on('pageerror', (e) => errors.push(e.message));
   await page.setViewport({ width: 844, height: 390, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
-  await page.goto('http://localhost:5173/?quickstart&stress&art=blender', { waitUntil: 'load' });
+  await page.goto(`${url}/?quickstart&stress&art=blender`, { waitUntil: 'load' });
   await ready(page);
   const shared = await page.evaluate(async () => {
     const { sim, game } = window.__dino;
@@ -20,7 +21,7 @@ try {
     const { paintDino, dinoShape } = await import('/src/render/dinoArt.ts');
     const { SPECIES } = await import('/src/sim/data/species.ts');
     const failures=[];
-    for (const id of ['tyrannosaurus','triceratops']) {
+    for (const id of Object.keys(SPECIES)) {
       const sp=SPECIES[id], expected=paintDino(sp).toDataURL();
       const card=[...document.querySelectorAll('#catalog .species-card')].find((c) => c.querySelector('h3').textContent===sp.name);
       if (card.querySelector('img').src!==expected) failures.push(`${id} catalog mismatch`);
@@ -34,12 +35,41 @@ try {
         if (tex.width!==shape[0].length+2 || tex.height!==shape.length+2) failures.push(`${id} canvas anchor changed`);
       }
     }
+    const {BUILDING_TYPES}=await import('/src/sim/data/economy.ts');
+    const {paintBuilding}=await import('/src/render/sceneryArt.ts');
+    for (const kind of Object.keys(BUILDING_TYPES)) {
+      const tex=game.textures.get(`building-${kind}`).getSourceImage();
+      if(tex.toDataURL()!==paintBuilding(kind).toDataURL()) failures.push(`${kind} building texture mismatch`);
+      const before=paintBuilding(kind, 'original'), after=paintBuilding(kind, 'blender');
+      if(before.width!==after.width || before.height!==after.height) failures.push(`${kind} footprint changed`);
+    }
     return failures;
   });
   check('catalog, guide, textures, fossil masks and palette overrides agree', shared.length===0, shared);
 
-  const animation = await page.evaluate(() => {
+  const animation = await page.evaluate(async () => {
     const { sim,game }=window.__dino, scene=game.scene.getScene('park');
+    const {SPECIES_IDS,habitatOf}=await import('/src/sim/data/species.ts');
+    const fullSet=[];
+    const sample=sim.state.dinos[0];
+    sim.state.hours=4;sim.speed=1;
+    for(const [i,species] of SPECIES_IDS.entries()) {
+      const animal={...sample,species,id:98000+i,x:22,px:21,y:20,py:20,baby:false};
+      sim.state.dinos.push(animal);
+      for(const left of [false,true]) {
+        animal.px=left ? animal.x+1 : animal.x-1;
+        for(const pose of [0,1,2,3]) {
+          Object.defineProperty(sim,'stepProgress',{configurable:true,get:()=>pose/4});
+          const habitat=habitatOf(species), duration=habitat==='air'?120:225;
+          scene.entities.animalTime=((pose-animal.id%4+4)%4)*duration;
+          scene.entities.lastUpdateTime=1000;
+          scene.entities.update(1000);
+          const img=scene.entities.dinos.get(animal.id);
+          if(img.texture.key!==`dino-${species}-${pose}` || img.flipX!==left) fullSet.push(`${species}:${pose}:${left}`);
+        }
+      }
+    }
+    delete sim.stepProgress;
     const d=sim.state.dinos.find((d)=>d.species==='triceratops');
     d.px=d.x-1;
     sim.speed=1;
@@ -68,8 +98,9 @@ try {
     const left=sim.state.dinos.find(d=>d.species==='triceratops');
     left.px=left.x+1; scene.entities.update(10000);
     const flip=scene.entities.dinos.get(left.id).flipX;
-    return {frames,frozen:JSON.stringify(first)===JSON.stringify(second),cropped,sleeping,flip};
+    return {fullSet,frames,frozen:JSON.stringify(first)===JSON.stringify(second),cropped,sleeping,flip};
   });
+  check('every species selects all four poses in both directions',animation.fullSet.length===0,animation.fullSet);
   check('all four walk poses selected', animation.frames.join(',') === [0,1,2,3].map(f=>`dino-triceratops-${f}`).join(','), animation.frames);
   check('pause freezes land, swimming and flying motion', animation.frozen);
   check('waterline, sleeping flight and left facing preserved', animation.cropped && animation.sleeping && animation.flip, animation);
@@ -90,7 +121,8 @@ try {
     await page.screenshot({path:`${out}catalog-blender-${width}.png`});
   }
   await page.setViewport({width:1000,height:650,deviceScaleFactor:1});
-  await page.goto('http://localhost:5173/scripts/art/review.html', {waitUntil:'networkidle0'});
+  await page.goto(`${url}/scripts/art/review.html`, {waitUntil:'networkidle0'});
+  check('all 26 assets are available in the comparison', await page.$$eval('#asset option',options=>options.length===26));
   check('interactive comparison loads', await page.$eval('#blender',c=>c.width===68*4));
   await page.screenshot({path:`${out}comparison-rex.png`});
   await page.select('#asset','triceratops');

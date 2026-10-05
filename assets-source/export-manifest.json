@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "blenderVersion": "4.5.14",
-  "converterVersion": 1,
+  "converterVersion": 2,
   "engine": "CYCLES",
   "device": "CPU",
   "samples": 1,
@@ -9,18 +9,422 @@
   "pixelFilterWidth": 0.01,
   "viewTransform": "Standard",
   "alphaThreshold": 0.5,
-  "camera": { "type": "ORTHO", "direction": [0, 1, 0], "up": [0, 0, 1], "depth": -100 },
+  "camera": {
+    "type": "ORTHO",
+    "direction": [
+      0,
+      1,
+      0
+    ],
+    "up": [
+      0,
+      0,
+      1
+    ],
+    "depth": -100
+  },
   "roles": {
-    "B": "#ff0000", "D": "#00ff00", "F": "#0000ff", "A": "#ffff00",
-    "G": "#00ffff", "W": "#ff00ff", "E": "#ffffff", "M": "#808080"
+    "B": "#ff0000",
+    "D": "#00ff00",
+    "F": "#0000ff",
+    "A": "#ffff00",
+    "G": "#00ffff",
+    "W": "#ff00ff",
+    "E": "#ffffff",
+    "M": "#808080"
   },
   "buildingColors": {
-    "B": "#4a4a52", "D": "#2b2b30", "F": "#6e7880", "A": "#5fa8d0",
-    "G": "#8f9aa3", "W": "#c9d2d8", "E": "#ffffff", "M": "#8a6038"
+    "B": "#4a4a52",
+    "D": "#2b2b30",
+    "F": "#6e7880",
+    "A": "#5fa8d0",
+    "G": "#8f9aa3",
+    "W": "#c9d2d8",
+    "E": "#ffffff",
+    "M": "#8a6038"
   },
   "assets": {
-    "tyrannosaurus": { "width": 66, "height": 44, "frames": [0, 0.25, 0.5, 0.75], "kind": "dino", "grounded": true },
-    "triceratops": { "width": 60, "height": 34, "frames": [0, 0.25, 0.5, 0.75], "kind": "dino", "grounded": true },
-    "tower": { "width": 24, "height": 42, "frames": [0], "kind": "building", "grounded": false }
+    "compsognathus": {
+      "width": 28,
+      "height": 16,
+      "frames": [
+        0,
+        0.25,
+        0.5,
+        0.75
+      ],
+      "kind": "dino",
+      "grounded": true
+    },
+    "velociraptor": {
+      "width": 36,
+      "height": 22,
+      "frames": [
+        0,
+        0.25,
+        0.5,
+        0.75
+      ],
+      "kind": "dino",
+      "grounded": true
+    },
+    "dilophosaurus": {
+      "width": 44,
+      "height": 30,
+      "frames": [
+        0,
+        0.25,
+        0.5,
+        0.75
+      ],
+      "kind": "dino",
+      "grounded": true
+    },
+    "allosaurus": {
+      "width": 56,
+      "height": 36,
+      "frames": [
+        0,
+        0.25,
+        0.5,
+        0.75
+      ],
+      "kind": "dino",
+      "grounded": true
+    },
+    "tyrannosaurus": {
+      "width": 66,
+      "height": 44,
+      "frames": [
+        0,
+        0.25,
+        0.5,
+        0.75
+      ],
+      "kind": "dino",
+      "grounded": true
+    },
+    "pachycephalosaurus": {
+      "width": 36,
+      "height": 28,
+      "frames": [
+        0,
+        0.25,
+        0.5,
+        0.75
+      ],
+      "kind": "dino",
+      "grounded": true
+    },
+    "parasaurolophus": {
+      "width": 50,
+      "height": 36,
+      "frames": [
+        0,
+        0.25,
+        0.5,
+        0.75
+      ],
+      "kind": "dino",
+      "grounded": true
+    },
+    "protoceratops": {
+      "width": 34,
+      "height": 20,
+      "frames": [
+        0,
+        0.25,
+        0.5,
+        0.75
+      ],
+      "kind": "dino",
+      "grounded": true
+    },
+    "triceratops": {
+      "width": 60,
+      "height": 34,
+      "frames": [
+        0,
+        0.25,
+        0.5,
+        0.75
+      ],
+      "kind": "dino",
+      "grounded": true
+    },
+    "stegosaurus": {
+      "width": 58,
+      "height": 36,
+      "frames": [
+        0,
+        0.25,
+        0.5,
+        0.75
+      ],
+      "kind": "dino",
+      "grounded": true
+    },
+    "ankylosaurus": {
+      "width": 54,
+      "height": 26,
+      "frames": [
+        0,
+        0.25,
+        0.5,
+        0.75
+      ],
+      "kind": "dino",
+      "grounded": true
+    },
+    "plesiosaurus": {
+      "width": 54,
+      "height": 22,
+      "frames": [
+        0,
+        0.25,
+        0.5,
+        0.75
+      ],
+      "kind": "dino",
+      "grounded": false
+    },
+    "mosasaurus": {
+      "width": 64,
+      "height": 22,
+      "frames": [
+        0,
+        0.25,
+        0.5,
+        0.75
+      ],
+      "kind": "dino",
+      "grounded": false
+    },
+    "pteranodon": {
+      "width": 58,
+      "height": 28,
+      "frames": [
+        0,
+        0.25,
+        0.5,
+        0.75
+      ],
+      "kind": "dino",
+      "grounded": false
+    },
+    "dimorphodon": {
+      "width": 38,
+      "height": 22,
+      "frames": [
+        0,
+        0.25,
+        0.5,
+        0.75
+      ],
+      "kind": "dino",
+      "grounded": false
+    },
+    "brachiosaurus": {
+      "width": 66,
+      "height": 66,
+      "frames": [
+        0,
+        0.25,
+        0.5,
+        0.75
+      ],
+      "kind": "dino",
+      "grounded": true
+    },
+    "restaurant": {
+      "width": 24,
+      "height": 32,
+      "frames": [
+        0
+      ],
+      "kind": "building",
+      "grounded": false,
+      "colors": {
+        "B": "#dd5240",
+        "D": "#9e3432",
+        "F": "#eeae3b",
+        "A": "#ffe083",
+        "G": "#f4c24b",
+        "W": "#fff0ca",
+        "E": "#ffffff",
+        "M": "#714b39"
+      }
+    },
+    "snackstall": {
+      "width": 22,
+      "height": 30,
+      "frames": [
+        0
+      ],
+      "kind": "building",
+      "grounded": false,
+      "colors": {
+        "B": "#e6574b",
+        "D": "#b33837",
+        "F": "#eeae3b",
+        "A": "#ffe9aa",
+        "G": "#d69348",
+        "W": "#fff3cf",
+        "E": "#ffffff",
+        "M": "#704432"
+      }
+    },
+    "restroom": {
+      "width": 24,
+      "height": 30,
+      "frames": [
+        0
+      ],
+      "kind": "building",
+      "grounded": false,
+      "colors": {
+        "B": "#65a5c0",
+        "D": "#36748b",
+        "F": "#9bb0b7",
+        "A": "#e58daa",
+        "G": "#9b567a",
+        "W": "#dae9db",
+        "E": "#ffffff",
+        "M": "#3b535d"
+      }
+    },
+    "giftshop": {
+      "width": 28,
+      "height": 32,
+      "frames": [
+        0
+      ],
+      "kind": "building",
+      "grounded": false,
+      "colors": {
+        "B": "#c66e4b",
+        "D": "#804a3b",
+        "F": "#6f9b58",
+        "A": "#93c169",
+        "G": "#dda466",
+        "W": "#f3d791",
+        "E": "#ffffff",
+        "M": "#473b31"
+      }
+    },
+    "trashcan": {
+      "width": 14,
+      "height": 19,
+      "frames": [
+        0
+      ],
+      "kind": "building",
+      "grounded": false,
+      "colors": {
+        "B": "#71a855",
+        "D": "#3f6b40",
+        "F": "#558844",
+        "A": "#ecdc95",
+        "G": "#aab96b",
+        "W": "#fff2d4",
+        "E": "#ffffff",
+        "M": "#273b31"
+      }
+    },
+    "station": {
+      "width": 30,
+      "height": 26,
+      "frames": [
+        0
+      ],
+      "kind": "building",
+      "grounded": false,
+      "colors": {
+        "B": "#c3ad70",
+        "D": "#81734d",
+        "F": "#5d7351",
+        "A": "#639caa",
+        "G": "#95bec5",
+        "W": "#e8d49c",
+        "E": "#ffffff",
+        "M": "#343e36"
+      }
+    },
+    "tower": {
+      "width": 24,
+      "height": 42,
+      "frames": [
+        0
+      ],
+      "kind": "building",
+      "grounded": false,
+      "colors": {
+        "B": "#4a4a52",
+        "D": "#2b2b30",
+        "F": "#6e7880",
+        "A": "#5fa8d0",
+        "G": "#8f9aa3",
+        "W": "#c9d2d8",
+        "E": "#ffffff",
+        "M": "#8a6038"
+      }
+    },
+    "petting": {
+      "width": 26,
+      "height": 26,
+      "frames": [
+        0
+      ],
+      "kind": "building",
+      "grounded": false,
+      "colors": {
+        "B": "#f0dfb2",
+        "D": "#c6ac79",
+        "F": "#78b568",
+        "A": "#deae64",
+        "G": "#d8818b",
+        "W": "#fff3d4",
+        "E": "#ffffff",
+        "M": "#664c37"
+      }
+    },
+    "pump": {
+      "width": 26,
+      "height": 26,
+      "frames": [
+        0
+      ],
+      "kind": "building",
+      "grounded": false,
+      "colors": {
+        "B": "#ab7355",
+        "D": "#684739",
+        "F": "#6097ab",
+        "A": "#91d2e0",
+        "G": "#4e8aa5",
+        "W": "#e2edc7",
+        "E": "#ffffff",
+        "M": "#3c5e64"
+      }
+    },
+    "digsite": {
+      "width": 28,
+      "height": 26,
+      "frames": [
+        0
+      ],
+      "kind": "building",
+      "grounded": false,
+      "colors": {
+        "B": "#c6a269",
+        "D": "#98774a",
+        "F": "#a99476",
+        "A": "#e56346",
+        "G": "#cfbe95",
+        "W": "#eee1bc",
+        "E": "#ffffff",
+        "M": "#5f543e"
+      }
+    }
   }
 }

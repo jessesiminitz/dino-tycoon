@@ -1,11 +1,13 @@
+import walkContacts from '../assets-source/walk-contacts.json';
 import { describe, expect, it } from 'vitest';
-import { BLENDER_ART } from '../src/render/generated/blenderArt';
+import { BLENDER_ART, BLENDER_BUILDING_COLORS } from '../src/render/generated/blenderArt';
 import { dinoFrameCount, dinoShape } from '../src/render/dinoArt';
 import { SPECIES, SPECIES_IDS } from '../src/sim/data/species';
+import { BUILDING_TYPES } from '../src/sim/data/economy';
 import { walkFrame } from '../src/render/dinoAnimation';
 
 describe('Blender sprite contracts', () => {
-  for (const id of ['tyrannosaurus', 'triceratops'] as const) {
+  for (const id of SPECIES_IDS) {
     it(`${id} keeps its registered footprint and baby face in all four poses`, () => {
       const asset = BLENDER_ART[id];
       expect(dinoFrameCount(id, 'blender')).toBe(4);
@@ -16,7 +18,7 @@ describe('Blender sprite contracts', () => {
         const grown = dinoShape(SPECIES[id], frame, false, 'blender');
         expect(grown.length).toBe(original.length);
         expect(grown.every((row) => row.length === original[0].length)).toBe(true);
-        expect(grown.at(-1)?.some(Boolean)).toBe(true);
+        if (!['water','air'].includes(SPECIES[id].habitat ?? 'land')) expect(grown.at(-1)?.some(Boolean)).toBe(true);
         expect(grown.flat().includes('E')).toBe(true);
         const baby = dinoShape(SPECIES[id], frame, true, 'blender');
         expect(baby.flat().includes('E')).toBe(true);
@@ -25,11 +27,40 @@ describe('Blender sprite contracts', () => {
     });
   }
 
-  it('preserves procedural fallback art for every species outside the pilot', () => {
-    for (const id of SPECIES_IDS.filter((id) => !(id in BLENDER_ART))) {
-      expect(dinoFrameCount(id, 'blender')).toBe(2);
-      for (const frame of [0, 1]) {
-        expect(dinoShape(SPECIES[id], frame, false, 'blender')).toEqual(dinoShape(SPECIES[id], frame, false, 'original'));
+  it('covers every species and park building', () => {
+    expect(SPECIES_IDS.every((id) => id in BLENDER_ART)).toBe(true);
+    for (const id of Object.keys(BUILDING_TYPES)) {
+      expect(id in BLENDER_ART).toBe(true);
+      const asset = BLENDER_ART[id as keyof typeof BLENDER_ART];
+      expect(asset.frames.length).toBe(1);
+      expect(asset.frames[0].join('').replaceAll('.', '').length).toBeGreaterThan(20);
+      const palette = BLENDER_BUILDING_COLORS[id];
+      for (const key of new Set(asset.frames[0].join('').replaceAll('.', ''))) expect(palette[key]).toMatch(/^#[0-9a-f]{6}$/i);
+    }
+  });
+
+  it('plants feet while they move backward and lifts them to swing forward, facing either way', () => {
+    const contacts = walkContacts as Record<string, {x:number;y:number;right:number}[]>;
+    const land = SPECIES_IDS.filter((id) => !['water','air'].includes(SPECIES[id].habitat ?? 'land'));
+    expect(Object.keys(contacts).sort()).toEqual([...land].sort());
+    for (const id of land) {
+      const [front, middle, back, swing] = contacts[id];
+      const asset = BLENDER_ART[id];
+      expect(front.y).toBe(asset.height);
+      expect(middle.y).toBe(front.y);
+      expect(back.y).toBe(front.y);
+      expect(swing.y).toBeLessThan(front.y - 1);
+      expect(front.x).toBeGreaterThan(middle.x);
+      expect(middle.x).toBeGreaterThan(back.x);
+      expect(swing.x).toBeGreaterThan(back.x);
+      // Confirm the actual exported toe pixels touch the ground during stance.
+      for (const f of [0,1,2]) expect(asset.frames[f][asset.height-1][Math.floor(contacts[id][f].x)], `${id}:${f} planted toe`).not.toBe('.');
+      for (const facing of [1,-1]) {
+        const stride = front.x - back.x;
+        const worldContacts = [front,middle,back].map((foot,i) => facing * (foot.x + i*stride/2));
+        expect(Math.abs(worldContacts[0]-worldContacts[2])).toBeLessThan(.001);
+        const relativeTravel = facing*(back.x-front.x);
+        expect(Math.sign(relativeTravel)).toBe(-facing);
       }
     }
   });

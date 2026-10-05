@@ -34,31 +34,43 @@
 </div>
 <div class="pair">
   <article><h2>Original</h2><div class="stage"><canvas id="original"></canvas></div></article>
-  <article><h2>Blender prototype</h2><div class="stage"><canvas id="blender"></canvas></div></article>
+  <article><h2>Blender artwork</h2><div class="stage"><canvas id="blender"></canvas></div></article>
 </div>
 <output id="detail"></output>
-<nav><a href="/?quickstart&seed=7&art=original">Original park</a><a href="/?quickstart&seed=7&art=blender">Prototype park</a><a href="/?quickstart&stress&art=blender">Busy prototype park</a></nav>
+<nav><a href="/?quickstart&seed=7&art=original">Original park</a><a href="/?quickstart&seed=7&art=blender">Blender park</a><a href="/?quickstart&stress&art=blender">Busy Blender park</a></nav>
 <script type="module">
   import { paintDino, dinoFrameCount } from '/src/render/dinoArt.ts';
   import { SPECIES } from '/src/sim/data/species.ts';
-  import { paintTower } from '/src/render/sceneryArt.ts';
+  import { paintBuilding } from '/src/render/sceneryArt.ts';
   const controls = Object.fromEntries(['asset','scale','background','pose','baby','left','animate'].map((id) => [id, document.getElementById(id)]));
+  const assetSelect=controls.asset;
+  assetSelect.innerHTML='';
+  for (const [id,sp] of Object.entries(SPECIES)) assetSelect.add(new Option(sp.name,id));
+  const buildings={restaurant:'Fries stand',snackstall:'Popcorn stand',restroom:'Restrooms',giftshop:'Gift shop',trashcan:'Dino bin',station:'Jeep station',tower:'Viewing tower',petting:'Petting pen',pump:'Pump house',digsite:'Dig site'};
+  for(const [id,name] of Object.entries(buildings)) assetSelect.add(new Option(name,id));
+  assetSelect.value='tyrannosaurus';
+  let travel=0;
   function draw() {
     const asset = controls.asset.value, scale = Number(controls.scale.value), pose = Number(controls.pose.value);
-    controls.baby.disabled = controls.pose.disabled = controls.animate.disabled = asset === 'tower';
+    const isBuilding=asset in buildings;
+    controls.baby.disabled = controls.pose.disabled = controls.animate.disabled = isBuilding;
     for (const style of ['original','blender']) {
-      const frame = asset === 'tower' ? 0 : Math.floor(pose * dinoFrameCount(asset,style) / 4);
-      const source = asset === 'tower' ? paintTower(style) : paintDino(SPECIES[asset], frame, controls.baby.checked, style);
+      const frame = isBuilding ? 0 : Math.floor(pose * dinoFrameCount(asset,style) / 4);
+      const source = isBuilding ? paintBuilding(asset,style) : paintDino(SPECIES[asset], frame, controls.baby.checked, style);
       const canvas = document.getElementById(style); canvas.width=source.width*scale; canvas.height=source.height*scale;
       const ctx=canvas.getContext('2d'); ctx.imageSmoothingEnabled=false;
       if (controls.left.checked) { ctx.translate(canvas.width,0); ctx.scale(-1,1); }
       ctx.drawImage(source,0,0,canvas.width,canvas.height);
       canvas.parentElement.style.background=controls.background.value;
-      if (style==='blender') document.getElementById('detail').textContent = `${source.width} × ${source.height} pixels · ${asset==='tower' ? 'static' : 'four walk poses'} · ${scale}× display`;
+      const span=Math.max(0,canvas.parentElement.clientWidth-canvas.width-16);
+      const shift=controls.animate.checked && !isBuilding ? (travel%60/60-.5)*span*(controls.left.checked?-1:1) : 0;
+      canvas.style.transform=`translateX(${shift}px)`;
+      canvas.parentElement.style.backgroundImage='repeating-linear-gradient(90deg,transparent 0px,transparent 63px,#ffffff18 64px)';
+      if (style==='blender') document.getElementById('detail').textContent = `${source.width} × ${source.height} pixels · ${isBuilding ? 'static' : 'four motion poses'} · ${scale}× display`;
     }
   }
   Object.values(controls).forEach((control) => control.addEventListener('input',draw));
-  setInterval(() => { if (controls.animate.checked && controls.asset.value!=='tower') { controls.pose.value=String((Number(controls.pose.value)+1)%4); draw(); } },180);
+  setInterval(() => { if (controls.animate.checked && controls.asset.value in SPECIES) { travel+=2; controls.pose.value=String((Number(controls.pose.value)+1)%4); draw(); } },180);
   draw();
 </script>
 </html>

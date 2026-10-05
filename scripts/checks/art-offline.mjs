@@ -1,4 +1,4 @@
-// Serve the prototype build under the same subpath as GitHub Pages and restart offline.
+// Serve the Blender build under the same subpath as GitHub Pages and restart offline.
 import { createServer } from 'node:http';
 import { readFileSync, existsSync, mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -6,7 +6,7 @@ import { resolve, extname } from 'node:path';
 import puppeteer from 'puppeteer-core';
 import { check, finish } from './lib.mjs';
 const root=fileURLToPath(new URL('../../',import.meta.url));
-const dist=resolve(root,'dist-art');
+const dist=resolve(root,process.env.ART_DIST ?? 'dist');
 const out=resolve(root,'docs/art-review');
 mkdirSync(out,{recursive:true});
 const mime={'.html':'text/html','.js':'text/javascript','.json':'application/json','.webmanifest':'application/manifest+json','.css':'text/css','.png':'image/png'};
@@ -25,11 +25,11 @@ try {
   browser=await puppeteer.launch({executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true,
     args:['--use-angle=swiftshader','--enable-unsafe-swiftshader']});
   const expectedPage=await browser.newPage();
-  await expectedPage.goto('http://localhost:5173/?art=blender',{waitUntil:'networkidle0'});
+  await expectedPage.goto(`${process.env.BASE_URL ?? 'http://localhost:5173'}/?art=blender`,{waitUntil:'networkidle0'});
   const expected=await expectedPage.evaluate(async()=>{
     const {paintDino}=await import('/src/render/dinoArt.ts');
     const {SPECIES}=await import('/src/sim/data/species.ts');
-    return ['tyrannosaurus','triceratops'].map(id=>paintDino(SPECIES[id]).toDataURL());
+    return Object.keys(SPECIES).map(id=>paintDino(SPECIES[id]).toDataURL());
   });
   await expectedPage.close();
   const page=await browser.newPage();
@@ -41,7 +41,7 @@ try {
     const images=[...document.querySelectorAll('.menu-parade img')].map(i=>i.src);
     return expected.every(src=>images.includes(src)) && !window.__dino;
   },expected);
-  check('cached preview uses the new art with production dev hooks stripped',active);
+  check('production build uses the new art with production dev hooks stripped',active);
   const tap=async selector=>{await (await page.waitForSelector(selector,{visible:true})).tap();};
   await tap('[data-go="new"]');await tap('[data-go="island"]');await tap('[data-start-sandbox]');
   await page.waitForSelector('#game canvas');
@@ -49,7 +49,7 @@ try {
     const rec=JSON.parse(localStorage.getItem('dino-tycoon:slot:1'));
     return rec?.state.version===21 && document.body.classList.contains('in-park');
   });
-  check('preview starts and saves a normal v21 park',saved);
+  check('production build starts and saves a normal v21 park',saved);
   await page.evaluate(async()=>{await navigator.serviceWorker.ready;});
   await page.reload({waitUntil:'networkidle0'});
   check('service worker controls the Pages subpath',await page.evaluate(()=>!!navigator.serviceWorker.controller));
@@ -63,6 +63,6 @@ try {
   await tap('[data-play="1"]');
   await page.waitForSelector('#game canvas');
   check('saved park resumes offline',await page.evaluate(()=>document.body.classList.contains('in-park')));
-  await page.screenshot({path:`${out}/prototype-offline.png`});
+  await page.screenshot({path:`${out}/blender-offline.png`});
   finish(errors);
 } finally {if(browser) await browser.close();await new Promise(resolve=>server.close(resolve));}

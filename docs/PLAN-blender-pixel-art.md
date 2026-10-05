@@ -1,5 +1,6 @@
 # Blender pixel-art improvement track
 
+**Current status (2026-10-04):** The owner accepted the pilot and requested the full set. All 16 species and 10 buildings are implemented as the default art, including the backward-walking fix. Full-set tests, builds, headless browser checks and production offline resume passed; physical-device/integration review remains pending. The original proposal and pilot measurements below document the earlier stages.
 Prepared 2026-10-04 after reviewing the local Dino Tycoon repository at `b37134fc0224609e6ad7efd68b9bbea40cd1df9b` (`main`). The representative pilot and its export/integration workflow are now implemented on `art/blender-pixel`; broader rollout and release integration remain behind visual/device review.
 
 Updated the existing draft on 2026-10-04 for the requested Blender MCP workflow. The local MCP connection successfully returned scene `Scene` with `Cube`, `Light`, and `Camera`; the installed app reports version 4.5.14. This verifies scene inspection, not Python execution, sprite export, or render performance.
@@ -168,7 +169,7 @@ This milestone is complete, including the representative Triceratops/tower set a
 
 Generated review images/logs are in `docs/art-review/` (ignored). An early stress-fixture run accidentally expired its visitors by changing the clock; it was discarded. The final comparison uses a corrected fixture initialized before scene creation with 150 visitors whose departure times remain in the future.
 
-The remaining gates are owner review of the representative art, real iPhone/iPad Safari checks, then species/building rollout in small groups and a reviewed integration PR. Additional animal conversion is deliberately queued at the plan's pilot gate; the toolchain and fallback adapter are ready for it.
+The owner accepted the pilot on 2026-10-04 and requested the complete species/building set plus a correction to backward-looking walking. That rollout is implemented below. Physical iPhone/iPad Safari checks and integration review remain pending.
 
 ## Implementation checkpoints
 
@@ -180,7 +181,18 @@ The remaining gates are owner review of the representative art, real iPhone/iPad
 - [x] Produce the shared-painter adult/baby comparison and game-size park captures.
 - [x] Evaluate the visual result before starting Triceratops and the tower.
 - [x] Validate representative prototypes and expand the two pilot species to four poses.
-- [ ] Owner visual review before remaining-species rollout.
+- [x] Owner visual review before remaining-species rollout (approved 2026-10-04).
 - [ ] Complete build, browser, device, performance, and offline checks before integration.
 
-Review status: export/regeneration, tests, builds, headless browser integration, local renderer comparison and offline checks passed. Physical device checks and the owner's visual acceptance remain open. Gameplay state and save version remain v21.
+Pilot review status: the owner accepted the visual direction. Its headless checks passed; physical device checks remain open. Gameplay state and save version remain v21.
+
+
+## Full-set rollout and gait correction (2026-10-04)
+
+The owner's request authorizes conversion of the remaining artwork. All 16 species now have four Blender-authored poses, all 10 buildings have matching models and individual palettes, and the regular production build uses them by default. Distinct species retain their identifying anatomy, including crests, feathers, plates, horns, long necks, flippers and wings. Original artwork remains available for development comparisons. Source scenes total about 2.5 MB and stay outside the shipped build.
+
+The backwards-walking appearance came from lifting the foot while its offset moved backward, then planting it while its offset moved forward. Stance now travels backward relative to the body; the lifted swing travels forward. Far limbs alternate and quadrupeds alternate diagonal pairs. Left-facing movement mirrors the artwork without reversing frame order. The extra walking bob is removed for authored poses so planted feet remain on the ground. Swimming and flight select all four poses; flying contours fit the canvas.
+
+All 74 frame hashes and all 12 land-species foot-contact exports reproduced exactly through Blender MCP. Gait regression checks inspect contact positions extracted from the actual Blender foot meshes and the exported ground-contact pixels, including both facing directions. The shared dinosaur painter serves the park, babies, catalog, guide, fossils, menu and icon; all building painters use the same generated data. The comparison page exposes all 26 assets with native/4× views and translated animation.
+
+Full-set validation passed 255 regular tests plus the separate performance test, both production build modes, all 13 existing browser tours and targeted integration checks for all four poses of every species in both directions. An isolated matched fixture with 32 dinosaurs and 150 visitors measured equal 50.1 ms p95 frame intervals and about 1.3 ms p95 entity updates; dev startup was 3,383 ms original and 3,328 ms Blender. Locally gzipped production files total 586,911 bytes, 11,454 bytes above the pre-pilot build. Full-set details are in the PR draft and local `docs/art-review/` reports. Physical iPhone/iPad Safari testing remains pending before integration; this branch has not been deployed.

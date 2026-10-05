@@ -66,7 +66,7 @@ try {
     });
     measurements[style] = { startupMs, ...metrics };
     check(`${style} populated park renders`, metrics.dinos >= 30 && metrics.visitors > 0, metrics);
-    await page.setViewport({ width: 1400, height: 1000, deviceScaleFactor: 1 });
+    await page.setViewport({ width: 1700, height: 1000, deviceScaleFactor: 1 });
     const contracts = await page.evaluate(async (style) => {
       const art = await import('/src/render/dinoArt.ts');
       const scenery = await import('/src/render/sceneryArt.ts');
@@ -97,7 +97,13 @@ try {
         if (!art.dinoShape(SPECIES[id],0,true,style).flat().includes('E')) failures.push(`${id} baby eye`);
         document.body.append(row);
       }
-      const tower=scenery.paintTower(style); document.body.append(magnify(tower,1),magnify(tower,4));
+      const { BUILDING_TYPES } = await import('/src/sim/data/economy.ts');
+      const buildings=document.createElement('div'); buildings.style.cssText='display:flex;flex-wrap:wrap;gap:20px;align-items:end;padding:20px';
+      for (const kind of Object.keys(BUILDING_TYPES)) {
+        const c=scenery.paintBuilding(kind,style), box=document.createElement('div');
+        box.textContent=kind;box.append(document.createElement('br'),magnify(c,1),magnify(c,4));buildings.append(box);
+      }
+      document.body.append(buildings);
       return failures;
     }, style);
     check(`${style} pixel and baby contracts`, contracts.length===0, contracts);

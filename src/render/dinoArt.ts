@@ -629,13 +629,13 @@ const ART: Record<SpeciesId, Painter> = {
 
 const OUTLINE = '#1b1b14';
 
-type BlenderDinoId = Exclude<keyof typeof BLENDER_ART, 'tower'>;
+type BlenderDinoId = SpeciesId;
 
 function blenderDino(id: SpeciesId): (typeof BLENDER_ART)[BlenderDinoId] | undefined {
   return id in BLENDER_ART ? BLENDER_ART[id as BlenderDinoId] : undefined;
 }
 
-/** Number of poses available in the active art set; procedural species keep two. */
+/** Number of poses available in the active art set. */
 export function dinoFrameCount(id: SpeciesId, style: ArtStyle = ART_STYLE): number {
   return style === 'blender' ? blenderDino(id)?.frames.length ?? 2 : 2;
 }

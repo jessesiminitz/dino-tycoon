@@ -11,6 +11,16 @@ import { BLENDER_ART, BLENDER_BUILDING_COLORS } from './generated/blenderArt';
  * lighter and right/bottom ones darker.
  */
 
+function paintBlenderBuilding(kind: BuildingKind): HTMLCanvasElement {
+  const { width, height, frames } = BLENDER_ART[kind];
+  const colors = BLENDER_BUILDING_COLORS[kind];
+  return paintSprite(width, height, (px) => {
+    frames[0].forEach((row, y) => {
+      for (let x = 0; x < row.length; x++) if (row[x] !== '.') px(x, y, colors[row[x]]);
+    });
+  });
+}
+
 const LEAF = { light: '#86c25c', mid: '#4f9a3a', dark: '#2f6b2a', deep: '#1f4d2a' };
 const TRUNK = { light: '#8a5a2b', dark: '#5a3b1f' };
 
@@ -271,7 +281,8 @@ export const FOREST_TREES = [paintConifer, paintBroadleaf, paintCycad, paintTree
 type Px = Plot;
 
 /** Trash can: a hungry green dino head whose open mouth is the bin slot. */
-export function paintTrashCan(): HTMLCanvasElement {
+export function paintTrashCan(style: ArtStyle = ART_STYLE): HTMLCanvasElement {
+  if (style === 'blender') return paintBlenderBuilding('trashcan');
   return paintSprite(14, 19, (px) => {
     // Round head with the jaws wide open (top jaw up, bottom jaw is the can).
     for (let y = 2; y < 7; y++) for (let x = 2; x < 12; x++) if (!(y === 2 && (x === 2 || x === 11))) px(x, y, y === 2 || x === 2 ? '#7fcf6a' : '#5fb84a');
@@ -290,7 +301,8 @@ export function paintTrashCan(): HTMLCanvasElement {
 }
 
 /** Safari station: a giant safari jeep you walk into, with a door in its side. */
-export function paintStation(): HTMLCanvasElement {
+export function paintStation(style: ArtStyle = ART_STYLE): HTMLCanvasElement {
+  if (style === 'blender') return paintBlenderBuilding('station');
   return paintSprite(30, 26, (px) => {
     // Roll bar and canvas roof.
     for (let x = 4; x < 19; x++) px(x, 4, x % 3 ? '#3f7a3a' : '#2f5a2a');
@@ -325,14 +337,7 @@ export function paintStation(): HTMLCanvasElement {
 
 /** Viewing tower: a giant pair of binoculars on a tall stand, with a ladder up the post. */
 export function paintTower(style: ArtStyle = ART_STYLE): HTMLCanvasElement {
-  if (style === 'blender') {
-    const { width, height, frames } = BLENDER_ART.tower;
-    return paintSprite(width, height, (px) => {
-      frames[0].forEach((row, y) => {
-        for (let x = 0; x < row.length; x++) if (row[x] !== '.') px(x, y, BLENDER_BUILDING_COLORS[row[x]]);
-      });
-    });
-  }
+  if (style === 'blender') return paintBlenderBuilding('tower');
   return paintSprite(24, 42, (px) => {
     // Tripod legs and the post with ladder rungs.
     for (let y = 18; y < 41; y++) {
@@ -366,7 +371,8 @@ export function paintTower(style: ArtStyle = ART_STYLE): HTMLCanvasElement {
 }
 
 /** Petting pen: a giant cracked-open dino egg with two babies peeking over the shell. */
-export function paintPettingPen(): HTMLCanvasElement {
+export function paintPettingPen(style: ArtStyle = ART_STYLE): HTMLCanvasElement {
+  if (style === 'blender') return paintBlenderBuilding('petting');
   return paintSprite(26, 26, (px) => {
     const cx = 12.5;
     // Two little dinos poking out of the top.
@@ -398,7 +404,8 @@ export function paintPettingPen(): HTMLCanvasElement {
 }
 
 /** Dig site: a giant fossil bone sticking out of a sand heap, with a shovel and a little flag. */
-export function paintDigSite(): HTMLCanvasElement {
+export function paintDigSite(style: ArtStyle = ART_STYLE): HTMLCanvasElement {
+  if (style === 'blender') return paintBlenderBuilding('digsite');
   return paintSprite(28, 26, (px) => {
     // Sand heap.
     for (let y = 12; y < 25; y++)
@@ -495,7 +502,8 @@ function hatch(px: Px, x0: number, x1: number, y: number, stripe: [string, strin
 }
 
 /** Restaurant: a giant carton of fries with a serving hatch and a door. */
-export function paintFriesStand(): HTMLCanvasElement {
+export function paintFriesStand(style: ArtStyle = ART_STYLE): HTMLCanvasElement {
+  if (style === 'blender') return paintBlenderBuilding('restaurant');
   return paintSprite(24, 32, (px) => {
     // Fries poking out of the top, at jaunty heights.
     const tops = [6, 3, 5, 2, 4, 3, 5, 2, 4, 6];
@@ -517,7 +525,8 @@ export function paintFriesStand(): HTMLCanvasElement {
 }
 
 /** Snack stall: a big striped popcorn bucket, heaped high, with a serving hatch. */
-export function paintPopcornStand(): HTMLCanvasElement {
+export function paintPopcornStand(style: ArtStyle = ART_STYLE): HTMLCanvasElement {
+  if (style === 'blender') return paintBlenderBuilding('snackstall');
   return paintSprite(22, 30, (px) => {
     // Heaped popcorn: overlapping puffs, lit from the upper left.
     const puffs = [[5, 8], [8, 6], [11, 5], [14, 6], [17, 8], [7, 9], [11, 8], [15, 9], [10, 3], [13, 4]];
@@ -541,7 +550,8 @@ export function paintPopcornStand(): HTMLCanvasElement {
 }
 
 /** Restrooms: a pair of porta-potties, one blue and one pink, with moon vents on the doors. */
-export function paintPortaPotties(): HTMLCanvasElement {
+export function paintPortaPotties(style: ArtStyle = ART_STYLE): HTMLCanvasElement {
+  if (style === 'blender') return paintBlenderBuilding('restroom');
   return paintSprite(24, 30, (px) => {
     const potty = (x0: number, body: [string, string, string], vent: boolean, dress: boolean) => {
       const x1 = x0 + 9;
@@ -576,7 +586,8 @@ export function paintPortaPotties(): HTMLCanvasElement {
 }
 
 /** Souvenir shop: a giant shopping basket with a dino plush, a balloon and a present peeking out. */
-export function paintBasketShop(): HTMLCanvasElement {
+export function paintBasketShop(style: ArtStyle = ART_STYLE): HTMLCanvasElement {
+  if (style === 'blender') return paintBlenderBuilding('giftshop');
   return paintSprite(28, 32, (px) => {
     // Balloon on a string, rising behind everything.
     for (let y = 2; y < 6; y++) for (let x = 18; x < 22; x++) if (!((y === 2 || y === 5) && (x === 18 || x === 21))) px(x, y, x === 18 || y === 2 ? '#f06a8f' : '#d9456f');
@@ -615,7 +626,8 @@ export function paintBasketShop(): HTMLCanvasElement {
 }
 
 /** Pump house: a little brick house with a big pipe spouting water back into the river. */
-export function paintPumpHouse(): HTMLCanvasElement {
+export function paintPumpHouse(style: ArtStyle = ART_STYLE): HTMLCanvasElement {
+  if (style === 'blender') return paintBlenderBuilding('pump');
   return paintSprite(26, 26, (px) => {
     // Brick walls and a slate roof.
     for (let y = 10; y < 23; y++) for (let x = 3; x < 17; x++) px(x, y, (y % 3 === 0 || (x + (y % 6 < 3 ? 0 : 2)) % 4 === 0) ? '#8a3a2a' : x < 5 ? '#c8604a' : '#b24a36');
@@ -637,28 +649,28 @@ export function paintPumpHouse(): HTMLCanvasElement {
 }
 
 /** Each building is shaped like what it offers, so it's obvious at a glance. */
-export function paintBuilding(kind: BuildingKind): HTMLCanvasElement {
+export function paintBuilding(kind: BuildingKind, style: ArtStyle = ART_STYLE): HTMLCanvasElement {
   switch (kind) {
     case 'restaurant':
-      return paintFriesStand();
+      return paintFriesStand(style);
     case 'snackstall':
-      return paintPopcornStand();
+      return paintPopcornStand(style);
     case 'giftshop':
-      return paintBasketShop();
+      return paintBasketShop(style);
     case 'restroom':
-      return paintPortaPotties();
+      return paintPortaPotties(style);
     case 'trashcan':
-      return paintTrashCan();
+      return paintTrashCan(style);
     case 'station':
-      return paintStation();
+      return paintStation(style);
     case 'tower':
-      return paintTower();
+      return paintTower(style);
     case 'petting':
-      return paintPettingPen();
+      return paintPettingPen(style);
     case 'digsite':
-      return paintDigSite();
+      return paintDigSite(style);
     case 'pump':
-      return paintPumpHouse();
+      return paintPumpHouse(style);
   }
 }
 

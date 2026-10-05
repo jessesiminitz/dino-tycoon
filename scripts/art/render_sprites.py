@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 import math
+import runpy
 import time
 from pathlib import Path
 
@@ -130,8 +131,8 @@ def rect(scene, name, x, y, w, h, role, depth):
 
 def rex(scene, phase):
     stride = math.cos(phase * math.tau) * 3
-    near_lift = max(0, math.sin(phase * math.tau)) * 3
-    far_lift = max(0, -math.sin(phase * math.tau)) * 3
+    near_lift = max(0, -math.sin(phase * math.tau)) * 3
+    far_lift = max(0, math.sin(phase * math.tau)) * 3
     # Far leg is a darker silhouette with space between shin and near ankle.
     limb(scene, 'far_leg', [(28,25,4), (24-stride,33,3), (25-stride,41-far_lift,1.5)], 'F', 4)
     profile(scene, 'far_toes', [(23-stride,40-far_lift), (27-stride,41-far_lift), (31-stride,43-far_lift), (31-stride,44-far_lift), (23-stride,44-far_lift)], 'F', 4)
@@ -157,8 +158,9 @@ def rex(scene, phase):
 def trike(scene, phase):
     stride = math.cos(phase * math.tau) * 2
     for name, x, offset in [('far_back',16,-stride), ('far_front',36,stride)]:
-        limb(scene, name, [(x,21,2.4), (x+offset-2,27,1.8), (x+offset,33,1.4)], 'F', 4)
-        rect(scene, name + '_foot', x+offset-1, 32, 5, 2, 'F', 4)
+        lift = max(0, math.sin(phase*math.tau) * (1 if name == 'far_back' else -1)) * 2
+        limb(scene, name, [(x,21,2.4), (x+offset-2,27,1.8), (x+offset,33-lift,1.4)], 'F', 4)
+        rect(scene, name + '_foot', x+offset-1, 32-lift, 5, 2, 'F', 4)
     profile(scene, 'tail', [(14,15), (8,17), (1,20), (8,22), (15,21)], 'B', 0)
     ellipse(scene, 'torso', 26, 17, 16, 9, 'B', 0)
     profile(scene, 'belly', [(14,21), (28,23), (39,21), (37,25), (19,25)], 'D', -2)
@@ -172,7 +174,7 @@ def trike(scene, phase):
     limb(scene, 'nose_horn', [(54,19,1), (57,15,0.25)], 'W', -8)
     rect(scene, 'eye', 49, 17, 1, 1, 'E', -9)
     for name, x, offset in [('near_back',17,stride), ('near_front',35,-stride)]:
-        lift = max(0, math.sin(phase*math.tau) * (1 if name == 'near_back' else -1)) * 2
+        lift = max(0, -math.sin(phase*math.tau) * (1 if name == 'near_back' else -1)) * 2
         limb(scene, name, [(x,22,3), (x+offset,28,2), (x+offset-1,33-lift,1.5)], 'B', -6)
         rect(scene, name + '_foot', x+offset-2, 32-lift, 6, 2, 'B', -6)
         rect(scene, name + '_toes', x+offset+1, 33-lift, 3, 1, 'W', -8)
@@ -199,6 +201,7 @@ def tower(scene, phase):
 
 
 BUILDERS = {'tyrannosaurus': rex, 'triceratops': trike, 'tower': tower}
+BUILDERS.update(runpy.run_path(str(ROOT / 'scripts/art/models.py'), init_globals=globals())['EXTRA_BUILDERS'])
 
 
 def build(asset, frame=0):
@@ -260,12 +263,19 @@ def render(asset, frame=0):
     payload = {'asset': asset, 'frame': frame, 'rows': rows,
                'hash': hashlib.sha256('\n'.join(rows).encode()).hexdigest(),
                'seconds': round(time.monotonic()-started, 3)}
+    if MANIFEST['assets'][asset]['grounded'] and MANIFEST['assets'][asset]['kind'] == 'dino':
+        suffix = 'near_toes' if asset == 'tyrannosaurus' else 'near_back_foot' if asset in ('triceratops','protoceratops','stegosaurus','ankylosaurus','brachiosaurus') else 'near_foot'
+        foot = bpy.data.objects[scene.name + '_' + suffix]
+        xs = [v.co.x for v in foot.data.vertices]
+        bottom = scene.render.resolution_y - min(v.co.z for v in foot.data.vertices)
+        payload['contact'] = {'x': round((min(xs)+max(xs))/2, 4), 'y': round(bottom, 4),
+                              'right': round(max(xs), 4)}
     (OUTPUT / f'{asset}-{frame}.json').write_text(json.dumps(payload, indent=2) + '\n')
     return payload
 
 
 def save_source(asset):
-    folder = ROOT / 'assets-source/blender' / ('buildings' if asset == 'tower' else 'dinos')
+    folder = ROOT / 'assets-source/blender' / ('buildings' if MANIFEST['assets'][asset]['kind'] == 'building' else 'dinos')
     folder.mkdir(parents=True, exist_ok=True)
     # Write just the asset scene and its dependencies, not the user's active file.
     scenes = {scene for scene in bpy.data.scenes if scene.name.startswith('DinoTycoon_'+asset+'_Pose')}

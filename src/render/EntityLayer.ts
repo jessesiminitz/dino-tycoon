@@ -387,15 +387,15 @@ export class EntityLayer {
       const moving = d.x !== d.px || d.y !== d.py;
       if (d.x !== d.px) this.facingLeft.set(d.id, d.x < d.px);
       const { x, y } = this.dinoPosition(d);
-      // A one-pixel bob while walking (babies hop); idle animals breathe slowly.
+      // Authored walk poses lift the feet; keep planted legs on the ground.
       const hop = d.baby ? -2 : -1;
       const walking = moving && this.sim.speed !== 0;
-      const bob = walking ? (this.sim.stepProgress < 0.5 ? hop : 0) : Math.sin(animalTime / 600 + d.id) > 0.9 ? -1 : 0;
+      const bob = walking ? (dinoFrameCount(d.species) === 2 && this.sim.stepProgress < 0.5 ? hop : 0) : Math.sin(animalTime / 600 + d.id) > 0.9 ? -1 : 0;
       const habitat = habitatOf(d.species);
       const asleep = isAsleep(state, d);
       if (habitat === 'water') {
         // Swimming: flippers keep stroking; only the top of the animal shows above the water.
-        img.setTexture(dinoKey(d.species, Math.floor(animalTime / 450 + d.id) % 2 === 0 ? 0 : 1, d.baby));
+        img.setTexture(dinoKey(d.species, Math.floor(animalTime / (900 / dinoFrameCount(d.species)) + d.id) % dinoFrameCount(d.species), d.baby));
         const shown = Math.round(img.height * WATERLINE);
         img.setCrop(0, 0, img.width, shown);
         img.setPosition(Math.round(x), Math.round(y) - 2 + (img.height - shown) + (Math.sin(animalTime / 700 + d.id) > 0.6 ? 1 : 0));
@@ -403,7 +403,7 @@ export class EntityLayer {
       } else if (habitat === 'air') {
         // Flying: always flapping, bobbing about a tile up, with a shadow on the ground below (asleep: settled on the ground).
         const flapping = !asleep;
-        img.setTexture(dinoKey(d.species, flapping && Math.floor(animalTime / 240 + d.id) % 2 === 1 ? 1 : 0, d.baby));
+        img.setTexture(dinoKey(d.species, flapping ? Math.floor(animalTime / (480 / dinoFrameCount(d.species)) + d.id) % dinoFrameCount(d.species) : 0, d.baby));
         const lift = flapping ? FLY_HEIGHT + Math.round(Math.sin(animalTime / 520 + d.id) * 2) : 0;
         img.setPosition(Math.round(x), Math.round(y) - lift);
         sh.fillEllipse(Math.round(x), Math.round(y) - 1, img.width * 0.45, 3);
