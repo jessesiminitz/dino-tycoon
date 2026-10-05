@@ -31,6 +31,7 @@ for (const [asset, spec] of Object.entries(manifest.assets)) {
     throw new Error(`Duplicate animation frames: ${asset}`);
   }
   const sprite = { width: spec.width, height: spec.height, frames };
+  if (spec.modelOffsetX) sprite.modelOffsetX = spec.modelOffsetX;
   if (spec.kind === 'environment') environment[asset] = { ...sprite, colors: spec.colors, shadow: spec.shadow };
   else if (spec.kind === 'terrain') terrain[asset.slice(5)] = { ...sprite, colors: spec.colors };
   else data[asset] = sprite;

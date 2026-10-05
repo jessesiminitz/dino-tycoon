@@ -39,6 +39,7 @@ def pose(asset, clip, index):
         builder.func.__globals__['gait'] = gait
     phase = index/8
     builder(scene, phase if asset not in ('tyrannosaurus','triceratops') and (clip == 'walk' or asset in AIR+WATER) else 1/6)
+    ART['offset_geometry'](scene)
     spec = ART['MANIFEST']['assets'][asset]
     height = spec['height']
     wave = math.sin(phase*math.tau)
@@ -46,7 +47,8 @@ def pose(asset, clip, index):
     # Rotate the connected neck and skull around the shoulder; secondary jaw motion
     # stays attached to the skull. Feet remain anchored while the body settles.
     width = spec['width']
-    pivot = (width*.55,height*.55)
+    offset = spec.get('modelOffsetX',0)
+    pivot = ((width-2*offset)*.55+offset,height*.55)
     neck = next((o for o in scene.objects if o.type == 'MESH' and o.name.endswith('_neck_0')), None)
     if neck:
         vx = sorted(neck.data.vertices, key=lambda v:v.co.x)[:4]

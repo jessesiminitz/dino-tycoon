@@ -142,3 +142,21 @@ After changing geometry, regenerate each affected canonical dinosaur with
 `render_sprites.py -- --asset <species>` **and** its four motion clips with
 `full_motion.py -- <species>`, then run both converters and both check commands.
 Review eating/resting as well as walking, including babies and both directions.
+
+Stegosaurus, Spinosaurus, Brachiosaurus and Kentrosaurus have additional horizontal
+camera room for their longer tails. `modelOffsetX` in the export manifest shifts
+their original model coordinates; the canvas expands by twice that amount.
+`offset_geometry()` applies the same translation to meshes and accessory anchors
+in both canonical and animated exports. Symmetric room preserves body scale and
+the centre/ground anchor when mirrored. Foot contact coordinates increase by the
+offset, while positions relative to the canvas centre stay the same.
+The generated canonical art retains this offset so the game's ground shadows
+exclude the extra transparent room, including for babies.
+
+Tail regression checks cover all 144 canonical/animated poses for these four,
+checking exposed length, ground clearance, unclipped edges and original foot
+placement. These are stylized silhouettes, informed by the
+[NHM Stegosaurus skeleton](https://www.nhm.ac.uk/discover/studying-stegosaurus-skeleton.html),
+[Spinosaurus tail study](https://www.nature.com/articles/s41586-020-2190-3),
+[NHM Brachiosaurus reference](https://www.nhm.ac.uk/discover/dino-directory/brachiosaurus.html)
+and the [Museum für Naturkunde Kentrosaurus mount](https://artsandculture.google.com/asset/kentrosaurus-0107/MQFPIYDp4rIjbw).

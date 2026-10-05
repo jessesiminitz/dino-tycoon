@@ -207,9 +207,20 @@ BUILDERS.update(runpy.run_path(str(ROOT / 'scripts/art/environment_models.py'), 
 BUILDERS.update(runpy.run_path(str(ROOT / 'scripts/art/expansion_models.py'), init_globals=globals())['EXPANSION_BUILDERS'])
 
 
+def offset_geometry(scene):
+    """Symmetric canvas room preserves pixel scale and the centred world anchor."""
+    offset = MANIFEST['assets'][scene['asset']].get('modelOffsetX',0)
+    if not offset: return
+    for obj in scene.objects:
+        if obj.type != 'MESH': continue
+        for vertex in obj.data.vertices: vertex.co.x += offset
+        if 'anchor_x' in obj: obj['anchor_x'] += offset
+
+
 def build(asset, frame=0):
     scene = setup(asset, frame)
     BUILDERS[asset](scene, MANIFEST['assets'][asset]['frames'][frame])
+    offset_geometry(scene)
     scene['pose'] = frame
     return scene
 

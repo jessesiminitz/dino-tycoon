@@ -72,6 +72,27 @@ try {
   check('every species selects all eight walk phases in both directions',animation.failures.length===0,animation.failures);
   check('pause freezes animal poses and positions',animation.frozen);
 
+  const tailShadows = await page.evaluate(() => {
+    const {sim,game}=window.__dino,entities=game.scene.getScene('park').entities;
+    const saved=sim.state.dinos,failures=[];
+    const graphics=entities.shadows,fillEllipse=graphics.fillEllipse;
+    const widths={stegosaurus:58,spinosaurus:76,brachiosaurus:66,kentrosaurus:52};
+    let calls=[];
+    graphics.fillEllipse=function(...args){calls.push(args);return fillEllipse.apply(this,args);};
+    try {
+      for(const [species,width] of Object.entries(widths)) for(const baby of [false,true]) {
+        const d={...saved[0],id:99101,species,baby,x:22,px:22,y:20,py:20,path:[],hunger:0};
+        sim.state.dinos=[d];entities.motions.delete(d.id);calls=[];entities.update(3000);
+        const scale=baby?.6:1,expected=(Math.ceil((width+16)*scale)+2-16*scale)*.7;
+        const actual=calls.at(-1)?.[2];
+        // Baby resampling can round the wider canvas by one native pixel.
+        if(actual===undefined||Math.abs(actual-expected)>.71)failures.push(`${species}:${baby} shadow ${actual}/${expected}`);
+      }
+    } finally {graphics.fillEllipse=fillEllipse;sim.state.dinos=saved;entities.update(3001);}
+    return failures;
+  });
+  check('long-tail canvas room preserves adult and baby ground shadow sizes',tailShadows.length===0,tailShadows);
+
   for(const [width,height] of [[844,390],[667,375],[1180,820],[820,1180]]) {
     await page.setViewport({width,height,deviceScaleFactor:1,isMobile:true,hasTouch:true});
     await page.evaluate(() => {

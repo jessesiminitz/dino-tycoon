@@ -16,6 +16,7 @@ import { paintBuilding, paintJeep, paintTrough } from './sceneryArt';
 import { walkFrame } from './dinoAnimation';
 import { ART_STYLE } from './artStyle';
 import { BLENDER_MOTION } from './generated/blenderMotion';
+import { BLENDER_ART } from './generated/blenderArt';
 import { advanceMotion, motionTexture, type AnimalMotion } from './parkMotion';
 import { getSettings } from '../ui/settings';
 import { isWater, Terrain } from '../sim/terrain';
@@ -413,6 +414,8 @@ export class EntityLayer {
       const habitat = habitatOf(d.species);
       const asleep = isAsleep(state, d);
       if (ART_STYLE === 'blender') {
+        const model = BLENDER_ART[d.species];
+        const modelPadding = 'modelOffsetX' in model ? model.modelOffsetX : 0;
         const previous = this.motions.get(d.id);
         const motion = advanceMotion(previous, {species:d.species,baby:d.baby,x,y,time:animalTime,offset:d.id*137,paused:this.sim.speed===0,moving,asleep,eatingSince:this.meals.get(d.id),ambient:getSettings().animation});
         this.motions.set(d.id,motion);
@@ -428,7 +431,9 @@ export class EntityLayer {
         } else {
           const lift=habitat==='air' && !asleep ? FLY_HEIGHT+Math.round(Math.sin(animalTime/520+d.id)*2) : 0;
           img.setPosition(Math.round(x),Math.round(y)-lift+(hops.get(d.id)??0));
-          sh.fillStyle(0x000000,.22).fillEllipse(Math.round(x),Math.round(y)-1,Math.max(6,(img.width-16*(d.baby?.6:1))*(habitat==='air'?.45:.7)),habitat==='air'?3:Math.max(4,(img.height-8*(d.baby?.6:1))*.14));
+          // Transparent tail room does not increase the body's ground shadow.
+          const groundWidth = img.width-(16+2*modelPadding)*(d.baby?.6:1);
+          sh.fillStyle(0x000000,.22).fillEllipse(Math.round(x),Math.round(y)-1,Math.max(6,groundWidth*(habitat==='air'?.45:.7)),habitat==='air'?3:Math.max(4,(img.height-8*(d.baby?.6:1))*.14));
         }
         if (getSettings().animation && this.sim.speed!==0 && moving && previous && motion.frame!==previous.frame && this.scene.cameras.main.worldView.contains(x,y)) {
           const walk=BLENDER_MOTION[d.species].walk;

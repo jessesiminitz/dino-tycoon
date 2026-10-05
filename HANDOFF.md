@@ -1,6 +1,6 @@
 # Dino Tycoon: handoff notes
 
-Everything a fresh session needs to carry on. Last updated 2026-10-05, after the Blender dinosaur anatomy corrections.
+Everything a fresh session needs to carry on. Last updated 2026-10-05, after the four-species tail length and placement corrections.
 
 ## Where things stand (read this first)
 
@@ -9,6 +9,8 @@ Everything a fresh session needs to carry on. Last updated 2026-10-05, after the
 - **Full park animation:** all 28 species now have four eight-frame Blender clips (896 frames / 112 editable animated source files). The playable park follows actual movement, feeding and nighttime rest. Rooted wind, leaves/fireflies, dust/wet footfalls, swimming wakes and pond sparkle extend the prototype's ambience. World animation is a device setting and defaults off for reduced motion; saves remain v21. Review all species at http://localhost:5173/scripts/art/review.html, or keep using the three-animal enclosure demo at http://localhost:5173/scripts/art/immersion.html. See [docs/PLAN-animation-immersion.md](docs/PLAN-animation-immersion.md) and [docs/PR-blender-park-immersion.md](docs/PR-blender-park-immersion.md).
 
 - **Anatomy corrections:** reduced and repositioned claws, horns, tail clubs, spikes and feathers in twelve canonical models. Stegosaurus/Ankylosaurus tails now sit above the ground. Neck spines follow grazing necks, tail accessories follow their roots, and the shared idle/rest deformation preserves accessory joins across the full roster. All 896 motion frames and 112 editable timelines were regenerated. Both converters now reject detached anatomy; see **Anatomy correction validation** below. The changes remain local to the graphics branch.
+
+- **Longer tails:** Stegosaurus, Spinosaurus, Brachiosaurus and Kentrosaurus now have longer tails rooted at their hips. Their canonical canvases have symmetric extra room, preserving body scale and world-relative foot placement in both directions. Spike groups follow the lengthened shafts; Spinosaurus has a tapered fin and Brachiosaurus carries its tail above ground. Generated model offsets keep transparent room out of the ground-shadow size. Four canonical sources and sixteen animation sources were rebuilt, covering 16 poses and 128 clip frames. See **Tail correction validation** below.
 
 - **Live and working:**
   - four challenges (The Great Escape, Fire Mountain, Flood Season, The Money Pit), in the 🧩 Challenges folder, unlocking in that order
@@ -54,7 +56,18 @@ Planted feet move backward relative to the body while lifted feet swing forward;
 
 **Source and regeneration:** [assets-source/README.md](assets-source/README.md) is the canonical workflow. Blender 4.5.14 LTS models and compressed `.blend` files live under `assets-source/`; generators are in `scripts/art/`. Render through Blender MCP or the documented Blender CLI, then run `npm run art:convert` and `npm run art:check`. PNG/JSON intermediates are ignored and must be regenerated on a fresh checkout. Runtime grids are checked in under `src/render/generated/`; Blender and MCP are not runtime dependencies. Canonical source files total about 6.7 MB; the 112 animation sources add about 12.7 MB. All source scenes are excluded from the shipped build.
 
-**Anatomy correction validation (2026-10-05):**
+**Tail correction validation (2026-10-05):**
+
+- Corrected the four requested models: canonical widths are now 94 / 128 / 110 / 88 pixels for Stegosaurus / Spinosaurus / Brachiosaurus / Kentrosaurus, with model offsets 18 / 26 / 22 / 18. Heights and geometry scale remain the same. Both authoring paths shift accessory roots along with meshes. Canvas-relative contact coordinates change, while world-relative contacts retain their previous positions (maximum 0.001 pixel rounding difference across 128 frame comparisons). Save schema remains v21.
+- Eight new regression tests cover exposed tail length, ground clearance, unclipped edges across all **144 canonical/animated poses**, and original foot positions. Canonical footprint tests now account explicitly for the additional canvas room.
+- Blender MCP inspected the four native models, confirmed unit pixel scale, and rerendered the saved Stegosaurus resting timeline; its longer tail and four bound spike meshes reproduced the export hash. Both converters validate all 224 canonical grids and 896 motion frames.
+- All **358 tests** passed (357 regular plus one performance test), along with the production build. The first concurrent build/test run hit a simulation-test timeout; the standalone rerun and the final suite passed without changing simulation code. All other canonical art and the **768 motion frames** outside these four species retain their previous pixels and contact data.
+- Full atlas/runtime/review checks passed: 1,792 adult/baby atlas frames, 896 runtime walking combinations and 3,584 animated gallery combinations. After adjusting shadow sizing, `art:integration` passed again, including the eight adult/baby shadow cases, catalog/guide/fossil/palette parity, all canonical expansion poses and phone/tablet layouts.
+- Final build files total **686,123 bytes gzipped**, with 14 PWA precache files / 3,500.48 KiB. Sources remain outside the shipped game. The existing Vite chunk advisory remains.
+- Final `art:offline` passed: production art, service-worker control, populated v21 save/resume and continuing animation after offline restart.
+- Same-scale before/after captures are ignored at `docs/art-review/long-tails-before-after.png`; reference links and the offset workflow are in [assets-source/README.md](assets-source/README.md). Review at `http://localhost:5173/scripts/art/review.html?asset=stegosaurus`. This remains local graphics-branch work; physical device review and integration/deployment remain pending.
+
+**Anatomy correction validation (2026-10-05, preceding pass):**
 
 - Twelve canonical dinosaur models were corrected: Velociraptor, Stegosaurus, Ankylosaurus, Therizinosaurus, Iguanodon, Microraptor, Kentrosaurus, Styracosaurus, Amargasaurus, Diplodocus, Argentinosaurus and Yutyrannus. Spinosaurus also received a snout-detail animation binding correction. The shared rest/idle deformation and tail-root rules apply throughout the roster.
 - Regenerated the affected canonical poses and sources, plus all **896 motion frames / 112 editable timelines**. Canonical dimensions, walking contact metadata and save schema v21 remain unchanged. All 224 canonical grids and 896 motion frames pass hash, face, ground-contact and the new native-silhouette attachment checks. Five regression fixtures cover detached claws, distant tiny spines, diagonal joins, thin raster tips and row boundaries.

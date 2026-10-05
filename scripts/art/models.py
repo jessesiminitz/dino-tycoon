@@ -89,6 +89,10 @@ def quadruped(scene, phase, asset):
     tip_y=cy+ry*.25 if asset in ('stegosaurus','ankylosaurus') else cy+ry+4
     tail=[(cx-rx*.6,cy-ry*.3),(cx-rx,cy),(1,tip_y),
           (cx-rx*.8,cy+ry*.7),(cx-rx*.2,cy+ry*.5)]
+    if asset == 'stegosaurus':
+        tail=[(17,17),(9,19),(-6,20.5),(-17,22),(-16,22.8),(-6,23),(9,24),(17,23)]
+    elif asset == 'brachiosaurus':
+        tail=[(23,36),(14,38),(-1,40),(-21,42),(-20,42.8),(-1,43),(14,44),(23,43)]
     profile(scene,'tail',tail,'B',0)
     ellipse(scene,'trunk',cx,cy,rx,ry,'B',0)
     ellipse(scene,'belly',cx+1,cy+ry*.45,rx*.75,ry*.5,'D',-2)
@@ -108,10 +112,10 @@ def quadruped(scene, phase, asset):
         ellipse(scene,'head',50,25,6,3,'B',-3)
         rect(scene,'jaw',50,27,6,1,'D',-4)
         rect(scene,'eye',50,24,1,1,'E',-9)
-        for i in range(4):
-            x=3+i*2
-            base=profile_edge(tail,x)+.8
-            profile(scene,'tail_spike'+str(i),[(x-1,base+1),(x-1.5,base-3.5),(x+1,base)],'W',-3)
+        for i,(x,lower) in enumerate(((-13,False),(-8,False),(-12,True),(-7,True))):
+            base=profile_edge(tail,x,lower)+(-.6 if lower else .6)
+            tip=base+(4 if lower else -4.5)
+            profile(scene,'tail_spike'+str(i),[(x-.8,base),(x-2,tip),(x+1,base)],'W',-3)
             attach(scene,'tail_spike'+str(i),'tail',x)
     elif asset=='ankylosaurus':
         club_x=4

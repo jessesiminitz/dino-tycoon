@@ -153,7 +153,7 @@
       "grounded": true
     },
     "stegosaurus": {
-      "width": 58,
+      "width": 94,
       "height": 36,
       "frames": [
         0,
@@ -162,7 +162,8 @@
         0.75
       ],
       "kind": "dino",
-      "grounded": true
+      "grounded": true,
+      "modelOffsetX": 18
     },
     "ankylosaurus": {
       "width": 54,
@@ -225,7 +226,7 @@
       "grounded": false
     },
     "brachiosaurus": {
-      "width": 66,
+      "width": 110,
       "height": 66,
       "frames": [
         0,
@@ -234,7 +235,8 @@
         0.75
       ],
       "kind": "dino",
-      "grounded": true
+      "grounded": true,
+      "modelOffsetX": 22
     },
     "restaurant": {
       "width": 24,
@@ -1102,7 +1104,7 @@
       }
     },
     "spinosaurus": {
-      "width": 76,
+      "width": 128,
       "height": 48,
       "frames": [
         0,
@@ -1112,7 +1114,8 @@
       ],
       "kind": "dino",
       "grounded": true,
-      "contactMesh": "near_foot"
+      "contactMesh": "near_foot",
+      "modelOffsetX": 26
     },
     "therizinosaurus": {
       "width": 56,
@@ -1141,7 +1144,7 @@
       "contactMesh": "near_back_foot"
     },
     "kentrosaurus": {
-      "width": 52,
+      "width": 88,
       "height": 34,
       "frames": [
         0,
@@ -1151,7 +1154,8 @@
       ],
       "kind": "dino",
       "grounded": true,
-      "contactMesh": "near_back_foot"
+      "contactMesh": "near_back_foot",
+      "modelOffsetX": 18
     },
     "styracosaurus": {
       "width": 60,

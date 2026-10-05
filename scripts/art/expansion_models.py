@@ -35,8 +35,9 @@ def biped(scene, phase, asset):
     leg(scene,'far',cx-3,cy+ry*.6,h,phase+.5,radius*.85,stride,False,True)
     # Most tails are narrow counterbalances; Spinosaurus has a deep paddle profile.
     if asset == 'spinosaurus':
-        profile(scene,'paddle_tail',[(23,27),(12,26),(2,25),(1,34),(10,39),(22,36),(32,34)],'B',0)
-        limb(scene,'tail_ridge',[(3,27,1),(11,28,1.5),(24,29,2)],'A',-2)
+        profile(scene,'paddle_tail',[(32,28),(23,28),(6,24),(-6,22),(-16,24),(-25,29.5),
+                    (-24,31),(-16,36),(-6,39),(6,39),(23,36),(32,34)],'B',0)
+        limb(scene,'tail_ridge',[(23,29,1),(6,25,.8),(-6,23,.6),(-16,25,.45),(-23,29.5,.3)],'A',-2)
         # Tall sail with rounded, uneven vertebral tips rather than one triangle.
         profile(scene,'sail',[(15,28),(19,14),(23,7),(28,4),(33,6),(38,8),(43,16),(49,27)],'A',1)
         for i,(x,y) in enumerate(((20,14),(25,7),(30,6),(35,8),(40,13),(44,21))):
@@ -128,6 +129,8 @@ def quadruped(scene, phase, asset):
     # Diplodocus devotes roughly a third of its sprite to its whip tail.
     tail=[(cx-rx*.4,cy-ry*.5),(cx-rx,cy),(2,cy+ry*.6),(1,cy+ry*.85),
           (cx-rx,cy+ry*.65),(cx,cy+ry*.5)]
+    if asset == 'kentrosaurus':
+        tail=[(18,19),(11,21),(-1,23),(-17,24),(-16,24.8),(-1,26),(11,26),(18,25)]
     profile(scene,'tail',tail,'B',0)
     ellipse(scene,'trunk',cx,cy,rx,ry,'B',0)
     ellipse(scene,'belly',cx+1,cy+ry*.5,rx*.75,ry*.5,'D',-2)
@@ -136,9 +139,9 @@ def quadruped(scene, phase, asset):
             base=ellipse_edge(cx,cy,rx,ry,x)+1.5
             profile(scene,'plate'+str(i),[(x-2,base),(x-1,base-5+i*.5),(x+2,base-1),(x+2,base+2)],'A',-3)
             profile(scene,'plate_light'+str(i),[(x-1,base-3.5+i*.5),(x+1,base-1),(x-1,base-1)],'G',-4)
-        for i,x in enumerate((4,8,12,16)):
+        for i,x in enumerate((-11,-4,3,10)):
             base=profile_edge(tail,x)+1
-            limb(scene,'tail_spike'+str(i),[(x,base,.85),(x-1.5,base-4-i*.4,.25)],'W',-3)
+            limb(scene,'tail_spike'+str(i),[(x,base,.85),(x-2,base-4.5-i*.45,.25)],'W',-3)
             attach(scene,'tail_spike'+str(i),'tail',x)
         profile(scene,'shoulder_spike',[(31,22),(30,28),(34,24)],'W',-5)
         limb(scene,'neck',[(36,24,3),(42,26,2)],'B',-1)

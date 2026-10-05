@@ -1,4 +1,5 @@
 import walkContacts from '../assets-source/walk-contacts.json';
+import manifest from '../assets-source/export-manifest.json';
 import { describe, expect, it } from 'vitest';
 import { BLENDER_ART, BLENDER_BUILDING_COLORS } from '../src/render/generated/blenderArt';
 import { dinoFrameCount, dinoShape, hasOriginalDinoArt } from '../src/render/dinoArt';
@@ -8,16 +9,18 @@ import { walkFrame } from '../src/render/dinoAnimation';
 
 describe('Blender sprite contracts', () => {
   for (const id of SPECIES_IDS) {
-    it(`${id} keeps its registered footprint and baby face in all four poses`, () => {
+    it(`${id} keeps its body scale, canvas room and baby face in all four poses`, () => {
       const asset = BLENDER_ART[id];
       expect(dinoFrameCount(id, 'blender')).toBe(4);
       expect(dinoFrameCount(id, 'original')).toBe(hasOriginalDinoArt(id) ? 2 : 4);
       expect(new Set(asset.frames.map((rows) => rows.join('\n'))).size).toBe(4);
       const original = dinoShape(SPECIES[id], 0, false, 'original');
+      const padding = (manifest.assets[id] as {modelOffsetX?:number}).modelOffsetX ?? 0;
+      const width = hasOriginalDinoArt(id) ? original[0].length+2*padding : asset.width;
       for (let frame = 0; frame < 4; frame++) {
         const grown = dinoShape(SPECIES[id], frame, false, 'blender');
         expect(grown.length).toBe(original.length);
-        expect(grown.every((row) => row.length === original[0].length)).toBe(true);
+        expect(grown.every((row) => row.length === width)).toBe(true);
         if (!['water','air'].includes(SPECIES[id].habitat ?? 'land')) expect(grown.at(-1)?.some(Boolean)).toBe(true);
         expect(grown.flat().includes('E')).toBe(true);
         const baby = dinoShape(SPECIES[id], frame, true, 'blender');
