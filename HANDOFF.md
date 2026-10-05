@@ -1,10 +1,10 @@
 # Dino Tycoon: handoff notes
 
-Everything a fresh session needs to carry on. Last updated 2026-09-30, after the bug-audit fixes (see "Bug-audit fixes" below).
+Everything a fresh session needs to carry on. Last updated 2026-10-04, after the full Blender artwork and environment pass.
 
 ## Where things stand (read this first)
 
-- **Graphics branch (2026-10-04):** `art/blender-pixel` in `/Volumes/Apple HDD 2TB/dino-tycoon-blender-art` now uses Blender artwork by default for all 16 species (four poses each) and all 10 park buildings. The owner accepted the pilot and requested the full set. Corrected backward-looking walks: planted feet move backward relative to the body and lifted feet swing forward; left-facing movement mirrors the same pose order. Swimmers/flyers use four poses, and pausing freezes the animal clock. The environment pass adds 15 scenery types (38 variants) and all 16 terrain types (four variants each) through Blender MCP. Tree fading, construction hiding, terrain IDs and volcano/fountain/light anchors retain their existing contracts. `npm run art:environment` validates the scenery and terrain atlas and writes comparison galleries. The environment round passed 273 total tests, the build, 13 UI tours, complete art/scenery checks and production offline resume; 102 new grid hashes reproduced through MCP. The 57-asset comparison is `/scripts/art/review.html`; dev `?art=original` retains the original comparison. Regular production builds now use Blender art. See `assets-source/README.md` for regeneration, sources and gait checks. This branch remains separate from `main` pending physical-device/integration review; no deployment has occurred.
+- **Graphics branch:** `art/blender-pixel` in `/Volumes/Apple HDD 2TB/dino-tycoon-blender-art`, latest implementation commit `843f5d7`. Blender artwork now covers all dinosaurs, park buildings, scenery and terrain; backward-looking walking is fixed. Validation passed. This work remains separate from `main` and has not been deployed; physical iPhone/iPad review and integration are still pending. See **Blender graphics work** below.
 
 - **Live and working:**
   - four challenges (The Great Escape, Fire Mountain, Flood Season, The Money Pit), in the 🧩 Challenges folder, unlocking in that order
@@ -22,23 +22,51 @@ Everything a fresh session needs to carry on. Last updated 2026-09-30, after the
   4. A case in `tests/challengeBalance.test.ts` where doing nothing fails and sensible play wins.
   5. A `scripts/checks/<name>-ui.mjs` screenshot tour.
   6. Bump the sticker medal count in `tests/stickers.test.ts`.
-- **Auto-mode note:** the harness's safety classifier sometimes fails for a while ("no verdict"). When it does, stop cleanly, tell the owner what's saved, and wait for "continue".
+- **Owner preference:** continue authorized repository work autonomously. If an approval review blocks an action, follow the current harness instructions, complete unaffected work, and report the specific blocked action and reason.
 
 ## What this is
 
 A touch-first spiritual successor to *DinoPark Tycoon* (1993) for iPhone (and iPad), built as an installable web game (PWA).
 
 - **Live:** https://jessesiminitz.github.io/dino-tycoon/ (GitHub Pages)
-- **Repo:** https://github.com/jessesiminitz/dino-tycoon (public), local at `~/Projects/dino-tycoon`
+- **Repo:** https://github.com/jessesiminitz/dino-tycoon (public). Main checkout: `~/Projects/dino-tycoon`; active graphics worktree: `/Volumes/Apple HDD 2TB/dino-tycoon-blender-art`.
 - **Owner:** Jesse plays on an iPhone (Home Screen app); his daughter plays on an iPad. Keep it kid-friendly.
-- **Stack:** TypeScript + Vite 6 + Phaser 3.90 + vite-plugin-pwa (prompt mode, "Update" banner) + Vitest. No art or audio files: pixel art is painted in code, sound is synthesised with Web Audio.
+- **Stack:** TypeScript + Vite 6 + Phaser 3.90 + vite-plugin-pwa (prompt mode, "Update" banner) + Vitest. Pixel art uses checked-in Blender role grids painted to canvases at runtime, alongside code-painted effects and UI. Blender source files stay outside the shipped build. Sound is synthesised with Web Audio.
 - **Machine:** Late-2015 iMac, macOS 12, no Xcode. Node 22 via nvm (`export PATH=~/.nvm/versions/node/v22.23.3/bin:$PATH`).
+
+## Blender graphics work (2026-10-04)
+
+Work in the graphics worktree on `art/blender-pixel`; do not overwrite the main checkout. Implementation commits:
+
+- `973dd75`: Blender pixel-art pilot and reproducible export workflow.
+- `b2a11ba`: all 16 dinosaur species × four poses and 10 buildings; walking gait correction and Blender Home Screen icons.
+- `843f5d7`: 15 scenery types with 38 variants, plus 16 terrain types with four variants each.
+
+The complete set contains **57 asset types and 176 grids**. Blender is the default in dev and regular production builds. Dev `?art=original` selects the original painters for comparison; normal production builds strip dev hooks and use Blender. Save format remains **v21**, with no simulation or map schema changes.
+
+Planted feet move backward relative to the body while lifted feet swing forward; left-facing animation mirrors the same frame order. Swimmers and flyers also have four poses, and pause freezes the animal animation clock. Baby scaling, palette patterns, fossil masks, water cropping and sleeping flyers retain their existing behavior. Environment variants keep seeded selection, scenery footprints, opaque 16×16 terrain tiles, tree fading/construction hiding and volcano/fountain/lamp effect anchors.
+
+**Preview:** `http://localhost:5173/scripts/art/review.html` compares all 57 asset types at native, 2× and 4× sizes, with pose/variant, direction, baby and background controls. `http://localhost:5173/?quickstart` opens a Blender park; add `&art=original` to compare. The dev server was running from this worktree at handoff; start it with `npm run dev` if needed.
+
+**Source and regeneration:** [assets-source/README.md](assets-source/README.md) is the canonical workflow. Blender 4.5.14 LTS models and compressed `.blend` files live under `assets-source/`; generators are in `scripts/art/`. Render through Blender MCP or the documented Blender CLI, then run `npm run art:convert` and `npm run art:check`. PNG/JSON intermediates are ignored and must be regenerated on a fresh checkout. Runtime grids are checked in under `src/render/generated/`; Blender and MCP are not runtime dependencies. The source files total about 5.1 MB and are excluded from the shipped build.
+
+**Completed validation for `843f5d7`:**
+
+- `npm test`: 272 tests plus the separate performance test, **273 total**, passed. `npm run build` passed.
+- `art:check`: all 176 grids passed; all 102 new environment grid hashes reproduced through Blender MCP, and the preceding 74 grids were unchanged.
+- `art:environment`, `art:integration`, all 13 `art:ui` tours and `art:offline` passed. These cover scenery/terrain textures, tree fading and construction restoration, dinosaur poses and facing, babies, catalogs, phone/iPad layout and production PWA offline save/resume.
+- An isolated 32-dinosaur/150-visitor comparison measured p95 frame time **50.1 ms** and entity update time **1.3 ms** for both styles. Startup was 3,027 ms original / 3,223 ms Blender in one run. This used headless Chrome software rendering on the iMac; physical Safari performance remains unmeasured.
+- Total gzipped build files: **595,187 bytes**, up 8,276 bytes from the dinosaur/building pass and 19,730 bytes from before the pilot. Review images, logs and metrics are local ignored artifacts under `docs/art-review/`.
+
+Run browser tours and performance comparisons sequentially on this machine to avoid contention. `npm run build:art` is available for a comparison-capable preview build, but it was not rerun for the latest environment pass; the regular production build was verified.
+
+**Remaining:** physical iPhone/iPad visual and performance review, then integration with `main` and deployment. No remote PR or deployment has been published. [docs/PLAN-blender-pixel-art.md](docs/PLAN-blender-pixel-art.md) tracks the work; [docs/PR-blender-environment.md](docs/PR-blender-environment.md) is the current local PR draft. The earlier [docs/PR-blender-pixel-art.md](docs/PR-blender-pixel-art.md) describes the dinosaur/building pass and has historical validation counts.
 
 ## Day-to-day
 
 ```sh
 npm run dev            # dev server (usually already running on :5173); /?quickstart skips the menu
-npm test               # all tests (235), including the challenge balance runs (~7 s)
+npm test               # 272 tests + 1 separate performance test (273 total)
 npm run build          # tsc --noEmit + vite build
 npm run icons          # regenerate Home Screen icons (dev server must be running)
 node scripts/checks/<name>.mjs   # browser checks (headless Chrome via puppeteer-core); see below
@@ -51,7 +79,7 @@ git -c credential.helper= -c credential.helper='!gh auth git-credential' push -q
 gh run list -R jessesiminitz/dino-tycoon --limit 1      # then gh run watch <id>
 ```
 
-End commit messages with the Co-Authored-By / Claude-Session trailers the harness supplies. Commit and deploy after each round of changes: the owner tests on the live site.
+End commit messages with the Co-Authored-By / Claude-Session trailers the harness supplies. Normally commit and deploy after each round of changes: the owner tests on the live site. The current graphics branch remains local pending the device review and integration described above; do not deploy a handoff-only update.
 
 **Dev hooks** (dev builds only): `window.__dino = { game, sim, ui, slot, audioDebug, playSfx }`. `/?quickstart` starts a fresh park (`&shape=river&seed=7&big` picks the island). Challenge checks start parks through the menu and set `localStorage['dino-tycoon-challenges']` to unlock them.
 
@@ -63,7 +91,7 @@ End commit messages with the Co-Authored-By / Claude-Session trailers the harnes
   - Regions come from a flood fill over fences (`regions.ts`: public, paddock or wild). `gaps.ts` finds missing or broken fence segments around a tapped tile.
   - `concerns.ts`: live dino and staff concerns, plus `whatVisitorsSay` (complaints with advice).
   - `goals.ts`: three rounds of milestones per scenario (Bronze, Silver, Gold) with rewards (species unlocks, or cash if already unlocked).
-- `src/render/`: `ParkScene` (input, selection, gap-fix offer, camera focus), `EntityLayer` (dinos, visitors with carried items, staff, buildings, dirt), `WorldLayers` (fences, paths, ghost and gap markers), `SceneryLayer`, `TerrainFx`, `WeatherScene`. `dinoArt.ts` builds each of the 12 species from shapes (per-species anatomy). `iconArt.ts` paints the Home Screen icon.
+- `src/render/`: `ParkScene` (input, selection, gap-fix offer, camera focus), `EntityLayer` (dinos, visitors with carried items, staff, buildings, dirt), `WorldLayers` (fences, paths, ghost and gap markers), `SceneryLayer`, `TerrainFx`, `WeatherScene`. `dinoArt.ts` paints all 16 species, with Blender grids as the default and original shapes retained for comparison. `sceneryArt.ts` paints buildings and scenery; `terrainArt.ts` supplies terrain tiles to `tileset.ts`. `generated/` holds the exported artwork, and `artStyle.ts` controls comparison mode. `iconArt.ts` paints the Home Screen icon.
 - `src/ui/`: DOM overlays. `hud.ts` (top bar with a live **fit pass** so ☰ is never pushed off-screen; the info panel is placed by measuring the toolbar), `people.ts` (👥 Visitors, Reviews, Dinos and Staff with filters, rename and 📍 locate), `log.ts` (🔔 alert log), `parkPanel.ts` (Goals medal track, overview, staff, finances, bank), `overlays.ts` (pause, milestone and outcome popups, update banner), `menu.ts` (title, scenarios, save slots with ⤓ export and import), `tutorial.ts`, `guide.ts`, `catalog.ts`, `settings.ts`.
 - `src/audio/`: `audio.ts` (sfx, rain, piano synth, shuffled playlist), `ragNotes.ts` (decoder and alphabet), `rags.ts` (generated, lazy-loaded chunk).
 - `src/save/storage.ts`: 3 IndexedDB slots plus a localStorage mirror, and a boot directive (used to return to the park after an update reload).
