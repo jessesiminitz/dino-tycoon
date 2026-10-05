@@ -33,6 +33,7 @@ import { WorldLayers, type GhostStyle } from './WorldLayers';
 import { EntityLayer } from './EntityLayer';
 import { TerrainFx } from './TerrainFx';
 import { SceneryLayer } from './SceneryLayer';
+import { getSettings } from '../ui/settings';
 import { playCall, playSfx, type Sfx } from '../audio/audio';
 
 /** How often (ms) the info panel refreshes while a dino or feeder is selected. */
@@ -68,6 +69,7 @@ export class ParkScene extends Phaser.Scene {
   private terrainFx!: TerrainFx;
   private scenery!: SceneryLayer;
   private infoRefreshAt = 0;
+  private worldTime = 0;
   private boundsZoom = 0;
   private drawnHour = -1;
   /** Fence segment being inspected in Look mode. */
@@ -134,7 +136,7 @@ export class ParkScene extends Phaser.Scene {
 
     // The ground shakes when the volcano rumbles.
     const offEvents = this.sim.onEvent((e) => {
-      if (/^🌋/.test(e.text)) this.cameras.main.shake(600, 0.006);
+      if (getSettings().animation && /^🌋/.test(e.text)) this.cameras.main.shake(600, 0.006);
     });
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, offEvents);
     const unsubscribe = this.ui.onChange(() => this.onModeChange());
@@ -154,8 +156,10 @@ export class ParkScene extends Phaser.Scene {
       this.layers.drawFences();
     }
     this.entities.update(time);
-    this.terrainFx.update(time);
-    this.scenery.update(time);
+    if(this.sim.speed!==0)this.worldTime+=Math.min(250,Math.max(0,delta))*this.sim.speed;
+    const ambientTime=getSettings().animation?this.worldTime:0;
+    this.terrainFx.update(ambientTime);
+    this.scenery.update(ambientTime);
     if ((this.entities.selection || this.selectedFence) && time >= this.infoRefreshAt) {
       this.infoRefreshAt = time + INFO_REFRESH_MS;
       this.showSelection();

@@ -2,7 +2,7 @@ import { MAX_LOG, type GameState } from './GameState';
 import { applyCommand, type Command, type CommandResult } from './commands';
 import { computeRegions, type RegionMap } from './regions';
 import { Rng } from './rng';
-import type { GameEvent, SimContext } from './systems/context';
+import type { DinoAction, GameEvent, SimContext } from './systems/context';
 import { hourlyDinos, stepDinos, STEPS_PER_HOUR } from './systems/dinos';
 import { hourlyBreeding } from './systems/breeding';
 import { hourlyRequests, updateRequests } from './systems/requests';
@@ -42,6 +42,7 @@ export class Simulation {
   private accumulator = 0;
   private listeners = new Set<Listener>();
   private eventListeners = new Set<EventListener>();
+  private actionListeners = new Set<(action: DinoAction) => void>();
   private regionCache?: { revision: number; map: RegionMap };
 
   constructor(public state: GameState) {}
@@ -80,6 +81,7 @@ export class Simulation {
       rng,
       regions: this.regions(),
       emit: (e) => this.emitEvent(e),
+      animate: (action) => { for (const fn of this.actionListeners) fn(action); },
       invalidateWorld: () => this.worldRevision++,
     };
     stepDinos(ctx);
@@ -143,6 +145,11 @@ export class Simulation {
   onEvent(fn: EventListener): () => void {
     this.eventListeners.add(fn);
     return () => this.eventListeners.delete(fn);
+  }
+
+  onDinoAction(fn: (action: DinoAction) => void): () => void {
+    this.actionListeners.add(fn);
+    return () => this.actionListeners.delete(fn);
   }
 
   private emit(): void {

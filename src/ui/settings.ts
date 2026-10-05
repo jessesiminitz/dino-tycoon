@@ -10,10 +10,12 @@ export interface Settings {
   nightDarkness: number;
   /** Birdsong by day and crickets at night. */
   ambience: boolean;
+  /** Ambient movement and particles; animal actions remain readable when off. */
+  animation: boolean;
 }
 
 const KEY = 'dino-tycoon:settings';
-const DEFAULTS: Settings = { sfx: true, sfxVolume: 0.7, music: true, musicVolume: 0.35, digGame: true, nightDarkness: 1, ambience: true };
+const DEFAULTS: Settings = { sfx: true, sfxVolume: 0.7, music: true, musicVolume: 0.35, digGame: true, nightDarkness: 1, ambience: true, animation: typeof matchMedia === 'undefined' || !matchMedia('(prefers-reduced-motion: reduce)').matches };
 
 type Listener = (s: Settings) => void;
 const listeners = new Set<Listener>();
@@ -61,6 +63,7 @@ export function renderSettings(root: HTMLElement): void {
       <label><input type="checkbox" data-key="digGame" ${s.digGame ? 'checked' : ''}> Fossil dig game</label>
       <label><input type="checkbox" data-key="ambience" ${s.ambience ? 'checked' : ''}> Birds &amp; crickets</label>
     </div>
+    <label class="setting"><input type="checkbox" data-key="animation" ${s.animation ? 'checked' : ''}> World animation</label>
     <label class="setting">
       🌙 Night darkness
       <input type="range" min="0" max="1" step="0.1" value="${s.nightDarkness}" data-key="nightDarkness" aria-label="Night darkness">

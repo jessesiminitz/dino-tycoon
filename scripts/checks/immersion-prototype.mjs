@@ -33,7 +33,7 @@ try {
       for(const [id,value]of [['clip',clip],['baby',small],['left',mirrored],['frame',frame]]) {
         const control=document.getElementById(id);if(typeof value==='boolean')control.checked=value;else control.value=String(value);control.dispatchEvent(new Event('input'));
       }
-      for(const id of Object.keys(BLENDER_MOTION)) {
+      for(const id of ['carnotaurus','diplodocus','yutyrannus']) {
         const actual=document.querySelector(`[data-species="${id}"] canvas`),source=paintDinoRows(SPECIES[id],BLENDER_MOTION[id][clip].frames[frame],small);
         const expected=document.createElement('canvas');expected.width=source.width*2;expected.height=source.height*2;
         const ctx=expected.getContext('2d');ctx.imageSmoothingEnabled=false;if(mirrored){ctx.translate(expected.width,0);ctx.scale(-1,1);}ctx.drawImage(source,0,0,expected.width,expected.height);

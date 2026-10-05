@@ -39,6 +39,7 @@
 <p>Compare the silhouette, face and feet at game size, then enlarge to inspect the pixels.</p>
 <div class="controls" id="review-controls">
   <label>Asset<select id="asset"><option value="tyrannosaurus">T. rex</option><option value="triceratops">Triceratops</option><option value="tower">Viewing tower</option></select></label>
+  <label>Animation<select id="clip"><option value="poses">Original four poses</option><option value="walk">Walk / swim / fly</option><option value="idle">Idle</option><option value="eat">Eat</option><option value="rest">Rest</option></select></label>
   <label>Scale<select id="scale"><option value="1">1×</option><option value="2">2×</option><option value="4" selected>4×</option></select></label>
   <label>Background<select id="background"><option value="#79af5d">Grass</option><option value="#cfbb7d">Sand</option><option value="#518da2">Water</option><option value="#253f46">Night</option></select></label>
   <label><span id="pose-label">Pose</span><input id="pose" type="range" min="0" max="3" value="0"></label>
@@ -52,9 +53,12 @@
 </div>
 <output id="detail"></output>
 <p id="species-fact" style="margin-top:12px"></p>
-<nav><a href="./immersion.html">Animation &amp; immersion prototype</a><a href="#new-dinosaurs">New dinosaur gallery</a><a href="/?quickstart&seed=7&art=original">Original park</a><a href="/?quickstart&seed=7&art=blender">Blender park</a><a href="/?quickstart&stress&art=blender">Busy Blender park</a></nav>
+<nav><a href="./immersion.html">Immersive enclosure demo</a><a href="#new-dinosaurs">New dinosaur gallery</a><a href="/?quickstart&seed=7&art=original">Original park</a><a href="/?quickstart&seed=7&art=blender">Blender park</a><a href="/?quickstart&stress&art=blender">Busy Blender park</a></nav>
 <section id="new-dinosaurs"><h2>12 new dinosaurs</h2><p>Choose a dinosaur to inspect its four walking poses, baby version and direction above.</p><div class="gallery" id="new-gallery"></div></section>
+<section><h2>All 28 animated animals</h2><p>Choose an animal to inspect its eight-frame Blender clips. Feeding and rest in the playable park follow the simulation.</p><div class="gallery" id="motion-gallery"></div></section>
 <script type="module">
+  import { BLENDER_MOTION } from '/src/render/generated/blenderMotion.ts';
+  import { paintDinoRows } from '/src/render/dinoArt.ts';
   import { paintDino, dinoFrameCount, hasOriginalDinoArt } from '/src/render/dinoArt.ts';
   import { SPECIES, EXPANSION_SPECIES_IDS } from '/src/sim/data/species.ts';
   import { paintTerrainTile } from '/src/render/terrainArt.ts';
@@ -62,7 +66,7 @@
   import { BLENDER_ENVIRONMENT } from '/src/render/generated/blenderEnvironment.ts';
   import { paintEnvironment } from '/src/render/sceneryArt.ts';
   import { paintBuilding } from '/src/render/sceneryArt.ts';
-  const controls = Object.fromEntries(['asset','scale','background','pose','baby','left','animate'].map((id) => [id, document.getElementById(id)]));
+  const controls = Object.fromEntries(['asset','clip','scale','background','pose','baby','left','animate'].map((id) => [id, document.getElementById(id)]));
   const assetSelect=controls.asset;
   assetSelect.innerHTML='';
   for (const [id,sp] of Object.entries(SPECIES)) assetSelect.add(new Option(sp.name + (EXPANSION_SPECIES_IDS.includes(id) ? ' · New' : ''),id));
@@ -82,8 +86,16 @@
     const title=document.createElement('strong'); title.textContent=SPECIES[id].name;
     const caption=document.createElement('small'); caption.textContent=SPECIES[id].fact;
     button.append(thumbnail,title,caption);
-    button.addEventListener('click',()=>{ assetSelect.value=id; assetSelect.dispatchEvent(new Event('input')); document.getElementById('review-controls').scrollIntoView({block:'start'}); });
+    button.addEventListener('click',()=>{ controls.clip.value='poses';assetSelect.value=id; assetSelect.dispatchEvent(new Event('input')); document.getElementById('review-controls').scrollIntoView({block:'start'}); });
     document.getElementById('new-gallery').append(button);
+  }
+  for(const [id,sp] of Object.entries(SPECIES)){
+    const button=document.createElement('button');button.type='button';button.className='dino-card motion-card';button.dataset.species=id;
+    const image=paintDinoRows(sp,BLENDER_MOTION[id].walk.frames[0]);image.style.width=`${image.width*2}px`;
+    const thumbnail=document.createElement('div');thumbnail.className='thumbnail';thumbnail.append(image);
+    const title=document.createElement('strong');title.textContent=sp.name;button.append(thumbnail,title);
+    button.addEventListener('click',()=>{assetSelect.value=id;controls.clip.value='walk';controls.pose.value='0';assetSelect.dispatchEvent(new Event('input'));document.getElementById('review-controls').scrollIntoView({block:'start'});});
+    document.getElementById('motion-gallery').append(button);
   }
   assetSelect.addEventListener('input',()=>{const url=new URL(location.href);url.searchParams.set('asset',assetSelect.value);history.replaceState(null,'',url);});
   let travel=0;
@@ -91,12 +103,14 @@
     const asset = controls.asset.value, scale = Number(controls.scale.value);
     const isBuilding=asset in buildings, isEnvironment=asset.startsWith('environment:'), isTerrain=asset.startsWith('terrain:');
     const isDino=asset in SPECIES, id=asset.split(':')[1];
-    const newDino=isDino && !hasOriginalDinoArt(asset);
+    const motion=isDino && controls.clip.value!=='poses';
+    controls.clip.disabled=!isDino;
+    const newDino=isDino && (!hasOriginalDinoArt(asset)||motion);
     document.getElementById('original-panel').hidden=newDino;
     document.querySelector('.pair').classList.toggle('single',newDino);
     document.getElementById('species-fact').textContent=isDino ? SPECIES[asset].fact : '';
     for(const button of document.querySelectorAll('.dino-card')) button.setAttribute('aria-pressed',String(button.dataset.species===asset));
-    const count=isDino?4:isEnvironment?BLENDER_ENVIRONMENT[id].frames.length:isTerrain?4:1;
+    const count=isDino?(motion?8:4):isEnvironment?BLENDER_ENVIRONMENT[id].frames.length:isTerrain?4:1;
     controls.pose.max=String(count-1); controls.pose.value=String(Math.min(Number(controls.pose.value),count-1));
     const pose=Number(controls.pose.value);
     controls.baby.disabled=controls.animate.disabled=!isDino;
@@ -104,21 +118,21 @@
     document.getElementById('pose-label').textContent=isDino?'Pose':'Variation';
     for (const style of newDino ? ['blender'] : ['original','blender']) {
       const frame = isDino ? Math.floor(pose * dinoFrameCount(asset,style) / 4) : pose;
-      const source = isBuilding ? paintBuilding(asset,style) : isEnvironment ? paintEnvironment(id,frame,style) : isTerrain ? paintTerrainTile(Number(id),frame,style) : paintDino(SPECIES[asset], frame, controls.baby.checked, style);
+      const source = motion ? paintDinoRows(SPECIES[asset],BLENDER_MOTION[asset][controls.clip.value].frames[pose],controls.baby.checked) : isBuilding ? paintBuilding(asset,style) : isEnvironment ? paintEnvironment(id,frame,style) : isTerrain ? paintTerrainTile(Number(id),frame,style) : paintDino(SPECIES[asset], frame, controls.baby.checked, style);
       const canvas = document.getElementById(style); canvas.width=source.width*scale; canvas.height=source.height*scale;
       const ctx=canvas.getContext('2d'); ctx.imageSmoothingEnabled=false;
       if (controls.left.checked && !isTerrain) { ctx.translate(canvas.width,0); ctx.scale(-1,1); }
       ctx.drawImage(source,0,0,canvas.width,canvas.height);
       canvas.parentElement.style.background=controls.background.value;
       const span=Math.max(0,canvas.parentElement.clientWidth-canvas.width-16);
-      const shift=controls.animate.checked && isDino ? (travel%60/60-.5)*span*(controls.left.checked?-1:1) : 0;
+      const shift=controls.animate.checked && isDino && !motion ? (travel%60/60-.5)*span*(controls.left.checked?-1:1) : 0;
       canvas.style.transform=`translateX(${shift}px)`;
       canvas.parentElement.style.backgroundImage='repeating-linear-gradient(90deg,transparent 0px,transparent 63px,#ffffff18 64px)';
-      if (style==='blender') document.getElementById('detail').textContent = `${source.width} × ${source.height} pixels · ${isDino ? 'four motion poses' : count>1 ? count+' variations' : 'static'} · ${scale}× display${newDino ? ' · New species, authored in Blender' : ''}`;
+      if (style==='blender') document.getElementById('detail').textContent = `${source.width} × ${source.height} pixels · ${isDino ? (motion ? `8 Blender ${controls.clip.value} frames` : 'four motion poses') : count>1 ? count+' variations' : 'static'} · ${scale}× display${newDino ? ' · New species, authored in Blender' : ''}`;
     }
   }
   Object.values(controls).forEach((control) => control.addEventListener('input',draw));
-  setInterval(() => { if (controls.animate.checked && controls.asset.value in SPECIES) { travel+=2; controls.pose.value=String((Number(controls.pose.value)+1)%4); draw(); } },180);
+  setInterval(() => { if (controls.animate.checked && controls.asset.value in SPECIES) { travel+=2; controls.pose.value=String((Number(controls.pose.value)+1)%(Number(controls.pose.max)+1)); draw(); } },180);
   draw();
 </script>
 </html>

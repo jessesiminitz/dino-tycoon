@@ -137,6 +137,7 @@ export class WeatherScene extends Phaser.Scene {
   }
 
   update(_time: number, delta: number): void {
+    if (this.sim.speed === 0) delta = 0;
     const warm = this.drawNight();
     const stormy = this.sim.state.stormHours > 0;
     this.intensity = Phaser.Math.Clamp(this.intensity + (stormy ? 1 : -1) * delta * FADE_PER_MS, 0, 1);
@@ -150,7 +151,7 @@ export class WeatherScene extends Phaser.Scene {
     g.fillStyle(0x0b1a2a, 0.3 * this.intensity).fillRect(0, 0, width, height);
 
     // Rain: game speed makes it fall faster too, so fast-forward feels fast.
-    const pace = delta * Math.max(1, this.sim.speed);
+    const pace = getSettings().animation ? delta * this.sim.speed : 0;
     g.lineStyle(1, 0xbfd9ee, 0.55 * this.intensity);
     for (const d of this.drops) {
       d.y += d.speed * pace;
@@ -159,7 +160,7 @@ export class WeatherScene extends Phaser.Scene {
       g.lineBetween(d.x, d.y, d.x + 3, d.y - 9);
     }
 
-    if (stormy && this.sim.speed > 0 && Math.random() < LIGHTNING_CHANCE * (delta / 16.7)) {
+    if (stormy && getSettings().animation && this.sim.speed > 0 && Math.random() < LIGHTNING_CHANCE * (delta / 16.7)) {
       this.flash = 1;
       // Thunder follows the flash.
       this.time.delayedCall(250 + Math.random() * 500, () => playSfx('thunder'));

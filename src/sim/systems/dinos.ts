@@ -125,6 +125,7 @@ function eatFromFeeder(ctx: SimContext, d: Dino, f: Feeder): void {
   f.stock -= eaten;
   d.hunger = Math.max(0, d.hunger - (100 * eaten) / meal);
   d.path = [];
+  ctx.animate?.({ kind: 'eat', dinoId: d.id, feederId: f.id });
   if (f.stock === 0) ctx.emit({ text: `A ${FEEDER_TYPES[f.kind].name.toLowerCase()} is empty`, kind: 'bad' });
 }
 

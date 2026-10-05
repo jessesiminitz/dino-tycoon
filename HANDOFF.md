@@ -1,12 +1,12 @@
 # Dino Tycoon: handoff notes
 
-Everything a fresh session needs to carry on. Last updated 2026-10-04, after the Blender animation and immersion prototype.
+Everything a fresh session needs to carry on. Last updated 2026-10-04, after the full-roster Blender animation and park immersion rollout.
 
 ## Where things stand (read this first)
 
 - **Graphics branch:** `art/blender-pixel` in `/Volumes/Apple HDD 2TB/dino-tycoon-blender-art`, now with the twelve-species expansion on top of environment commit `843f5d7`. The roster now has 28 species. Blender artwork covers all dinosaurs, park buildings, scenery and terrain; backward-looking walking is fixed. Validation passed. This work remains separate from `main` and has not been deployed; physical iPhone/iPad review and integration are still pending. See **Blender graphics work** below.
 
-- **Animation prototype:** http://localhost:5173/scripts/art/immersion.html, linked from artwork review. Carnotaurus, Diplodocus and Yutyrannus each have four eight-pose Blender clips (walk/idle/eat/rest), with 12 editable animated source files. A review enclosure adds natural feeding/resting sequences, rooted wind motion, pond/footstep effects and day/dusk/rain lighting. This is a standalone review fixture; simulation and saves remain v21. All 295 tests, build, art/motion checks, prototype browser checks and existing art integration passed. See [docs/PLAN-animation-immersion.md](docs/PLAN-animation-immersion.md) for regeneration, measurements and remaining transition/device review.
+- **Full park animation:** all 28 species now have four eight-frame Blender clips (896 frames / 112 editable animated source files). The playable park follows actual movement, feeding and nighttime rest. Rooted wind, leaves/fireflies, dust/wet footfalls, swimming wakes and pond sparkle extend the prototype's ambience. World animation is a device setting and defaults off for reduced motion; saves remain v21. Review all species at http://localhost:5173/scripts/art/review.html, or keep using the three-animal enclosure demo at http://localhost:5173/scripts/art/immersion.html. See [docs/PLAN-animation-immersion.md](docs/PLAN-animation-immersion.md) and [docs/PR-blender-park-immersion.md](docs/PR-blender-park-immersion.md).
 
 - **Live and working:**
   - four challenges (The Great Escape, Fire Mountain, Flood Season, The Money Pit), in the 🧩 Challenges folder, unlocking in that order
@@ -44,13 +44,24 @@ Work in the graphics worktree on `art/blender-pixel`; do not overwrite the main 
 - `b2a11ba`: all 16 dinosaur species × four poses and 10 buildings; walking gait correction and Blender Home Screen icons.
 - `843f5d7`: 15 scenery types with 38 variants, plus 16 terrain types with four variants each.
 
-The complete set contains **69 asset types and 224 grids**. Blender is the default in dev and regular production builds. Dev `?art=original` selects the original painters for comparison; normal production builds strip dev hooks and use Blender. Save format remains **v21**, with no simulation or map schema changes.
+The canonical set contains **69 asset types and 224 grids**; the full runtime animation adds 896 frames. Blender is the default in dev and regular production builds. Dev `?art=original` selects the original painters for comparison; normal production builds strip dev hooks and use Blender. Save format remains **v21**, with no simulation or map schema changes.
 
 Planted feet move backward relative to the body while lifted feet swing forward; left-facing animation mirrors the same frame order. Swimmers and flyers also have four poses, and pause freezes the animal animation clock. Baby scaling, palette patterns, fossil masks, water cropping and sleeping flyers retain their existing behavior. Environment variants keep seeded selection, scenery footprints, opaque 16×16 terrain tiles, tree fading/construction hiding and volcano/fountain/lamp effect anchors.
 
 **Preview:** `http://localhost:5173/scripts/art/review.html` compares all 69 asset types at native, 2× and 4× sizes, with pose/variant, direction, baby and background controls. `http://localhost:5173/?quickstart` opens a Blender park; add `&art=original` to compare. The dev server was running from this worktree at handoff; start it with `npm run dev` if needed.
 
-**Source and regeneration:** [assets-source/README.md](assets-source/README.md) is the canonical workflow. Blender 4.5.14 LTS models and compressed `.blend` files live under `assets-source/`; generators are in `scripts/art/`. Render through Blender MCP or the documented Blender CLI, then run `npm run art:convert` and `npm run art:check`. PNG/JSON intermediates are ignored and must be regenerated on a fresh checkout. Runtime grids are checked in under `src/render/generated/`; Blender and MCP are not runtime dependencies. The source files total about 6.7 MB and are excluded from the shipped build.
+**Source and regeneration:** [assets-source/README.md](assets-source/README.md) is the canonical workflow. Blender 4.5.14 LTS models and compressed `.blend` files live under `assets-source/`; generators are in `scripts/art/`. Render through Blender MCP or the documented Blender CLI, then run `npm run art:convert` and `npm run art:check`. PNG/JSON intermediates are ignored and must be regenerated on a fresh checkout. Runtime grids are checked in under `src/render/generated/`; Blender and MCP are not runtime dependencies. Canonical source files total about 6.7 MB; the 112 animation sources add about 12.3 MB. All source scenes are excluded from the shipped build.
+
+**Full park animation validation (2026-10-04):**
+
+- All **350 tests** passed (349 regular plus one performance test); production build, canonical `art:check` and full-roster `art:motion:check` passed.
+- `art:park-motion` passed: all **1,792 adult/baby atlas frames**, **896 runtime walk/frame/baby/facing combinations**, actual feeding, nighttime rest, pause, fixed wind roots, bounded texture caches, mobile layout, reduced-motion defaults and **3,584** review combinations. The review page adds 28 animated gallery cards while retaining the twelve-species canonical gallery.
+- The enclosure demo (`art:immersion`), expanded art integration, environment review and all **13 UI tours** passed. `art:motion-controls` verifies paused position lookup, meal-cue cleanup for animals disappearing before their first frame, and settings at 390×844, 667×375, 844×390 and 820×1180. The existing portrait rotate hint remains.
+- Final `art:offline` passed with a populated 30-dinosaur v21 park, offline resume and continuing animation. Production dev hooks remain stripped.
+- Blender MCP audited all **112** saved source scenes: every mesh has nine shape-key blocks and an animation action, with an orthographic camera. MCP rerendered 24 frames from saved Nigersaurus eat / Pteranodon rest / Mosasaurus walk sources; all hashes matched the bulk export. The exporter reports zero failed clips.
+- Matched headless Chrome, 844×390 daytime, 32 dinosaurs / 150 visitors: **50.1 ms p95 frame time** for both original and animated Blender; entity update 1.5 / 1.6 ms, startup 5,554 / 6,812 ms in one captured run. A separate 1000×650 dusk run with 30 dinosaurs / 150 visitors measured **116.8 ms p95** with ambient movement both off and on, entity update 1.3 / 1.4 ms. These are software-rendered iMac measurements, not physical Safari results; the larger dusk run is not comparable to the smaller daytime run.
+- Final gzipped build files total **701,060 bytes** (+96,610 versus the prototype); the main chunk is about 3.24 MB and remains under the 5 MiB PWA precache limit. Vite's existing 2,000 kB chunk advisory remains. Animation rows are deduplicated and textures are lazy per species/appearance; caches and particles are bounded.
+- Current sources and regeneration: [docs/PLAN-animation-immersion.md](docs/PLAN-animation-immersion.md). Current local PR draft: [docs/PR-blender-park-immersion.md](docs/PR-blender-park-immersion.md). Captures, metrics and source audits remain ignored under `docs/art-review/`. Physical iPhone/iPad review, main integration and deployment remain pending.
 
 **Twelve-species expansion:** Spinosaurus, Therizinosaurus, Amargasaurus, Kentrosaurus, Styracosaurus, Carnotaurus, Yutyrannus, Iguanodon, Microraptor, Diplodocus, Argentinosaurus and Nigersaurus. `EXPANSION_SPECIES_IDS` groups them in the registry and review gallery; `scripts/art/expansion_models.py` authors their four walking poses. They have catalog/guide entries, sounds, baby/fossil art and campaign fossil unlocks. New Sandbox parks unlock all 28; existing saved unlock lists and the six starters are preserved. Spinosaurus uses a land paddock and fish feeder; Microraptor is shown walking with folded feathers. New species have only Blender art, including in original-style comparison parks, and show one review panel. Direct preview: `http://localhost:5173/scripts/art/review.html?asset=spinosaurus#new-dinosaurs`.
 
@@ -74,7 +85,7 @@ Run browser tours and performance comparisons sequentially on this machine to av
 
 ```sh
 npm run dev            # dev server (usually already running on :5173); /?quickstart skips the menu
-npm test               # 294 tests + 1 separate performance test (295 total)
+npm test               # 349 tests + 1 separate performance test (350 total)
 npm run build          # tsc --noEmit + vite build
 npm run icons          # regenerate Home Screen icons (dev server must be running)
 node scripts/checks/<name>.mjs   # browser checks (headless Chrome via puppeteer-core); see below

@@ -14,6 +14,11 @@ import { TILE } from './tileset';
 import { paintRows } from './pixels';
 import { paintBuilding, paintJeep, paintTrough } from './sceneryArt';
 import { walkFrame } from './dinoAnimation';
+import { ART_STYLE } from './artStyle';
+import { BLENDER_MOTION } from './generated/blenderMotion';
+import { advanceMotion, motionTexture, type AnimalMotion } from './parkMotion';
+import { getSettings } from '../ui/settings';
+import { isWater, Terrain } from '../sim/terrain';
 
 const dinoKey = (id: SpeciesId, frame = 0, baby = false) => `dino-${id}-${frame}${baby ? '-baby' : ''}`;
 const eggKey = (id: SpeciesId) => `egg-${id}`;
@@ -118,6 +123,10 @@ export class EntityLayer {
   /** Shared animation clock: freezes with the simulation, including flyers/idle motion. */
   private animalTime = 0;
   private lastUpdateTime?: number;
+  private motions = new Map<number, AnimalMotion>();
+  private meals = new Map<number, number>();
+  private footfalls: {x:number;y:number;born:number;wet:boolean}[] = [];
+  private tracks: Phaser.GameObjects.Graphics;
   selection: Selection = null;
 
   constructor(
@@ -145,6 +154,9 @@ export class EntityLayer {
     this.markers = scene.add.graphics().setDepth(9);
     this.shadows = scene.add.graphics().setDepth(3.9);
     this.dirt = scene.add.graphics().setDepth(3.85);
+    this.tracks = scene.add.graphics().setDepth(3.88);
+    const offActions = sim.onDinoAction(action => this.meals.set(action.dinoId, Number.NaN));
+    scene.events.once(Phaser.Scenes.Events.SHUTDOWN, offActions);
   }
 
   /** Where a visitor is drawn (feet), nudged per person so crowds don't stack. */
@@ -200,7 +212,7 @@ export class EntityLayer {
 
   /** Show how an animal reacted to a treat or pat. */
   careEffect(dinoId: number, kind: CareEffect): void {
-    this.effects.push({ dinoId, kind, start: this.scene.time.now });
+    this.effects.push({ dinoId, kind, start: this.animalTime });
   }
 
   /** The sprite drawn for a dino (for photos). */
@@ -210,6 +222,10 @@ export class EntityLayer {
 
   /** Where a dino is drawn right now (feet position, world pixels). */
   dinoPosition(d: Dino): { x: number; y: number } {
+    if (ART_STYLE === 'blender' && this.sim.speed === 0) {
+      const motion = this.motions.get(d.id);
+      if (motion) return { x: motion.x, y: motion.y };
+    }
     const t = this.sim.stepProgress;
     return {
       x: (d.px + (d.x - d.px) * t) * TILE + TILE / 2,
@@ -244,6 +260,8 @@ export class EntityLayer {
     this.lastUpdateTime = time;
     if (this.sim.speed !== 0) this.animalTime += elapsed * this.sim.speed;
     const animalTime = this.animalTime;
+    time = animalTime;
+    for(const [id,started] of this.meals)if(Number.isNaN(started))this.meals.set(id,animalTime);
     const { state } = this.sim;
     const g = this.markers.clear();
     const sh = this.shadows.clear();
@@ -251,6 +269,7 @@ export class EntityLayer {
     this.drawDirt(time);
     this.drawEffects(g, time);
 
+    this.drawFootfalls();
     // Feeders
     const liveFeeders = new Set<number>();
     for (const f of state.feeders) {
@@ -385,15 +404,44 @@ export class EntityLayer {
         this.dinos.set(d.id, img);
       }
       const moving = d.x !== d.px || d.y !== d.py;
-      if (d.x !== d.px) this.facingLeft.set(d.id, d.x < d.px);
-      const { x, y } = this.dinoPosition(d);
+      if (this.sim.speed !== 0 && d.x !== d.px) this.facingLeft.set(d.id, d.x < d.px);
+      let { x, y } = this.dinoPosition(d);
       // Authored walk poses lift the feet; keep planted legs on the ground.
       const hop = d.baby ? -2 : -1;
       const walking = moving && this.sim.speed !== 0;
       const bob = walking ? (dinoFrameCount(d.species) === 2 && this.sim.stepProgress < 0.5 ? hop : 0) : Math.sin(animalTime / 600 + d.id) > 0.9 ? -1 : 0;
       const habitat = habitatOf(d.species);
       const asleep = isAsleep(state, d);
-      if (habitat === 'water') {
+      if (ART_STYLE === 'blender') {
+        const previous = this.motions.get(d.id);
+        const motion = advanceMotion(previous, {species:d.species,baby:d.baby,x,y,time:animalTime,offset:d.id*137,paused:this.sim.speed===0,moving,asleep,eatingSince:this.meals.get(d.id),ambient:getSettings().animation});
+        this.motions.set(d.id,motion);
+        x=motion.x; y=motion.y;
+        img.setTexture(motionTexture(this.scene,d.species,d.baby),`${motion.clip}-${motion.frame}`);
+        img.setCrop();
+        if (habitat === 'water') {
+          // Padding is above the animal; preserve the original submerged fraction.
+          const shown=Math.round((BLENDER_MOTION[d.species].walk.height-8)*WATERLINE*(d.baby?.6:1))+Math.round(8*(d.baby?.6:1))+1;
+          img.setCrop(0,0,img.width,shown);
+          img.setPosition(Math.round(x),Math.round(y)-2+img.height-shown);
+          sh.lineStyle(1,0xe8f6fb,.55).strokeEllipse(Math.round(x),Math.round(y)-2,(img.width-16*(d.baby?.6:1))*.8,4);
+        } else {
+          const lift=habitat==='air' && !asleep ? FLY_HEIGHT+Math.round(Math.sin(animalTime/520+d.id)*2) : 0;
+          img.setPosition(Math.round(x),Math.round(y)-lift+(hops.get(d.id)??0));
+          sh.fillStyle(0x000000,.22).fillEllipse(Math.round(x),Math.round(y)-1,Math.max(6,(img.width-16*(d.baby?.6:1))*(habitat==='air'?.45:.7)),habitat==='air'?3:Math.max(4,(img.height-8*(d.baby?.6:1))*.14));
+        }
+        if (getSettings().animation && this.sim.speed!==0 && moving && previous && motion.frame!==previous.frame && this.scene.cameras.main.worldView.contains(x,y)) {
+          const walk=BLENDER_MOTION[d.species].walk;
+          const landed=walk.contacts[motion.frame].find(foot=>foot.planted && !walk.contacts[previous.frame].find(old=>old.name===foot.name)?.planted);
+          if (landed || (habitat==='water' && motion.frame%2===0)) {
+            const tile=state.map.tiles[d.y*state.map.width+d.x];
+            const wet=habitat==='water'||isWater(tile)||tile===Terrain.Marsh||state.stormHours>0;
+            const direction=this.facingLeft.get(d.id)?-1:1;
+            this.footfalls.push({x:Math.round(x+(landed?(landed.x-walk.width/2)*(d.baby?.6:1)*direction:0)),y:Math.round(y)-1,born:animalTime,wet});
+            if(this.footfalls.length>96)this.footfalls.shift();
+          }
+        }
+      } else if (habitat === 'water') {
         // Swimming: flippers keep stroking; only the top of the animal shows above the water.
         img.setTexture(dinoKey(d.species, Math.floor(animalTime / (900 / dinoFrameCount(d.species)) + d.id) % dinoFrameCount(d.species), d.baby));
         const shown = Math.round(img.height * WATERLINE);
@@ -415,7 +463,7 @@ export class EntityLayer {
       img.setFlipX(this.facingLeft.get(d.id) ?? false);
       img.setDepth(4 + y / 10000);
 
-      const top = Math.round(y) - img.height - 3;
+      const top = ART_STYLE==='blender' ? Math.round(img.y)-img.height+Math.round(8*(d.baby?.6:1))-3 : Math.round(y)-img.height-3;
       const cx = Math.round(x);
       if (d.escaped) {
         // Escaped: pulsing orange ring and a double "!".
@@ -451,8 +499,26 @@ export class EntityLayer {
         img.destroy();
         this.dinos.delete(id);
         this.facingLeft.delete(id);
+        this.motions.delete(id);
+        this.meals.delete(id);
         if (this.selection?.kind === 'dino' && this.selection.id === id) this.selection = null;
       }
+    }
+    // A newly spawned animal can eat and disappear between rendered frames.
+    for (const [id, started] of this.meals) {
+      if (!liveDinos.has(id) || animalTime - started >= 600) this.meals.delete(id);
+    }
+  }
+
+  /** Bounded, native-pixel footfalls and wakes; the clock stops with the park. */
+  private drawFootfalls(): void {
+    const g=this.tracks.clear();
+    this.footfalls=this.footfalls.filter(p=>this.animalTime-p.born<600);
+    if(!getSettings().animation){this.footfalls=[];return;}
+    for(const p of this.footfalls){
+      const t=(this.animalTime-p.born)/600;
+      if(p.wet)g.lineStyle(1,0xc8e8df,(1-t)*.55).strokeEllipse(p.x,p.y,3+t*9,2+t*3);
+      else g.fillStyle(0xbda774,(1-t)*.4).fillRect(p.x-1-Math.round(t*2),p.y-Math.round(t*3),2,1).fillRect(p.x+Math.round(t*3),p.y-Math.round(t*2),1,1);
     }
   }
 

@@ -1,0 +1,22 @@
+# Animate the full Blender roster and bring the prototype's ambience into the park
+
+Dinosaurs previously used four shared walk poses while stationary animals stayed
+mostly still. All 28 species now have eight-pose walk/swim/fly, idle, eat and rest
+clips backed by 112 editable Blender timelines. Walk phase follows distance,
+babies use the scaled gait, meals trigger chewing after actual feeder consumption,
+and nighttime sleep selects rest. Pose and presentation clocks freeze on pause.
+Save schema, simulation balance, RNG and feeding/pathfinding rules stay unchanged.
+
+The park adds cached rooted foliage sway, drifting leaves, evening fireflies,
+ground-contact dust and wet rings, swimming wakes and pond sparkle. Existing
+lighting, volcano/fountain effects and rain follow the presentation clocks. A
+World animation setting disables ambient movement and defaults off for reduced
+motion. Motion sheets load lazily per appearance; effects and caches are bounded.
+The review page exposes all four clips and all 28 animals alongside the canonical
+art comparisons and the original three-animal enclosure demo.
+
+Validation is recorded in HANDOFF.md: unit/simulation tests, production build,
+896 frame/hash/contact checks, full atlas/runtime/gallery browser checks, mobile
+UI tours, offline populated-park resume and Blender source audits/parity renders.
+Blender source files and review captures are excluded from the shipped app.
+Physical Safari review and integration with main remain pending; no deployment.

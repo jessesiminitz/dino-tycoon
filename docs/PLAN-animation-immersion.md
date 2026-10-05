@@ -1,118 +1,128 @@
-# Animation and immersion prototype
+# Blender animation and park immersion
 
-Implemented 2026-10-04 on `art/blender-pixel`. This is a local review prototype;
-the simulation and regular production game retain their existing artwork and saves.
+Implemented on `art/blender-pixel`, 2026-10-04. The three-animal enclosure prototype
+now drives a full-roster rollout in the playable game. Saves remain **v21**.
+The branch remains local pending physical iPhone/iPad review and integration.
 
 ## Review
 
-Open http://localhost:5173/scripts/art/immersion.html, also linked from the artwork
-review page. The enclosure contains Carnotaurus, Diplodocus and Yutyrannus. Each
-has eight Blender poses for walk, idle, eat and rest: **12 clips / 96 frames**.
-The scene uses actual Blender scenery and terrain, a forest backdrop, swaying
-rooted vegetation, drifting leaves, pond ripples, ground-contact dust or wet
-footfall ripples, evening fireflies, warm lamps, and daylight/dusk/rain controls.
+- Play the park: http://localhost:5173/?quickstart
+- Inspect all 28 species: http://localhost:5173/scripts/art/review.html
+  Choose Walk / swim / fly, Idle, Eat or Rest, then inspect eight frames,
+  babies and both directions. The original four-pose comparison remains available.
+- Enclosure demo: http://localhost:5173/scripts/art/immersion.html
+  Carnotaurus, Diplodocus and Yutyrannus retain the day/dusk/rain prototype fixture.
+  Its staged sequence demonstrates the art; the actual park follows simulation rules.
 
-Natural behavior walks to a feeder, looks around, eats, rests and walks back.
-Behavior controls can isolate each action. Preview cards support babies, both
-directions, pause and frame inspection. Reduced-motion preference starts paused;
-hidden tabs do not advance time. This fixture does not represent the simulation's
-feeding rules, predator/prey interactions, saved behavior or production gameplay.
+## Full rollout
 
-## Authoring
+**28 species × four clips × eight frames = 896 Blender frames**, backed by
+**112 editable animated .blend sources** (12,299,079 bytes, outside the build).
+Each mesh has a Basis and eight shape keys on an editable looping timeline.
+Canonical dinosaur, building, scenery and terrain sources and their 224 grids remain intact.
 
-`scripts/art/prototype_motion.py` reuses the canonical extruded anatomy with
-connected neck/head rotation, tail movement, jaw motion, feather movement and
-resting body/leg compression. All meshes have a Basis and eight shape keys on an
-editable Blender timeline. Twelve compressed `.blend` files live in
-`assets-source/blender/motion/` (1,408,312 bytes total). The pixel camera gets eight
-pixels of side and top clearance; the original sources and 224 grids remain intact.
-Diplodocus/Yutyrannus eyes are enlarged slightly to survive native rotated sampling.
+The anatomy author groups bipeds, quadrupeds, swimmers and flyers. Neck, skull,
+crests, horns and jaw move together; tails and feathers add secondary movement.
+Grazing starts and finishes upright and clamps the muzzle above the soil. Resting
+land animals compress their legs while toes stay planted. Resting flyers fold
+wings and sit with their feet on the ground. Swimmers retain fin and tail motion.
+Eyes stay readable at native resolution, including after rotation.
 
-Walk stance is linear for two thirds of the cycle, followed by a lifted return.
-The prototype measures translation speed from exported planted-foot meshes; tests
-verify world-space contact in both directions. This prototype gait is separate
-from the four-pose production gait. Timing: walk 960 ms, idle 1,600 ms, eat 2,000 ms,
-rest 2,400 ms per eight-frame loop.
+Walk stance moves backward linearly for two thirds of the cycle, then lifts and
+returns forward. The runtime advances land gait by actual distance, with mirrored
+facing and baby scale. The phase continues across tile boundaries. Teleports don't
+produce giant strides. Stationary idle, eating and rest clips use a clock that
+follows game speed and freezes on pause. Feeding emits a transient presentation
+cue only after stock is consumed; cues never enter saves, logs or simulation RNG.
+A meal plays its eight frames within the existing 625 ms stationary movement step.
+Movement and sleep take priority. No new hunger, thirst or pathfinding rules were added.
 
-Use **separate MCP calls** for preparation, saving/first render batch, and final
-batch. Reload the script each time:
+One 32-frame GPU atlas is created lazily per species and adult/baby appearance.
+Shared role rows reduce the generated download; the shared pixel painter preserves
+palette patterns, hard alpha, outlines and baby scaling. Catalogs, fossils and
+menus keep their existing static artwork. Blender/MCP is an authoring dependency only.
+
+Trees, palms, bushes, reeds and living garden decorations use seven cached native
+pixel bends. Roots stay fixed, variants keep their seeded placement, and tree
+fading/construction hiding still work. Visible foliage updates at 120 ms intervals.
+Small drifting leaves and dusk/night fireflies are bounded to nearby plants;
+storms strengthen wind and suppress fireflies. Ground-contact dust, wet footfall
+rings and swimming wakes have a 96-particle cap. Pond sparkles, volcano smoke,
+fountain spray and wind follow the paused simulation clock. Existing daylight,
+warm light pools and weather remain coordinated with the calendar; rain freezes
+on pause. World animation can be disabled in device settings and defaults off
+when the system requests reduced motion. Essential movement and feeding remain visible.
+
+## Regeneration
+
+`scripts/art/full_motion.py` is the single animation author. The old
+`prototype_motion.py` entry forwards to it. Original scene files remain untouched.
+Blender 4.5.14 LTS uses the canonical CPU Cycles palette and orthographic camera.
+MCP prepared and rendered the first full-roster clip; local Blender CLI performs
+the bulk render to avoid transport timeouts. MCP also inspects saved sources.
+
+For a small MCP batch, reload the script on every call:
 
 ```python
 import runpy
-motion = runpy.run_path(
-    '/Volumes/Apple HDD 2TB/dino-tycoon-blender-art/scripts/art/prototype_motion.py',
-    run_name='dino_motion'
-)
-motion['prepare']('diplodocus', 'eat')
+motion = runpy.run_path('/Volumes/Apple HDD 2TB/dino-tycoon-blender-art/scripts/art/full_motion.py')
+motion['prepare']('nigersaurus', 'eat')
+# Next call, after reloading:
+motion['save_source']('nigersaurus', 'eat')
+motion['render_clip']('nigersaurus', 'eat', 0, 4)
+# Next call, after reloading:
+motion['render_clip']('nigersaurus', 'eat', 4, 8)
 ```
 
-```python
-# After reloading motion in the next call:
-motion['save_source']('diplodocus', 'eat')
-motion['render_clip']('diplodocus', 'eat', 0, 4)
-```
-
-```python
-# After reloading motion in the next call:
-motion['render_clip']('diplodocus', 'eat', 4, 8)
-```
-
-`prepare` replaces only this prototype's named working scenes; source files remain
-available to reload. Preparation sometimes returned “No data received” after the
-scene was fully authored. Inspect scene name, dimensions and clip metadata before
-continuing. Smaller saving/render calls completed normally. Export errors such as
-a missing eye must be fixed before conversion. Per-frame PNG/JSON intermediates
-are ignored; regenerate all twelve clips before converting on a fresh checkout.
-`motion['export'](asset, clip)` combines the steps for a sufficiently long-running
-Blender process.
+For all 112 clips, or selected species:
 
 ```sh
+/Applications/Blender.app/Contents/MacOS/Blender --background --python scripts/art/full_motion.py
+/Applications/Blender.app/Contents/MacOS/Blender --background --python scripts/art/full_motion.py -- tyrannosaurus pteranodon
 npm run art:motion:convert
 npm run art:motion:check
-npm run art:immersion
 ```
 
-The converter checks dimensions, allowed roles, eyes, grounded pixels, mesh
-contacts, hashes and distinct poses. Checked-in `blenderMotion.ts` feeds the shared
-palette/outline/baby painter through `paintDinoRows`. Its 192 adult/baby canvases
-are prepared once. Wind deformations, sky and lighting are cached; preview cards
-redraw only when their pose changes. The world paints at up to 30 fps while time
-and animal movement advance independently. The prototype entry is not imported
-by the regular game build.
+PNG/per-frame JSON/aggregate JSON intermediates and the batch status file live
+under ignored `assets-source/renders/motion/`. Regenerate all species before
+conversion on a fresh checkout. The converter checks dimensions, palette roles,
+eyes, hashes, distinct poses and planted mesh contacts for every land frame.
+Air and water clips are not incorrectly required to have land foot contacts.
+Canonical cleanup patches do not apply to animated, padded anatomy.
 
 ## Validation
 
-- **295 tests** passed: 294 regular plus one performance test. Six new checks cover
-  frame looping, face/contour validity, anchored feet and direction.
-- Production build, `art:check` and `art:motion:check` passed. All original 224 grids
-  still match their render hashes. Total gzipped production files: 604,450 bytes
-  (+61 versus the preceding expansion build); prototype clips/scenes are excluded.
-- `art:immersion` passed: all **384** clip/frame/baby/direction previews match the
-  shared painter with binary alpha; full-world pause; actual movement/footfalls;
-  particle switch; feeders/rest; all four natural behaviors for all three animals;
-  fixed sprite cache; untouched local storage; reduced-motion startup; no errors.
-- No horizontal overflow at 390×844, 844×390 or 820×1180. Desktop and device-size
-  screenshots plus metrics are ignored local artifacts in `docs/art-review/`.
-- `art:integration` passed for all 28 species, catalog/guide/game texture agreement,
-  palettes, babies/fossil masks, both directions, pause, waterline/sleeping flight,
-  four catalog viewports and the existing twelve-dinosaur review gallery.
-- Blender MCP reloaded all twelve saved source files and confirmed every mesh had
-  nine shape-key blocks and an animation action, with correct clip durations.
-- Headless Chrome on the iMac measured p95 requestAnimationFrame interval 66.7 ms
-  before scenery caching and **16.8 ms** afterward. This is a prototype measurement,
-  not a production park benchmark or physical Safari result.
+Current validation and measured performance are recorded in HANDOFF.md.
 
-## Next review
+```sh
+npm test
+npm run build
+npm run art:check
+npm run art:motion:check
+npm run art:park-motion
+npm run art:motion-controls
+npm run art:immersion
+npm run art:integration
+npm run art:environment
+npm run art:ui
+npm run art:offline
+```
 
-Judge legibility and mood on physical iPhone/iPad. Refine transitions between
-standing, eating and resting; the current clips switch directly. Then choose
-which behaviors to connect to actual game state and animation clocks, profile a
-busy park, and expand by anatomy group. Drinking, visitor reactions and full-roster
-animation remain future work. No deployment or integration into `main` occurred.
+`art:park-motion` checks all 1,792 adult/baby atlas frames, 896 runtime
+walk/frame/baby/direction combinations, real feeding, nighttime rest, pause,
+rooted wind, stable caches, phone/iPad layout, reduced-motion defaults and all
+3,584 clip/frame/baby/direction gallery combinations. It measures a busy park
+with ambient movement off/on in sequential isolated runs. Generated captures,
+logs and metrics stay under ignored `docs/art-review/`. Software-rendered Chrome
+on this iMac does not establish physical Safari performance.
+
+Future additions such as drinking, predator pounces and visitor reactions require
+separate simulation/action designs. The current scope implements the prototype's
+four behaviors across the roster and its ambient effects in the playable park.
 
 ## References
 
-- [Rainy bookshop reference](https://www.reddit.com/r/mcp/comments/1wsg1zi/i_built_an_mcp_server_that_lets_agents_draw_and/): warm/cool contrast, separate ambient layers and small character actions.
+- [Rainy bookshop reference](https://www.reddit.com/r/mcp/comments/1wsg1zi/i_built_an_mcp_server_that_lets_agents_draw_and/): warm/cool contrast, ambient layers and small character actions.
 - [Motion Twin](https://motiontwin.com/faq): 3D-authored artwork converted to 2D.
 - [Rain World developer interview](https://unity.com/blog/exploring-procedural-design-rain-world): creature animation and environmental interactions.
 - [Kingdom Two Crowns official trailer](https://www.youtube.com/watch?v=7neFkOEDP6w): atmospheric pixel-world reference.

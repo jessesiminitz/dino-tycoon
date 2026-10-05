@@ -4,7 +4,7 @@ import { paintEnvironment, paintBuilding } from './sceneryArt';
 import { paintTerrainTile } from './terrainArt';
 import { Terrain } from '../sim/terrain';
 import { SPECIES } from '../sim/data/species';
-import { MOTION_SPECIES, motionFrame, motionWalkSpeed, type MotionSpecies, type MotionClip } from './immersionMotion';
+import { PROTOTYPE_SPECIES, motionFrame, motionWalkSpeed, type MotionSpecies, type MotionClip } from './immersionMotion';
 
 const input = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const world = input<HTMLCanvasElement>('world'), ctx = world.getContext('2d')!;
@@ -16,16 +16,16 @@ const baby = input<HTMLInputElement>('baby'), left = input<HTMLInputElement>('le
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 let paused = reducedMotion.matches, clock = 0, lastTime = 0, lastDraw = 0, manualFrame = 0;
 const sprites = new Map<string,HTMLCanvasElement>();
-for (const id of MOTION_SPECIES) for (const clip of Object.keys(BLENDER_MOTION[id]) as MotionClip[]) {
+for (const id of PROTOTYPE_SPECIES) for (const clip of Object.keys(BLENDER_MOTION[id]) as MotionClip[]) {
   for (const small of [false,true]) BLENDER_MOTION[id][clip].frames.forEach((rows,frame) => {
     sprites.set(`${id}:${clip}:${frame}:${small}`,paintDinoRows(SPECIES[id],rows,small));
   });
 }
 const sprite = (id: MotionSpecies, clip: MotionClip, frame: number, small = false) => sprites.get(`${id}:${clip}:${frame}:${small}`)!;
-const previews = MOTION_SPECIES.map(id => {
+const previews = PROTOTYPE_SPECIES.map(id => {
   const card = document.createElement('article'); card.className = 'card'; card.dataset.species = id;
   const title = document.createElement('h2'); title.textContent = SPECIES[id].name;
-  const description = document.createElement('p'); description.textContent = {carnotaurus:'A curious head tilt and a weighty stride.',diplodocus:'A long neck reaching for a leafy meal.',yutyrannus:'Feathers, tail movement and a gentle resting pose.'}[id];
+  const description = document.createElement('p'); description.textContent = ({carnotaurus:'A curious head tilt and a weighty stride.',diplodocus:'A long neck reaching for a leafy meal.',yutyrannus:'Feathers, tail movement and a gentle resting pose.'} as Record<string,string>)[id];
   const stage = document.createElement('div'); stage.className = 'clip-stage';
   const canvas = document.createElement('canvas'); canvas.setAttribute('aria-label',`${SPECIES[id].name} animation preview`); stage.append(canvas);
   const detail = document.createElement('output'); card.append(title,description,stage,detail); input('clips').append(card);

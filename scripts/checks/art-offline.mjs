@@ -31,6 +31,7 @@ try {
     const {SPECIES}=await import('/src/sim/data/species.ts');
     return Object.keys(SPECIES).map(id=>paintDino(SPECIES[id]).toDataURL());
   });
+  const offlinePark=await expectedPage.evaluate(async()=>{const {stressPark}=await import('/src/dev/stressPark.ts');const state=stressPark();state.entrance={x:28,y:25};return state;});
   await expectedPage.close();
   const page=await browser.newPage();
   page.on('pageerror',e=>errors.push(e.message));
@@ -53,6 +54,7 @@ try {
   await page.evaluate(async()=>{await navigator.serviceWorker.ready;});
   await page.reload({waitUntil:'networkidle0'});
   check('service worker controls the Pages subpath',await page.evaluate(()=>!!navigator.serviceWorker.controller));
+  await page.evaluate(state=>{const key='dino-tycoon:slot:1',rec=JSON.parse(localStorage.getItem(key));rec.state=state;rec.savedAt=Date.now()+1000;rec.summary.dinos=state.dinos.length;localStorage.setItem(key,JSON.stringify(rec));},offlinePark);
   await page.setOfflineMode(true);
   await page.reload({waitUntil:'load'});
   await page.waitForSelector('[data-play="1"]',{visible:true});
@@ -62,7 +64,11 @@ try {
   },expected));
   await tap('[data-play="1"]');
   await page.waitForSelector('#game canvas');
-  check('saved park resumes offline',await page.evaluate(()=>document.body.classList.contains('in-park')));
+  check('populated v21 park resumes offline',await page.evaluate(()=>document.body.classList.contains('in-park')&&JSON.parse(localStorage.getItem('dino-tycoon:slot:1')).state.dinos.length>=30));
+  await new Promise(resolve=>setTimeout(resolve,1000));
+  const before=await page.screenshot();await new Promise(resolve=>setTimeout(resolve,800));const after=await page.screenshot();
+  check('offline populated park keeps animating',!before.equals(after));
   await page.screenshot({path:`${out}/blender-offline.png`});
   finish(errors);
-} finally {if(browser) await browser.close();await new Promise(resolve=>server.close(resolve));}
+} finally {if(browser){let timer;await Promise.race([browser.close(),new Promise(resolve=>{timer=setTimeout(()=>{browser.disconnect();browser.process()?.kill('SIGKILL');resolve();},10000);})]);clearTimeout(timer);}await new Promise(resolve=>server.close(resolve));}
+process.exit(process.exitCode??0);

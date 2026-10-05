@@ -47,63 +47,30 @@ try {
   });
   check('catalog, guide, textures, fossil masks and palette overrides agree', shared.length===0, shared);
 
+  // Exhaustive atlas/behavior coverage lives in park-immersion.mjs.
   const animation = await page.evaluate(async () => {
-    const { sim,game }=window.__dino, scene=game.scene.getScene('park');
-    const {SPECIES_IDS,habitatOf}=await import('/src/sim/data/species.ts');
-    const fullSet=[];
-    const sample=sim.state.dinos[0];
-    sim.state.hours=4;sim.speed=1;
-    for(const [i,species] of SPECIES_IDS.entries()) {
-      const animal={...sample,species,id:98000+i,x:22,px:21,y:20,py:20,baby:false};
-      sim.state.dinos.push(animal);
-      for(const left of [false,true]) {
-        animal.px=left ? animal.x+1 : animal.x-1;
-        for(const pose of [0,1,2,3]) {
-          Object.defineProperty(sim,'stepProgress',{configurable:true,get:()=>pose/4});
-          const habitat=habitatOf(species), duration=habitat==='air'?120:225;
-          scene.entities.animalTime=((pose-animal.id%4+4)%4)*duration;
-          scene.entities.lastUpdateTime=1000;
-          scene.entities.update(1000);
-          const img=scene.entities.dinos.get(animal.id);
-          if(img.texture.key!==`dino-${species}-${pose}` || img.flipX!==left) fullSet.push(`${species}:${pose}:${left}`);
-        }
+    const {sim,game}=window.__dino,scene=game.scene.getScene('park');
+    const {SPECIES_IDS}=await import('/src/sim/data/species.ts');
+    const {BLENDER_MOTION}=await import('/src/render/generated/blenderMotion.ts');
+    const {motionWalkSpeed}=await import('/src/render/immersionMotion.ts');
+    const failures=[],saved=sim.state.dinos;sim.state.hours=4;sim.speed=1;
+    for(const [i,species] of SPECIES_IDS.entries())for(const left of [false,true]){
+      const d={...saved[0],species,id:98000+i,x:22,px:left?23:21,y:20,py:20,baby:false,hunger:0};
+      sim.state.dinos=[d];scene.entities.motions.delete(d.id);
+      const cycle=motionWalkSpeed(species)*BLENDER_MOTION[species].walk.durationMs/1000;
+      for(let pose=0;pose<8;pose++){
+        Object.defineProperty(sim,'stepProgress',{configurable:true,get:()=>pose*cycle/128});
+        scene.entities.update(1000);const img=scene.entities.dinos.get(d.id);
+        if(img.texture.key!==`motion-${species}`||img.frame.name!==`walk-${pose}`||img.flipX!==left)failures.push(`${species}:${pose}:${left}`);
       }
     }
-    delete sim.stepProgress;
-    const d=sim.state.dinos.find((d)=>d.species==='triceratops');
-    d.px=d.x-1;
-    sim.speed=1;
-    const frames=[];
-    for(const progress of [0,.25,.5,.75]) {
-      Object.defineProperty(sim,'stepProgress',{configurable:true,get:()=>progress});
-      scene.entities.update(1000+progress*1000);
-      frames.push(scene.entities.dinos.get(d.id).texture.key);
-    }
-    delete sim.stepProgress;
-    const source=sim.state.dinos[0];
-    for(const [species,id] of [['pteranodon',99001],['plesiosaurus',99002]]) {
-      sim.state.dinos.push({...source,species,id,x:22,px:22,y:20,py:20,baby:false});
-    }
-    sim.setSpeed(0);
-    scene.entities.update(2500);
-    const snapshot=()=>[...scene.entities.dinos].map(([id,img])=>({id,key:img.texture.key,x:img.x,y:img.y,flip:img.flipX}));
-    const first=snapshot(); scene.entities.update(9000); const second=snapshot();
-    const swimmer=scene.entities.dinos.get(99002);
-    const cropped=swimmer.isCropped && swimmer._crop.height===Math.round(swimmer.height*.62);
-    sim.state.hours=15; // 23:00
-    scene.entities.update(9500);
-    const flyer=sim.state.dinos.find(d=>d.id===99001);
-    const img=scene.entities.dinos.get(flyer.id), floor=scene.entities.dinoPosition(flyer).y;
-    const sleeping=Math.abs(img.y-Math.round(floor))===0;
-    const left=sim.state.dinos.find(d=>d.species==='triceratops');
-    left.px=left.x+1; scene.entities.update(10000);
-    const flip=scene.entities.dinos.get(left.id).flipX;
-    return {fullSet,frames,frozen:JSON.stringify(first)===JSON.stringify(second),cropped,sleeping,flip};
+    delete sim.stepProgress;sim.state.dinos=saved;sim.setSpeed(0);scene.entities.update(2500);
+    const snapshot=()=>JSON.stringify([...scene.entities.dinos].map(([id,img])=>[id,img.texture.key,img.frame.name,img.x,img.y,img.flipX]));
+    const before=snapshot();scene.entities.update(9000);
+    return {failures,frozen:before===snapshot()};
   });
-  check('every species selects all four poses in both directions',animation.fullSet.length===0,animation.fullSet);
-  check('all four walk poses selected', animation.frames.join(',') === [0,1,2,3].map(f=>`dino-triceratops-${f}`).join(','), animation.frames);
-  check('pause freezes land, swimming and flying motion', animation.frozen);
-  check('waterline, sleeping flight and left facing preserved', animation.cropped && animation.sleeping && animation.flip, animation);
+  check('every species selects all eight walk phases in both directions',animation.failures.length===0,animation.failures);
+  check('pause freezes animal poses and positions',animation.frozen);
 
   for(const [width,height] of [[844,390],[667,375],[1180,820],[820,1180]]) {
     await page.setViewport({width,height,deviceScaleFactor:1,isMobile:true,hasTouch:true});
@@ -153,7 +120,7 @@ try {
       }
     }
     baby.checked=false;left.checked=false;pose.value='0';select.value='spinosaurus';select.dispatchEvent(new Event('input'));
-    return {count:document.querySelectorAll('.dino-card').length,failures};
+    return {count:document.querySelectorAll('#new-gallery .dino-card').length,failures};
   });
   check('new dinosaur gallery selects all twelve and paints every pose, baby and facing correctly',additions.count===12 && additions.failures.length===0,additions);
   await page.setViewport({width:1200,height:900,deviceScaleFactor:1});

@@ -1,3 +1,4 @@
+import { habitatOf } from '../src/sim/data/species';
 import { describe, expect, it } from 'vitest';
 import { BLENDER_MOTION } from '../src/render/generated/blenderMotion';
 import { MOTION_SPECIES, motionFrame, motionWalkSpeed, type MotionClip } from '../src/render/immersionMotion';
@@ -12,8 +13,10 @@ describe('Blender prototype motion',()=>{
           expect(rows).toHaveLength(clip.height);
           expect(rows.every(row=>row.length===clip.width && /^[.BDFAGWEM]+$/.test(row))).toBe(true);
           expect(rows.join('')).toContain('E');
-          expect(rows.at(-1)).toMatch(/[BDFAGWEM]/);
-          expect(clip.contacts[i].some(foot=>foot.planted)).toBe(true);
+          if(habitatOf(id)==='land'){
+            expect(rows.at(-1)).toMatch(/[BDFAGWEM]/);
+            expect(clip.contacts[i].some(foot=>foot.planted)).toBe(true);
+          }
         }
         expect(new Set(clip.frames.map(rows=>rows.join('\n'))).size).toBeGreaterThanOrEqual(3);
         const type=name as MotionClip;
@@ -23,6 +26,7 @@ describe('Blender prototype motion',()=>{
       }
     });
     it(`${id} keeps planted feet stationary in world space in both directions`,()=>{
+      if(habitatOf(id)!=='land')return;
       const walk=BLENDER_MOTION[id].walk;
       const movement=motionWalkSpeed(id)*walk.durationMs/8000;
       expect(movement).toBeGreaterThan(0);

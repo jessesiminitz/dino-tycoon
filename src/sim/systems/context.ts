@@ -18,6 +18,14 @@ export interface SimContext {
   rng: Rng;
   regions: RegionMap;
   emit(event: GameEvent): void;
+  /** Presentation only; never stored in a save or the park log. */
+  animate?(action: DinoAction): void;
   /** Call when fences break or get fixed, so paddocks are recomputed. */
   invalidateWorld(): void;
+}
+
+export interface DinoAction {
+  kind: 'eat';
+  dinoId: number;
+  feederId: number;
 }

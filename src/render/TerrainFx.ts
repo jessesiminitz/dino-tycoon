@@ -48,7 +48,7 @@ export class TerrainFx {
         if (t === Terrain.Waterfall) this.falls.push(y * width + x);
         if (t === Terrain.Lava) this.lava.push(y * width + x);
         if (!isWater(t)) continue;
-        if (t !== Terrain.Pond && t !== Terrain.HotSpring && t !== Terrain.Waterfall) this.water.push(y * width + x);
+        if (t !== Terrain.HotSpring && t !== Terrain.Waterfall) this.water.push(y * width + x);
         if (!FOAMY.has(t)) continue;
         const ox = x * TILE;
         const oy = y * TILE;

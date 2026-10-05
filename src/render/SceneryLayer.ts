@@ -14,6 +14,10 @@ import {
   VOLCANO_CRATER_ABOVE_BASE,
 } from './sceneryArt';
 import { TILE } from './tileset';
+import { swayTexture } from './plantMotion';
+import { getSettings } from '../ui/settings';
+import { calendar } from '../sim/GameState';
+import { lightAt } from './daylight';
 
 const TREE_VARIANTS = 3;
 /** Beach tiles that get a palm (away from the gate). */
@@ -49,6 +53,10 @@ export class SceneryLayer {
   private fx: Phaser.GameObjects.Graphics;
   private volcanoGlow: Phaser.GameObjects.Graphics;
   private volcanoBase = 0;
+  private windTick = -1;
+  private windEnabled = true;
+  private plants: Phaser.GameObjects.Image[] = [];
+  private ambience: Phaser.GameObjects.Graphics;
 
   constructor(
     private scene: Phaser.Scene,
@@ -121,6 +129,7 @@ export class SceneryLayer {
       }
 
     this.volcanoGlow = scene.add.graphics();
+    this.ambience = scene.add.graphics().setDepth(8.3);
     this.fx = scene.add.graphics().setDepth(8.5);
     const v = map.volcano;
     if (v) {
@@ -213,6 +222,7 @@ export class SceneryLayer {
   /** Volcano smoke and glow, fountain sparkle, see-through trees. */
   update(time: number): void {
     this.fadeTreesInFront();
+    this.updateWind(time);
     const g = this.fx.clear();
     const glow = this.volcanoGlow.clear();
     const { state } = this.sim;
@@ -243,6 +253,44 @@ export class SceneryLayer {
         const t = ((time / 500 + k / 4) % 1 + 1) % 1;
         const dx = (k % 2 ? 1 : -1) * t * 5;
         g.fillStyle(0xe8f6fb, 1 - t).fillRect(x + dx, y - 3 + t * t * 8, 1, 1);
+      }
+    }
+  }
+
+  private updateWind(time: number): void {
+    const enabled = getSettings().animation;
+    const tick = Math.floor(time / 120);
+    if (tick !== this.windTick || enabled !== this.windEnabled) {
+      this.windTick = tick; this.windEnabled = enabled; this.plants = [];
+      const view = this.scene.cameras.main.worldView;
+      for (const img of [...this.trees.values(), ...this.decor.values()]) {
+        const root = img.getData('rootTexture') as string | undefined;
+        const base = root ?? img.texture.key;
+        if (!/^(tree-|palm-|bush-|reeds-|decor-(tree|palm|flowers)$)/.test(base)) continue;
+        if (!root) img.setData('rootTexture', base);
+        if (!enabled) { img.setTexture(base); continue; }
+        if (!img.visible || img.x < view.left-40 || img.x > view.right+40 || img.y < view.top-8 || img.y-img.height > view.bottom) continue;
+        const phase = time / 1700 + hash2(Math.floor(img.x), Math.floor(img.y), 31)*Math.PI*2;
+        const strength = this.sim.state.stormHours > 0 ? 3 : 2;
+        img.setTexture(swayTexture(this.scene,base),3+Math.round(Math.sin(phase)*strength));
+        if(this.plants.length<24)this.plants.push(img);
+      }
+    }
+    const g = this.ambience.clear();
+    if (!enabled) return;
+    const { hour } = calendar(this.sim.state);
+    const dark = lightAt(hour+this.sim.stepProgressInHour).dark;
+    const storm = this.sim.state.stormHours > 0;
+    for (const [i, plant] of this.plants.entries()) {
+      const phase = (time/4200+i*.173)%1;
+      const x = Math.round(plant.x-8+phase*(storm?32:20));
+      const y = Math.round(plant.y-plant.height*.6+phase*22);
+      if(i%3===0)g.fillStyle(storm?0x97ae63:0xc3ca71,Math.sin(phase*Math.PI)*.55).fillRect(x,y,2,1);
+      if(dark>.3 && !storm && i<12){
+        const glow = Math.max(0,Math.sin(time/650+i*2))*.7*dark;
+        const fx=Math.round(plant.x+Math.sin(time/1700+i)*9),fy=Math.round(plant.y-9+Math.cos(time/1300+i)*5);
+        g.fillStyle(0xdde78e,glow*.2).fillRect(fx-1,fy-1,3,3);
+        g.fillStyle(0xf5ed9e,glow).fillRect(fx,fy,1,1);
       }
     }
   }

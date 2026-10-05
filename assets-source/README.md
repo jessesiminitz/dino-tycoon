@@ -1,6 +1,6 @@
 # Blender sprite authoring
 
-The full set contains **28 dinosaur species × four poses, 10 park buildings, 15 scenery types with 38 variants, and 16 terrain types with four tile variants each**. There are 224 exported grids in total. Blender **4.5.14 LTS** renders extruded mesh profiles with CPU Cycles, flat emission region colors and an orthographic camera at native pixel resolution. Dinosaurs keep the game's species palettes, highlights, patterns, outlines and 60% baby painter; each building has its own palette. Blender artwork is the default in development and production.
+The canonical set contains **28 dinosaur species × four poses, 10 park buildings, 15 scenery types with 38 variants, and 16 terrain types with four tile variants each**. There are 224 canonical grids, plus 896 animation frames in the full-roster rollout below. Blender **4.5.14 LTS** renders extruded mesh profiles with CPU Cycles, flat emission region colors and an orthographic camera at native pixel resolution. Dinosaurs keep the game's species palettes, highlights, patterns, outlines and 60% baby painter; each building has its own palette. Blender artwork is the default in development and production.
 
 ## Review locally
 
@@ -13,7 +13,7 @@ npm run dev
 - Original artwork comparison: `http://localhost:5173/?quickstart&seed=7&art=original`
 - Busy fixture: `http://localhost:5173/?quickstart&stress`
 
-The review page has a twelve-card new-dinosaur gallery and supports `?asset=spinosaurus` links. New species have only Blender artwork, so their comparison displays one panel; they also use Blender in an otherwise original-style park. All twelve are available in new Sandbox parks and enter campaign catalogs through fossil digs. The six starters are unchanged. See [the roster and facts sources](../docs/PR-blender-dinosaur-expansion.md).
+The review page has a 28-card animated gallery, clip controls and a twelve-card new-dinosaur comparison gallery and supports `?asset=spinosaurus` links. New species have only Blender artwork, so their comparison displays one panel; they also use Blender in an otherwise original-style park. All twelve are available in new Sandbox parks and enter campaign catalogs through fossil digs. The six starters are unchanged. See [the roster and facts sources](../docs/PR-blender-dinosaur-expansion.md).
 
 The art choice is made before textures and DOM artwork are created. Reload to change the set. Saves remain v21 and contain no art selection. Development and `npm run build:art` previews support `?art=original`; regular production always uses Blender artwork and strips development hooks. `build:art` remains available for a separate `dist-art/` preview.
 
@@ -96,3 +96,27 @@ Generated captures and logs live under ignored `docs/art-review/`. Headless Chro
 Scenery canvases retain their original footprints and outline padding. `environmentVariant()` maps the existing integer seeds to fixed authored variants, so forest types, palm placement and rocky terrain stay deterministic across loading and rendering. Tree fading, depth sorting, construction hiding, shoreline foam, water sparkles, fountain spray, lamp lighting and volcano effects continue to use their existing layers. The 84×70 volcano's opening remains at native row 10, matching the smoke/glow anchor.
 
 `terrainArt.ts` shares one painter between atlas construction and the comparison page. Terrain enum values, 16-pixel tiles, four variants per terrain, per-cell variant hashing and all saved-map rules remain unchanged. The baked material clusters add depth while keeping ground contrast below that of animals and buildings. No Blender connection or new fetch is needed at runtime; generated grids ship in the precached application bundle.
+
+## Full-roster animation
+
+All 28 species now have four eight-frame Blender clips: walk/swim/fly, idle, eat
+and rest. The 112 editable timelines live under `blender/motion/`; render
+intermediates live under ignored `renders/motion/`. `scripts/art/full_motion.py`
+is the single author, with the original prototype entry forwarding to it.
+The bulk export uses local Blender CLI after MCP authoring/inspection. No cloud
+assets or running Blender connection are required by the game.
+
+```sh
+/Applications/Blender.app/Contents/MacOS/Blender --background --python scripts/art/full_motion.py
+npm run art:motion:convert
+npm run art:motion:check
+npm run art:park-motion
+npm run art:immersion
+```
+
+The motion converter validates all 896 frames and stores shared palette-role rows
+in `src/render/generated/blenderMotion.ts`. The park creates one 32-frame atlas
+only when a species/adult-baby appearance is present. Saved state stays v21;
+meal cues, gait phase, wind and particles are presentation state. See
+[docs/PLAN-animation-immersion.md](../docs/PLAN-animation-immersion.md) for the
+MCP recipe, grounded gait, review links, performance limits and full validation.
