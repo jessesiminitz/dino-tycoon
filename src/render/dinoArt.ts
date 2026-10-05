@@ -234,7 +234,7 @@ function quadruped(s: Sprite, q: QuadSpec, frame: 0 | 1): void {
 
 type Painter = (frame: 0 | 1) => Sprite;
 
-const ART: Record<SpeciesId, Painter> = {
+const ART: Partial<Record<SpeciesId, Painter>> = {
   // Chicken-sized hunter: slender, with a very long tail.
   compsognathus: (f) => {
     const s = new Sprite(28, 16);
@@ -635,17 +635,26 @@ function blenderDino(id: SpeciesId): (typeof BLENDER_ART)[BlenderDinoId] | undef
   return id in BLENDER_ART ? BLENDER_ART[id as BlenderDinoId] : undefined;
 }
 
+/** New species were authored in Blender and have no historical code-painted version. */
+export function hasOriginalDinoArt(id: SpeciesId): boolean {
+  return id in ART;
+}
+
 /** Number of poses available in the active art set. */
 export function dinoFrameCount(id: SpeciesId, style: ArtStyle = ART_STYLE): number {
-  return style === 'blender' ? blenderDino(id)?.frames.length ?? 2 : 2;
+  return style === 'blender' || !hasOriginalDinoArt(id) ? blenderDino(id)?.frames.length ?? 2 : 2;
 }
 
 /** One shape resolver keeps canvases, babies and fossil masks in agreement. */
 function shapeFor(species: Species, frame: number, style: ArtStyle): Sprite {
-  const candidate = style === 'blender' ? blenderDino(species.id) : undefined;
+  const candidate = style === 'blender' || !hasOriginalDinoArt(species.id) ? blenderDino(species.id) : undefined;
   const count = candidate?.frames.length ?? 2;
   if (!Number.isInteger(frame) || frame < 0 || frame >= count) throw new RangeError(`Invalid ${species.id} pose ${frame}`);
-  if (!candidate) return ART[species.id](frame as 0 | 1);
+  if (!candidate) {
+    const painter = ART[species.id];
+    if (!painter) throw new Error(`Missing artwork for ${species.id}`);
+    return painter(frame as 0 | 1);
+  }
   const sprite = new Sprite(candidate.width, candidate.height);
   candidate.frames[frame].forEach((row, y) => {
     for (let x = 0; x < row.length; x++) sprite.grid[y][x] = row[x] === '.' ? null : row[x] as Key;

@@ -1100,6 +1100,162 @@
         "E": "#fff1aa",
         "M": "#463229"
       }
+    },
+    "spinosaurus": {
+      "width": 76,
+      "height": 48,
+      "frames": [
+        0,
+        0.25,
+        0.5,
+        0.75
+      ],
+      "kind": "dino",
+      "grounded": true,
+      "contactMesh": "near_foot"
+    },
+    "therizinosaurus": {
+      "width": 56,
+      "height": 58,
+      "frames": [
+        0,
+        0.25,
+        0.5,
+        0.75
+      ],
+      "kind": "dino",
+      "grounded": true,
+      "contactMesh": "near_foot"
+    },
+    "amargasaurus": {
+      "width": 70,
+      "height": 46,
+      "frames": [
+        0,
+        0.25,
+        0.5,
+        0.75
+      ],
+      "kind": "dino",
+      "grounded": true,
+      "contactMesh": "near_back_foot"
+    },
+    "kentrosaurus": {
+      "width": 52,
+      "height": 34,
+      "frames": [
+        0,
+        0.25,
+        0.5,
+        0.75
+      ],
+      "kind": "dino",
+      "grounded": true,
+      "contactMesh": "near_back_foot"
+    },
+    "styracosaurus": {
+      "width": 60,
+      "height": 38,
+      "frames": [
+        0,
+        0.25,
+        0.5,
+        0.75
+      ],
+      "kind": "dino",
+      "grounded": true,
+      "contactMesh": "near_back_foot"
+    },
+    "carnotaurus": {
+      "width": 62,
+      "height": 42,
+      "frames": [
+        0,
+        0.25,
+        0.5,
+        0.75
+      ],
+      "kind": "dino",
+      "grounded": true,
+      "contactMesh": "near_foot"
+    },
+    "yutyrannus": {
+      "width": 64,
+      "height": 44,
+      "frames": [
+        0,
+        0.25,
+        0.5,
+        0.75
+      ],
+      "kind": "dino",
+      "grounded": true,
+      "contactMesh": "near_foot"
+    },
+    "iguanodon": {
+      "width": 60,
+      "height": 38,
+      "frames": [
+        0,
+        0.25,
+        0.5,
+        0.75
+      ],
+      "kind": "dino",
+      "grounded": true,
+      "contactMesh": "near_foot"
+    },
+    "microraptor": {
+      "width": 34,
+      "height": 24,
+      "frames": [
+        0,
+        0.25,
+        0.5,
+        0.75
+      ],
+      "kind": "dino",
+      "grounded": true,
+      "contactMesh": "near_foot"
+    },
+    "diplodocus": {
+      "width": 100,
+      "height": 44,
+      "frames": [
+        0,
+        0.25,
+        0.5,
+        0.75
+      ],
+      "kind": "dino",
+      "grounded": true,
+      "contactMesh": "near_back_foot"
+    },
+    "argentinosaurus": {
+      "width": 104,
+      "height": 70,
+      "frames": [
+        0,
+        0.25,
+        0.5,
+        0.75
+      ],
+      "kind": "dino",
+      "grounded": true,
+      "contactMesh": "near_back_foot"
+    },
+    "nigersaurus": {
+      "width": 64,
+      "height": 36,
+      "frames": [
+        0,
+        0.25,
+        0.5,
+        0.75
+      ],
+      "kind": "dino",
+      "grounded": true,
+      "contactMesh": "near_back_foot"
     }
   }
 }

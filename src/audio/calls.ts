@@ -33,6 +33,18 @@ export const CALLS: Record<SpeciesId, Call> = {
   mosasaurus: { kind: 'song', pitch: 110, length: 1.2 },
   pteranodon: { kind: 'screech', pitch: 800, length: 0.5 },
   dimorphodon: { kind: 'chirp', pitch: 1800, length: 0.2 },
+  spinosaurus: { kind: 'roar', pitch: 85, length: 1.2 },
+  therizinosaurus: { kind: 'honk', pitch: 100, length: 1 },
+  amargasaurus: { kind: 'honk', pitch: 95, length: 0.8 },
+  kentrosaurus: { kind: 'bellow', pitch: 145, length: 0.5 },
+  styracosaurus: { kind: 'bellow', pitch: 115, length: 0.7 },
+  carnotaurus: { kind: 'roar', pitch: 135, length: 0.8 },
+  yutyrannus: { kind: 'roar', pitch: 145, length: 0.9 },
+  iguanodon: { kind: 'honk', pitch: 170, length: 0.8 },
+  microraptor: { kind: 'chirp', pitch: 1700, length: 0.2 },
+  diplodocus: { kind: 'honk', pitch: 65, length: 1.4 },
+  argentinosaurus: { kind: 'bellow', pitch: 50, length: 1.5 },
+  nigersaurus: { kind: 'honk', pitch: 180, length: 0.6 },
 };
 
 /** Babies: higher, shorter and softer. */

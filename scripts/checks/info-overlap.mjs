@@ -5,6 +5,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage();
 const tag = process.argv[2] ?? 'before';
+let failed = false;
 const long = 'Gap in the fence (2 missing, 1 broken, circled in red). Close it to let your Triceratops in.';
 for (const [w, h, safe] of [[667, 375, 0], [812, 375, 44], [844, 390, 47], [932, 430, 59], [1180, 820, 0]]) {
   await page.setViewport({ width: w, height: h, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
@@ -30,6 +31,23 @@ for (const [w, h, safe] of [[667, 375, 0], [812, 375, 44], [844, 390, 47], [932,
     results.push(r);
     if (mode === 'building') await page.screenshot({ path: `${OUT}info-${tag}-${w}.png` });
   }
-  console.log(w + 'x' + h, results.filter((r) => r.hits.length || r.textW < 150).map((r) => `${r.mode}: text ${r.textW}px ${r.hits.join(',')}`).join(' | ') || 'OK');
+  const issues = results.filter((r) => r.hits.length || r.textW < 150);
+  if (issues.length) failed = true;
+  console.log(w + 'x' + h, issues.map((r) => `${r.mode}: text ${r.textW}px ${r.hits.join(',')}`).join(' | ') || 'OK');
 }
-await browser.close();
+// Chrome can hang during WebGL shutdown on this Mac. Only bound teardown of
+// this check's disposable browser, after all viewport assertions and captures.
+let shutdownTimer;
+try {
+  await Promise.race([
+    (async () => { await page.close(); await browser.close(); })(),
+    new Promise(resolve => { shutdownTimer = setTimeout(() => {
+      resolve();
+      browser.disconnect();
+      browser.process()?.kill('SIGKILL');
+    }, 10_000); }),
+  ]);
+} finally { clearTimeout(shutdownTimer); }
+
+// End this standalone check even if a Chrome helper holds a pipe open.
+process.exit(failed ? 1 : 0);

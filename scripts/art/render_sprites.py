@@ -203,6 +203,7 @@ def tower(scene, phase):
 BUILDERS = {'tyrannosaurus': rex, 'triceratops': trike, 'tower': tower}
 BUILDERS.update(runpy.run_path(str(ROOT / 'scripts/art/models.py'), init_globals=globals())['EXTRA_BUILDERS'])
 BUILDERS.update(runpy.run_path(str(ROOT / 'scripts/art/environment_models.py'), init_globals=globals())['ENVIRONMENT_BUILDERS'])
+BUILDERS.update(runpy.run_path(str(ROOT / 'scripts/art/expansion_models.py'), init_globals=globals())['EXPANSION_BUILDERS'])
 
 
 def build(asset, frame=0):
@@ -270,6 +271,7 @@ def render(asset, frame=0):
                'seconds': round(time.monotonic()-started, 3)}
     if MANIFEST['assets'][asset]['grounded'] and MANIFEST['assets'][asset]['kind'] == 'dino':
         suffix = 'near_toes' if asset == 'tyrannosaurus' else 'near_back_foot' if asset in ('triceratops','protoceratops','stegosaurus','ankylosaurus','brachiosaurus') else 'near_foot'
+        suffix = MANIFEST['assets'][asset].get('contactMesh', suffix)
         foot = bpy.data.objects[scene.name + '_' + suffix]
         xs = [v.co.x for v in foot.data.vertices]
         bottom = scene.render.resolution_y - min(v.co.z for v in foot.data.vertices)

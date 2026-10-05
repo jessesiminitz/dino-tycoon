@@ -1,10 +1,10 @@
 # Dino Tycoon: handoff notes
 
-Everything a fresh session needs to carry on. Last updated 2026-10-04, after the full Blender artwork and environment pass.
+Everything a fresh session needs to carry on. Last updated 2026-10-04, after adding twelve Blender-authored dinosaurs and their review gallery.
 
 ## Where things stand (read this first)
 
-- **Graphics branch:** `art/blender-pixel` in `/Volumes/Apple HDD 2TB/dino-tycoon-blender-art`, latest implementation commit `843f5d7`. Blender artwork now covers all dinosaurs, park buildings, scenery and terrain; backward-looking walking is fixed. Validation passed. This work remains separate from `main` and has not been deployed; physical iPhone/iPad review and integration are still pending. See **Blender graphics work** below.
+- **Graphics branch:** `art/blender-pixel` in `/Volumes/Apple HDD 2TB/dino-tycoon-blender-art`, now with the twelve-species expansion on top of environment commit `843f5d7`. The roster now has 28 species. Blender artwork covers all dinosaurs, park buildings, scenery and terrain; backward-looking walking is fixed. Validation passed. This work remains separate from `main` and has not been deployed; physical iPhone/iPad review and integration are still pending. See **Blender graphics work** below.
 
 - **Live and working:**
   - four challenges (The Great Escape, Fire Mountain, Flood Season, The Money Pit), in the 🧩 Challenges folder, unlocking in that order
@@ -42,15 +42,21 @@ Work in the graphics worktree on `art/blender-pixel`; do not overwrite the main 
 - `b2a11ba`: all 16 dinosaur species × four poses and 10 buildings; walking gait correction and Blender Home Screen icons.
 - `843f5d7`: 15 scenery types with 38 variants, plus 16 terrain types with four variants each.
 
-The complete set contains **57 asset types and 176 grids**. Blender is the default in dev and regular production builds. Dev `?art=original` selects the original painters for comparison; normal production builds strip dev hooks and use Blender. Save format remains **v21**, with no simulation or map schema changes.
+The complete set contains **69 asset types and 224 grids**. Blender is the default in dev and regular production builds. Dev `?art=original` selects the original painters for comparison; normal production builds strip dev hooks and use Blender. Save format remains **v21**, with no simulation or map schema changes.
 
 Planted feet move backward relative to the body while lifted feet swing forward; left-facing animation mirrors the same frame order. Swimmers and flyers also have four poses, and pause freezes the animal animation clock. Baby scaling, palette patterns, fossil masks, water cropping and sleeping flyers retain their existing behavior. Environment variants keep seeded selection, scenery footprints, opaque 16×16 terrain tiles, tree fading/construction hiding and volcano/fountain/lamp effect anchors.
 
-**Preview:** `http://localhost:5173/scripts/art/review.html` compares all 57 asset types at native, 2× and 4× sizes, with pose/variant, direction, baby and background controls. `http://localhost:5173/?quickstart` opens a Blender park; add `&art=original` to compare. The dev server was running from this worktree at handoff; start it with `npm run dev` if needed.
+**Preview:** `http://localhost:5173/scripts/art/review.html` compares all 69 asset types at native, 2× and 4× sizes, with pose/variant, direction, baby and background controls. `http://localhost:5173/?quickstart` opens a Blender park; add `&art=original` to compare. The dev server was running from this worktree at handoff; start it with `npm run dev` if needed.
 
-**Source and regeneration:** [assets-source/README.md](assets-source/README.md) is the canonical workflow. Blender 4.5.14 LTS models and compressed `.blend` files live under `assets-source/`; generators are in `scripts/art/`. Render through Blender MCP or the documented Blender CLI, then run `npm run art:convert` and `npm run art:check`. PNG/JSON intermediates are ignored and must be regenerated on a fresh checkout. Runtime grids are checked in under `src/render/generated/`; Blender and MCP are not runtime dependencies. The source files total about 5.1 MB and are excluded from the shipped build.
+**Source and regeneration:** [assets-source/README.md](assets-source/README.md) is the canonical workflow. Blender 4.5.14 LTS models and compressed `.blend` files live under `assets-source/`; generators are in `scripts/art/`. Render through Blender MCP or the documented Blender CLI, then run `npm run art:convert` and `npm run art:check`. PNG/JSON intermediates are ignored and must be regenerated on a fresh checkout. Runtime grids are checked in under `src/render/generated/`; Blender and MCP are not runtime dependencies. The source files total about 6.7 MB and are excluded from the shipped build.
 
-**Completed validation for `843f5d7`:**
+**Twelve-species expansion:** Spinosaurus, Therizinosaurus, Amargasaurus, Kentrosaurus, Styracosaurus, Carnotaurus, Yutyrannus, Iguanodon, Microraptor, Diplodocus, Argentinosaurus and Nigersaurus. `EXPANSION_SPECIES_IDS` groups them in the registry and review gallery; `scripts/art/expansion_models.py` authors their four walking poses. They have catalog/guide entries, sounds, baby/fossil art and campaign fossil unlocks. New Sandbox parks unlock all 28; existing saved unlock lists and the six starters are preserved. Spinosaurus uses a land paddock and fish feeder; Microraptor is shown walking with folded feathers. New species have only Blender art, including in original-style comparison parks, and show one review panel. Direct preview: `http://localhost:5173/scripts/art/review.html?asset=spinosaurus#new-dinosaurs`.
+
+**Latest expansion validation:** 288 regular tests plus one performance test (289 total), regular production build, `art:check`, expanded `art:integration`, all 13 UI tours and production `art:offline` passed. The overlap tour was rerun after fixing its disposable Chrome shutdown; it now exits nonzero for layout issues and bounds cleanup to ten seconds. All 48 new frame hashes reproduced through MCP; the preceding 176 grids were unchanged. Gallery checks cover all twelve × four poses × baby/adult × both directions, selection links, animation and phone access to the largest sprite. Build files total 604,389 gzipped bytes (+9,202 versus the environment pass). Source models stay outside the precached build. Vite's 2,000 kB chunk advisory now appears; the main chunk is within the configured 5 MiB PWA limit and offline resume passed. The current local PR draft, roster and facts references are [docs/PR-blender-dinosaur-expansion.md](docs/PR-blender-dinosaur-expansion.md).
+
+Blender export batches can finish writing after an MCP transport timeout. Use one new species per call, and check render/source timestamps and hashes before repeating an export. The final expansion rerender completed despite batch response timeouts; all twelve source files and all 48 renders were confirmed newer than the captured hash baseline and identical to it.
+
+**Historical environment validation for `843f5d7`:**
 
 - `npm test`: 272 tests plus the separate performance test, **273 total**, passed. `npm run build` passed.
 - `art:check`: all 176 grids passed; all 102 new environment grid hashes reproduced through Blender MCP, and the preceding 74 grids were unchanged.
@@ -58,15 +64,15 @@ Planted feet move backward relative to the body while lifted feet swing forward;
 - An isolated 32-dinosaur/150-visitor comparison measured p95 frame time **50.1 ms** and entity update time **1.3 ms** for both styles. Startup was 3,027 ms original / 3,223 ms Blender in one run. This used headless Chrome software rendering on the iMac; physical Safari performance remains unmeasured.
 - Total gzipped build files: **595,187 bytes**, up 8,276 bytes from the dinosaur/building pass and 19,730 bytes from before the pilot. Review images, logs and metrics are local ignored artifacts under `docs/art-review/`.
 
-Run browser tours and performance comparisons sequentially on this machine to avoid contention. `npm run build:art` is available for a comparison-capable preview build, but it was not rerun for the latest environment pass; the regular production build was verified.
+Run browser tours and performance comparisons sequentially on this machine to avoid contention. `npm run build:art` is available for a comparison-capable preview build, but it was not rerun for the latest expansion; the regular production build was verified.
 
-**Remaining:** physical iPhone/iPad visual and performance review, then integration with `main` and deployment. No remote PR or deployment has been published. [docs/PLAN-blender-pixel-art.md](docs/PLAN-blender-pixel-art.md) tracks the work; [docs/PR-blender-environment.md](docs/PR-blender-environment.md) is the current local PR draft. The earlier [docs/PR-blender-pixel-art.md](docs/PR-blender-pixel-art.md) describes the dinosaur/building pass and has historical validation counts.
+**Remaining:** physical iPhone/iPad visual and performance review, then integration with `main` and deployment. No remote PR or deployment has been published. [docs/PLAN-blender-pixel-art.md](docs/PLAN-blender-pixel-art.md) tracks the work; [docs/PR-blender-dinosaur-expansion.md](docs/PR-blender-dinosaur-expansion.md) is the current local PR draft. [docs/PR-blender-environment.md](docs/PR-blender-environment.md) records the preceding environment pass. The earlier [docs/PR-blender-pixel-art.md](docs/PR-blender-pixel-art.md) describes the dinosaur/building pass and has historical validation counts.
 
 ## Day-to-day
 
 ```sh
 npm run dev            # dev server (usually already running on :5173); /?quickstart skips the menu
-npm test               # 272 tests + 1 separate performance test (273 total)
+npm test               # 288 tests + 1 separate performance test (289 total)
 npm run build          # tsc --noEmit + vite build
 npm run icons          # regenerate Home Screen icons (dev server must be running)
 node scripts/checks/<name>.mjs   # browser checks (headless Chrome via puppeteer-core); see below
@@ -91,7 +97,7 @@ End commit messages with the Co-Authored-By / Claude-Session trailers the harnes
   - Regions come from a flood fill over fences (`regions.ts`: public, paddock or wild). `gaps.ts` finds missing or broken fence segments around a tapped tile.
   - `concerns.ts`: live dino and staff concerns, plus `whatVisitorsSay` (complaints with advice).
   - `goals.ts`: three rounds of milestones per scenario (Bronze, Silver, Gold) with rewards (species unlocks, or cash if already unlocked).
-- `src/render/`: `ParkScene` (input, selection, gap-fix offer, camera focus), `EntityLayer` (dinos, visitors with carried items, staff, buildings, dirt), `WorldLayers` (fences, paths, ghost and gap markers), `SceneryLayer`, `TerrainFx`, `WeatherScene`. `dinoArt.ts` paints all 16 species, with Blender grids as the default and original shapes retained for comparison. `sceneryArt.ts` paints buildings and scenery; `terrainArt.ts` supplies terrain tiles to `tileset.ts`. `generated/` holds the exported artwork, and `artStyle.ts` controls comparison mode. `iconArt.ts` paints the Home Screen icon.
+- `src/render/`: `ParkScene` (input, selection, gap-fix offer, camera focus), `EntityLayer` (dinos, visitors with carried items, staff, buildings, dirt), `WorldLayers` (fences, paths, ghost and gap markers), `SceneryLayer`, `TerrainFx`, `WeatherScene`. `dinoArt.ts` paints all 28 species, with Blender grids as the default and original shapes retained for comparison. `sceneryArt.ts` paints buildings and scenery; `terrainArt.ts` supplies terrain tiles to `tileset.ts`. `generated/` holds the exported artwork, and `artStyle.ts` controls comparison mode. `iconArt.ts` paints the Home Screen icon.
 - `src/ui/`: DOM overlays. `hud.ts` (top bar with a live **fit pass** so ☰ is never pushed off-screen; the info panel is placed by measuring the toolbar), `people.ts` (👥 Visitors, Reviews, Dinos and Staff with filters, rename and 📍 locate), `log.ts` (🔔 alert log), `parkPanel.ts` (Goals medal track, overview, staff, finances, bank), `overlays.ts` (pause, milestone and outcome popups, update banner), `menu.ts` (title, scenarios, save slots with ⤓ export and import), `tutorial.ts`, `guide.ts`, `catalog.ts`, `settings.ts`.
 - `src/audio/`: `audio.ts` (sfx, rain, piano synth, shuffled playlist), `ragNotes.ts` (decoder and alphabet), `rags.ts` (generated, lazy-loaded chunk).
 - `src/save/storage.ts`: 3 IndexedDB slots plus a localStorage mirror, and a boot directive (used to return to the park after an update reload).

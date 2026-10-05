@@ -12,19 +12,32 @@
   label { display: grid; gap: 6px; }
   label.check { display: flex; align-items: center; }
   select, button { min-height: 40px; padding: 6px 12px; background: #e8edcf; color: #193e32; border: 0; border-radius: 4px; font: inherit; }
+  .pair.single { grid-template-columns: 1fr; }
+  [hidden] { display: none !important; }
+  .gallery { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; margin-top: 16px; }
+  .dino-card { display: grid; justify-items: center; gap: 8px; padding: 14px; border: 2px solid transparent; background: #254d3d; color: #fff0c5; cursor: pointer; }
+  .dino-card[aria-pressed="true"], .dino-card:focus-visible { border-color: #ffd67a; }
+  .dino-card .thumbnail { width: 100%; height: 144px; display: grid; place-items: center; }
+  .dino-card canvas { max-width: 100%; height: auto !important; }
+  .dino-card small { color: #c7dccb; font-size: 13px; text-align: center; }
+  section { margin-top: 28px; }
+  section h2 { padding: 0; background: none; font-size: 22px; }
   .pair { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
   article { overflow: hidden; border: 1px solid #51775e; border-radius: 8px; }
   h2 { font-size: 17px; margin: 0; padding: 12px 16px; background: #254d3d; }
-  .stage { min-height: 300px; padding: 12px; display: grid; place-items: center; background: #79af5d; }
+  .stage { overflow: auto; min-height: 300px; padding: 12px; display: grid; place-items: center safe center; background: #79af5d; }
   canvas { image-rendering: pixelated; }
   nav { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 20px; }
   a { color: #ffd67a; }
+  @media (max-width:1100px) { .gallery { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+  @media (max-width:700px) { .gallery { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  @media (max-width:500px) { .gallery { grid-template-columns:1fr; } }
   @media (max-width:700px) { .pair { grid-template-columns:1fr; } }
   output { display: block; margin-top: 16px; color: #c7dccb; }
 </style>
 <h1>Dino Tycoon art comparison</h1>
 <p>Compare the silhouette, face and feet at game size, then enlarge to inspect the pixels.</p>
-<div class="controls">
+<div class="controls" id="review-controls">
   <label>Asset<select id="asset"><option value="tyrannosaurus">T. rex</option><option value="triceratops">Triceratops</option><option value="tower">Viewing tower</option></select></label>
   <label>Scale<select id="scale"><option value="1">1×</option><option value="2">2×</option><option value="4" selected>4×</option></select></label>
   <label>Background<select id="background"><option value="#79af5d">Grass</option><option value="#cfbb7d">Sand</option><option value="#518da2">Water</option><option value="#253f46">Night</option></select></label>
@@ -34,14 +47,16 @@
   <label class="check"><input id="animate" type="checkbox">Animate</label>
 </div>
 <div class="pair">
-  <article><h2>Original</h2><div class="stage"><canvas id="original"></canvas></div></article>
+  <article id="original-panel"><h2>Original</h2><div class="stage"><canvas id="original"></canvas></div></article>
   <article><h2>Blender artwork</h2><div class="stage"><canvas id="blender"></canvas></div></article>
 </div>
 <output id="detail"></output>
-<nav><a href="/?quickstart&seed=7&art=original">Original park</a><a href="/?quickstart&seed=7&art=blender">Blender park</a><a href="/?quickstart&stress&art=blender">Busy Blender park</a></nav>
+<p id="species-fact" style="margin-top:12px"></p>
+<nav><a href="#new-dinosaurs">New dinosaur gallery</a><a href="/?quickstart&seed=7&art=original">Original park</a><a href="/?quickstart&seed=7&art=blender">Blender park</a><a href="/?quickstart&stress&art=blender">Busy Blender park</a></nav>
+<section id="new-dinosaurs"><h2>12 new dinosaurs</h2><p>Choose a dinosaur to inspect its four walking poses, baby version and direction above.</p><div class="gallery" id="new-gallery"></div></section>
 <script type="module">
-  import { paintDino, dinoFrameCount } from '/src/render/dinoArt.ts';
-  import { SPECIES } from '/src/sim/data/species.ts';
+  import { paintDino, dinoFrameCount, hasOriginalDinoArt } from '/src/render/dinoArt.ts';
+  import { SPECIES, EXPANSION_SPECIES_IDS } from '/src/sim/data/species.ts';
   import { paintTerrainTile } from '/src/render/terrainArt.ts';
   import { TERRAIN_NAMES } from '/src/sim/terrain.ts';
   import { BLENDER_ENVIRONMENT } from '/src/render/generated/blenderEnvironment.ts';
@@ -50,24 +65,44 @@
   const controls = Object.fromEntries(['asset','scale','background','pose','baby','left','animate'].map((id) => [id, document.getElementById(id)]));
   const assetSelect=controls.asset;
   assetSelect.innerHTML='';
-  for (const [id,sp] of Object.entries(SPECIES)) assetSelect.add(new Option(sp.name,id));
+  for (const [id,sp] of Object.entries(SPECIES)) assetSelect.add(new Option(sp.name + (EXPANSION_SPECIES_IDS.includes(id) ? ' · New' : ''),id));
   const buildings={restaurant:'Fries stand',snackstall:'Popcorn stand',restroom:'Restrooms',giftshop:'Gift shop',trashcan:'Dino bin',station:'Jeep station',tower:'Viewing tower',petting:'Petting pen',pump:'Pump house',digsite:'Dig site'};
   for(const [id,name] of Object.entries(buildings)) assetSelect.add(new Option(name,id));
   for(const id of Object.keys(BLENDER_ENVIRONMENT)) assetSelect.add(new Option(id[0].toUpperCase()+id.slice(1),`environment:${id}`));
   for(const [id,name] of Object.entries(TERRAIN_NAMES)) assetSelect.add(new Option(name+ ' tile',`terrain:${id}`));
-  assetSelect.value='tyrannosaurus';
+  const requested = new URLSearchParams(location.search).get('asset');
+  assetSelect.value=[...assetSelect.options].some(o=>o.value===requested) ? requested : 'tyrannosaurus';
+  for (const id of EXPANSION_SPECIES_IDS) {
+    const button=document.createElement('button');
+    button.type='button'; button.className='dino-card'; button.dataset.species=id;
+    const image=paintDino(SPECIES[id],0,false,'blender');
+    image.style.width=`${image.width*2}px`; image.style.height=`${image.height*2}px`;
+    image.setAttribute('aria-label',SPECIES[id].name);
+    const thumbnail=document.createElement('div'); thumbnail.className='thumbnail'; thumbnail.append(image);
+    const title=document.createElement('strong'); title.textContent=SPECIES[id].name;
+    const caption=document.createElement('small'); caption.textContent=SPECIES[id].fact;
+    button.append(thumbnail,title,caption);
+    button.addEventListener('click',()=>{ assetSelect.value=id; assetSelect.dispatchEvent(new Event('input')); document.getElementById('review-controls').scrollIntoView({block:'start'}); });
+    document.getElementById('new-gallery').append(button);
+  }
+  assetSelect.addEventListener('input',()=>{const url=new URL(location.href);url.searchParams.set('asset',assetSelect.value);history.replaceState(null,'',url);});
   let travel=0;
   function draw() {
     const asset = controls.asset.value, scale = Number(controls.scale.value);
     const isBuilding=asset in buildings, isEnvironment=asset.startsWith('environment:'), isTerrain=asset.startsWith('terrain:');
     const isDino=asset in SPECIES, id=asset.split(':')[1];
+    const newDino=isDino && !hasOriginalDinoArt(asset);
+    document.getElementById('original-panel').hidden=newDino;
+    document.querySelector('.pair').classList.toggle('single',newDino);
+    document.getElementById('species-fact').textContent=isDino ? SPECIES[asset].fact : '';
+    for(const button of document.querySelectorAll('.dino-card')) button.setAttribute('aria-pressed',String(button.dataset.species===asset));
     const count=isDino?4:isEnvironment?BLENDER_ENVIRONMENT[id].frames.length:isTerrain?4:1;
     controls.pose.max=String(count-1); controls.pose.value=String(Math.min(Number(controls.pose.value),count-1));
     const pose=Number(controls.pose.value);
     controls.baby.disabled=controls.animate.disabled=!isDino;
     controls.pose.disabled=count===1; controls.left.disabled=isTerrain;
     document.getElementById('pose-label').textContent=isDino?'Pose':'Variation';
-    for (const style of ['original','blender']) {
+    for (const style of newDino ? ['blender'] : ['original','blender']) {
       const frame = isDino ? Math.floor(pose * dinoFrameCount(asset,style) / 4) : pose;
       const source = isBuilding ? paintBuilding(asset,style) : isEnvironment ? paintEnvironment(id,frame,style) : isTerrain ? paintTerrainTile(Number(id),frame,style) : paintDino(SPECIES[asset], frame, controls.baby.checked, style);
       const canvas = document.getElementById(style); canvas.width=source.width*scale; canvas.height=source.height*scale;
@@ -79,7 +114,7 @@
       const shift=controls.animate.checked && isDino ? (travel%60/60-.5)*span*(controls.left.checked?-1:1) : 0;
       canvas.style.transform=`translateX(${shift}px)`;
       canvas.parentElement.style.backgroundImage='repeating-linear-gradient(90deg,transparent 0px,transparent 63px,#ffffff18 64px)';
-      if (style==='blender') document.getElementById('detail').textContent = `${source.width} × ${source.height} pixels · ${isDino ? 'four motion poses' : count>1 ? count+' variations' : 'static'} · ${scale}× display`;
+      if (style==='blender') document.getElementById('detail').textContent = `${source.width} × ${source.height} pixels · ${isDino ? 'four motion poses' : count>1 ? count+' variations' : 'static'} · ${scale}× display${newDino ? ' · New species, authored in Blender' : ''}`;
     }
   }
   Object.values(controls).forEach((control) => control.addEventListener('input',draw));

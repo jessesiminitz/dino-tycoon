@@ -1,7 +1,7 @@
 import walkContacts from '../assets-source/walk-contacts.json';
 import { describe, expect, it } from 'vitest';
 import { BLENDER_ART, BLENDER_BUILDING_COLORS } from '../src/render/generated/blenderArt';
-import { dinoFrameCount, dinoShape } from '../src/render/dinoArt';
+import { dinoFrameCount, dinoShape, hasOriginalDinoArt } from '../src/render/dinoArt';
 import { SPECIES, SPECIES_IDS } from '../src/sim/data/species';
 import { BUILDING_TYPES } from '../src/sim/data/economy';
 import { walkFrame } from '../src/render/dinoAnimation';
@@ -11,7 +11,7 @@ describe('Blender sprite contracts', () => {
     it(`${id} keeps its registered footprint and baby face in all four poses`, () => {
       const asset = BLENDER_ART[id];
       expect(dinoFrameCount(id, 'blender')).toBe(4);
-      expect(dinoFrameCount(id, 'original')).toBe(2);
+      expect(dinoFrameCount(id, 'original')).toBe(hasOriginalDinoArt(id) ? 2 : 4);
       expect(new Set(asset.frames.map((rows) => rows.join('\n'))).size).toBe(4);
       const original = dinoShape(SPECIES[id], 0, false, 'original');
       for (let frame = 0; frame < 4; frame++) {

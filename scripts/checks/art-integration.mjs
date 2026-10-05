@@ -114,15 +114,17 @@ try {
     const fits=await page.evaluate(() => {
       const card=document.querySelector('#catalog .modal-card').getBoundingClientRect();
       const imgs=[...document.querySelectorAll('#catalog .species-art')];
+      const speciesCount=document.querySelectorAll('#guide .guide-item[data-species]').length;
       return { fits:card.left>=-1 && card.right<=innerWidth+1 && card.bottom<=innerHeight+1,
-        images:imgs.length===16 && imgs.every(img=>img.complete && img.naturalWidth>0)};
+        images:imgs.length===speciesCount && imgs.every(img=>img.complete && img.naturalWidth>0)};
     });
     check(`catalog fits ${width}x${height} and all art loads`, fits.fits && fits.images, fits);
     await page.screenshot({path:`${out}catalog-blender-${width}.png`});
   }
   await page.setViewport({width:1000,height:650,deviceScaleFactor:1});
   await page.goto(`${url}/scripts/art/review.html`, {waitUntil:'networkidle0'});
-  check('all 57 assets are available in the comparison', await page.$$eval('#asset option',options=>options.length===57));
+  const expectedAssets=await page.evaluate(async()=>{const {SPECIES_IDS}=await import('/src/sim/data/species.ts');const {BUILDING_TYPES}=await import('/src/sim/data/economy.ts');const {BLENDER_ENVIRONMENT,BLENDER_TERRAIN}=await import('/src/render/generated/blenderEnvironment.ts');return SPECIES_IDS.length+Object.keys(BUILDING_TYPES).length+Object.keys(BLENDER_ENVIRONMENT).length+Object.keys(BLENDER_TERRAIN).length;});
+  check('all registered assets are available in the comparison', await page.$$eval('#asset option',options=>options.length)===expectedAssets);
   check('interactive comparison loads', await page.$eval('#blender',c=>c.width===68*4));
   await page.screenshot({path:`${out}comparison-rex.png`});
   await page.select('#asset','triceratops');
@@ -130,6 +132,44 @@ try {
   await page.select('#asset','tower');
   check('tower comparison preserves dimensions',await page.$eval('#blender',c=>c.width===24*4 && c.height===42*4));
   await page.screenshot({path:`${out}comparison-tower.png`});
+  const additions=await page.evaluate(async()=>{
+    const {EXPANSION_SPECIES_IDS,SPECIES}=await import('/src/sim/data/species.ts');
+    const {paintDino}=await import('/src/render/dinoArt.ts');
+    const select=document.getElementById('asset'), pose=document.getElementById('pose'), baby=document.getElementById('baby'), left=document.getElementById('left');
+    const failures=[];
+    for(const id of EXPANSION_SPECIES_IDS) {
+      const card=document.querySelector(`.dino-card[data-species="${id}"]`);
+      card.click();
+      if(select.value!==id || new URL(location.href).searchParams.get('asset')!==id || card.getAttribute('aria-pressed')!=='true') failures.push(`${id} selection`);
+      if(!document.getElementById('original-panel').hidden) failures.push(`${id} misleading original comparison`);
+      for(const isBaby of [false,true]) for(const facingLeft of [false,true]) for(const frame of [0,1,2,3]) {
+        baby.checked=isBaby; left.checked=facingLeft; pose.value=String(frame); pose.dispatchEvent(new Event('input'));
+        const source=paintDino(SPECIES[id],frame,isBaby,'blender');
+        const expected=document.createElement('canvas'); expected.width=source.width*4;expected.height=source.height*4;
+        const ctx=expected.getContext('2d');ctx.imageSmoothingEnabled=false;
+        if(facingLeft) {ctx.translate(expected.width,0);ctx.scale(-1,1);}
+        ctx.drawImage(source,0,0,expected.width,expected.height);
+        if(document.getElementById('blender').toDataURL()!==expected.toDataURL()) failures.push(`${id}:${frame}:${isBaby}:${facingLeft} review pixels`);
+      }
+    }
+    baby.checked=false;left.checked=false;pose.value='0';select.value='spinosaurus';select.dispatchEvent(new Event('input'));
+    return {count:document.querySelectorAll('.dino-card').length,failures};
+  });
+  check('new dinosaur gallery selects all twelve and paints every pose, baby and facing correctly',additions.count===12 && additions.failures.length===0,additions);
+  await page.setViewport({width:1200,height:900,deviceScaleFactor:1});
+  await page.$eval('#new-dinosaurs',el=>el.scrollIntoView());
+  await (await page.$('#new-dinosaurs')).screenshot({path:`${out}new-dinosaurs-gallery.png`});
+  await page.goto(`${url}/scripts/art/review.html?asset=argentinosaurus`,{waitUntil:'networkidle0'});
+  await page.setViewport({width:390,height:844,deviceScaleFactor:1,isMobile:true,hasTouch:true});
+  check('largest new dinosaur stays accessible at 4x on a phone',await page.evaluate(()=>{
+    const stage=document.getElementById('blender').parentElement;
+    return document.documentElement.scrollWidth<=innerWidth+1 && stage.scrollWidth>=document.getElementById('blender').width && stage.scrollHeight>=document.getElementById('blender').height;
+  }));
+  await page.screenshot({path:`${out}new-dinosaurs-phone.png`,fullPage:true});
+  await page.$eval('#asset',el=>{el.value='spinosaurus';el.dispatchEvent(new Event('input'));});
+  await page.$eval('#animate',el=>{el.checked=true;el.dispatchEvent(new Event('input'));});
+  await page.waitForFunction(()=>document.getElementById('pose').value!=='0');
+  check('new dinosaur review animation advances',await page.$eval('#pose',el=>Number(el.value)>0));
   await page.close();
   writeFileSync(`${out}integration.json`,JSON.stringify({shared,animation,errors},null,2)+'\n');
   finish(errors);

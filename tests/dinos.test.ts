@@ -36,8 +36,8 @@ function runHours(sim: Simulation, hours: number): void {
 const inPaddock = (d: { x: number; y: number }) => d.x >= 2 && d.x < 10 && d.y >= 2 && d.y < 8;
 
 describe('species data', () => {
-  it('has 16 species, 6 at the start, and every one has art', () => {
-    expect(SPECIES_IDS).toHaveLength(16);
+  it('has 28 species, 6 at the start, and every one has art', () => {
+    expect(SPECIES_IDS).toHaveLength(28);
     expect(SPECIES_IDS.filter((id) => SPECIES[id].starter)).toHaveLength(6);
     for (const id of SPECIES_IDS) expect(dinoShape(SPECIES[id]).length).toBeGreaterThan(0);
   });

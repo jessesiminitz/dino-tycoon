@@ -16,9 +16,26 @@ export type SpeciesId =
   | 'plesiosaurus'
   | 'mosasaurus'
   | 'pteranodon'
-  | 'dimorphodon';
+  | 'dimorphodon'
+  | (typeof EXPANSION_SPECIES_IDS)[number];
 
-/** Fish-eaters (the sea and flying reptiles) eat from fish feeders and don't hunt dinosaurs. */
+/** The twelve Blender-authored additions, also grouped on the artwork review page. */
+export const EXPANSION_SPECIES_IDS = [
+  'spinosaurus',
+  'therizinosaurus',
+  'amargasaurus',
+  'kentrosaurus',
+  'styracosaurus',
+  'carnotaurus',
+  'yutyrannus',
+  'iguanodon',
+  'microraptor',
+  'diplodocus',
+  'argentinosaurus',
+  'nigersaurus'
+] as const;
+
+/** Fish-eaters (including Spinosaurus, sea reptiles and flying reptiles) use fish feeders and do not hunt dinosaurs. */
 export type Diet = 'herbivore' | 'carnivore' | 'piscivore';
 
 /** Where an animal lives: land paddocks, a lagoon (a paddock with a pond) or an aviary (a paddock fenced with nets). */
@@ -315,6 +332,186 @@ export const SPECIES: Record<SpeciesId, Species> = {
     ],
     fossilsNeeded: 3, fossilWeight: 35,
     art: { template: 'flyer', body: '#7a8f4a', dark: '#4d5e2a', accent: '#e0a040', pattern: 'spots' },
+  },
+  spinosaurus: {
+    id: 'spinosaurus', name: 'Spinosaurus', diet: 'piscivore', price: 44000, size: 5,
+    hungerRate: 2.3, meal: 42, fenceNeeded: 3, space: 60, appeal: 11, pace: 2, social: false, starter: false,
+    period: 'Late Cretaceous', lengthM: 14,
+    fact: 'A towering back sail, narrow crocodile-like jaws and a deep tail made this fish hunter unmistakable.',
+    weight: 'about 7 tonnes (estimates vary)',
+    discovered: 'Named by Ernst Stromer in 1915 from Egyptian fossils.',
+    facts: [
+      'Its jaws held cone-shaped teeth suited to gripping fish.',
+      'Its short hind legs and paddle-shaped tail set it apart from many other large theropods.',
+      'Scientists still debate how much time it spent swimming or hunting along the shore.',
+    ],
+    fossilsNeeded: 12, fossilWeight: 5,
+    art: { template: 'theropod', body: '#547f84', dark: '#305459', accent: '#ec9560', pattern: 'stripes' },
+  },
+  therizinosaurus: {
+    id: 'therizinosaurus', name: 'Therizinosaurus', diet: 'herbivore', price: 36000, size: 4,
+    hungerRate: 1.8, meal: 42, fenceNeeded: 3, space: 48, appeal: 10, pace: 3, social: false, starter: false,
+    period: 'Late Cretaceous', lengthM: 10,
+    fact: 'A pot-bellied plant eater with a small beaked head and extraordinarily long hand claws.',
+    weight: 'several tonnes (estimates vary)',
+    discovered: 'Named by Evgeny Maleev in 1954 from Mongolian fossils.',
+    facts: [
+      'It belonged to the theropods, the group that also includes many meat-eating dinosaurs.',
+      'Its enormous claws gave it the name “scythe lizard”.',
+      'Its full appearance is reconstructed using incomplete fossils and better-known relatives.',
+    ],
+    fossilsNeeded: 10, fossilWeight: 6,
+    art: { template: 'theropod', body: '#8eab79', dark: '#516d50', accent: '#e2bb6f', pattern: 'spots' },
+  },
+  amargasaurus: {
+    id: 'amargasaurus', name: 'Amargasaurus', diet: 'herbivore', price: 24000, size: 4,
+    hungerRate: 1.5, meal: 38, fenceNeeded: 2, space: 42, appeal: 8, pace: 3, social: true, starter: false,
+    period: 'Early Cretaceous', lengthM: 12,
+    fact: 'A smaller long-necked dinosaur with two striking rows of tall spines running along its neck.',
+    weight: 'about 9 tonnes (estimates vary)',
+    discovered: 'Named by Leonardo Salgado and José Bonaparte in 1991 from Argentina.',
+    facts: [
+      'The neck spines were extensions of its vertebrae.',
+      'Some reconstructions show skin linking the spines; their exact covering remains uncertain.',
+      'Its name comes from the La Amarga area of Argentina.',
+    ],
+    fossilsNeeded: 7, fossilWeight: 11,
+    art: { template: 'sauropod', body: '#ad845c', dark: '#705238', accent: '#dd7356' },
+  },
+  kentrosaurus: {
+    id: 'kentrosaurus', name: 'Kentrosaurus', diet: 'herbivore', price: 13000, size: 3,
+    hungerRate: 1.8, meal: 24, fenceNeeded: 2, space: 28, appeal: 6, pace: 3, social: false, starter: false,
+    period: 'Late Jurassic', lengthM: 5,
+    fact: 'A spiky relative of Stegosaurus, with small back plates and long spikes toward its tail.',
+    weight: 'roughly 1 to 2 tonnes',
+    discovered: 'Named by Edwin Hennig in 1915 from fossils found in Tanzania.',
+    facts: [
+      'Its name means “spiky lizard”.',
+      'Its fossils were found at Tendaguru in present-day Tanzania.',
+      'It walked on four legs and ate plants.',
+    ],
+    fossilsNeeded: 4, fossilWeight: 26,
+    art: { template: 'stego', body: '#70958d', dark: '#42645d', accent: '#e8af69', pattern: 'spots' },
+  },
+  styracosaurus: {
+    id: 'styracosaurus', name: 'Styracosaurus', diet: 'herbivore', price: 14500, size: 3,
+    hungerRate: 1.8, meal: 28, fenceNeeded: 2, space: 30, appeal: 7, pace: 3, social: true, starter: false,
+    period: 'Late Cretaceous', lengthM: 5.5,
+    fact: 'A horned dinosaur with a huge nose horn and a crown of long spikes around its neck frill.',
+    weight: 'about 2.7 tonnes',
+    discovered: 'Named by Lawrence Lambe in 1913 from Canadian fossils.',
+    facts: [
+      'Unlike Triceratops, it had a prominent nose horn rather than long brow horns.',
+      'Several skeletons together in bone beds suggest it may have lived in herds.',
+      'Its beak and slicing teeth helped it crop plants.',
+    ],
+    fossilsNeeded: 5, fossilWeight: 19,
+    art: { template: 'trike', body: '#997187', dark: '#614659', accent: '#e0ba7a' },
+  },
+  carnotaurus: {
+    id: 'carnotaurus', name: 'Carnotaurus', diet: 'carnivore', price: 26000, size: 4,
+    hungerRate: 2.6, meal: 30, fenceNeeded: 3, space: 40, appeal: 9, pace: 1, social: false, starter: false,
+    period: 'Late Cretaceous', lengthM: 8,
+    fact: 'A bull-horned predator with a short, deep skull and astonishingly tiny arms.',
+    weight: 'roughly 1 to 2 tonnes',
+    discovered: 'Named by José Bonaparte in 1985 from fossils found in Argentina.',
+    facts: [
+      'Its name means “meat-eating bull”.',
+      'Fossil skin impressions preserve scales across parts of its body.',
+      'The purpose of its two head horns is still debated.',
+    ],
+    fossilsNeeded: 7, fossilWeight: 10,
+    art: { template: 'theropod', body: '#bd7059', dark: '#773f38', accent: '#e7c68a', pattern: 'spots' },
+  },
+  yutyrannus: {
+    id: 'yutyrannus', name: 'Yutyrannus', diet: 'carnivore', price: 28000, size: 4,
+    hungerRate: 2.4, meal: 32, fenceNeeded: 3, space: 42, appeal: 9, pace: 2, social: false, starter: false,
+    period: 'Early Cretaceous', lengthM: 7.5,
+    fact: 'A large, shaggy tyrannosaur relative whose fossils preserve evidence of feathers.',
+    weight: 'about 1.1 tonnes',
+    discovered: 'Named by Xu Xing and colleagues in 2012 from Chinese fossils.',
+    facts: [
+      'Its name means “feathered tyrant”.',
+      'Unlike T. rex, it had longer arms and three fingers on each hand.',
+      'Feather impressions were found beside several parts of its body.',
+    ],
+    fossilsNeeded: 8, fossilWeight: 10,
+    art: { template: 'theropod', body: '#9b91ab', dark: '#5e556f', accent: '#e8d2a1', pattern: 'spots' },
+  },
+  iguanodon: {
+    id: 'iguanodon', name: 'Iguanodon', diet: 'herbivore', price: 10000, size: 3,
+    hungerRate: 2, meal: 26, fenceNeeded: 2, space: 28, appeal: 6, pace: 2, social: true, starter: false,
+    period: 'Early Cretaceous', lengthM: 10,
+    fact: 'A sturdy plant eater with a beaked mouth and a pointed thumb spike on each hand.',
+    weight: 'about 4 tonnes',
+    discovered: 'The genus was named in 1825; famous later skeletons came from Bernissart, Belgium.',
+    facts: [
+      'It could move on two legs or four.',
+      'Its cheek teeth helped it process plant food.',
+      'Its name means “iguana tooth”, after the resemblance of its teeth to an iguana’s.',
+    ],
+    fossilsNeeded: 4, fossilWeight: 29,
+    art: { template: 'hadro', body: '#648ea2', dark: '#3a5b6d', accent: '#dca46a', pattern: 'stripes' },
+  },
+  microraptor: {
+    id: 'microraptor', name: 'Microraptor', diet: 'carnivore', price: 5500, size: 1,
+    hungerRate: 2.8, meal: 6, fenceNeeded: 1, space: 8, appeal: 5, pace: 1, social: true, starter: false,
+    period: 'Early Cretaceous', lengthM: 0.8,
+    fact: 'A tiny feathered hunter with long wing feathers on both its arms and its legs.',
+    weight: 'about 1 kg',
+    discovered: 'Named by Xu Xing and colleagues in 2000 from Chinese fossils.',
+    facts: [
+      'It was a relative of Velociraptor, but much smaller.',
+      'Fossils show that it ate small animals, including fish and lizards.',
+      'Its four feathered limbs helped it move through the air; scientists study how it flew.',
+    ],
+    fossilsNeeded: 3, fossilWeight: 40,
+    art: { template: 'raptor', body: '#586d87', dark: '#303f54', accent: '#83b8b0' },
+  },
+  diplodocus: {
+    id: 'diplodocus', name: 'Diplodocus', diet: 'herbivore', price: 34000, size: 5,
+    hungerRate: 1.4, meal: 58, fenceNeeded: 2, space: 64, appeal: 10, pace: 4, social: true, starter: false,
+    period: 'Late Jurassic', lengthM: 26,
+    fact: 'A long, low sauropod with a slender neck and an exceptionally long, whip-like tail.',
+    weight: 'about 15 tonnes (estimates vary)',
+    discovered: 'Named by Othniel Charles Marsh in 1878 from fossils in the western USA.',
+    facts: [
+      'Its name means “double beam”, referring to bones underneath its tail.',
+      'Its narrow teeth could strip leaves from plants.',
+      'Its fossils come from the Morrison Formation of the western United States.',
+    ],
+    fossilsNeeded: 9, fossilWeight: 7,
+    art: { template: 'sauropod', body: '#7f9a68', dark: '#4c633c', accent: '#d8b875', pattern: 'stripes' },
+  },
+  argentinosaurus: {
+    id: 'argentinosaurus', name: 'Argentinosaurus', diet: 'herbivore', price: 52000, size: 5,
+    hungerRate: 1.5, meal: 80, fenceNeeded: 3, space: 80, appeal: 12, pace: 4, social: true, starter: false,
+    period: 'Late Cretaceous', lengthM: 35,
+    fact: 'An immense titanosaur with a bulky body, pillar-like legs and a long neck for reaching plants.',
+    weight: 'perhaps 70 tonnes; estimates vary widely',
+    discovered: 'Named by José Bonaparte and Rodolfo Coria in 1993 from Argentine fossils.',
+    facts: [
+      'It was among the largest land animals ever discovered.',
+      'Its remains are incomplete, so estimates of its size differ.',
+      'Titanosaurs were a successful group of long-necked plant eaters during the Cretaceous.',
+    ],
+    fossilsNeeded: 14, fossilWeight: 4,
+    art: { template: 'sauropod', body: '#788da0', dark: '#485b6f', accent: '#cdb79a', pattern: 'spots' },
+  },
+  nigersaurus: {
+    id: 'nigersaurus', name: 'Nigersaurus', diet: 'herbivore', price: 18000, size: 3,
+    hungerRate: 1.7, meal: 30, fenceNeeded: 2, space: 32, appeal: 7, pace: 3, social: true, starter: false,
+    period: 'Early Cretaceous', lengthM: 9,
+    fact: 'A low-browsing long-neck with a broad, straight-edged muzzle and hundreds of replacement teeth.',
+    weight: 'a few tonnes (estimates vary)',
+    discovered: 'Named by Paul Sereno and colleagues in 1999 from fossils found in Niger.',
+    facts: [
+      'Its skull held batteries of as many as 500 slender teeth.',
+      'It cropped soft plants close to the ground.',
+      'Its skull bones were remarkably thin and light.',
+    ],
+    fossilsNeeded: 6, fossilWeight: 16,
+    art: { template: 'sauropod', body: '#ab9b63', dark: '#6c613b', accent: '#d9c999', pattern: 'spots' },
   },
 };
 
