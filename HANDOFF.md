@@ -1,6 +1,6 @@
 # Dino Tycoon: handoff notes
 
-Everything a fresh session needs to carry on. Last updated 2026-10-05, after the four-species tail length and placement corrections.
+Everything a fresh session needs to carry on. Last updated 2026-10-05, after the full-roster picture reference and anatomy review.
 
 ## Where things stand (read this first)
 
@@ -11,6 +11,8 @@ Everything a fresh session needs to carry on. Last updated 2026-10-05, after the
 - **Anatomy corrections:** reduced and repositioned claws, horns, tail clubs, spikes and feathers in twelve canonical models. Stegosaurus/Ankylosaurus tails now sit above the ground. Neck spines follow grazing necks, tail accessories follow their roots, and the shared idle/rest deformation preserves accessory joins across the full roster. All 896 motion frames and 112 editable timelines were regenerated. Both converters now reject detached anatomy; see **Anatomy correction validation** below. The changes remain local to the graphics branch.
 
 - **Longer tails:** Stegosaurus, Spinosaurus, Brachiosaurus and Kentrosaurus now have longer tails rooted at their hips. Their canonical canvases have symmetric extra room, preserving body scale and world-relative foot placement in both directions. Spike groups follow the lengthened shafts; Spinosaurus has a tapered fin and Brachiosaurus carries its tail above ground. Generated model offsets keep transparent room out of the ground-shadow size. Four canonical sources and sixteen animation sources were rebuilt, covering 16 poses and 128 clip frames. See **Tail correction validation** below.
+
+- **Full-roster picture review:** reviewed all 28 animals against additional web skeleton photographs and museum/research reconstructions. Revised 26 canonical silhouettes, corrected Pteranodon's resting wing fold, and retained Triceratops after comparison. Longer tails, clearer plates/armor/feathers, improved skull/beak/claw shapes, neck proportions, sail and tail-fin profiles now feed all four clips. Twenty-four canvases have symmetric extra room; world-relative grounded feet remain within 0.001 pixel of the preceding version. All picture links and per-animal decisions are in [docs/PR-dinosaur-reference-review.md](docs/PR-dinosaur-reference-review.md). See **Reference review validation** below.
 
 - **Live and working:**
   - four challenges (The Great Escape, Fire Mountain, Flood Season, The Money Pit), in the 🧩 Challenges folder, unlocking in that order
@@ -56,7 +58,17 @@ Planted feet move backward relative to the body while lifted feet swing forward;
 
 **Source and regeneration:** [assets-source/README.md](assets-source/README.md) is the canonical workflow. Blender 4.5.14 LTS models and compressed `.blend` files live under `assets-source/`; generators are in `scripts/art/`. Render through Blender MCP or the documented Blender CLI, then run `npm run art:convert` and `npm run art:check`. PNG/JSON intermediates are ignored and must be regenerated on a fresh checkout. Runtime grids are checked in under `src/render/generated/`; Blender and MCP are not runtime dependencies. Canonical source files total about 6.7 MB; the 112 animation sources add about 12.7 MB. All source scenes are excluded from the shipped build.
 
-**Tail correction validation (2026-10-05):**
+**Reference review validation (2026-10-05):**
+
+- Regenerated all 28 canonical source sets and all 112 motion timelines; retained the original binaries for the two unchanged canonical models and seven unchanged clips. The final canonical set still has 224 grids; motion still has 896 frames. Both converters pass attachment, face, hashes and ground-contact validation.
+- Blender MCP inspected all 28 final models at unit pixel scale. MCP rerenders reproduced the revised Stegosaurus and Tyrannosaurus canonical hashes, the saved Pteranodon resting frame and the final Iguanodon grazing frame. New cheek meshes follow the skull through neck rotations. A separate saved-source audit verified all 112 timelines have the correct orthographic camera/dimensions and nine animated shape keys per mesh.
+- All **406 tests** passed (405 regular plus one performance test), and the production build passed. New tests protect all 24 land species' original world toe anchors and unclipped side edges across the 24 expanded canvases. Integration now checks adult/baby shadows for all 24 land species, alongside catalog/guide/fossil/palette parity and phone/tablet layouts.
+- Final `art:park-motion` passed: 1,792 adult/baby atlas frames, 896 walking/baby/facing combinations and 3,584 review combinations, feeding/rest/pause behavior, reduced motion and mobile layouts. Texture caches stayed bounded. The final software-rendered Chrome sweep measured p95 frame times of about 133 / 167 ms with ambient animation off/on; an earlier sweep measured about 117 ms for both. These desktop software measurements do not establish physical Safari performance.
+- Final build files total **691,033 bytes gzipped**; PWA precache is 14 files / **3,884.48 KiB**, under its 5 MiB limit. Motion sources total 12,657,257 bytes and remain excluded from the shipped build. The existing Vite chunk advisory remains. Save schema remains v21; this is local graphics-branch work pending physical device review and integration/deployment.
+- Final `art:offline` passed: production art, service-worker control, populated v21 save/resume and continuing animation after offline restart. `art:immersion` also passed for the three-animal prototype, including phone/iPad layout, untouched storage and reduced motion.
+- Same-scale before/after artwork: `docs/art-review/reference-before-after.png`. All 28 model/picture sheets, downloaded reference images and Blender inspection reports are ignored under `docs/art-review/`. Research pictures are not shipped game assets. Review at http://localhost:5173/scripts/art/review.html.
+
+**Tail correction validation (2026-10-05, preceding pass):**
 
 - Corrected the four requested models: canonical widths are now 94 / 128 / 110 / 88 pixels for Stegosaurus / Spinosaurus / Brachiosaurus / Kentrosaurus, with model offsets 18 / 26 / 22 / 18. Heights and geometry scale remain the same. Both authoring paths shift accessory roots along with meshes. Canvas-relative contact coordinates change, while world-relative contacts retain their previous positions (maximum 0.001 pixel rounding difference across 128 frame comparisons). Save schema remains v21.
 - Eight new regression tests cover exposed tail length, ground clearance, unclipped edges across all **144 canonical/animated poses**, and original foot positions. Canonical footprint tests now account explicitly for the additional canvas room.

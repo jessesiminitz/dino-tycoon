@@ -59,7 +59,7 @@ def pose(asset, clip, index):
     else: angle, crouch = .08+wave*.025, min(4,height*.1)+breath*.4
     if asset in WATER: angle,crouch = angle*.35,0
     if asset in AIR: angle,crouch = angle*.3,0
-    head_names = ('head','skull','face','jaw','mouth','eye','tooth','beak','wide_muzzle',
+    head_names = ('head','skull','face','cheek','jaw','mouth','eye','tooth','beak','wide_muzzle',
                   'near_horn','far_horn','nose_horn','nasal_crest','dome','tube_crest','crest_ridge',
                   'near_crest','far_crest','brow','frill','crest','fang','neck','long_neck','neck_light','throat_fluff','snout_notch')
     tail = next((o for o in scene.objects if o.type == 'MESH' and o.name.removeprefix(scene.name+'_') in ('tail','paddle_tail')),None)
@@ -115,8 +115,11 @@ def pose(asset, clip, index):
                     y += breath*.8
             if part == 'eye': depth = -30
             if asset in AIR and clip == 'rest' and part.startswith(('near_membrane','far_wing','wing_fingers')):
-                x = width*.48+(x-width*.48)*.45
-                y = height*.65+(y-height*.65)*.35
+                # Fold at the actual shoulder shared by the membrane and finger.
+                shoulder_x=(30 if asset == 'pteranodon' else 21)+spec.get('modelOffsetX',0)
+                shoulder_y=14 if asset == 'pteranodon' else 9
+                x = shoulder_x+(x-shoulder_x)*.45
+                y = shoulder_y+(y-shoulder_y)*.35
             if asset not in WATER+AIR and ('tail' in part or obj.get('attachment') == 'tail'):
                 anchor = obj.get('anchor_x',x)
                 weight = min(1,max(0,(tail_root-anchor)/max(1,tail_root-tail_tip)))

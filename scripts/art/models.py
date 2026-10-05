@@ -39,33 +39,47 @@ def biped(scene, phase, asset):
     cx, cy, rx, ry, hx, hy, hrx, hry, radius = specs[asset]
     stride = max(1.6, radius*.85)
     leg(scene,'far',cx-3,cy+ry*.6,h,phase+.5,radius*.85,stride,False,True)
-    profile(scene,'tail',[(cx-rx*.4,cy-ry*.6),(cx-rx,cy-ry*.4),(1,cy+ry*.8),
-                         (cx-rx,cy+ry*.7),(cx,cy+ry*.6)],'B',0)
+    tip={'compsognathus':-9,'velociraptor':-13,'dilophosaurus':-11,
+         'allosaurus':-17,'pachycephalosaurus':-11,'parasaurolophus':-13}[asset]
+    tail=[(cx-rx*.4,cy-ry*.6),(cx-rx,cy-ry*.4),(tip+6,cy+ry*.25),
+          (tip,cy+ry*.35),(tip+5,cy+ry*.55),(cx-rx,cy+ry*.7),(cx,cy+ry*.6)]
+    profile(scene,'tail',tail,'B',0)
     ellipse(scene,'trunk',cx,cy,rx,ry,'B',0)
     profile(scene,'belly',[(cx-rx*.6,cy+ry*.4),(cx+rx*.9,cy+ry*.2),
                           (cx+rx*.6,cy+ry*.9),(cx-rx*.2,cy+ry)],'D',-2)
     limb(scene,'neck',[(cx+rx*.65,cy-ry*.1,radius+1),(hx-hrx*.65,hy+1,radius*.8)],'B',-1)
     if asset == 'pachycephalosaurus':
-        ellipse(scene,'dome',hx-1,hy-2,4.5,5,'A',-3)
-        ellipse(scene,'dome_highlight',hx-1.5,hy-3,3,3,'G',-4)
+        ellipse(scene,'dome',hx-2,hy-2,4,3.8,'A',-3)
+        ellipse(scene,'dome_highlight',hx-2.5,hy-3,2.5,2,'G',-4)
     if asset == 'parasaurolophus':
         profile(scene,'tube_crest',[(hx-3,hy-2),(hx-8,2),(hx-15,2),(hx-15,4),(hx-7,6),(hx-2,hy+1)],'A',-2)
         limb(scene,'crest_ridge',[(hx-14,2.7,.6),(hx-8,3,.8),(hx-3,hy-2,.6)],'G',-4)
-    profile(scene,'head',[(hx-hrx,hy-hry*.7),(hx-hrx*.3,hy-hry),(min(w-1,hx+hrx),hy-hry*.5),
-                         (min(w-1,hx+hrx),hy+hry*.8),(hx,hy+hry),(hx-hrx,hy+hry*.5)],'B',-3)
+    head=[(hx-hrx,hy-hry*.7),(hx-hrx*.3,hy-hry),(min(w-1,hx+hrx),hy-hry*.5),
+          (min(w-1,hx+hrx),hy+hry*.8),(hx,hy+hry),(hx-hrx,hy+hry*.5)]
+    if asset=='velociraptor':
+        head=[(21,4),(25,3),(31,4),(35,6),(35,8),(27,9),(21,8)]
+    elif asset=='allosaurus':
+        head=[(35,9),(39,6),(45,6),(54,9),(54,13),(48,16),(36,14)]
+    profile(scene,'head',head,'B',-3)
+    if asset in ('parasaurolophus','pachycephalosaurus'):
+        # Rounded cheek and a short cropping beak, rather than a predator's jaw.
+        ellipse(scene,'cheek',hx-2,hy+1,hrx*.55,hry*.8,'B',-4)
+        profile(scene,'beak',[(hx+hrx-3,hy),(hx+hrx,hy+.5),
+                             (hx+hrx-1,hy+2),(hx+hrx-3,hy+2)],'M',-8)
     rect(scene,'jaw',hx-1,hy+hry*.4,hrx, max(1,hry*.5),'D',-4)
     rect(scene,'mouth',hx+1,hy+hry*.3,hrx-1,1,'M',-6)
     rect(scene,'eye',hx-1,hy-1,1,1,'E',-9)
     if asset == 'dilophosaurus':
-        profile(scene,'far_crest',[(hx-5,hy-3),(hx-4,2),(hx+1,3),(hx+3,hy-3)],'G',-3)
-        profile(scene,'near_crest',[(hx-4,hy-3),(hx-3,1),(hx+2,2),(hx+4,hy-3)],'A',-7)
+        profile(scene,'far_crest',[(hx-6,hy-2),(hx-5,3),(hx-2,2),(hx+3,4),(hx+5,hy-2)],'G',-3)
+        profile(scene,'near_crest',[(hx-5,hy-2),(hx-4,2),(hx-1,1.5),(hx+4,4),(hx+5,hy-1)],'A',-7)
     if asset == 'allosaurus':
         profile(scene,'brow',[(hx-2,hy-2),(hx-1,hy-5),(hx+1,hy-2)],'A',-8)
     arm_x = cx+rx*.9
     limb(scene,'arm',[(arm_x,cy,1),(arm_x+2,cy+3,.8),(arm_x+5,cy+2,.5)],'B',-5)
     if asset == 'velociraptor':
-        profile(scene,'tail_fan',[(1,cy+3),(3,cy+1),(8,cy+2),(8,cy+4),(2,cy+5)],'A',-3)
-        attach(scene,'tail_fan','tail',7)
+        profile(scene,'tail_fan',[(tip,cy+1),(tip+3,cy-.5),(tip+9,cy+1),
+                                 (tip+9,cy+3),(tip+2,cy+3)],'A',-3)
+        attach(scene,'tail_fan','tail',tip+6)
         for i in range(3):
             profile(scene,'arm_feather'+str(i),[(arm_x+i,cy+2),(arm_x+i+1,cy+6),(arm_x+i+3,cy+2)],'A',-7)
     leg(scene,'near',cx,cy+ry*.5,h,phase,radius,stride,True,True)
@@ -91,10 +105,17 @@ def quadruped(scene, phase, asset):
           (cx-rx*.8,cy+ry*.7),(cx-rx*.2,cy+ry*.5)]
     if asset == 'stegosaurus':
         tail=[(17,17),(9,19),(-6,20.5),(-17,22),(-16,22.8),(-6,23),(9,24),(17,23)]
+    elif asset == 'ankylosaurus':
+        tail=[(16,12),(8,13),(-10,14),(-16,14.5),(-16,16.5),(-10,17),(8,17),(16,18)]
+    elif asset == 'protoceratops':
+        tail=[(9,9),(4,11),(-7,12.5),(-6,13.5),(4,14),(10,14)]
     elif asset == 'brachiosaurus':
         tail=[(23,36),(14,38),(-1,40),(-21,42),(-20,42.8),(-1,43),(14,44),(23,43)]
     profile(scene,'tail',tail,'B',0)
     ellipse(scene,'trunk',cx,cy,rx,ry,'B',0)
+    if asset=='brachiosaurus':
+        # Higher shoulders and lower hips distinguish this from diplodocids.
+        profile(scene,'shoulder',[(20,34),(30,29),(39,28),(45,32),(43,42),(28,43)],'B',-1)
     ellipse(scene,'belly',cx+1,cy+ry*.45,rx*.75,ry*.5,'D',-2)
     if asset=='protoceratops':
         limb(scene,'neck',[(20,10,3),(27,11,3)],'B',0)
@@ -104,10 +125,13 @@ def quadruped(scene, phase, asset):
         profile(scene,'beak',[(30,10),(33,11),(31,15),(29,14)],'M',-7)
         rect(scene,'eye',26,8,1,1,'E',-9)
     elif asset=='stegosaurus':
-        for i,x in enumerate((10,15,21,27,33,38)):
-            base=18-9*math.exp(-((x-25)/15)**2)
-            profile(scene,'plate'+str(i),[(x-3,base+2),(x-2,base-5),(x+1,base-7),(x+4,base),(x+2,base+3)],'A',-3)
-            profile(scene,'plate_edge'+str(i),[(x-2,base-4),(x+1,base-7),(x+2,base-4)],'G',-4)
+        # Narrow rooted bases leave gaps between the broad, alternating plates.
+        for i,(x,size) in enumerate(((10,3.5),(16,6),(23,8),(30,7.5),(36,5),(40,3))):
+            base=ellipse_edge(cx,cy,rx,ry,min(x,cx+rx-.1))+1
+            profile(scene,'plate'+str(i),[(x-1.2,base),(x-2.5,base-size*.65),
+                    (x-.5,base-size),(x+2.8,base-size*.5),(x+1.2,base+.6)],'A',-3)
+            profile(scene,'plate_edge'+str(i),[(x-.5,base-size),(x+1,base-size*.7),
+                    (x+.5,base-size*.4),(x-1,base-size*.6)],'G',-4)
         limb(scene,'neck',[(38,23,4),(46,25,2.5)],'B',-1)
         ellipse(scene,'head',50,25,6,3,'B',-3)
         rect(scene,'jaw',50,27,6,1,'D',-4)
@@ -118,17 +142,17 @@ def quadruped(scene, phase, asset):
             profile(scene,'tail_spike'+str(i),[(x-.8,base),(x-2,tip),(x+1,base)],'W',-3)
             attach(scene,'tail_spike'+str(i),'tail',x)
     elif asset=='ankylosaurus':
-        club_x=4
+        club_x=-15
         club_y=(profile_edge(tail,club_x)+profile_edge(tail,club_x,True))/2
-        ellipse(scene,'tail_club',club_x,club_y,2.4,2.2,'A',-3)
+        ellipse(scene,'tail_club',club_x,club_y,3.4,2.4,'A',-3)
         attach(scene,'tail_club','tail',club_x)
         for row in range(3):
             for col in range(6):
                 x=13+col*4+row%2; y=9+row*3
                 ellipse(scene,f'scute_{row}_{col}',x,y,1.4,1,'A',-4,6)
-        for x in (11,18,25,32,38):
+        for x in (11,18,32,38):
             base=ellipse_edge(cx,cy,rx,ry,x,True)-1
-            profile(scene,'side_spike'+str(x),[(x-1.5,base),(x,base+2.5),(x+1.5,base)],'W',-5)
+            profile(scene,'side_spike'+str(x),[(x-1.5,base),(x,base+1.2),(x+1.5,base)],'A',-5)
         limb(scene,'neck',[(38,13,4),(44,14,3)],'B',-1)
         profile(scene,'head',[(43,10),(49,10),(53,13),(52,17),(43,17)],'B',-3)
         rect(scene,'jaw',48,16,4,1,'D',-4)
@@ -149,15 +173,20 @@ def swimmer(scene, phase, asset):
     cx,rx=(23,12) if plesio else (31,20)
     for i,x in enumerate((cx-9,cx+7)):
         profile(scene,'far_paddle'+str(i),[(x,12),(x+4+sweep,17+wave),(x+8+sweep,17+wave),(x+3,10)],'F',4)
-    profile(scene,'tail',[(cx-rx+4,10),(8,12),(1,14+wave*2),(8,17),(cx-rx+4,17)],'B',0)
+    if plesio:
+        profile(scene,'tail',[(cx-rx+4,10),(8,12),(1,14+wave),(8,17),(cx-rx+4,17)],'B',0)
+    else:
+        profile(scene,'tail',[(19,8),(7,9),(-5,11),(-13,13+wave*.8),
+                              (-11,15+wave*.8),(-5,16),(7,16),(19,16)],'B',0)
     if not plesio:
-        profile(scene,'tail_fin',[(1,6+wave),(6,12),(1,20+wave),(3,13)],'A',-2)
+        profile(scene,'tail_fin',[(-11,12+wave*.8),(-17,7+wave*.8),(-17,9+wave*.8),
+                 (-14,14+wave*.8),(-20,22.3+wave*.8),(-16,20+wave*.8),(-9,14+wave*.8)],'A',-2)
     ellipse(scene,'trunk',cx,14 if plesio else 11,rx,5 if plesio else 6,'B',0)
     ellipse(scene,'belly',cx+2,16 if plesio else 14,rx*.8,2,'D',-2)
     if plesio:
-        limb(scene,'neck',[(32,12,3),(38,8,2),(44,5,1.6)],'B',-1)
-        profile(scene,'head',[(43,2),(48,2),(53,4),(53,6),(46,7),(43,5)],'B',-3)
-        rect(scene,'mouth',49,5,4,1,'M',-5);rect(scene,'eye',47,3,1,1,'E',-9)
+        limb(scene,'neck',[(32,12,2.8),(43,9,2.1),(53,7,1.6),(60,7,1.3)],'B',-1)
+        profile(scene,'head',[(59,5),(64,5),(67,7),(66,9),(60,9),(58,8)],'B',-3)
+        rect(scene,'mouth',64,8,2,1,'M',-5);rect(scene,'eye',63,6,1,1,'E',-9)
     else:
         profile(scene,'head',[(44,5),(54,4),(63,7),(62,13),(51,15),(43,12)],'B',-3)
         rect(scene,'mouth',50,10,12,1,'M',-5)
@@ -191,8 +220,7 @@ def flyer(scene, phase, asset):
         profile(scene,'beak',[(37,10),(57,14),(37,15)],'W',-6)
         rect(scene,'eye',36,11,1,1,'E',-9)
     else:
-        limb(scene,'tail',[(16,12,1),(8,13,.6),(3,13,.4)],'B',-1)
-        profile(scene,'tail_vane',[(0,13),(3,11),(6,13),(3,15)],'A',-3)
+        limb(scene,'tail',[(16,12,1),(7,13,.7),(-6,13.5,.4)],'B',-1)
         limb(scene,'neck',[(22,12,2),(26,9,2)],'B',-2)
         ellipse(scene,'head',28,8,5,4,'B',-5)
         profile(scene,'beak',[(31,6),(37,10),(31,12)],'D',-6)

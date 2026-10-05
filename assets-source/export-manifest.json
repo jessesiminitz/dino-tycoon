@@ -45,7 +45,7 @@
   },
   "assets": {
     "compsognathus": {
-      "width": 28,
+      "width": 52,
       "height": 16,
       "frames": [
         0,
@@ -54,10 +54,11 @@
         0.75
       ],
       "kind": "dino",
-      "grounded": true
+      "grounded": true,
+      "modelOffsetX": 12
     },
     "velociraptor": {
-      "width": 36,
+      "width": 68,
       "height": 22,
       "frames": [
         0,
@@ -66,10 +67,11 @@
         0.75
       ],
       "kind": "dino",
-      "grounded": true
+      "grounded": true,
+      "modelOffsetX": 16
     },
     "dilophosaurus": {
-      "width": 44,
+      "width": 72,
       "height": 30,
       "frames": [
         0,
@@ -78,10 +80,11 @@
         0.75
       ],
       "kind": "dino",
-      "grounded": true
+      "grounded": true,
+      "modelOffsetX": 14
     },
     "allosaurus": {
-      "width": 56,
+      "width": 96,
       "height": 36,
       "frames": [
         0,
@@ -90,10 +93,11 @@
         0.75
       ],
       "kind": "dino",
-      "grounded": true
+      "grounded": true,
+      "modelOffsetX": 20
     },
     "tyrannosaurus": {
-      "width": 66,
+      "width": 114,
       "height": 44,
       "frames": [
         0,
@@ -102,10 +106,11 @@
         0.75
       ],
       "kind": "dino",
-      "grounded": true
+      "grounded": true,
+      "modelOffsetX": 24
     },
     "pachycephalosaurus": {
-      "width": 36,
+      "width": 64,
       "height": 28,
       "frames": [
         0,
@@ -114,10 +119,11 @@
         0.75
       ],
       "kind": "dino",
-      "grounded": true
+      "grounded": true,
+      "modelOffsetX": 14
     },
     "parasaurolophus": {
-      "width": 50,
+      "width": 82,
       "height": 36,
       "frames": [
         0,
@@ -126,10 +132,11 @@
         0.75
       ],
       "kind": "dino",
-      "grounded": true
+      "grounded": true,
+      "modelOffsetX": 16
     },
     "protoceratops": {
-      "width": 34,
+      "width": 54,
       "height": 20,
       "frames": [
         0,
@@ -138,7 +145,8 @@
         0.75
       ],
       "kind": "dino",
-      "grounded": true
+      "grounded": true,
+      "modelOffsetX": 10
     },
     "triceratops": {
       "width": 60,
@@ -166,7 +174,7 @@
       "modelOffsetX": 18
     },
     "ankylosaurus": {
-      "width": 54,
+      "width": 98,
       "height": 26,
       "frames": [
         0,
@@ -175,10 +183,11 @@
         0.75
       ],
       "kind": "dino",
-      "grounded": true
+      "grounded": true,
+      "modelOffsetX": 22
     },
     "plesiosaurus": {
-      "width": 54,
+      "width": 82,
       "height": 22,
       "frames": [
         0,
@@ -187,10 +196,11 @@
         0.75
       ],
       "kind": "dino",
-      "grounded": false
+      "grounded": false,
+      "modelOffsetX": 14
     },
     "mosasaurus": {
-      "width": 64,
+      "width": 112,
       "height": 22,
       "frames": [
         0,
@@ -199,7 +209,8 @@
         0.75
       ],
       "kind": "dino",
-      "grounded": false
+      "grounded": false,
+      "modelOffsetX": 24
     },
     "pteranodon": {
       "width": 58,
@@ -214,7 +225,7 @@
       "grounded": false
     },
     "dimorphodon": {
-      "width": 38,
+      "width": 58,
       "height": 22,
       "frames": [
         0,
@@ -223,7 +234,8 @@
         0.75
       ],
       "kind": "dino",
-      "grounded": false
+      "grounded": false,
+      "modelOffsetX": 10
     },
     "brachiosaurus": {
       "width": 110,
@@ -1131,7 +1143,7 @@
       "contactMesh": "near_foot"
     },
     "amargasaurus": {
-      "width": 70,
+      "width": 102,
       "height": 46,
       "frames": [
         0,
@@ -1141,7 +1153,8 @@
       ],
       "kind": "dino",
       "grounded": true,
-      "contactMesh": "near_back_foot"
+      "contactMesh": "near_back_foot",
+      "modelOffsetX": 16
     },
     "kentrosaurus": {
       "width": 88,
@@ -1171,7 +1184,7 @@
       "contactMesh": "near_back_foot"
     },
     "carnotaurus": {
-      "width": 62,
+      "width": 98,
       "height": 42,
       "frames": [
         0,
@@ -1181,10 +1194,11 @@
       ],
       "kind": "dino",
       "grounded": true,
-      "contactMesh": "near_foot"
+      "contactMesh": "near_foot",
+      "modelOffsetX": 18
     },
     "yutyrannus": {
-      "width": 64,
+      "width": 104,
       "height": 44,
       "frames": [
         0,
@@ -1194,10 +1208,11 @@
       ],
       "kind": "dino",
       "grounded": true,
-      "contactMesh": "near_foot"
+      "contactMesh": "near_foot",
+      "modelOffsetX": 20
     },
     "iguanodon": {
-      "width": 60,
+      "width": 96,
       "height": 38,
       "frames": [
         0,
@@ -1207,10 +1222,11 @@
       ],
       "kind": "dino",
       "grounded": true,
-      "contactMesh": "near_foot"
+      "contactMesh": "near_foot",
+      "modelOffsetX": 18
     },
     "microraptor": {
-      "width": 34,
+      "width": 66,
       "height": 24,
       "frames": [
         0,
@@ -1220,10 +1236,11 @@
       ],
       "kind": "dino",
       "grounded": true,
-      "contactMesh": "near_foot"
+      "contactMesh": "near_foot",
+      "modelOffsetX": 16
     },
     "diplodocus": {
-      "width": 100,
+      "width": 188,
       "height": 44,
       "frames": [
         0,
@@ -1233,10 +1250,11 @@
       ],
       "kind": "dino",
       "grounded": true,
-      "contactMesh": "near_back_foot"
+      "contactMesh": "near_back_foot",
+      "modelOffsetX": 44
     },
     "argentinosaurus": {
-      "width": 104,
+      "width": 168,
       "height": 70,
       "frames": [
         0,
@@ -1246,10 +1264,11 @@
       ],
       "kind": "dino",
       "grounded": true,
-      "contactMesh": "near_back_foot"
+      "contactMesh": "near_back_foot",
+      "modelOffsetX": 32
     },
     "nigersaurus": {
-      "width": 64,
+      "width": 96,
       "height": 36,
       "frames": [
         0,
@@ -1259,7 +1278,8 @@
       ],
       "kind": "dino",
       "grounded": true,
-      "contactMesh": "near_back_foot"
+      "contactMesh": "near_back_foot",
+      "modelOffsetX": 16
     }
   }
 }

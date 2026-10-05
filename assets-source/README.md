@@ -143,8 +143,8 @@ After changing geometry, regenerate each affected canonical dinosaur with
 `full_motion.py -- <species>`, then run both converters and both check commands.
 Review eating/resting as well as walking, including babies and both directions.
 
-Stegosaurus, Spinosaurus, Brachiosaurus and Kentrosaurus have additional horizontal
-camera room for their longer tails. `modelOffsetX` in the export manifest shifts
+Twenty-four dinosaurs have additional horizontal camera room for their longer
+tails or necks. `modelOffsetX` in the export manifest shifts
 their original model coordinates; the canvas expands by twice that amount.
 `offset_geometry()` applies the same translation to meshes and accessory anchors
 in both canonical and animated exports. Symmetric room preserves body scale and
@@ -160,3 +160,22 @@ placement. These are stylized silhouettes, informed by the
 [Spinosaurus tail study](https://www.nature.com/articles/s41586-020-2190-3),
 [NHM Brachiosaurus reference](https://www.nhm.ac.uk/discover/dino-directory/brachiosaurus.html)
 and the [Museum für Naturkunde Kentrosaurus mount](https://artsandculture.google.com/asset/kentrosaurus-0107/MQFPIYDp4rIjbw).
+
+## Full-roster reference review (2026-10-05)
+
+[Picture references and model decisions](../docs/PR-dinosaur-reference-review.md)
+cover all 28 animals. The pass revised 26 canonical silhouettes and corrected
+the Pteranodon resting wing fold; Triceratops was retained after comparison.
+It includes longer tapered tails, separated Stegosaurus plates, revised skulls,
+armor, claws and feathers, and improved neck/sail/fin profiles. All four clips
+use the canonical authoring geometry, with editable shape-key source timelines.
+
+Cleanup patch coordinates remain in the original model space: the exporter adds
+`modelOffsetX` once when applying them. Pterosaur resting wings fold at their
+actual shoulder, including its offset. Preserve these rules when extending a
+canvas; a shifted eye patch or shoulder can otherwise detach from the body.
+
+`tests/dinoAnatomy.test.ts` protects original world-relative toes for all 24 land
+animals and unclipped side edges across every canonical/animated frame of the
+24 expanded canvases. Integration checks cover adult/baby ground shadows for
+all land animals. Run the expensive suites sequentially as documented above.

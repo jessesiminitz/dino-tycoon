@@ -137,7 +137,8 @@ def rex(scene, phase):
     limb(scene, 'far_leg', [(28,25,4), (24-stride,33,3), (25-stride,41-far_lift,1.5)], 'F', 4)
     profile(scene, 'far_toes', [(23-stride,40-far_lift), (27-stride,41-far_lift), (31-stride,43-far_lift), (31-stride,44-far_lift), (23-stride,44-far_lift)], 'F', 4)
     # The tail counterbalances a horizontal trunk rather than a vertical blob.
-    profile(scene, 'tail', [(29,18), (20,19), (11,23), (1,23), (9,27), (20,27), (30,28)], 'B', 0)
+    profile(scene, 'tail', [(29,18), (20,19), (5,21), (-20,22), (-19,23),
+                          (5,25), (20,27), (30,28)], 'B', 0)
     ellipse(scene, 'torso', 32, 22, 12, 7, 'B', 0)
     profile(scene, 'neck', [(39,19), (42,11), (47,8), (50,12), (46,23), (39,26)], 'B', -1)
     profile(scene, 'skull', [(47,7), (53,5), (61,6), (65,9), (64,16), (55,17), (48,14)], 'B', -2)
@@ -251,6 +252,7 @@ def convert(scene, image, frame):
         rows.append(row)
     patches = PATCHES['assets'].get(scene['asset'], {})
     for x,y,role in patches.get('all', []) + patches.get(str(frame), []):
+        x += spec.get('modelOffsetX',0)
         if not (0 <= x < width and 0 <= y < height) or role not in set('.BDFAGWEM'):
             raise ValueError('Invalid cleanup patch')
         rows[y][x] = role

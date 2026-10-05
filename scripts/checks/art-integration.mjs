@@ -76,7 +76,7 @@ try {
     const {sim,game}=window.__dino,entities=game.scene.getScene('park').entities;
     const saved=sim.state.dinos,failures=[];
     const graphics=entities.shadows,fillEllipse=graphics.fillEllipse;
-    const widths={stegosaurus:58,spinosaurus:76,brachiosaurus:66,kentrosaurus:52};
+    const widths={"compsognathus":28,"velociraptor":36,"dilophosaurus":44,"allosaurus":56,"tyrannosaurus":66,"pachycephalosaurus":36,"parasaurolophus":50,"protoceratops":34,"triceratops":60,"stegosaurus":58,"ankylosaurus":54,"brachiosaurus":66,"spinosaurus":76,"therizinosaurus":56,"amargasaurus":70,"kentrosaurus":52,"styracosaurus":60,"carnotaurus":62,"yutyrannus":64,"iguanodon":60,"microraptor":34,"diplodocus":100,"argentinosaurus":104,"nigersaurus":64};
     let calls=[];
     graphics.fillEllipse=function(...args){calls.push(args);return fillEllipse.apply(this,args);};
     try {
@@ -113,7 +113,10 @@ try {
   await page.goto(`${url}/scripts/art/review.html`, {waitUntil:'networkidle0'});
   const expectedAssets=await page.evaluate(async()=>{const {SPECIES_IDS}=await import('/src/sim/data/species.ts');const {BUILDING_TYPES}=await import('/src/sim/data/economy.ts');const {BLENDER_ENVIRONMENT,BLENDER_TERRAIN}=await import('/src/render/generated/blenderEnvironment.ts');return SPECIES_IDS.length+Object.keys(BUILDING_TYPES).length+Object.keys(BLENDER_ENVIRONMENT).length+Object.keys(BLENDER_TERRAIN).length;});
   check('all registered assets are available in the comparison', await page.$$eval('#asset option',options=>options.length)===expectedAssets);
-  check('interactive comparison loads', await page.$eval('#blender',c=>c.width===68*4));
+  check('interactive comparison loads', await page.evaluate(async()=>{
+    const {BLENDER_ART}=await import('/src/render/generated/blenderArt.ts');
+    return document.getElementById('blender').width===(BLENDER_ART.tyrannosaurus.width+2)*4;
+  }));
   await page.screenshot({path:`${out}comparison-rex.png`});
   await page.select('#asset','triceratops');
   await page.screenshot({path:`${out}comparison-triceratops.png`});
