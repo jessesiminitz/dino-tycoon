@@ -3,6 +3,7 @@ import type { DecorKind } from '../sim/data/decor';
 import type { BuildingKind } from '../sim/data/economy';
 import { paintSprite, type Plot } from './pixels';
 import { ART_STYLE, type ArtStyle } from './artStyle';
+import { BLENDER_ENVIRONMENT } from './generated/blenderEnvironment';
 import { BLENDER_ART, BLENDER_BUILDING_COLORS } from './generated/blenderArt';
 
 /**
@@ -10,6 +11,24 @@ import { BLENDER_ART, BLENDER_BUILDING_COLORS } from './generated/blenderArt';
  * garden decorations. Light comes from the upper left, so left/top pixels are
  * lighter and right/bottom ones darker.
  */
+
+export type EnvironmentId = keyof typeof BLENDER_ENVIRONMENT;
+
+/** Stable authored variation for the existing seeded scenery placements. */
+export function environmentVariant(id: EnvironmentId, seed: number): number {
+  const count = BLENDER_ENVIRONMENT[id].frames.length;
+  return ((Math.trunc(seed) % count) + count) % count;
+}
+
+function paintBlenderEnvironment(id: EnvironmentId, seed = 0): HTMLCanvasElement {
+  const { width, height, frames, colors, shadow } = BLENDER_ENVIRONMENT[id];
+  const palette: Record<string, string> = colors;
+  return paintSprite(width, height, (px) => {
+    frames[environmentVariant(id, seed)].forEach((row, y) => {
+      for (let x = 0; x < row.length; x++) if (row[x] !== '.') px(x, y, palette[row[x]]);
+    });
+  }, shadow);
+}
 
 function paintBlenderBuilding(kind: BuildingKind): HTMLCanvasElement {
   const { width, height, frames } = BLENDER_ART[kind];
@@ -35,7 +54,8 @@ function leafShade(fx: number, fy: number, noise: number): string {
   return lit > 0.75 ? LEAF.light : lit > 0.35 ? LEAF.mid : lit > 0.05 ? LEAF.dark : LEAF.deep;
 }
 
-export function paintConifer(seed: number): HTMLCanvasElement {
+export function paintConifer(seed: number, style: ArtStyle = ART_STYLE): HTMLCanvasElement {
+  if (style === 'blender') return paintBlenderEnvironment('conifer', seed);
   return paintSprite(18, 30, (px) => {
     trunk(px, 8, 22, 27);
     for (let tier = 0; tier < 4; tier++) {
@@ -52,7 +72,8 @@ export function paintConifer(seed: number): HTMLCanvasElement {
   });
 }
 
-export function paintBroadleaf(seed: number): HTMLCanvasElement {
+export function paintBroadleaf(seed: number, style: ArtStyle = ART_STYLE): HTMLCanvasElement {
+  if (style === 'blender') return paintBlenderEnvironment('broadleaf', seed);
   return paintSprite(20, 26, (px) => {
     trunk(px, 9, 16, 23);
     px(8, 23, TRUNK.dark);
@@ -69,7 +90,8 @@ export function paintBroadleaf(seed: number): HTMLCanvasElement {
 }
 
 /** Cycads: prehistoric palm-like plants with a stout, scaly trunk. */
-export function paintCycad(seed: number): HTMLCanvasElement {
+export function paintCycad(seed: number, style: ArtStyle = ART_STYLE): HTMLCanvasElement {
+  if (style === 'blender') return paintBlenderEnvironment('cycad', seed);
   return paintSprite(20, 20, (px) => {
     for (let y = 11; y < 17; y++) for (let x = 8; x < 12; x++) px(x, y, (y + (x % 2)) % 2 ? '#8a6a3e' : '#6b5238');
     const fronds = 7;
@@ -86,7 +108,8 @@ export function paintCycad(seed: number): HTMLCanvasElement {
 }
 
 /** Tree ferns: a slim trunk with a crown of arching fronds. */
-export function paintTreeFern(seed: number): HTMLCanvasElement {
+export function paintTreeFern(seed: number, style: ArtStyle = ART_STYLE): HTMLCanvasElement {
+  if (style === 'blender') return paintBlenderEnvironment('treefern', seed);
   return paintSprite(22, 28, (px) => {
     trunk(px, 10, 8, 25, 2, { light: '#6b4a2a', dark: '#4a3018' });
     const fronds = 6;
@@ -104,7 +127,8 @@ export function paintTreeFern(seed: number): HTMLCanvasElement {
 }
 
 /** A towering conifer, a landmark in the forest. */
-export function paintGiant(seed: number): HTMLCanvasElement {
+export function paintGiant(seed: number, style: ArtStyle = ART_STYLE): HTMLCanvasElement {
+  if (style === 'blender') return paintBlenderEnvironment('giant', seed);
   return paintSprite(20, 40, (px) => {
     trunk(px, 9, 20, 37, 3, { light: '#a0582e', dark: '#6b3a1e' });
     for (let y = 2; y < 26; y++) {
@@ -117,7 +141,8 @@ export function paintGiant(seed: number): HTMLCanvasElement {
   });
 }
 
-export function paintPalm(seed: number): HTMLCanvasElement {
+export function paintPalm(seed: number, style: ArtStyle = ART_STYLE): HTMLCanvasElement {
+  if (style === 'blender') return paintBlenderEnvironment('palm', seed);
   const lean = seed % 2 ? 1 : -1;
   return paintSprite(22, 30, (px) => {
     // Curved, ringed trunk.
@@ -141,7 +166,8 @@ export function paintPalm(seed: number): HTMLCanvasElement {
   });
 }
 
-export function paintMountain(seed: number): HTMLCanvasElement {
+export function paintMountain(seed: number, style: ArtStyle = ART_STYLE): HTMLCanvasElement {
+  if (style === 'blender') return paintBlenderEnvironment('mountain', seed);
   // A craggy peak: a jagged ridge line, lit west face, shadowed east face, rock strata.
   const w = 30;
   const h = 34;
@@ -165,7 +191,8 @@ export function paintMountain(seed: number): HTMLCanvasElement {
   });
 }
 
-export function paintVolcano(): HTMLCanvasElement {
+export function paintVolcano(style: ArtStyle = ART_STYLE): HTMLCanvasElement {
+  if (style === 'blender') return paintBlenderEnvironment('volcano');
   const w = 84;
   const h = 70;
   return paintSprite(w, h, (px) => {
@@ -200,7 +227,8 @@ export function paintVolcano(): HTMLCanvasElement {
 export const VOLCANO_CRATER_ABOVE_BASE = 70 - 10;
 
 /** A low rounded shrub for open grassland. */
-export function paintBush(seed: number): HTMLCanvasElement {
+export function paintBush(seed: number, style: ArtStyle = ART_STYLE): HTMLCanvasElement {
+  if (style === 'blender') return paintBlenderEnvironment('bush', seed);
   return paintSprite(14, 12, (px) => {
     for (let y = 2; y < 10; y++)
       for (let x = 1; x < 13; x++) {
@@ -215,7 +243,8 @@ export function paintBush(seed: number): HTMLCanvasElement {
 }
 
 /** A clump of cattails for marshland. */
-export function paintReeds(seed: number): HTMLCanvasElement {
+export function paintReeds(seed: number, style: ArtStyle = ART_STYLE): HTMLCanvasElement {
+  if (style === 'blender') return paintBlenderEnvironment('reeds', seed);
   return paintSprite(12, 16, (px) => {
     for (let k = 0; k < 5; k++) {
       const x = 2 + k * 2 + (hash2(k, seed, 4) < 0.5 ? 0 : 1);
@@ -225,7 +254,8 @@ export function paintReeds(seed: number): HTMLCanvasElement {
   }, false);
 }
 
-export function paintFlowerBed(seed: number): HTMLCanvasElement {
+export function paintFlowerBed(seed: number, style: ArtStyle = ART_STYLE): HTMLCanvasElement {
+  if (style === 'blender') return paintBlenderEnvironment('flowers', seed);
   const colors = ['#f2d24e', '#ff9fb8', '#f4ecd2', '#e05a4f', '#b28dff'];
   return paintSprite(16, 12, (px) => {
     for (let y = 4; y < 10; y++)
@@ -237,7 +267,8 @@ export function paintFlowerBed(seed: number): HTMLCanvasElement {
   }, false);
 }
 
-export function paintFountain(): HTMLCanvasElement {
+export function paintFountain(style: ArtStyle = ART_STYLE): HTMLCanvasElement {
+  if (style === 'blender') return paintBlenderEnvironment('fountain');
   return paintSprite(18, 20, (px) => {
     for (let y = 10; y < 18; y++)
       for (let x = 1; x < 17; x++) {
@@ -252,7 +283,8 @@ export function paintFountain(): HTMLCanvasElement {
 }
 
 /** Path lamp: a slim dark post with a lantern on top. */
-export function paintLamp(): HTMLCanvasElement {
+export function paintLamp(style: ArtStyle = ART_STYLE): HTMLCanvasElement {
+  if (style === 'blender') return paintBlenderEnvironment('lamp');
   return paintSprite(10, 24, (px) => {
     for (let y = 8; y < 22; y++) px(5, y, '#3b3b3b');
     for (const x of [3, 4, 5, 6, 7]) px(x, 22, '#2b2b2b'); // foot
@@ -262,7 +294,8 @@ export function paintLamp(): HTMLCanvasElement {
   });
 }
 
-export function paintBench(): HTMLCanvasElement {
+export function paintBench(style: ArtStyle = ART_STYLE): HTMLCanvasElement {
+  if (style === 'blender') return paintBlenderEnvironment('bench');
   return paintSprite(16, 12, (px) => {
     for (let x = 2; x < 14; x++) {
       px(x, 3, '#9c6b3c');
@@ -675,7 +708,8 @@ export function paintBuilding(kind: BuildingKind, style: ArtStyle = ART_STYLE): 
 }
 
 /** A dinosaur skeleton lying on the ground: skull, spine, ribs and a tail. */
-export function paintSkeleton(): HTMLCanvasElement {
+export function paintSkeleton(style: ArtStyle = ART_STYLE): HTMLCanvasElement {
+  if (style === 'blender') return paintBlenderEnvironment('skeleton');
   return paintSprite(22, 12, (px) => {
     const bone = '#f4ecd2';
     const shade = '#cfc4a6';
@@ -693,21 +727,44 @@ export function paintSkeleton(): HTMLCanvasElement {
 }
 
 /** Garden decorations, as placed in the park. */
-export function paintDecor(kind: DecorKind): HTMLCanvasElement {
+export function paintDecor(kind: DecorKind, style: ArtStyle = ART_STYLE): HTMLCanvasElement {
   switch (kind) {
     case 'tree':
-      return paintBroadleaf(99);
+      return paintBroadleaf(99, style);
     case 'palm':
-      return paintPalm(1);
+      return paintPalm(1, style);
     case 'flowers':
-      return paintFlowerBed(5);
+      return paintFlowerBed(5, style);
     case 'fountain':
-      return paintFountain();
+      return paintFountain(style);
     case 'bench':
-      return paintBench();
+      return paintBench(style);
     case 'lamp':
-      return paintLamp();
+      return paintLamp(style);
     case 'skeleton':
-      return paintSkeleton();
+      return paintSkeleton(style);
   }
+}
+
+
+/** One entry point for environment reviews and the shared Garden artwork. */
+export function paintEnvironment(id: EnvironmentId, seed = 0, style: ArtStyle = ART_STYLE): HTMLCanvasElement {
+  const painters: Record<EnvironmentId, (seed: number, style: ArtStyle) => HTMLCanvasElement> = {
+    conifer: paintConifer,
+    broadleaf: paintBroadleaf,
+    cycad: paintCycad,
+    treefern: paintTreeFern,
+    giant: paintGiant,
+    palm: paintPalm,
+    mountain: paintMountain,
+    bush: paintBush,
+    reeds: paintReeds,
+    flowers: paintFlowerBed,
+    volcano: (_seed, style) => paintVolcano(style),
+    fountain: (_seed, style) => paintFountain(style),
+    lamp: (_seed, style) => paintLamp(style),
+    bench: (_seed, style) => paintBench(style),
+    skeleton: (_seed, style) => paintSkeleton(style),
+  };
+  return painters[id](seed, style);
 }

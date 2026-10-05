@@ -122,7 +122,7 @@ try {
   }
   await page.setViewport({width:1000,height:650,deviceScaleFactor:1});
   await page.goto(`${url}/scripts/art/review.html`, {waitUntil:'networkidle0'});
-  check('all 26 assets are available in the comparison', await page.$$eval('#asset option',options=>options.length===26));
+  check('all 57 assets are available in the comparison', await page.$$eval('#asset option',options=>options.length===57));
   check('interactive comparison loads', await page.$eval('#blender',c=>c.width===68*4));
   await page.screenshot({path:`${out}comparison-rex.png`});
   await page.select('#asset','triceratops');

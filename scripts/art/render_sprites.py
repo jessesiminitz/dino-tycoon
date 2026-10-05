@@ -202,6 +202,7 @@ def tower(scene, phase):
 
 BUILDERS = {'tyrannosaurus': rex, 'triceratops': trike, 'tower': tower}
 BUILDERS.update(runpy.run_path(str(ROOT / 'scripts/art/models.py'), init_globals=globals())['EXTRA_BUILDERS'])
+BUILDERS.update(runpy.run_path(str(ROOT / 'scripts/art/environment_models.py'), init_globals=globals())['ENVIRONMENT_BUILDERS'])
 
 
 def build(asset, frame=0):
@@ -244,6 +245,10 @@ def convert(scene, image, frame):
         raise ValueError('Grounded sprite misses its bottom row')
     if spec['kind'] == 'dino' and not any('E' in row for row in rows):
         raise ValueError('Dinosaur eye missing')
+    if spec['kind'] == 'terrain' and any('.' in row for row in rows):
+        raise ValueError('Terrain must fill every pixel, including tile edges')
+    if spec['kind'] == 'environment' and (any(c != '.' for c in rows[0]+rows[-1]) or any(row[0] != '.' or row[-1] != '.' for row in rows)):
+        raise ValueError(f'{scene["asset"]}:{frame} environment contour needs room for its outline')
     return [''.join(row) for row in rows]
 
 
@@ -275,7 +280,7 @@ def render(asset, frame=0):
 
 
 def save_source(asset):
-    folder = ROOT / 'assets-source/blender' / ('buildings' if MANIFEST['assets'][asset]['kind'] == 'building' else 'dinos')
+    folder = ROOT / 'assets-source/blender' / {'building': 'buildings', 'dino': 'dinos', 'environment': 'environment', 'terrain': 'terrain'}[MANIFEST['assets'][asset]['kind']]
     folder.mkdir(parents=True, exist_ok=True)
     # Write just the asset scene and its dependencies, not the user's active file.
     scenes = {scene for scene in bpy.data.scenes if scene.name.startswith('DinoTycoon_'+asset+'_Pose')}

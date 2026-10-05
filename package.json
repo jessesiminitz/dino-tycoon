@@ -14,6 +14,7 @@
     "icons": "node scripts/make-icons.mjs",
     "art:convert": "node scripts/art/convert_sprites.mjs",
     "art:check": "node scripts/art/convert_sprites.mjs --check",
+    "art:environment": "node scripts/checks/environment-review.mjs",
     "art:review": "node scripts/checks/art-review.mjs",
     "art:integration": "node scripts/checks/art-integration.mjs",
     "art:ui": "node scripts/checks/art-ui.mjs",

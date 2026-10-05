@@ -1,6 +1,6 @@
 # Blender sprite authoring
 
-The full set contains **16 dinosaur species × four poses and 10 park buildings**. Blender **4.5.14 LTS** renders extruded mesh profiles with CPU Cycles, flat emission region colors and an orthographic camera at native pixel resolution. Dinosaurs keep the game's species palettes, highlights, patterns, outlines and 60% baby painter; each building has its own palette. Blender artwork is the default in development and production.
+The full set contains **16 dinosaur species × four poses, 10 park buildings, 15 scenery types with 38 variants, and 16 terrain types with four tile variants each**. There are 176 exported grids in total. Blender **4.5.14 LTS** renders extruded mesh profiles with CPU Cycles, flat emission region colors and an orthographic camera at native pixel resolution. Dinosaurs keep the game's species palettes, highlights, patterns, outlines and 60% baby painter; each building has its own palette. Blender artwork is the default in development and production.
 
 ## Review locally
 
@@ -8,7 +8,7 @@ The full set contains **16 dinosaur species × four poses and 10 park buildings*
 npm run dev
 ```
 
-- All 26 assets, poses, babies, backgrounds, directions and moving comparison: `http://localhost:5173/scripts/art/review.html`
+- All 57 assets, poses, babies, backgrounds, directions and moving comparison: `http://localhost:5173/scripts/art/review.html`
 - Park: `http://localhost:5173/?quickstart&seed=7`
 - Original artwork comparison: `http://localhost:5173/?quickstart&seed=7&art=original`
 - Busy fixture: `http://localhost:5173/?quickstart&stress`
@@ -18,12 +18,15 @@ The art choice is made before textures and DOM artwork are created. Reload to ch
 ## Sources and generated data
 
 - `scripts/art/render_sprites.py`: isolated scenes, pilot models, renderer, camera and region conversion.
+- `scripts/art/environment_models.py`: canonical tree, plant, rock, volcano and decoration meshes, plus 16 ground/water materials. Natural scenery uses stable seeded variants; opaque 16×16 terrain tiles replace speckled placeholders in the existing atlas.
 - `scripts/art/models.py`: the other species and buildings; shared leg modeling and species-specific anatomy, crests, feathers, plates, horns, flippers and wings.
 - `export-manifest.json`: dimensions, phases, versions, colors, rendering settings and per-building palettes. Camera `(width/2, -100, height/2)`, orthographic scale `max(width,height)`.
 - `pixel-cleanup/patches.json`: repeatable eye, brow and lens pixel corrections. `all` edits apply to every pose; frame-number keys apply to one pose. `.` erases a pixel.
 - `blender/dinos/*.blend`, `blender/buildings/*.blend`: compressed, inspectable scenes for every asset and pose. Only this exporter's named scenes are rebuilt. Update the authoring functions or cleanup data to retain changes during regeneration.
 - `renders/`: ignored diagnostic PNGs and JSON grids with SHA-256 hashes, timings and foot-contact coordinates extracted from the actual foot meshes.
-- `src/render/generated/blenderArt.ts`: checked-in runtime rows and building palettes.
+- `src/render/generated/blenderArt.ts`: checked-in dinosaur/building rows and building palettes.
+- `src/render/generated/blenderEnvironment.ts`: checked-in scenery/terrain rows, palettes and shadow settings.
+- `blender/environment/*.blend`, `blender/terrain/*.blend`: compressed source scenes for all environment and tile variants.
 - `walk-contacts.json`: generated land-foot positions for gait regression tests. It is not shipped in the game.
 
 Regions `B D F A G W E M` mean body, belly, far limbs, accent, far accent, horn/claw/teeth, eye and mouth. Dino alpha remains binary. Building rows feed the existing outline/shadow painter. No Blender or MCP connection is needed at runtime.
@@ -58,7 +61,7 @@ npm run art:convert
 npm run art:check
 ```
 
-All **74 frame hashes** and land-foot coordinates reproduced exactly through MCP during the full rollout. The converter rejects unknown interior colors, missing eyes, floating grounded sprites, malformed dimensions and duplicate poses. `art:check` compares checked-in data with local render JSONs; regenerate first on a fresh checkout because intermediate renders are ignored.
+The dinosaur/building rollout reproduced all **74 frame hashes** and land-foot coordinates. The environment rollout reproduced all **102 additional variant hashes** through MCP. The converter rejects unknown interior colors, missing eyes, floating grounded sprites, malformed dimensions and duplicate poses. `art:check` compares checked-in data with local render JSONs; regenerate first on a fresh checkout because intermediate renders are ignored.
 
 ## Validate integration
 
@@ -66,11 +69,19 @@ All **74 frame hashes** and land-foot coordinates reproduced exactly through MCP
 npm test
 npm run build
 npm run art:integration
+npm run art:environment
 npm run art:ui
 npm run art:review
 npm run art:offline
 ```
 
-Browser checks require the dev server and installed Google Chrome; each uses a temporary browser profile. Run expensive test and browser suites sequentially on this iMac. `BASE_URL` can select a different dev server. `art:ui` runs 13 existing UI tours. `art:review` captures the full native/4× gallery and matched busy-park renderer measurements. `art:offline` serves the regular production `dist/` under `/dino-tycoon/`, checks all 16 menu sprites, creates a v21 park and resumes it offline. Set `ART_DIST=dist-art` to check the separate preview instead.
+Browser checks require the dev server and installed Google Chrome; each uses a temporary browser profile. Run expensive test and browser suites sequentially on this iMac. `BASE_URL` can select a different dev server. `art:environment` captures scenery and repeated-tile galleries plus river/coast/volcano views. It verifies every scenery/decor texture, all 64 atlas tiles, preserved footprints and terrain opacity, tree fading around animals, and hiding/restoring scenery under construction. `art:ui` runs 13 existing UI tours. `art:review` captures the full native/4× gallery and matched busy-park renderer measurements. `art:offline` serves the regular production `dist/` under `/dino-tycoon/`, checks all 16 menu sprites, creates a v21 park and resumes it offline. Set `ART_DIST=dist-art` to check the separate preview instead.
 
 Generated captures and logs live under ignored `docs/art-review/`. Headless Chrome software rendering does not establish physical iPhone/iPad Safari performance. The graphics branch remains separate from main pending device/integration review.
+
+
+## Environment integration
+
+Scenery canvases retain their original footprints and outline padding. `environmentVariant()` maps the existing integer seeds to fixed authored variants, so forest types, palm placement and rocky terrain stay deterministic across loading and rendering. Tree fading, depth sorting, construction hiding, shoreline foam, water sparkles, fountain spray, lamp lighting and volcano effects continue to use their existing layers. The 84×70 volcano's opening remains at native row 10, matching the smoke/glow anchor.
+
+`terrainArt.ts` shares one painter between atlas construction and the comparison page. Terrain enum values, 16-pixel tiles, four variants per terrain, per-cell variant hashing and all saved-map rules remain unchanged. The baked material clusters add depth while keeping ground contrast below that of animals and buildings. No Blender connection or new fetch is needed at runtime; generated grids ship in the precached application bundle.

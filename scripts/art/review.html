@@ -15,10 +15,11 @@
   .pair { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
   article { overflow: hidden; border: 1px solid #51775e; border-radius: 8px; }
   h2 { font-size: 17px; margin: 0; padding: 12px 16px; background: #254d3d; }
-  .stage { height: 300px; display: grid; place-items: center; background: #79af5d; }
+  .stage { min-height: 300px; padding: 12px; display: grid; place-items: center; background: #79af5d; }
   canvas { image-rendering: pixelated; }
   nav { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 20px; }
   a { color: #ffd67a; }
+  @media (max-width:700px) { .pair { grid-template-columns:1fr; } }
   output { display: block; margin-top: 16px; color: #c7dccb; }
 </style>
 <h1>Dino Tycoon art comparison</h1>
@@ -27,7 +28,7 @@
   <label>Asset<select id="asset"><option value="tyrannosaurus">T. rex</option><option value="triceratops">Triceratops</option><option value="tower">Viewing tower</option></select></label>
   <label>Scale<select id="scale"><option value="1">1×</option><option value="2">2×</option><option value="4" selected>4×</option></select></label>
   <label>Background<select id="background"><option value="#79af5d">Grass</option><option value="#cfbb7d">Sand</option><option value="#518da2">Water</option><option value="#253f46">Night</option></select></label>
-  <label>Pose<input id="pose" type="range" min="0" max="3" value="0"></label>
+  <label><span id="pose-label">Pose</span><input id="pose" type="range" min="0" max="3" value="0"></label>
   <label class="check"><input id="baby" type="checkbox">Baby</label>
   <label class="check"><input id="left" type="checkbox">Face left</label>
   <label class="check"><input id="animate" type="checkbox">Animate</label>
@@ -41,6 +42,10 @@
 <script type="module">
   import { paintDino, dinoFrameCount } from '/src/render/dinoArt.ts';
   import { SPECIES } from '/src/sim/data/species.ts';
+  import { paintTerrainTile } from '/src/render/terrainArt.ts';
+  import { TERRAIN_NAMES } from '/src/sim/terrain.ts';
+  import { BLENDER_ENVIRONMENT } from '/src/render/generated/blenderEnvironment.ts';
+  import { paintEnvironment } from '/src/render/sceneryArt.ts';
   import { paintBuilding } from '/src/render/sceneryArt.ts';
   const controls = Object.fromEntries(['asset','scale','background','pose','baby','left','animate'].map((id) => [id, document.getElementById(id)]));
   const assetSelect=controls.asset;
@@ -48,25 +53,33 @@
   for (const [id,sp] of Object.entries(SPECIES)) assetSelect.add(new Option(sp.name,id));
   const buildings={restaurant:'Fries stand',snackstall:'Popcorn stand',restroom:'Restrooms',giftshop:'Gift shop',trashcan:'Dino bin',station:'Jeep station',tower:'Viewing tower',petting:'Petting pen',pump:'Pump house',digsite:'Dig site'};
   for(const [id,name] of Object.entries(buildings)) assetSelect.add(new Option(name,id));
+  for(const id of Object.keys(BLENDER_ENVIRONMENT)) assetSelect.add(new Option(id[0].toUpperCase()+id.slice(1),`environment:${id}`));
+  for(const [id,name] of Object.entries(TERRAIN_NAMES)) assetSelect.add(new Option(name+ ' tile',`terrain:${id}`));
   assetSelect.value='tyrannosaurus';
   let travel=0;
   function draw() {
-    const asset = controls.asset.value, scale = Number(controls.scale.value), pose = Number(controls.pose.value);
-    const isBuilding=asset in buildings;
-    controls.baby.disabled = controls.pose.disabled = controls.animate.disabled = isBuilding;
+    const asset = controls.asset.value, scale = Number(controls.scale.value);
+    const isBuilding=asset in buildings, isEnvironment=asset.startsWith('environment:'), isTerrain=asset.startsWith('terrain:');
+    const isDino=asset in SPECIES, id=asset.split(':')[1];
+    const count=isDino?4:isEnvironment?BLENDER_ENVIRONMENT[id].frames.length:isTerrain?4:1;
+    controls.pose.max=String(count-1); controls.pose.value=String(Math.min(Number(controls.pose.value),count-1));
+    const pose=Number(controls.pose.value);
+    controls.baby.disabled=controls.animate.disabled=!isDino;
+    controls.pose.disabled=count===1; controls.left.disabled=isTerrain;
+    document.getElementById('pose-label').textContent=isDino?'Pose':'Variation';
     for (const style of ['original','blender']) {
-      const frame = isBuilding ? 0 : Math.floor(pose * dinoFrameCount(asset,style) / 4);
-      const source = isBuilding ? paintBuilding(asset,style) : paintDino(SPECIES[asset], frame, controls.baby.checked, style);
+      const frame = isDino ? Math.floor(pose * dinoFrameCount(asset,style) / 4) : pose;
+      const source = isBuilding ? paintBuilding(asset,style) : isEnvironment ? paintEnvironment(id,frame,style) : isTerrain ? paintTerrainTile(Number(id),frame,style) : paintDino(SPECIES[asset], frame, controls.baby.checked, style);
       const canvas = document.getElementById(style); canvas.width=source.width*scale; canvas.height=source.height*scale;
       const ctx=canvas.getContext('2d'); ctx.imageSmoothingEnabled=false;
-      if (controls.left.checked) { ctx.translate(canvas.width,0); ctx.scale(-1,1); }
+      if (controls.left.checked && !isTerrain) { ctx.translate(canvas.width,0); ctx.scale(-1,1); }
       ctx.drawImage(source,0,0,canvas.width,canvas.height);
       canvas.parentElement.style.background=controls.background.value;
       const span=Math.max(0,canvas.parentElement.clientWidth-canvas.width-16);
-      const shift=controls.animate.checked && !isBuilding ? (travel%60/60-.5)*span*(controls.left.checked?-1:1) : 0;
+      const shift=controls.animate.checked && isDino ? (travel%60/60-.5)*span*(controls.left.checked?-1:1) : 0;
       canvas.style.transform=`translateX(${shift}px)`;
       canvas.parentElement.style.backgroundImage='repeating-linear-gradient(90deg,transparent 0px,transparent 63px,#ffffff18 64px)';
-      if (style==='blender') document.getElementById('detail').textContent = `${source.width} × ${source.height} pixels · ${isBuilding ? 'static' : 'four motion poses'} · ${scale}× display`;
+      if (style==='blender') document.getElementById('detail').textContent = `${source.width} × ${source.height} pixels · ${isDino ? 'four motion poses' : count>1 ? count+' variations' : 'static'} · ${scale}× display`;
     }
   }
   Object.values(controls).forEach((control) => control.addEventListener('input',draw));
