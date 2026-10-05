@@ -64,7 +64,8 @@ def biped(scene, phase, asset):
     arm_x = cx+rx*.9
     limb(scene,'arm',[(arm_x,cy,1),(arm_x+2,cy+3,.8),(arm_x+5,cy+2,.5)],'B',-5)
     if asset == 'velociraptor':
-        profile(scene,'tail_fan',[(1,cy+3),(2,cy-1),(7,cy+1),(8,cy+4),(2,cy+6)],'A',-3)
+        profile(scene,'tail_fan',[(1,cy+3),(3,cy+1),(8,cy+2),(8,cy+4),(2,cy+5)],'A',-3)
+        attach(scene,'tail_fan','tail',7)
         for i in range(3):
             profile(scene,'arm_feather'+str(i),[(arm_x+i,cy+2),(arm_x+i+1,cy+6),(arm_x+i+3,cy+2)],'A',-7)
     leg(scene,'near',cx,cy+ry*.5,h,phase,radius,stride,True,True)
@@ -85,8 +86,10 @@ def quadruped(scene, phase, asset):
     stride=max(1.5,radius*.65)
     leg(scene,'far_back',hind-2,hip,h,phase+.5,radius*.85,stride,False)
     leg(scene,'far_front',front-2,hip-2,h,phase,radius*.85,stride,False)
-    profile(scene,'tail',[(cx-rx*.6,cy-ry*.3),(cx-rx,cy),(1,cy+ry+4),
-                         (cx-rx*.8,cy+ry*.7),(cx-rx*.2,cy+ry*.5)],'B',0)
+    tip_y=cy+ry*.25 if asset in ('stegosaurus','ankylosaurus') else cy+ry+4
+    tail=[(cx-rx*.6,cy-ry*.3),(cx-rx,cy),(1,tip_y),
+          (cx-rx*.8,cy+ry*.7),(cx-rx*.2,cy+ry*.5)]
+    profile(scene,'tail',tail,'B',0)
     ellipse(scene,'trunk',cx,cy,rx,ry,'B',0)
     ellipse(scene,'belly',cx+1,cy+ry*.45,rx*.75,ry*.5,'D',-2)
     if asset=='protoceratops':
@@ -107,15 +110,21 @@ def quadruped(scene, phase, asset):
         rect(scene,'eye',50,24,1,1,'E',-9)
         for i in range(4):
             x=3+i*2
-            profile(scene,'tail_spike'+str(i),[(x,cy+ry+1-i*.5),(x-2,cy+ry-4-i*.5),(x+2,cy+ry-i*.5)],'W',-3)
+            base=profile_edge(tail,x)+.8
+            profile(scene,'tail_spike'+str(i),[(x-1,base+1),(x-1.5,base-3.5),(x+1,base)],'W',-3)
+            attach(scene,'tail_spike'+str(i),'tail',x)
     elif asset=='ankylosaurus':
-        ellipse(scene,'tail_club',3,cy+ry+1,3,3,'A',-3)
+        club_x=4
+        club_y=(profile_edge(tail,club_x)+profile_edge(tail,club_x,True))/2
+        ellipse(scene,'tail_club',club_x,club_y,2.4,2.2,'A',-3)
+        attach(scene,'tail_club','tail',club_x)
         for row in range(3):
             for col in range(6):
                 x=13+col*4+row%2; y=9+row*3
                 ellipse(scene,f'scute_{row}_{col}',x,y,1.4,1,'A',-4,6)
         for x in (11,18,25,32,38):
-            profile(scene,'side_spike'+str(x),[(x-2,17),(x,21),(x+2,17)],'W',-5)
+            base=ellipse_edge(cx,cy,rx,ry,x,True)-1
+            profile(scene,'side_spike'+str(x),[(x-1.5,base),(x,base+2.5),(x+1.5,base)],'W',-5)
         limb(scene,'neck',[(38,13,4),(44,14,3)],'B',-1)
         profile(scene,'head',[(43,10),(49,10),(53,13),(52,17),(43,17)],'B',-3)
         rect(scene,'jaw',48,16,4,1,'D',-4)

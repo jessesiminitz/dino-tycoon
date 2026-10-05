@@ -120,3 +120,25 @@ only when a species/adult-baby appearance is present. Saved state stays v21;
 meal cues, gait phase, wind and particles are presentation state. See
 [docs/PLAN-animation-immersion.md](../docs/PLAN-animation-immersion.md) for the
 MCP recipe, grounded gait, review links, performance limits and full validation.
+
+## Anatomy attachments
+
+`scripts/art/anatomy.py` supplies surface intersections and accessory bindings to
+the canonical model builders. Spike and feather roots overlap the actual body
+or tail profile; hands root their claws in a shared palm. Tail accessories carry
+an `attachment` and native `anchor_x` in the editable Blender meshes. Neck-bound
+Amargasaurus spines rotate with the neck, while its back spines stay on the body.
+Tail clubs and fans follow their root without being stretched across the tail.
+The idle and resting deformation is shared by the body and its accessories;
+hind feathers use the same gait as their leg.
+
+Both converters check eight-neighbour connectivity of the native silhouette.
+Detached components larger than two pixels, or farther than a one-pixel gap from
+the main silhouette, fail conversion. Tiny raster gaps at thin tips are tolerated.
+The check never deletes or moves exported pixels. Its regression fixtures run
+with `node --test scripts/art/silhouette.test.mjs`.
+
+After changing geometry, regenerate each affected canonical dinosaur with
+`render_sprites.py -- --asset <species>` **and** its four motion clips with
+`full_motion.py -- <species>`, then run both converters and both check commands.
+Review eating/resting as well as walking, including babies and both directions.

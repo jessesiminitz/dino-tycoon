@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
+import { assertAttachedSilhouette } from './silhouette.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const manifest = JSON.parse(readFileSync(`${root}assets-source/export-manifest.json`, 'utf8'));
@@ -20,6 +21,7 @@ for (const [asset, spec] of Object.entries(manifest.assets)) {
     if (hash !== result.hash) throw new Error(`Hash mismatch ${asset}:${frame}`);
     if (spec.grounded && !/[^.]/.test(result.rows.at(-1))) throw new Error(`Floating feet ${asset}:${frame}`);
     if (spec.kind === 'dino' && !result.rows.some((row) => row.includes('E'))) throw new Error(`Missing eye ${asset}:${frame}`);
+    if (spec.kind === 'dino') assertAttachedSilhouette(result.rows, `${asset}:pose:${frame}`);
     if (spec.kind === 'terrain' && result.rows.some(row => row.includes('.'))) throw new Error(`Incomplete tile ${asset}:${frame}`);
     if (spec.kind === 'environment' && (/[BDFAGWEM]/.test(result.rows[0]+result.rows.at(-1)) || result.rows.some(row => row[0] !== '.' || row.at(-1) !== '.'))) throw new Error(`Clipped scenery ${asset}:${frame}`);
     if (result.contact) (contacts[asset] ??= []).push(result.contact);

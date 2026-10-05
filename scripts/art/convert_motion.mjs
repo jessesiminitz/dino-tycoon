@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import { assertAttachedSilhouette } from './silhouette.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const manifest = JSON.parse(readFileSync(`${root}assets-source/export-manifest.json`,'utf8'));
@@ -16,6 +17,7 @@ for (const asset of species) {
       const hash = createHash('sha256').update(rows.join('\n')).digest('hex');
       if (rows.length !== p.height || rows.some(row => row.length !== p.width || /[^.BDFAGWEM]/.test(row)) || hash !== p.hashes[i]) throw new Error(`Invalid frame ${asset}:${clip}:${i}`);
       if (!rows.some(row => row.includes('E')) || (manifest.assets[asset].grounded && !/[^.]/.test(rows.at(-1)))) throw new Error(`Missing face or planted feet ${asset}:${clip}:${i}`);
+      assertAttachedSilhouette(rows, `${asset}:${clip}:${i}`);
       if (manifest.assets[asset].grounded && !p.contacts[i].some(foot => foot.planted)) throw new Error(`No mesh ground contact ${asset}:${clip}:${i}`);
     });
     if (new Set(p.hashes).size < 3) throw new Error(`Insufficient motion ${asset}:${clip}`);

@@ -42,11 +42,14 @@ def biped(scene, phase, asset):
         for i,(x,y) in enumerate(((20,14),(25,7),(30,6),(35,8),(40,13),(44,21))):
             limb(scene,'sail_ray'+str(i),[(x,y,.5),(x+1,28,.6)],'G',-1)
     else:
-        profile(scene,'tail',[(cx-rx*.3,cy-ry*.5),(cx-rx,cy-ry*.1),(1,cy+ry*.6),
-                              (cx-rx,cy+ry*.7),(cx,cy+ry*.5)],'B',0)
+        tail=[(cx-rx*.3,cy-ry*.5),(cx-rx,cy-ry*.1),(1,cy+ry*.6),
+              (cx-rx,cy+ry*.7),(cx,cy+ry*.5)]
+        profile(scene,'tail',tail,'B',0)
     if asset == 'yutyrannus':
-        feather_fringe(scene,'back_fluff',[(x,16-3*math.sin((x-14)/23*math.pi)) for x in range(13,39,3)],4)
-        feather_fringe(scene,'tail_fluff',[(x,25-x*.15) for x in range(3,15,3)],3)
+        feather_fringe(scene,'back_fluff',[(x,ellipse_edge(cx,cy,rx,ry,x)+1.5) for x in range(16,39,3)],2.5)
+        for i,x in enumerate(range(4,15,3)):
+            feather_fringe(scene,'tail_fluff'+str(i)+'_',[(x,profile_edge(tail,x)+1.5)],2)
+            attach(scene,'tail_fluff'+str(i)+'_0','tail',x)
     ellipse(scene,'trunk',cx,cy,rx,ry,'B',0)
     ellipse(scene,'belly',cx+2,cy+ry*.45,rx*.72,ry*.52,'D',-2)
     neck_radius = radius+1 if asset != 'therizinosaurus' else 4
@@ -57,11 +60,13 @@ def biped(scene, phase, asset):
         profile(scene,'beak',[(48,9),(54,11),(51,15),(48,13)],'W',-6)
         rect(scene,'mouth',49,12,3,1,'M',-9)
         eye(scene,44,9)
-        # Long forearms and three separated scythe claws are the key identifier.
+        # A shared palm roots three curved claws; no claw starts beyond the hand.
         limb(scene,'far_arm',[(33,28,2.5),(38,34,2),(41,34,1.5)],'F',3)
         limb(scene,'near_arm',[(34,27,3),(37,35,2.5),(44,34,1.7)],'B',-7)
+        ellipse(scene,'palm',44.8,34.5,2.4,1.5,'B',-8)
         for i in range(3):
-            limb(scene,'scythe'+str(i),[(44+i*3,34,.8),(46+i*3,41,.6),(46+i*3,49-i*2,.2)],'W',-10)
+            limb(scene,'scythe'+str(i),[(43.5+i*1.6,35,.65),(45+i*1.6,40-i*.3,.5),
+                                      (44.5+i*1.6,45-i,.25)],'W',-10)
     else:
         profile(scene,'head',[(hx-hrx,hy-hry*.5),(hx-hrx*.4,hy-hry),(hx+hrx,hy-hry*.4),
                               (hx+hrx,hy+hry*.65),(hx+hrx*.35,hy+hry),(hx-hrx,hy+hry*.5)],'B',-4)
@@ -82,23 +87,27 @@ def biped(scene, phase, asset):
             profile(scene,'nasal_crest',[(45,7),(48,4),(54,5),(57,7)],'A',-6)
             feather_fringe(scene,'throat_fluff',[(43,20),(42,23),(40,26)],-3,'A',-5)
             limb(scene,'arm',[(39,23,2),(42,29,1.2),(46,28,.7)],'B',-6)
-            for i in range(3):rect(scene,'finger'+str(i),46+i,28,1,2,'W',-8)
+            ellipse(scene,'palm',46.5,28,1.8,1,'B',-7)
+            for i in range(3):rect(scene,'finger'+str(i),45.5+i,28,1,1.5,'W',-8)
         elif asset == 'iguanodon':
             profile(scene,'beak',[(53,14),(59,16),(58,19),(53,19)],'W',-7)
             limb(scene,'arm',[(38,23,2.3),(41,29,1.7),(46,28,1)],'B',-7)
-            profile(scene,'thumb_spike',[(44,28),(47,23),(47,29)],'W',-9)
+            profile(scene,'thumb_spike',[(45,28),(46.5,24.5),(47.5,28.5)],'W',-9)
         elif asset == 'spinosaurus':
             limb(scene,'arm',[(46,30,2),(49,35,1.5),(54,34,.8)],'B',-6)
             profile(scene,'snout_notch',[(69,21),(72,23),(74,21)],'D',-8)
         else:
             # Four feathered limbs, folded for this animal's walking poses.
-            profile(scene,'tail_fan',[(1,12),(2,8),(9,10),(8,15),(2,16)],'A',-3)
+            profile(scene,'tail_fan',[(2,13.5),(3,11.5),(8,12),(9,14),(3,15)],'A',-3)
+            attach(scene,'tail_fan','tail',7)
             limb(scene,'arm',[(20,12,1.2),(19,15,1),(23,16,.5)],'B',-5)
             for i in range(4):
-                profile(scene,'arm_feather'+str(i),[(18+i,12),(16+i,20-i*.4),(21+i,15)],'A',-8)
-            offset,lift=gait(phase,stride,2)
+                profile(scene,'arm_feather'+str(i),[(19+i,14),(17+i,18-i*.3),(21+i,16)],'A',-8)
+            offset,lift=gait(phase,stride,max(2,radius))
+            knee_x,knee_y=cx+offset+radius,(cy+ry*.55+h)/2
             for i in range(3):
-                profile(scene,'hind_feather'+str(i),[(cx-1+i,16),(cx-7+i+offset,22-lift),(cx+2+i,19)],'A',-8)
+                profile(scene,'hind_feather'+str(i),[(knee_x-1+i*.7,knee_y-1),
+                        (knee_x-4+i*.7,knee_y+3-lift*.3),(knee_x+1+i*.7,knee_y+1)],'A',-8)
     leg(scene,'near',cx,cy+ry*.55,h,phase,radius,stride,True,True)
 
 
@@ -117,37 +126,45 @@ def quadruped(scene, phase, asset):
     leg(scene,'far_back',hind-2,hip,h,phase+.5,radius*.85,stride,False)
     leg(scene,'far_front',front-2,hip-2,h,phase,radius*.85,stride,False)
     # Diplodocus devotes roughly a third of its sprite to its whip tail.
-    profile(scene,'tail',[(cx-rx*.4,cy-ry*.5),(cx-rx,cy),(2,cy+ry*.6),(1,cy+ry*.85),
-                          (cx-rx,cy+ry*.65),(cx,cy+ry*.5)],'B',0)
+    tail=[(cx-rx*.4,cy-ry*.5),(cx-rx,cy),(2,cy+ry*.6),(1,cy+ry*.85),
+          (cx-rx,cy+ry*.65),(cx,cy+ry*.5)]
+    profile(scene,'tail',tail,'B',0)
     ellipse(scene,'trunk',cx,cy,rx,ry,'B',0)
     ellipse(scene,'belly',cx+1,cy+ry*.5,rx*.75,ry*.5,'D',-2)
     if asset == 'kentrosaurus':
-        for i,x in enumerate((25,30,35,39)):
-            profile(scene,'plate'+str(i),[(x-3,15),(x-1,7+i*.6),(x+2,13),(x+3,17)],'A',-3)
-            profile(scene,'plate_light'+str(i),[(x-1,8+i*.6),(x+1,13),(x-1,12)],'G',-4)
-        for i,x in enumerate((4,9,14,19)):
-            limb(scene,'tail_spike'+str(i),[(x,26-i*.8,1.4),(x-2,17-i*2,.25)],'W',-3)
-        profile(scene,'shoulder_spike',[(31,20),(28,31),(35,23)],'W',-5)
+        for i,x in enumerate((24,29,34,37)):
+            base=ellipse_edge(cx,cy,rx,ry,x)+1.5
+            profile(scene,'plate'+str(i),[(x-2,base),(x-1,base-5+i*.5),(x+2,base-1),(x+2,base+2)],'A',-3)
+            profile(scene,'plate_light'+str(i),[(x-1,base-3.5+i*.5),(x+1,base-1),(x-1,base-1)],'G',-4)
+        for i,x in enumerate((4,8,12,16)):
+            base=profile_edge(tail,x)+1
+            limb(scene,'tail_spike'+str(i),[(x,base,.85),(x-1.5,base-4-i*.4,.25)],'W',-3)
+            attach(scene,'tail_spike'+str(i),'tail',x)
+        profile(scene,'shoulder_spike',[(31,22),(30,28),(34,24)],'W',-5)
         limb(scene,'neck',[(36,24,3),(42,26,2)],'B',-1)
         ellipse(scene,'head',46,26,4.5,2.5,'B',-4)
         eye(scene,45,25)
     elif asset == 'styracosaurus':
         limb(scene,'neck',[(35,22,5),(43,25,4)],'B',-1)
         for i,(x,y,tx,ty) in enumerate(((38,12,30,4),(41,9,38,1),(45,10,47,2),(47,15,54,8))):
-            limb(scene,'frill_spike'+str(i),[(x,y,1.3),(tx,ty,.25)],'W',-2)
+            limb(scene,'frill_spike'+str(i),[(x,y,1),(x+(tx-x)*.75,y+(ty-y)*.75,.25)],'W',-2)
         ellipse(scene,'frill',41,16,6.5,10,'A',-3)
         ellipse(scene,'frill_inset',42,16,4.5,7.5,'G',-4)
         profile(scene,'face',[(43,21),(49,20),(55,24),(57,28),(54,31),(45,30),(42,26)],'B',-5)
         profile(scene,'beak',[(55,26),(59,28),(57,32),(53,30)],'M',-8)
-        limb(scene,'nose_horn',[(54,25,1.6),(56,18,1),(57,12,.25)],'W',-10)
+        limb(scene,'nose_horn',[(54,25,1.4),(55.5,20,.8),(56,16,.25)],'W',-10)
         eye(scene,48,23)
     elif asset == 'amargasaurus':
         neck=[(41,26,4),(48,20,3.2),(55,17,2.6),(60,17,2.3)]
         limb(scene,'neck',neck,'B',-1)
-        for i,(x,y) in enumerate(((32,24),(38,24),(44,23),(49,19),(54,17),(58,16))):
-            # Parallel rows offset in side view, with bony tips kept separate.
-            limb(scene,'far_spine'+str(i),[(x,y,1),(x-4,y-13+i*.4,.3)],'G',-3)
-            limb(scene,'near_spine'+str(i),[(x+2,y,1),(x-1,y-14+i*.4,.3)],'A',-5)
+        for i,(x,y) in enumerate(((32,24),(38,25),(44,21),(49,18),(54,16),(58,16))):
+            # Short paired spines overlap the back/neck surface at their roots.
+            length=8-i*.45
+            limb(scene,'far_spine'+str(i),[(x,y,.85),(x-2,y-length,.3)],'G',-3)
+            limb(scene,'near_spine'+str(i),[(x+1,y,.85),(x-1,y-length-1,.3)],'A',-5)
+            if i >= 2:
+                attach(scene,'far_spine'+str(i),'neck',x)
+                attach(scene,'near_spine'+str(i),'neck',x+1)
         ellipse(scene,'head',64,18,4.5,2.5,'B',-6)
         rect(scene,'jaw',64,20,4,1,'D',-7)
         eye(scene,63,17)
@@ -158,7 +175,11 @@ def quadruped(scene, phase, asset):
         rect(scene,'jaw',92,17,5,1,'D',-5)
         eye(scene,91,14)
         for i,x in enumerate(range(18,56,5)):
-            profile(scene,'back_spine'+str(i),[(x,22),(x-1,19),(x+2,22)],'A',-3)
+            base=min(profile_edge(tail,x) if x <= cx else h,
+                     ellipse_edge(cx,cy,rx,ry,x) if abs(x-cx)<rx else h)+1.5
+            profile(scene,'back_spine'+str(i),[(x-1,base),(x,base-2.5),(x+2,base)],'A',-3)
+            if x < cx-rx:
+                attach(scene,'back_spine'+str(i),'tail',x)
     elif asset == 'argentinosaurus':
         limb(scene,'long_neck',[(63,37,8),(73,28,6),(83,17,4.2),(89,10,3.2)],'B',-1)
         limb(scene,'neck_light',[(68,37,1.8),(78,28,1.3),(87,18,1)],'D',-3)
@@ -166,7 +187,7 @@ def quadruped(scene, phase, asset):
         rect(scene,'jaw',95,12,5,1,'D',-5)
         eye(scene,93,8)
         for i,x in enumerate((30,39,48,57)):
-            ellipse(scene,'back_scute'+str(i),x,33,1.8,1.2,'A',-3,6)
+            ellipse(scene,'back_scute'+str(i),x,ellipse_edge(cx,cy,rx,ry,x)+.5,1.8,1.2,'A',-3,6)
     else:
         limb(scene,'neck',[(35,20,3.8),(43,23,3),(50,26,2.5)],'B',-1)
         # Downward-facing broad muzzle: a squared scoop rather than a tiny snout.

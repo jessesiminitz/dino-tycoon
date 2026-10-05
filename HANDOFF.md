@@ -1,12 +1,14 @@
 # Dino Tycoon: handoff notes
 
-Everything a fresh session needs to carry on. Last updated 2026-10-04, after the full-roster Blender animation and park immersion rollout.
+Everything a fresh session needs to carry on. Last updated 2026-10-05, after the Blender dinosaur anatomy corrections.
 
 ## Where things stand (read this first)
 
 - **Graphics branch:** `art/blender-pixel` in `/Volumes/Apple HDD 2TB/dino-tycoon-blender-art`, now with the twelve-species expansion on top of environment commit `843f5d7`. The roster now has 28 species. Blender artwork covers all dinosaurs, park buildings, scenery and terrain; backward-looking walking is fixed. Validation passed. This work remains separate from `main` and has not been deployed; physical iPhone/iPad review and integration are still pending. See **Blender graphics work** below.
 
 - **Full park animation:** all 28 species now have four eight-frame Blender clips (896 frames / 112 editable animated source files). The playable park follows actual movement, feeding and nighttime rest. Rooted wind, leaves/fireflies, dust/wet footfalls, swimming wakes and pond sparkle extend the prototype's ambience. World animation is a device setting and defaults off for reduced motion; saves remain v21. Review all species at http://localhost:5173/scripts/art/review.html, or keep using the three-animal enclosure demo at http://localhost:5173/scripts/art/immersion.html. See [docs/PLAN-animation-immersion.md](docs/PLAN-animation-immersion.md) and [docs/PR-blender-park-immersion.md](docs/PR-blender-park-immersion.md).
+
+- **Anatomy corrections:** reduced and repositioned claws, horns, tail clubs, spikes and feathers in twelve canonical models. Stegosaurus/Ankylosaurus tails now sit above the ground. Neck spines follow grazing necks, tail accessories follow their roots, and the shared idle/rest deformation preserves accessory joins across the full roster. All 896 motion frames and 112 editable timelines were regenerated. Both converters now reject detached anatomy; see **Anatomy correction validation** below. The changes remain local to the graphics branch.
 
 - **Live and working:**
   - four challenges (The Great Escape, Fire Mountain, Flood Season, The Money Pit), in the 🧩 Challenges folder, unlocking in that order
@@ -50,7 +52,17 @@ Planted feet move backward relative to the body while lifted feet swing forward;
 
 **Preview:** `http://localhost:5173/scripts/art/review.html` compares all 69 asset types at native, 2× and 4× sizes, with pose/variant, direction, baby and background controls. `http://localhost:5173/?quickstart` opens a Blender park; add `&art=original` to compare. The dev server was running from this worktree at handoff; start it with `npm run dev` if needed.
 
-**Source and regeneration:** [assets-source/README.md](assets-source/README.md) is the canonical workflow. Blender 4.5.14 LTS models and compressed `.blend` files live under `assets-source/`; generators are in `scripts/art/`. Render through Blender MCP or the documented Blender CLI, then run `npm run art:convert` and `npm run art:check`. PNG/JSON intermediates are ignored and must be regenerated on a fresh checkout. Runtime grids are checked in under `src/render/generated/`; Blender and MCP are not runtime dependencies. Canonical source files total about 6.7 MB; the 112 animation sources add about 12.3 MB. All source scenes are excluded from the shipped build.
+**Source and regeneration:** [assets-source/README.md](assets-source/README.md) is the canonical workflow. Blender 4.5.14 LTS models and compressed `.blend` files live under `assets-source/`; generators are in `scripts/art/`. Render through Blender MCP or the documented Blender CLI, then run `npm run art:convert` and `npm run art:check`. PNG/JSON intermediates are ignored and must be regenerated on a fresh checkout. Runtime grids are checked in under `src/render/generated/`; Blender and MCP are not runtime dependencies. Canonical source files total about 6.7 MB; the 112 animation sources add about 12.7 MB. All source scenes are excluded from the shipped build.
+
+**Anatomy correction validation (2026-10-05):**
+
+- Twelve canonical dinosaur models were corrected: Velociraptor, Stegosaurus, Ankylosaurus, Therizinosaurus, Iguanodon, Microraptor, Kentrosaurus, Styracosaurus, Amargasaurus, Diplodocus, Argentinosaurus and Yutyrannus. Spinosaurus also received a snout-detail animation binding correction. The shared rest/idle deformation and tail-root rules apply throughout the roster.
+- Regenerated the affected canonical poses and sources, plus all **896 motion frames / 112 editable timelines**. Canonical dimensions, walking contact metadata and save schema v21 remain unchanged. All 224 canonical grids and 896 motion frames pass hash, face, ground-contact and the new native-silhouette attachment checks. Five regression fixtures cover detached claws, distant tiny spines, diagonal joins, thin raster tips and row boundaries.
+- All **350 existing tests**, the five anatomy fixtures and the production build passed. Blender audited all 112 saved timelines for nine shape-key blocks per mesh, animation actions, orthographic cameras and accessory bindings. MCP loaded the saved Amargasaurus eating model, verified its 24 neck-bound spine meshes, and reproduced the corrected grazing frame's hash.
+- `art:park-motion` and `art:integration` passed: **1,792 adult/baby atlas frames**, **896 runtime walk/baby/facing combinations**, **3,584 animated review combinations**, all canonical expansion poses, catalog/guide/fossil/palette parity, feeding/rest/pause and phone/tablet layouts. The 30-dinosaur / 150-visitor dusk check kept both texture caches bounded; p95 frame time was about 116.7 ms with ambient animation both off and on in software-rendered Chrome.
+- `art:offline` passed with the rebuilt production art: service-worker control, v21 save/resume, the updated menu art and continuing animation in a populated park after offline restart.
+- Build files total **683,897 bytes gzipped**; PWA precache is 14 files / 3,394.80 KiB. The existing Vite chunk-size advisory remains. Before/after sheets and the source audit are ignored under `docs/art-review/`.
+- Review at `http://localhost:5173/scripts/art/review.html`; choose the eating and resting clips as well as walking. Physical iPhone/iPad review, main integration and deployment remain pending.
 
 **Full park animation validation (2026-10-04):**
 

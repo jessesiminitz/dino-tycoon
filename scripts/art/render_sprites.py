@@ -201,6 +201,7 @@ def tower(scene, phase):
 
 
 BUILDERS = {'tyrannosaurus': rex, 'triceratops': trike, 'tower': tower}
+globals().update({k:v for k,v in runpy.run_path(str(ROOT / 'scripts/art/anatomy.py'), init_globals=globals()).items() if k in ('ellipse_edge','profile_edge','attach')})
 BUILDERS.update(runpy.run_path(str(ROOT / 'scripts/art/models.py'), init_globals=globals())['EXTRA_BUILDERS'])
 BUILDERS.update(runpy.run_path(str(ROOT / 'scripts/art/environment_models.py'), init_globals=globals())['ENVIRONMENT_BUILDERS'])
 BUILDERS.update(runpy.run_path(str(ROOT / 'scripts/art/expansion_models.py'), init_globals=globals())['EXPANSION_BUILDERS'])

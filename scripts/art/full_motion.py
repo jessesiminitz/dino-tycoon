@@ -36,6 +36,7 @@ def pose(asset, clip, index):
     # These globals belong to this runpy instance, leaving the canonical gait alone.
     if hasattr(builder, 'func'):
         builder.func.__globals__['leg'].__globals__['gait'] = gait
+        builder.func.__globals__['gait'] = gait
     phase = index/8
     builder(scene, phase if asset not in ('tyrannosaurus','triceratops') and (clip == 'walk' or asset in AIR+WATER) else 1/6)
     spec = ART['MANIFEST']['assets'][asset]
@@ -58,7 +59,10 @@ def pose(asset, clip, index):
     if asset in AIR: angle,crouch = angle*.3,0
     head_names = ('head','skull','face','jaw','mouth','eye','tooth','beak','wide_muzzle',
                   'near_horn','far_horn','nose_horn','nasal_crest','dome','tube_crest','crest_ridge',
-                  'near_crest','far_crest','brow','frill','crest','fang','neck','long_neck','neck_light','throat_fluff')
+                  'near_crest','far_crest','brow','frill','crest','fang','neck','long_neck','neck_light','throat_fluff','snout_notch')
+    tail = next((o for o in scene.objects if o.type == 'MESH' and o.name.removeprefix(scene.name+'_') in ('tail','paddle_tail')),None)
+    tail_root = max((v.co.x for v in tail.data.vertices),default=25) if tail else 25
+    tail_tip = min((v.co.x for v in tail.data.vertices),default=1) if tail else 1
     # Keep a grazing muzzle above the soil, including short, low necks.
     if angle > 0 and asset not in WATER+AIR:
         head_vertices = [(v.co.x,height-v.co.z) for o in scene.objects if o.type == 'MESH' and o.name.removeprefix(scene.name+'_').startswith(head_names) for v in o.data.vertices]
@@ -101,7 +105,7 @@ def pose(asset, clip, index):
                     weight = 1 if part.endswith(('toes','foot','claws')) else min(1,max(0,(y-height*.55)/(height*.38)))
                     x += (offset-old_x)*weight
                     y += (old_lift-lift)*weight
-            if part.startswith(head_names):
+            if part.startswith(head_names) or obj.get('attachment') == 'neck':
                 dx,dy = x-pivot[0], y-pivot[1]
                 x = pivot[0]+dx*math.cos(angle)-dy*math.sin(angle)
                 y = pivot[1]+dx*math.sin(angle)+dy*math.cos(angle)
@@ -111,15 +115,17 @@ def pose(asset, clip, index):
             if asset in AIR and clip == 'rest' and part.startswith(('near_membrane','far_wing','wing_fingers')):
                 x = width*.48+(x-width*.48)*.45
                 y = height*.65+(y-height*.65)*.35
-            if 'tail' in part:
-                y += wave*1.7*max(0,1-x/(38 if asset == 'diplodocus' else 25))
-            if 'fluff' in part and clip == 'idle': y += wave*.5
+            if asset not in WATER+AIR and ('tail' in part or obj.get('attachment') == 'tail'):
+                anchor = obj.get('anchor_x',x)
+                weight = min(1,max(0,(tail_root-anchor)/max(1,tail_root-tail_tip)))
+                y += wave*1.1*weight**2
             if clip == 'rest' and asset not in WATER+AIR:
-                # Compress legs toward planted toes, lower torso/neck consistently.
-                weight = min(1,max(0,(height-y)/14)) if part.startswith(('near','far')) and 'horn' not in part else 1
+                # One continuous deformation preserves every joint, including
+                # hand claws, shoulder spikes, feathers and foot sickles.
+                weight = min(1,max(0,(height-y)/(height*.45)))
                 y += crouch*weight
-            elif clip == 'idle' and part.startswith(('trunk','belly')):
-                y -= breath*.7*max(0,(height-y)/height)
+            elif clip == 'idle' and asset not in WATER+AIR:
+                y -= breath*.45*max(0,(height-y)/height)
             points.append((x+8,depth,height-y-rest_shift))
         result[part] = points
     return scene, result

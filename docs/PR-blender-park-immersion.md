@@ -15,6 +15,13 @@ motion. Motion sheets load lazily per appearance; effects and caches are bounded
 The review page exposes all four clips and all 28 animals alongside the canonical
 art comparisons and the original three-animal enclosure demo.
 
+The anatomy pass corrects oversized or detached claws, horns, spikes, feathers
+and tail clubs in twelve canonical models, and rebuilds all animation clips.
+Spikes follow the neck during grazing; tail ornaments follow their shaft;
+idle/rest movement preserves body and accessory joins. Stegosaurus and
+Ankylosaurus carry their tails above the ground. Both export converters reject
+detached native silhouettes, with fixtures for claws, spines and raster tips.
+
 Validation is recorded in HANDOFF.md: unit/simulation tests, production build,
 896 frame/hash/contact checks, full atlas/runtime/gallery browser checks, mobile
 UI tours, offline populated-park resume and Blender source audits/parity renders.
