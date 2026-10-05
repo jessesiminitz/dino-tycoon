@@ -1374,19 +1374,38 @@ body:not(.in-park) #info {
 }
 
 .menu-parade img {
-  position: absolute;
-  bottom: 0;
+  flex: none;
   height: 48px;
   image-rendering: pixelated;
-  animation: parade 37s linear infinite;
+}
+
+.menu-parade-track {
+  display: flex;
+  width: max-content;
+  animation: parade 180s linear infinite;
+}
+
+.menu-parade-group {
+  display: flex;
+  align-items: flex-end;
+  gap: 48px;
+  padding-right: 48px;
+  min-width: 100vw;
+  flex: none;
 }
 
 @keyframes parade {
   from {
-    transform: translateX(-120px);
+    transform: translateX(-50%);
   }
   to {
-    transform: translateX(calc(100vw + 40px));
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-parade-track {
+    animation: none;
   }
 }
 

@@ -48,13 +48,27 @@ export function showMenu(handlers: MenuHandlers): void {
   // A parade of dinosaurs across the bottom of the title screen.
   const parade = root.querySelector<HTMLElement>('.menu-parade')!;
   if (!parade.childElementCount) {
-    SPECIES_IDS.forEach((id, i) => {
+    const track = document.createElement('div');
+    track.className = 'menu-parade-track';
+    const group = document.createElement('div');
+    group.className = 'menu-parade-group';
+    for (const id of SPECIES_IDS) {
+      const canvas = paintDino(SPECIES[id]);
       const img = document.createElement('img');
-      img.src = paintDino(SPECIES[id]).toDataURL();
+      img.src = canvas.toDataURL();
       img.alt = '';
-      img.style.animationDelay = `${-i * 3.1}s`;
-      parade.appendChild(img);
-    });
+      // Reserve the full silhouette, including the newly lengthened tails.
+      img.style.width = `${48 * canvas.width / canvas.height}px`;
+      group.appendChild(img);
+    }
+    // Identical rows make the seam continuous, with the same gap at the join.
+    track.append(group, group.cloneNode(true));
+    parade.appendChild(track);
+    new ResizeObserver(() => {
+      // All species travel together at 30 px/s, independent of screen width.
+      const width = group.getBoundingClientRect().width;
+      if (width > 0) track.style.animationDuration = `${width / 30}s`;
+    }).observe(group);
   }
 
   let slots: Record<SlotId, SaveRecord | null> = { 1: null, 2: null, 3: null };

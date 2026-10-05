@@ -259,7 +259,7 @@ export class EntityLayer {
   update(time: number): void {
     const elapsed = this.lastUpdateTime === undefined ? 0 : Math.max(0, Math.min(250, time - this.lastUpdateTime));
     this.lastUpdateTime = time;
-    if (this.sim.speed !== 0) this.animalTime += elapsed * this.sim.speed;
+    if (this.sim.speed !== 0) this.animalTime += elapsed * this.sim.effectiveSpeed;
     const animalTime = this.animalTime;
     time = animalTime;
     for(const [id,started] of this.meals)if(Number.isNaN(started))this.meals.set(id,animalTime);

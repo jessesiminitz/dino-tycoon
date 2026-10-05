@@ -177,6 +177,10 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
     const minutes = Math.floor((sim.stepProgressInHour * 60) / 15) * 15;
     const time = `${String(hour).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
     clockEl.textContent = hudEl.classList.contains('fit-3') ? `D${day} ${time}` : `Day ${day} · ${time}`;
+    clockEl.title = sim.speed === 0 ? 'Paused' : sim.effectiveSpeed !== sim.speed
+      ? `Night fast-forward · ${sim.effectiveSpeed}× speed until 05:00`
+      : `${sim.speed}× speed`;
+    clockEl.setAttribute('aria-label', `${clockEl.textContent} · ${clockEl.title}`);
     const width = moneyEl.textContent.length + clockEl.textContent.length;
     const left = hudEl.querySelector<HTMLElement>('.hud-group')!;
     // Refit when the text changes length, or if anything (a badge, a font loading) made it overflow.

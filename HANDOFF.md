@@ -1,6 +1,6 @@
 # Dino Tycoon: handoff notes
 
-Everything a fresh session needs to carry on. Last updated 2026-10-05, after the full-roster picture reference and anatomy review.
+Everything a fresh session needs to carry on. Last updated 2026-10-05, after spacing the title parade and accelerating nighttime.
 
 ## Where things stand (read this first)
 
@@ -13,6 +13,8 @@ Everything a fresh session needs to carry on. Last updated 2026-10-05, after the
 - **Longer tails:** Stegosaurus, Spinosaurus, Brachiosaurus and Kentrosaurus now have longer tails rooted at their hips. Their canonical canvases have symmetric extra room, preserving body scale and world-relative foot placement in both directions. Spike groups follow the lengthened shafts; Spinosaurus has a tapered fin and Brachiosaurus carries its tail above ground. Generated model offsets keep transparent room out of the ground-shadow size. Four canonical sources and sixteen animation sources were rebuilt, covering 16 poses and 128 clip frames. See **Tail correction validation** below.
 
 - **Full-roster picture review:** reviewed all 28 animals against additional web skeleton photographs and museum/research reconstructions. Revised 26 canonical silhouettes, corrected Pteranodon's resting wing fold, and retained Triceratops after comparison. Longer tails, clearer plates/armor/feathers, improved skull/beak/claw shapes, neck proportions, sail and tail-fin profiles now feed all four clips. Twenty-four canvases have symmetric extra room; world-relative grounded feet remain within 0.001 pixel of the preceding version. All picture links and per-animal decisions are in [docs/PR-dinosaur-reference-review.md](docs/PR-dinosaur-reference-review.md). See **Reference review validation** below.
+
+- **Parade and nighttime pacing:** the title-screen parade reserves each dinosaur's actual sprite width and leaves a 48 CSS-pixel gap, including at the loop seam. Two matching rows scroll together at 30 px/s; reduced motion stops the parade. Nighttime (21:00–05:00) automatically multiplies the selected speed by three, then restores daytime pacing at dawn. Pause still freezes time and animation. At selected 1×, the night now takes about 27 seconds and a full day about 3 minutes 7 seconds. No simulation steps or hourly care/economy/event processing are skipped, and saves remain v21. Animal, environment and weather animation clocks use the effective speed. The clock tooltip/accessibility label explains nighttime acceleration without expanding the mobile HUD. See **Pacing validation** below. These changes remain local to the graphics branch.
 
 - **Live and working:**
   - four challenges (The Great Escape, Fire Mountain, Flood Season, The Money Pit), in the 🧩 Challenges folder, unlocking in that order
@@ -58,7 +60,13 @@ Planted feet move backward relative to the body while lifted feet swing forward;
 
 **Source and regeneration:** [assets-source/README.md](assets-source/README.md) is the canonical workflow. Blender 4.5.14 LTS models and compressed `.blend` files live under `assets-source/`; generators are in `scripts/art/`. Render through Blender MCP or the documented Blender CLI, then run `npm run art:convert` and `npm run art:check`. PNG/JSON intermediates are ignored and must be regenerated on a fresh checkout. Runtime grids are checked in under `src/render/generated/`; Blender and MCP are not runtime dependencies. Canonical source files total about 6.7 MB; the 112 animation sources add about 12.7 MB. All source scenes are excluded from the shipped build.
 
-**Reference review validation (2026-10-05):**
+**Pacing validation (2026-10-05):**
+
+- All **415 tests** passed (414 regular plus one performance test). Nine additional clock cases cover nighttime multipliers at all selected speeds, pause/resume, within-frame dusk/dawn transitions, background-tab clamping, midnight rollover, complete-day timing and state parity with direct movement/hourly steps.
+- `npm run check:pacing` sweeps the full parade loop and seam at 390×844, 667×375, 844×390, 820×1180 and 7680×1080. All 28 unique species retain at least 48px between image bounds, a matching loop, rightward 30px/s motion and no page overflow. Reduced motion stops the parade. The playable park check verifies synchronized 3× night clocks, pause, dawn and the mobile HUD. The phone capture is ignored at `docs/art-review/parade-spaced-phone.png`.
+- The final production build passed (14 precache entries / 3,885.35 KiB; existing Vite chunk advisory). `art:motion-controls` passed paused-position, meal-cue cleanup and animation settings across four mobile layouts. `art:offline` passed the new parade artwork, production dev-hook stripping, service-worker control and populated v21 save/resume with continuing offline animation. Physical iPhone/iPad review and deployment remain pending.
+
+**Reference review validation (2026-10-05, preceding pass):**
 
 - Regenerated all 28 canonical source sets and all 112 motion timelines; retained the original binaries for the two unchanged canonical models and seven unchanged clips. The final canonical set still has 224 grids; motion still has 896 frames. Both converters pass attachment, face, hashes and ground-contact validation.
 - Blender MCP inspected all 28 final models at unit pixel scale. MCP rerenders reproduced the revised Stegosaurus and Tyrannosaurus canonical hashes, the saved Pteranodon resting frame and the final Iguanodon grazing frame. New cheek meshes follow the skull through neck rotations. A separate saved-source audit verified all 112 timelines have the correct orthographic camera/dimensions and nine animated shape keys per mesh.
@@ -142,7 +150,7 @@ End commit messages with the Co-Authored-By / Claude-Session trailers the harnes
 ## Architecture (see README for the overview)
 
 - `src/sim/`: pure TS game rules, no Phaser. One serializable `GameState` (`GameState.ts`), a fixed-timestep `Simulation` (`Simulation.ts`), and commands via `sim.dispatch(cmd)` → `commands.ts` `applyCommand`. Seeded RNG (`rng.ts`; `hash2` gives stateless variation).
-  - **Time:** `MS_PER_HOUR = 10_000` (a game day is 4 real minutes at 1×). `STEPS_PER_HOUR = 16` (in `systems/dinos.ts`). Speeds are `0 | 1 | 3 | 8`. Per-step odds that were tuned at 4 steps/hour go through `perStep()`; staff `WORK_STEPS` are in 16ths of an hour.
+  - **Time:** `MS_PER_HOUR = 10_000` in daytime; `NIGHT_SPEED_MULTIPLIER = 3` during `isNight` (21:00–05:00). A full day is about 3m 7s at selected 1×. `STEPS_PER_HOUR = 16` (in `systems/dinos.ts`). Selected speeds are `0 | 1 | 3 | 8`; `sim.effectiveSpeed` includes nighttime acceleration and is zero when paused. `advance()` splits elapsed time at movement boundaries so rate changes do not skip steps or charge the whole frame at the wrong rate. Direct `step()` behavior remains unchanged. Per-step odds that were tuned at 4 steps/hour go through `perStep()`; staff `WORK_STEPS` are in 16ths of an hour.
   - Step systems: dinos, escapes, visitors, staff. Hourly: dinos (hunger, happiness, **droppings**), health, fences, events, visitors (needs, thoughts, accidents, litter warnings), fossils, economy, scenario.
   - Regions come from a flood fill over fences (`regions.ts`: public, paddock or wild). `gaps.ts` finds missing or broken fence segments around a tapped tile.
   - `concerns.ts`: live dino and staff concerns, plus `whatVisitorsSay` (complaints with advice).
@@ -246,7 +254,7 @@ Always bump `SAVE_VERSION` and add a step to `migrate()` when the state shape ch
 
 ## Owner preferences and feedback so far
 
-- Pacing: a 4-minute game day at 1×, with 3× and 8× available.
+- Pacing: keep daytime at 10 real seconds per game hour at 1×, with 3× and 8× available. On 2026-10-05 the owner requested faster nights; 21:00–05:00 now receives an automatic additional 3× boost, for a full day of about 3m 7s at selected 1×.
 - Keep the game kid-friendly. Mess and pee/poop jokes are wanted but mild; cleanliness should not dominate.
 - Wants more depth: richer menus, milestones with unlock rewards, visible items, lively visitors.
 - Art should evoke classic DinoPark Tycoon (VGA palette, bevelled UI, 3/4 view), with good dino likeness.
@@ -294,7 +302,7 @@ Scripts that step the sim by hand should use 16 steps per game-hour.
 ## Other ideas not done yet (ask before starting)
 
 - Milestone M8 from the original plan: an App Store build (Capacitor plus a cloud macOS build). It needs an Apple Developer account.
-- Scenario deadlines are counted in game days, so at 4-minute days they take a while in real time (First Steps Bronze is 45 days, 3 h at 1×). Offered to shorten them; no answer yet.
+- Scenario deadlines are counted in game days and can take a while in real time (First Steps Bronze is 45 days, about 2h 20m at selected 1× with the new nighttime boost). Offered to shorten the deadlines themselves; no answer yet.
 - Offered earlier: storms washing away litter; mess made purely cosmetic.
 - Possible: a credits screen listing the music, and a day/night tint.
 

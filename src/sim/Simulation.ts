@@ -3,7 +3,7 @@ import { applyCommand, type Command, type CommandResult } from './commands';
 import { computeRegions, type RegionMap } from './regions';
 import { Rng } from './rng';
 import type { DinoAction, GameEvent, SimContext } from './systems/context';
-import { hourlyDinos, stepDinos, STEPS_PER_HOUR } from './systems/dinos';
+import { hourlyDinos, isNight, stepDinos, STEPS_PER_HOUR } from './systems/dinos';
 import { hourlyBreeding } from './systems/breeding';
 import { hourlyRequests, updateRequests } from './systems/requests';
 import { stepJeeps } from './systems/rides';
@@ -18,9 +18,10 @@ import { hourlyScenario } from './goals';
 import { hourlyEruption } from './systems/eruption';
 import { hourlyFlood } from './systems/flood';
 
-/** Real-time milliseconds per game-hour at 1× speed: a game day takes a minute. */
-/** Real milliseconds per game-hour at 1× speed: a game day lasts four minutes. */
+/** Real milliseconds per daytime game-hour at 1× speed. */
 export const MS_PER_HOUR = 10_000;
+/** Automatically shorten the sleeping hours, 21:00–05:00. */
+export const NIGHT_SPEED_MULTIPLIER = 3;
 /** Real-time milliseconds per movement step at 1× speed. */
 export const MS_PER_STEP = MS_PER_HOUR / STEPS_PER_HOUR;
 
@@ -47,16 +48,30 @@ export class Simulation {
 
   constructor(public state: GameState) {}
 
+  /** Selected speed with the automatic nighttime boost; pause remains zero. */
+  get effectiveSpeed(): number {
+    return this.speed * (isNight(this.state) ? NIGHT_SPEED_MULTIPLIER : 1);
+  }
+
   /** Feed real elapsed time; runs zero or more whole steps. Returns steps run. */
   advance(realMs: number): number {
     if (this.speed === 0) return 0;
     // Clamp so returning from a backgrounded tab doesn't fast-forward days.
-    this.accumulator += Math.min(realMs, 250) * this.speed;
+    let remaining = Math.max(0, Math.min(realMs, 250));
     let steps = 0;
-    while (this.accumulator >= MS_PER_STEP) {
-      this.accumulator -= MS_PER_STEP;
+    while (remaining > 0) {
+      const rate = this.effectiveSpeed;
+      if (rate === 0) break;
+      const untilStep = (MS_PER_STEP - this.accumulator) / rate;
+      if (remaining < untilStep) {
+        this.accumulator += remaining * rate;
+        break;
+      }
+      remaining -= untilStep;
+      this.accumulator = 0;
       this.step();
       steps++;
+      // Recalculate after each step so 21:00 and 05:00 switch rates exactly.
     }
     if (steps > 0) this.emit();
     return steps;

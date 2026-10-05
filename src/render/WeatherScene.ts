@@ -151,7 +151,7 @@ export class WeatherScene extends Phaser.Scene {
     g.fillStyle(0x0b1a2a, 0.3 * this.intensity).fillRect(0, 0, width, height);
 
     // Rain: game speed makes it fall faster too, so fast-forward feels fast.
-    const pace = getSettings().animation ? delta * this.sim.speed : 0;
+    const pace = getSettings().animation ? delta * this.sim.effectiveSpeed : 0;
     g.lineStyle(1, 0xbfd9ee, 0.55 * this.intensity);
     for (const d of this.drops) {
       d.y += d.speed * pace;

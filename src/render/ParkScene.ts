@@ -156,7 +156,7 @@ export class ParkScene extends Phaser.Scene {
       this.layers.drawFences();
     }
     this.entities.update(time);
-    if(this.sim.speed!==0)this.worldTime+=Math.min(250,Math.max(0,delta))*this.sim.speed;
+    if(this.sim.speed!==0)this.worldTime+=Math.min(250,Math.max(0,delta))*this.sim.effectiveSpeed;
     const ambientTime=getSettings().animation?this.worldTime:0;
     this.terrainFx.update(ambientTime);
     this.scenery.update(ambientTime);
