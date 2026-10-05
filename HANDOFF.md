@@ -1,6 +1,6 @@
 # Dino Tycoon: handoff notes
 
-Everything a fresh session needs to carry on. Last updated 2026-10-05, after spacing the title parade and accelerating nighttime.
+Everything a fresh session needs to carry on. Last updated 2026-10-05, after easier fossil unlocks, longer brushing and fence drawing-order corrections.
 
 ## Where things stand (read this first)
 
@@ -15,6 +15,8 @@ Everything a fresh session needs to carry on. Last updated 2026-10-05, after spa
 - **Full-roster picture review:** reviewed all 28 animals against additional web skeleton photographs and museum/research reconstructions. Revised 26 canonical silhouettes, corrected Pteranodon's resting wing fold, and retained Triceratops after comparison. Longer tails, clearer plates/armor/feathers, improved skull/beak/claw shapes, neck proportions, sail and tail-fin profiles now feed all four clips. Twenty-four canvases have symmetric extra room; world-relative grounded feet remain within 0.001 pixel of the preceding version. All picture links and per-animal decisions are in [docs/PR-dinosaur-reference-review.md](docs/PR-dinosaur-reference-review.md). See **Reference review validation** below.
 
 - **Parade and nighttime pacing:** the title-screen parade reserves each dinosaur's actual sprite width and leaves a 48 CSS-pixel gap, including at the loop seam. Two matching rows scroll together at 30 px/s; reduced motion stops the parade. Nighttime (21:00–05:00) automatically multiplies the selected speed by three, then restores daytime pacing at dawn. Pause still freezes time and animation. At selected 1×, the night now takes about 27 seconds and a full day about 3 minutes 7 seconds. No simulation steps or hourly care/economy/event processing are skipped, and saves remain v21. Animal, environment and weather animation clocks use the effective speed. The clock tooltip/accessibility label explains nighttime acceleration without expanding the mobile HUD. See **Pacing validation** below. These changes remain local to the graphics branch.
+
+- **Fossils and fence visibility:** all 22 fossil-locked species now need **two bones**; the six starters remain available without digging. Loaded parks and `Simulation` honor previously earned counts of two or more without resetting bones, duplicating unlocks or changing save schema v21. Fossil brushing now auto-completes at **95%** of the fossil rather than 70%; large silhouettes are fitted into the pit instead of clipping. Objects and people share a logical ground anchor, end-on fences sort at their midpoint, and dinosaurs get priority over nearby live fence faces intersecting their silhouettes. Carried balloons/snacks, staff tools and jeep passengers sort with their owners instead of floating in front of every wall. Source artwork is unchanged. See **Fossil and depth validation** below. These changes remain local pending physical device review and deployment.
 
 - **Live and working:**
   - four challenges (The Great Escape, Fire Mountain, Flood Season, The Money Pit), in the 🧩 Challenges folder, unlocking in that order
@@ -60,7 +62,16 @@ Planted feet move backward relative to the body while lifted feet swing forward;
 
 **Source and regeneration:** [assets-source/README.md](assets-source/README.md) is the canonical workflow. Blender 4.5.14 LTS models and compressed `.blend` files live under `assets-source/`; generators are in `scripts/art/`. Render through Blender MCP or the documented Blender CLI, then run `npm run art:convert` and `npm run art:check`. PNG/JSON intermediates are ignored and must be regenerated on a fresh checkout. Runtime grids are checked in under `src/render/generated/`; Blender and MCP are not runtime dependencies. Canonical source files total about 6.7 MB; the 112 animation sources add about 12.7 MB. All source scenes are excluded from the shipped build.
 
-**Pacing validation (2026-10-05):**
+**Fossil and depth validation (2026-10-05):**
+
+- All **446 tests** passed (445 regular plus one performance test). The initial default run hit five existing 5-second timing limits (scenario generation, challenge setup/balance, long event simulation and music decoding); the complete rerun with `--testTimeout=30000` passed all assertions without changing timeout configuration. All five initially timed-out cases then passed at their original default limit in a 2.41-second targeted run. The separate strict performance check measured **0.454 ms average / 2.59 ms p99** per movement step in the 30-dinosaur / 150-visitor park.
+- The production build passed with 14 precache entries / **3,887.19 KiB**, under the PWA limit; the existing Vite chunk advisory remains. No Blender sources, generated grids or animation frames changed.
+- New simulation cases verify a first bone keeps each of the 22 non-starter species locked and a second bone unlocks it exactly once. Older v21 saves retain bone counts, unlock completed species immediately, preserve one-bone progress and round-trip without duplicates. A pending collector offer in an old save keeps the completed unlock and displays accurate text.
+- Seven depth regressions cover consistent people/object anchors, end-on fence ordering, local dinosaur preference, broken/distant fences, lifted flyers/babies, crossing side walls and off-map silhouettes.
+- `check:fossil-depth` verifies all 28 fossil silhouettes fit the canvas and skipping preserves credited progress. At 667×375, 844×390 and 820×1180, about 80% uncovered still allows brushing and completion happens near 95%; pause and the selected speed are restored correctly. Runtime checks cover **672** species/baby/direction/fence-type combinations, owner/prop depth parity and graphics cleanup. Comparison captures are ignored at `docs/art-review/fence-depth-before.png`, `fence-depth-after.png` and `fossil-more-brushing.png`.
+- Final `art:integration` passed catalog/guide/fossil/palette parity, all 28 species' eight walking phases in both directions, pause and adult/baby shadows, plus phone/tablet catalogs and the expansion gallery. `art:motion-controls` passed four mobile settings layouts, paused positions and meal-cue cleanup. `art:offline` passed production startup, service-worker control, all 28 parade images and populated v21 save/resume with continuing animation. Physical device review and deployment remain pending.
+
+**Pacing validation (2026-10-05, preceding pass):**
 
 - All **415 tests** passed (414 regular plus one performance test). Nine additional clock cases cover nighttime multipliers at all selected speeds, pause/resume, within-frame dusk/dawn transitions, background-tab clamping, midnight rollover, complete-day timing and state parity with direct movement/hourly steps.
 - `npm run check:pacing` sweeps the full parade loop and seam at 390×844, 667×375, 844×390, 820×1180 and 7680×1080. All 28 unique species retain at least 48px between image bounds, a matching loop, rightward 30px/s motion and no page overflow. Reduced motion stops the parade. The playable park check verifies synchronized 3× night clocks, pause, dawn and the mobile HUD. The phone capture is ignored at `docs/art-review/parade-spaced-phone.png`.
@@ -209,7 +220,8 @@ Always bump `SAVE_VERSION` and add a step to `migrate()` when the state shape ch
 - **Fossil dig mini-game** (`ui/dig.ts`):
   - Dig-site find events carry `fossil: { species, bone, have, needed, unlocked }`. They're credited at once as before; the mini-game is presentation only.
   - Finds queue behind a pulsing "🦴 Dig!" button (top right).
-  - The pit is a 128×96 pixel canvas: the species' shape rendered as bone in dirt, under dithered sand. A finger brush clears the sand, and 70% uncovered triggers the reveal with sparkles and a caption.
+  - All fossil-locked species need two bones. Saves with existing counts of at least two honor the unlock immediately; partial progress stays intact.
+  - The pit is a 128×96 pixel canvas: the species' full silhouette fitted into the pit as bone in dirt, under dithered sand. A finger brush clears the sand, and 95% of the fossil uncovered triggers the reveal with sparkles and a caption.
   - The game pauses while digging, and there's a Skip button. The Settings switch "Fossil dig mini-game" (`digGame`) turns it off.
 - **Lagoons and aviaries** (roadmap #6; no save change):
   - 16 species. Four have `habitat`: Plesiosaurus and Mosasaurus live in water; Pteranodon and Dimorphodon fly. All four eat fish (diet `piscivore`).
@@ -255,6 +267,8 @@ Always bump `SAVE_VERSION` and add a step to `migrate()` when the state shape ch
 ## Owner preferences and feedback so far
 
 - Pacing: keep daytime at 10 real seconds per game hour at 1×, with 3× and 8× available. On 2026-10-05 the owner requested faster nights; 21:00–05:00 now receives an automatic additional 3× boost, for a full day of about 3m 7s at selected 1×.
+- Fossils: the owner requested two bones per unlockable dinosaur and more time brushing. Use the shared two-bone target and 95% uncovering threshold; honor existing earned bones when loading parks.
+- Fence visibility: people and their carried objects should agree about walls. Favor dinosaur silhouettes against nearby fences so heads and feet stay readable; preserve ordinary depth ordering for distant scenery.
 - Keep the game kid-friendly. Mess and pee/poop jokes are wanted but mild; cleanliness should not dominate.
 - Wants more depth: richer menus, milestones with unlock rewards, visible items, lively visitors.
 - Art should evoke classic DinoPark Tycoon (VGA palette, bevelled UI, 3/4 view), with good dino likeness.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { newGame, type GameState } from '../src/sim/GameState';
+import { migrate, newGame, type GameState } from '../src/sim/GameState';
 import { applyCommand } from '../src/sim/commands';
 import { pathEdges, type Edge } from '../src/sim/grid';
 import { parcelGrid } from '../src/sim/land';
@@ -112,7 +112,7 @@ describe('decisions', () => {
 
   it('selling fossils to the collector resets them', () => {
     const s = openPark();
-    s.fossils = { allosaurus: 3 };
+    s.fossils = { allosaurus: 1 };
     const c = present(s, 'collector');
     const money = s.money;
     answerChoice(s, 0);
@@ -122,15 +122,28 @@ describe('decisions', () => {
 
   it('left unanswered, the cautious choice is taken, and a new one may come later', () => {
     const s = openPark();
-    s.fossils = { allosaurus: 3 };
+    s.fossils = { allosaurus: 1 };
     present(s, 'collector');
     const events: string[] = [];
     const ctx = ctxFor(s, events);
     s.hours += CHOICE_HOURS;
     hourlyChoices(ctx);
     expect(s.pendingChoice).toBeNull();
-    expect(s.fossils.allosaurus).toBe(3); // kept, not sold
+    expect(s.fossils.allosaurus).toBe(1); // kept, not sold
     expect(events.some((t) => t.startsWith('⌛ No answer in time'))).toBe(true);
+  });
+
+  it('an old pending collector offer preserves the newly completed unlock', () => {
+    const s = openPark();
+    s.fossils = { allosaurus: 3 };
+    present(s, 'collector');
+    const restored = migrate(JSON.parse(JSON.stringify(s)))!;
+    expect(restored.unlockedSpecies).toContain('allosaurus');
+    const offer = choiceEvent('collector')!;
+    expect(offer.text(restored, restored.pendingChoice!)).toMatch(/stay available/);
+    expect(answerChoice(restored, 1)).toMatch(/available in the Dinos catalog/);
+    expect(restored.fossils.allosaurus).toBe(3);
+    expect(restored.unlockedSpecies.filter(id => id === 'allosaurus')).toHaveLength(1);
   });
 
   it('about one decision a day comes up while the park is open', () => {

@@ -13,8 +13,7 @@ await sleep(1200);
 // Fake a find the way the dig site reports one.
 await page.evaluate(() => {
   const { sim } = window.__dino; sim.setSpeed(1);
-  sim.state.fossils.triceratops = 0;
-  sim.emitEvent?.({ text: '🦴 Fossil find: a Triceratops thigh bone (3/5)', kind: 'good', fossil: { species: 'triceratops', bone: 'thigh bone', have: 3, needed: 5, unlocked: false } });
+  sim.emitEvent?.({ text: '🦴 Fossil find: a Pachycephalosaurus thigh bone (1/2)', kind: 'good', fossil: { species: 'pachycephalosaurus', bone: 'thigh bone', have: 1, needed: 2, unlocked: false } });
 });
 await sleep(300);
 const btn = await page.evaluate(() => { const b = document.getElementById('dig-btn'); const r = b.getBoundingClientRect(); return { hidden: b.classList.contains('hidden'), rect: [Math.round(r.left), Math.round(r.top), Math.round(r.width)] }; });

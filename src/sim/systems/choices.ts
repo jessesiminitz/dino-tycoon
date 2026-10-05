@@ -157,7 +157,10 @@ export const CHOICE_EVENTS: ChoiceEvent[] = [
     title: 'A fossil collector',
     text: (s, c) => {
       const n = s.fossils[c.species!] ?? 0;
-      return `A private collector offers ${usd(c.amount ?? 0)} for your ${n} ${SPECIES[c.species!].name} fossil piece${n === 1 ? '' : 's'}. Sell them, and you'll have to dig them up all over again to unlock the species.`;
+      const consequence = s.unlockedSpecies.includes(c.species!)
+        ? 'This species is already unlocked and will stay available.'
+        : "Sell them, and you'll have to dig them up all over again to unlock the species.";
+      return `A private collector offers ${usd(c.amount ?? 0)} for your ${n} ${SPECIES[c.species!].name} fossil piece${n === 1 ? '' : 's'}. ${consequence}`;
     },
     setup: (s, rng) => {
       const species = pick(rng, lockedSpecies(s).filter((id) => (s.fossils[id] ?? 0) > 0));
@@ -172,7 +175,14 @@ export const CHOICE_EVENTS: ChoiceEvent[] = [
           return `🦴 You sold the ${SPECIES[c.species!].name} fossils for ${usd(c.amount ?? 0)}.`;
         },
       },
-      { label: 'Keep digging', apply: (s, c) => `🦴 You kept the ${SPECIES[c.species!].name} fossils. Only ${SPECIES[c.species!].fossilsNeeded - (s.fossils[c.species!] ?? 0)} more to go!` },
+      { label: 'Keep digging', apply: (s, c) => {
+        const sp = SPECIES[c.species!];
+        const remaining = Math.max(0, sp.fossilsNeeded - (s.fossils[sp.id] ?? 0));
+        const progress = s.unlockedSpecies.includes(sp.id)
+          ? `${sp.name} is available in the Dinos catalog.`
+          : `Only ${remaining} more to go!`;
+        return `🦴 You kept the ${sp.name} fossils. ${progress}`;
+      } },
     ],
   },
   {

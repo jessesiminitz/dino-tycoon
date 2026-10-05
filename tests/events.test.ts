@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { newGame, type GameState } from '../src/sim/GameState';
+import { migrate, newGame, type GameState } from '../src/sim/GameState';
 import { applyCommand } from '../src/sim/commands';
 import { MUSEUM_PRICE } from '../src/sim/data/economy';
 import { SPECIES, SPECIES_IDS, STARTER_SPECIES, habitatOf } from '../src/sim/data/species';
@@ -84,7 +84,7 @@ describe('species data for the Dino Guide', () => {
       expect(sp.discovered).toMatch(/\d{4}/);
       if (sp.starter) expect(sp.fossilsNeeded).toBe(0);
       else {
-        expect(sp.fossilsNeeded).toBeGreaterThanOrEqual(3);
+        expect(sp.fossilsNeeded).toBe(2);
         expect(sp.fossilWeight).toBeGreaterThan(0);
       }
     }
@@ -97,6 +97,38 @@ describe('species data for the Dino Guide', () => {
 });
 
 describe('fossil digs', () => {
+  it.each(SPECIES_IDS.filter(id => !SPECIES[id].starter))('unlocks %s on its second bone', (species) => {
+    const s = park();
+    s.unlockedSpecies = SPECIES_IDS.filter(id => id !== species);
+    applyCommand(s, { type: 'placeBuilding', kind: 'digsite', x: 16, y: 3 });
+    const c = ctxFor(s);
+    c.rng.chance = () => true;
+    atMidnight(s);
+    hourlyFossils(c);
+    expect(s.fossils[species]).toBe(1);
+    expect(s.unlockedSpecies).not.toContain(species);
+    expect(c.events.at(-1)?.fossil).toMatchObject({ species, have: 1, needed: 2, unlocked: false });
+    hourlyFossils(c);
+    expect(s.fossils[species]).toBe(2);
+    expect(s.unlockedSpecies).toContain(species);
+    expect(c.events.at(-1)?.fossil).toMatchObject({ species, have: 2, needed: 2, unlocked: true });
+    hourlyFossils(c);
+    expect(s.unlockedSpecies.filter(id => id === species)).toHaveLength(1);
+    expect(s.fossils[species]).toBe(2);
+  });
+
+  it('honors existing save progress without requiring another find or resetting bones', () => {
+    const s = newGame(1);
+    s.fossils = { tyrannosaurus: 2, argentinosaurus: 8, velociraptor: 1 };
+    const restored = migrate(JSON.parse(JSON.stringify(s)))!;
+    expect(restored.unlockedSpecies).toEqual([...STARTER_SPECIES, 'tyrannosaurus', 'argentinosaurus']);
+    expect(restored.fossils).toEqual(s.fossils);
+    expect(restored.version).toBe(21);
+    expect(migrate(JSON.parse(JSON.stringify(restored)))?.unlockedSpecies).toEqual(restored.unlockedSpecies);
+    const inMemory = new Simulation(s);
+    expect(inMemory.state.unlockedSpecies).toEqual(restored.unlockedSpecies);
+  });
+
   it('dig sites need no path, but must be on a fossil bed', () => {
     const s = park();
     expect(applyCommand(s, { type: 'placeBuilding', kind: 'digsite', x: 16, y: 3 }).ok).toBe(true);

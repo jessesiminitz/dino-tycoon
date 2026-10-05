@@ -20,6 +20,7 @@ import { BLENDER_ART } from './generated/blenderArt';
 import { advanceMotion, motionTexture, type AnimalMotion } from './parkMotion';
 import { getSettings } from '../ui/settings';
 import { isWater, Terrain } from '../sim/terrain';
+import { depthAt, tileDepth, dinoDepth, FOOT_Y, DEPTH_EPSILON } from './worldDepth';
 
 const dinoKey = (id: SpeciesId, frame = 0, baby = false) => `dino-${id}-${frame}${baby ? '-baby' : ''}`;
 const eggKey = (id: SpeciesId) => `egg-${id}`;
@@ -33,9 +34,6 @@ const ZZZ = ['XXX', '..X', '.X.', 'XXX'];
 /** How long hearts or a "Nope!" stay up, in ms. */
 const EFFECT_MS = 1100;
 const HEART = ['.X.X.', 'XXXXX', '.XXX.', '..X..'];
-/** Sprites stand with their feet this far down the tile. */
-const FOOT_Y = 13;
-
 export type Selection = { kind: 'dino' | 'feeder' | 'building' | 'visitor' | 'staff' | 'egg'; id: number } | null;
 
 const staffKey = (role: StaffRole, frame: 0 | 1 = 0) => `staff-${role}-${frame}`;
@@ -128,6 +126,8 @@ export class EntityLayer {
   private meals = new Map<number, number>();
   private footfalls: {x:number;y:number;born:number;wet:boolean}[] = [];
   private tracks: Phaser.GameObjects.Graphics;
+  /** Carried objects and tools sort with their owners, below any intervening wall. */
+  private attachments = new Map<string, Phaser.GameObjects.Graphics>();
   selection: Selection = null;
 
   constructor(
@@ -265,6 +265,16 @@ export class EntityLayer {
     for(const [id,started] of this.meals)if(Number.isNaN(started))this.meals.set(id,animalTime);
     const { state } = this.sim;
     const g = this.markers.clear();
+    const liveAttachments = new Set<string>();
+    const propsFor = (key: string, depth: number) => {
+      liveAttachments.add(key);
+      let props = this.attachments.get(key);
+      if (!props) {
+        props = this.scene.add.graphics();
+        this.attachments.set(key, props);
+      }
+      return props.clear().setDepth(depth + DEPTH_EPSILON / 2);
+    };
     const sh = this.shadows.clear();
     sh.fillStyle(0x000000, 0.22);
     this.drawDirt(time);
@@ -278,7 +288,7 @@ export class EntityLayer {
       let img = this.feeders.get(f.id);
       if (!img) {
         const base = (f.y + 1) * TILE;
-        img = this.scene.add.image(f.x * TILE + TILE / 2, base, feederKey(f.kind, true)).setOrigin(0.5, 1).setDepth(4 + base / 10000);
+        img = this.scene.add.image(f.x * TILE + TILE / 2, base, feederKey(f.kind, true)).setOrigin(0.5, 1).setDepth(tileDepth(f.y));
         this.feeders.set(f.id, img);
       }
       img.setTexture(feederKey(f.kind, f.stock > 0));
@@ -299,7 +309,7 @@ export class EntityLayer {
 
     // Buildings
     this.sync(this.buildings, state.buildings, (b) =>
-      this.scene.add.image(b.x * TILE + TILE / 2, (b.y + 1) * TILE, buildingKey(b.kind)).setOrigin(0.5, 1).setDepth(4 + ((b.y + 1) * TILE) / 10000),
+      this.scene.add.image(b.x * TILE + TILE / 2, (b.y + 1) * TILE, buildingKey(b.kind)).setOrigin(0.5, 1).setDepth(tileDepth(b.y)),
     );
     const selB = this.selection?.kind === 'building' ? state.buildings.find((b) => b.id === this.selection!.id) : undefined;
     if (selB) g.lineStyle(1, 0xf2c14e, 1).strokeRect(selB.x * TILE - 0.5, selB.y * TILE - 0.5, TILE + 1, TILE + 1);
@@ -313,15 +323,16 @@ export class EntityLayer {
       const y = (j.py + (j.y - j.py) * t) * TILE + FOOT_Y + 1;
       if (j.x !== j.px) img.setFlipX(j.x < j.px);
       const bump = j.steps > 0 && Math.floor(time / 160 + j.id) % 2 === 0 ? -1 : 0;
-      img.setPosition(Math.round(x), Math.round(y) + bump).setDepth(4 + y / 10000);
+      img.setPosition(Math.round(x), Math.round(y) + bump).setDepth(depthAt(y));
       sh.fillEllipse(Math.round(x), Math.round(y) - 1, 18, 4);
+      const riders = j.riders.length ? propsFor(`jeep:${j.id}`, img.depth) : null;
       j.riders.forEach((r, i) => {
         const v = state.visitors.find((q) => q.id === r.id);
         const hx = Math.round(x) + Math.round((i - 1.5) * 3) - (img.flipX ? -2 : 2); // seats behind the windscreen
         const hy = Math.round(y) + bump - img.height + 1;
-        g.fillStyle(0x1b1b14, 1).fillRect(hx - 2, hy - 1, 4, 5);
-        g.fillStyle(parseInt(SKIN[(v?.look ?? i) % SKIN.length].slice(1), 16), 1).fillRect(hx - 1, hy, 2, 2);
-        g.fillStyle(parseInt(SHIRTS[(v?.look ?? i) % SHIRTS.length].slice(1), 16), 1).fillRect(hx - 1, hy + 2, 2, 2);
+        riders!.fillStyle(0x1b1b14, 1).fillRect(hx - 2, hy - 1, 4, 5);
+        riders!.fillStyle(parseInt(SKIN[(v?.look ?? i) % SKIN.length].slice(1), 16), 1).fillRect(hx - 1, hy, 2, 2);
+        riders!.fillStyle(parseInt(SHIRTS[(v?.look ?? i) % SHIRTS.length].slice(1), 16), 1).fillRect(hx - 1, hy + 2, 2, 2);
       });
     }
 
@@ -339,8 +350,8 @@ export class EntityLayer {
       const vy = Math.round(y) + (moving && !stride ? -1 : 0);
       img.setPosition(vx, vy);
       sh.fillEllipse(vx, Math.round(y) - 1, 7, 3);
-      this.drawCarried(g, v, vx, vy, img.height);
-      img.setDepth(4 + y / 10000);
+      img.setDepth(depthAt(y));
+      if (v.items.length || v.snack || v.sodaUntil > 0) this.drawCarried(propsFor(`visitor:${v.id}`, img.depth), v, vx, vy, img.height);
       if (this.selection?.kind === 'visitor' && this.selection.id === v.id) {
         g.lineStyle(1, 0xf2c14e, 1).strokeEllipse(Math.round(x), Math.round(y), 9, 4);
       }
@@ -356,18 +367,19 @@ export class EntityLayer {
       const walking = Math.abs(m.x - m.px) + Math.abs(m.y - m.py) > 0.01;
       img.setTexture(staffKey(m.role, walking && Math.floor(time / 150) % 2 === 1 ? 1 : 0));
       img.setPosition(Math.round(x), Math.round(y) + (working && Math.floor(time / 180) % 2 === 0 ? -1 : 0));
-      img.setDepth(4 + y / 10000);
+      img.setDepth(depthAt(y));
       sh.fillEllipse(Math.round(x), Math.round(y) - 1, 8, 3);
+      const tools = m.role === 'janitor' || working ? propsFor(`staff:${m.id}`, img.depth) : null;
       if (m.role === 'janitor') {
         // Broom: handle up past the shoulder, bristles at the feet (they sweep while working).
         const bx = Math.round(x) + 4 + (working && Math.floor(time / 160) % 2 === 0 ? 1 : 0);
         const by = Math.round(y);
-        g.lineStyle(1, 0x8a5a2a, 1).lineBetween(bx - 1, by - 10, bx, by - 2);
-        g.fillStyle(0xd9b060, 1).fillRect(bx - 1, by - 2, 3, 2);
+        tools!.lineStyle(1, 0x8a5a2a, 1).lineBetween(bx - 1, by - 10, bx, by - 2);
+        tools!.fillStyle(0xd9b060, 1).fillRect(bx - 1, by - 2, 3, 2);
       }
       if (working) {
         // Busy sparks above the head.
-        g.fillStyle(0xf2c14e, 1).fillRect(Math.round(x) + (Math.floor(time / 240) % 2 === 0 ? -3 : 2), Math.round(y) - 14, 1, 1);
+        tools!.fillStyle(0xf2c14e, 1).fillRect(Math.round(x) + (Math.floor(time / 240) % 2 === 0 ? -3 : 2), Math.round(y) - 14, 1, 1);
       }
       if (this.selection?.kind === 'staff' && this.selection.id === m.id) {
         g.lineStyle(1, 0xf2c14e, 1).strokeEllipse(Math.round(x), Math.round(y), 9, 4);
@@ -382,7 +394,7 @@ export class EntityLayer {
       const x = e.x * TILE + TILE / 2;
       const y = e.y * TILE + FOOT_Y;
       const wobbling = hoursToHatch(state, e.laidHour) <= WOBBLE_HOURS && Math.floor(time / 400 + e.id) % 3 === 0;
-      img.setPosition(x, y).setAngle(wobbling ? Math.sin(time / 60) * 12 : 0).setDepth(4 + y / 10000);
+      img.setPosition(x, y).setAngle(wobbling ? Math.sin(time / 60) * 12 : 0).setDepth(depthAt(y));
       sh.fillEllipse(x, y - 1, 9, 3);
       if (this.selection?.kind === 'egg' && this.selection.id === e.id) g.lineStyle(1, 0xf2c14e, 1).strokeEllipse(x, y, 13, 5);
     }
@@ -466,7 +478,10 @@ export class EntityLayer {
         sh.fillEllipse(Math.round(x), Math.round(y) - 1, img.width * 0.7, Math.max(4, img.height * 0.14));
       }
       img.setFlipX(this.facingLeft.get(d.id) ?? false);
-      img.setDepth(4 + y / 10000);
+      const bounds = img.getBounds();
+      // Swimmers' cropped-away pixels cannot overlap a fence above the waterline.
+      if (habitat === 'water') bounds.bottom = Math.min(bounds.bottom, y - 2);
+      img.setDepth(dinoDepth(state, y, bounds));
 
       const top = ART_STYLE==='blender' ? Math.round(img.y)-img.height+Math.round(8*(d.baby?.6:1))-3 : Math.round(y)-img.height-3;
       const cx = Math.round(x);
@@ -512,6 +527,12 @@ export class EntityLayer {
     // A newly spawned animal can eat and disappear between rendered frames.
     for (const [id, started] of this.meals) {
       if (!liveDinos.has(id) || animalTime - started >= 600) this.meals.delete(id);
+    }
+    for (const [key, props] of this.attachments) {
+      if (!liveAttachments.has(key)) {
+        props.destroy();
+        this.attachments.delete(key);
+      }
     }
   }
 

@@ -15,7 +15,7 @@ const W = 128;
 const H = 96;
 const BRUSH = 5;
 /** Share of the fossil to uncover before it's identified. */
-const REVEAL = 0.7;
+const REVEAL = 0.95;
 
 const DIRT = ['#6b4e2e', '#5e4428', '#76583a', '#634829'];
 const SAND = ['#e3c98f', '#d9bd82', '#ecd7a3', '#cfb178', '#e8cf97'];
@@ -33,7 +33,8 @@ function paintFossil(ctx: CanvasRenderingContext2D, find: Find): boolean[] {
   const shape = dinoShape(SPECIES[find.species]);
   const sh = shape.length;
   const sw = shape[0].length;
-  const scale = Math.max(1, Math.floor(Math.min((W - 16) / sw, (H - 14) / sh)));
+  const fit = Math.min((W - 16) / sw, (H - 14) / sh);
+  const scale = fit < 1 ? fit : Math.floor(fit);
   const ox = Math.floor((W - sw * scale) / 2);
   const oy = Math.floor((H - sh * scale) / 2);
   const at = (x: number, y: number) => {

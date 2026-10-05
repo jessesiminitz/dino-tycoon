@@ -18,6 +18,7 @@ import { swayTexture } from './plantMotion';
 import { getSettings } from '../ui/settings';
 import { calendar } from '../sim/GameState';
 import { lightAt } from './daylight';
+import { depthAt, tileDepth, FOOT_Y } from './worldDepth';
 
 const TREE_VARIANTS = 3;
 /** Beach tiles that get a palm (away from the gate). */
@@ -35,9 +36,6 @@ const SMOKE_PUFFS = 14;
 
 const treeKey = (kind: number, v: number) => `tree-${kind}-${v}`;
 const decorKey = (kind: DecorKind) => `decor-${kind}`;
-
-/** Depth for something standing with its base at world y (matches dinos and people). */
-const depthAt = (y: number) => 4 + y / 10000;
 
 /**
  * Everything tall that stands on the island: forest trees and beach palms
@@ -94,13 +92,13 @@ export class SceneryLayer {
           const img = scene.add
             .image(x * TILE + TILE / 2 + jitter, base, treeKey(kind, Math.floor(hash2(x, y, 5) * TREE_VARIANTS)))
             .setOrigin(0.5, 1)
-            .setDepth(depthAt(base));
+            .setDepth(tileDepth(y));
           this.trees.set(i, img);
         } else if (t === Terrain.Sand && h < PALM_CHANCE && Math.max(Math.abs(x - gate.x), Math.abs(y - gate.y)) > 2) {
           const img = scene.add
             .image(x * TILE + TILE / 2 + jitter, base, `palm-${Math.floor(hash2(x, y, 6) * TREE_VARIANTS)}`)
             .setOrigin(0.5, 1)
-            .setDepth(depthAt(base));
+            .setDepth(tileDepth(y));
           this.trees.set(i, img);
         } else if (t === Terrain.Grass && h < LONE_TREE_CHANCE + BUSH_CHANCE) {
           // Open grassland gets the odd lone tree or bush.
@@ -108,13 +106,13 @@ export class SceneryLayer {
           const img = scene.add
             .image(x * TILE + TILE / 2 + jitter, base, key)
             .setOrigin(0.5, 1)
-            .setDepth(depthAt(base));
+            .setDepth(tileDepth(y));
           this.trees.set(i, img);
         } else if (t === Terrain.Marsh && h < REED_CHANCE) {
           const img = scene.add
             .image(x * TILE + TILE / 2 + jitter, base - 2, `reeds-${Math.floor(hash2(x, y, 10) * 3)}`)
             .setOrigin(0.5, 1)
-            .setDepth(depthAt(base));
+            .setDepth(tileDepth(y));
           this.trees.set(i, img);
         } else if (t === Terrain.Mountain) {
           const v = map.volcano;
@@ -123,7 +121,7 @@ export class SceneryLayer {
             scene.add
               .image(x * TILE + TILE / 2 + jitter, base + 6, `mountain-${Math.floor(h * 6)}`)
               .setOrigin(0.5, 1)
-              .setDepth(depthAt(base));
+              .setDepth(tileDepth(y));
           }
         }
       }
@@ -134,8 +132,9 @@ export class SceneryLayer {
     const v = map.volcano;
     if (v) {
       this.volcanoBase = (v.y + 2) * TILE + 4;
-      scene.add.image(v.x * TILE + TILE / 2, this.volcanoBase, 'volcano').setOrigin(0.5, 1).setDepth(depthAt(this.volcanoBase));
-      this.volcanoGlow.setDepth(depthAt(this.volcanoBase) + 0.00001);
+      const volcanoDepth = depthAt(this.volcanoBase - (TILE - FOOT_Y));
+      scene.add.image(v.x * TILE + TILE / 2, this.volcanoBase, 'volcano').setOrigin(0.5, 1).setDepth(volcanoDepth);
+      this.volcanoGlow.setDepth(volcanoDepth + 0.00001);
     }
     this.refresh();
   }
@@ -162,7 +161,7 @@ export class SceneryLayer {
       const img = this.scene.add
         .image(d.x * TILE + TILE / 2, base, decorKey(d.kind))
         .setOrigin(0.5, 1)
-        .setDepth(depthAt(base));
+        .setDepth(tileDepth(d.y));
       this.decor.set(d.id, img);
     }
     for (const [id, img] of this.decor) {

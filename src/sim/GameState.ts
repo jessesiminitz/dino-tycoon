@@ -486,9 +486,21 @@ export function startScenario(id: ScenarioId, randomSeed: number, island: Island
 export function migrate(raw: { version?: number } & Record<string, unknown>): GameState | null {
   try {
     const state = upgrade(raw);
-    return state && !stateProblem(state) ? state : null;
+    if (!state || stateProblem(state)) return null;
+    unlockCompletedFossils(state);
+    return state;
   } catch {
     return null;
+  }
+}
+
+/** Honor already-earned bones when a saved park uses the easier unlock target. */
+export function unlockCompletedFossils(state: GameState): void {
+  for (const sp of Object.values(SPECIES)) {
+    const have = state.fossils[sp.id] ?? 0;
+    if (sp.fossilsNeeded > 0 && Number.isFinite(have) && have >= sp.fossilsNeeded && !state.unlockedSpecies.includes(sp.id)) {
+      state.unlockedSpecies.push(sp.id);
+    }
   }
 }
 

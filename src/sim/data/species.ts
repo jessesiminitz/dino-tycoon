@@ -88,6 +88,8 @@ export interface Species {
   art: { template: BodyTemplate; body: string; dark: string; accent: string; pattern?: 'stripes' | 'spots' };
 }
 
+export const FOSSILS_TO_UNLOCK = 2;
+
 export const SPECIES: Record<SpeciesId, Species> = {
   protoceratops: {
     id: 'protoceratops', name: 'Protoceratops', diet: 'herbivore', price: 3000, size: 2,
@@ -191,7 +193,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
       'Knobs and short spikes ringed the back of its dome.',
       'Its name means “thick-headed lizard”.',
     ],
-    fossilsNeeded: 3, fossilWeight: 30,
+    fossilsNeeded: FOSSILS_TO_UNLOCK, fossilWeight: 30,
     art: { template: 'dome', body: '#a07f5a', dark: '#6b5238', accent: '#e8d8b0' },
   },
   ankylosaurus: {
@@ -206,7 +208,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
       'The tail club was made of fused bony plates and could swing with bone-breaking force.',
       'It was one of the last and largest of the armoured dinosaurs.',
     ],
-    fossilsNeeded: 4, fossilWeight: 25,
+    fossilsNeeded: FOSSILS_TO_UNLOCK, fossilWeight: 25,
     art: { template: 'ankylo', body: '#7a6f5a', dark: '#4a4336', accent: '#b0a17a' },
   },
   velociraptor: {
@@ -221,7 +223,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
       'Its name means “swift seizer”.',
       'The raptors in the movies were modelled on a larger relative, Deinonychus.',
     ],
-    fossilsNeeded: 5, fossilWeight: 18,
+    fossilsNeeded: FOSSILS_TO_UNLOCK, fossilWeight: 18,
     art: { template: 'raptor', body: '#8c6a4a', dark: '#5a4028', accent: '#3f7fb0', pattern: 'stripes' },
   },
   allosaurus: {
@@ -236,7 +238,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
       'A skeleton nicknamed “Big Al” shows many healed injuries and infections.',
       'It is one of the most common large predators in the rocks of the Late Jurassic.',
     ],
-    fossilsNeeded: 6, fossilWeight: 12,
+    fossilsNeeded: FOSSILS_TO_UNLOCK, fossilWeight: 12,
     art: { template: 'theropod', body: '#a8703f', dark: '#6b4424', accent: '#d9b060', pattern: 'stripes' },
   },
   brachiosaurus: {
@@ -251,7 +253,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
       'A similar giant from Tanzania, now called Giraffatitan, was once thought to be the same animal.',
       'It swallowed plants without chewing, eating huge amounts every day.',
     ],
-    fossilsNeeded: 8, fossilWeight: 9,
+    fossilsNeeded: FOSSILS_TO_UNLOCK, fossilWeight: 9,
     art: { template: 'sauropod', body: '#6f8a9e', dark: '#44596b', accent: '#9fb8c9' },
   },
   tyrannosaurus: {
@@ -266,7 +268,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
       'Its arms were short but muscular, with two fingers on each hand.',
       'It had some of the largest teeth of any meat-eating dinosaur, up to about 30 cm long including the root.',
     ],
-    fossilsNeeded: 12, fossilWeight: 6,
+    fossilsNeeded: FOSSILS_TO_UNLOCK, fossilWeight: 6,
     art: { template: 'theropod', body: '#6b7a4a', dark: '#40492a', accent: '#c9573b', pattern: 'stripes' },
   },
   plesiosaurus: {
@@ -282,7 +284,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
       'Fossils show that plesiosaurs gave birth to live young in the water instead of laying eggs.',
       'It probably snapped up fish and squid-like animals with its long, sharp teeth.',
     ],
-    fossilsNeeded: 3, fossilWeight: 20,
+    fossilsNeeded: FOSSILS_TO_UNLOCK, fossilWeight: 20,
     art: { template: 'swimmer', body: '#4f8a9e', dark: '#2f5a6b', accent: '#9fd0d8' },
   },
   mosasaurus: {
@@ -298,7 +300,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
       'It swam by sweeping its tail, which ended in a fin a little like a shark’s.',
       'It was one of the very first prehistoric reptiles ever described by scientists.',
     ],
-    fossilsNeeded: 8, fossilWeight: 7,
+    fossilsNeeded: FOSSILS_TO_UNLOCK, fossilWeight: 7,
     art: { template: 'swimmer', body: '#4a6b7a', dark: '#2b4450', accent: '#c9d8c0', pattern: 'stripes' },
   },
   pteranodon: {
@@ -314,7 +316,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
       'Its wings were sheets of skin stretched from an incredibly long fourth finger to its legs.',
       'It probably soared over the sea like an albatross, scooping up fish.',
     ],
-    fossilsNeeded: 3, fossilWeight: 28,
+    fossilsNeeded: FOSSILS_TO_UNLOCK, fossilWeight: 28,
     art: { template: 'flyer', body: '#c9b48a', dark: '#8a7250', accent: '#d9573b' },
   },
   dimorphodon: {
@@ -330,7 +332,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
       'It may have been better at climbing and scrambling than at long flights.',
       'Its long tail probably ended in a little vane that helped it steer.',
     ],
-    fossilsNeeded: 3, fossilWeight: 35,
+    fossilsNeeded: FOSSILS_TO_UNLOCK, fossilWeight: 35,
     art: { template: 'flyer', body: '#7a8f4a', dark: '#4d5e2a', accent: '#e0a040', pattern: 'spots' },
   },
   spinosaurus: {
@@ -345,7 +347,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
       'Its short hind legs and paddle-shaped tail set it apart from many other large theropods.',
       'Scientists still debate how much time it spent swimming or hunting along the shore.',
     ],
-    fossilsNeeded: 12, fossilWeight: 5,
+    fossilsNeeded: FOSSILS_TO_UNLOCK, fossilWeight: 5,
     art: { template: 'theropod', body: '#547f84', dark: '#305459', accent: '#ec9560', pattern: 'stripes' },
   },
   therizinosaurus: {
@@ -360,7 +362,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
       'Its enormous claws gave it the name “scythe lizard”.',
       'Its full appearance is reconstructed using incomplete fossils and better-known relatives.',
     ],
-    fossilsNeeded: 10, fossilWeight: 6,
+    fossilsNeeded: FOSSILS_TO_UNLOCK, fossilWeight: 6,
     art: { template: 'theropod', body: '#8eab79', dark: '#516d50', accent: '#e2bb6f', pattern: 'spots' },
   },
   amargasaurus: {
@@ -375,7 +377,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
       'Some reconstructions show skin linking the spines; their exact covering remains uncertain.',
       'Its name comes from the La Amarga area of Argentina.',
     ],
-    fossilsNeeded: 7, fossilWeight: 11,
+    fossilsNeeded: FOSSILS_TO_UNLOCK, fossilWeight: 11,
     art: { template: 'sauropod', body: '#ad845c', dark: '#705238', accent: '#dd7356' },
   },
   kentrosaurus: {
@@ -390,7 +392,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
       'Its fossils were found at Tendaguru in present-day Tanzania.',
       'It walked on four legs and ate plants.',
     ],
-    fossilsNeeded: 4, fossilWeight: 26,
+    fossilsNeeded: FOSSILS_TO_UNLOCK, fossilWeight: 26,
     art: { template: 'stego', body: '#70958d', dark: '#42645d', accent: '#e8af69', pattern: 'spots' },
   },
   styracosaurus: {
@@ -405,7 +407,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
       'Several skeletons together in bone beds suggest it may have lived in herds.',
       'Its beak and slicing teeth helped it crop plants.',
     ],
-    fossilsNeeded: 5, fossilWeight: 19,
+    fossilsNeeded: FOSSILS_TO_UNLOCK, fossilWeight: 19,
     art: { template: 'trike', body: '#997187', dark: '#614659', accent: '#e0ba7a' },
   },
   carnotaurus: {
@@ -420,7 +422,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
       'Fossil skin impressions preserve scales across parts of its body.',
       'The purpose of its two head horns is still debated.',
     ],
-    fossilsNeeded: 7, fossilWeight: 10,
+    fossilsNeeded: FOSSILS_TO_UNLOCK, fossilWeight: 10,
     art: { template: 'theropod', body: '#bd7059', dark: '#773f38', accent: '#e7c68a', pattern: 'spots' },
   },
   yutyrannus: {
@@ -435,7 +437,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
       'Unlike T. rex, it had longer arms and three fingers on each hand.',
       'Feather impressions were found beside several parts of its body.',
     ],
-    fossilsNeeded: 8, fossilWeight: 10,
+    fossilsNeeded: FOSSILS_TO_UNLOCK, fossilWeight: 10,
     art: { template: 'theropod', body: '#9b91ab', dark: '#5e556f', accent: '#e8d2a1', pattern: 'spots' },
   },
   iguanodon: {
@@ -450,7 +452,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
       'Its cheek teeth helped it process plant food.',
       'Its name means “iguana tooth”, after the resemblance of its teeth to an iguana’s.',
     ],
-    fossilsNeeded: 4, fossilWeight: 29,
+    fossilsNeeded: FOSSILS_TO_UNLOCK, fossilWeight: 29,
     art: { template: 'hadro', body: '#648ea2', dark: '#3a5b6d', accent: '#dca46a', pattern: 'stripes' },
   },
   microraptor: {
@@ -465,7 +467,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
       'Fossils show that it ate small animals, including fish and lizards.',
       'Its four feathered limbs helped it move through the air; scientists study how it flew.',
     ],
-    fossilsNeeded: 3, fossilWeight: 40,
+    fossilsNeeded: FOSSILS_TO_UNLOCK, fossilWeight: 40,
     art: { template: 'raptor', body: '#586d87', dark: '#303f54', accent: '#83b8b0' },
   },
   diplodocus: {
@@ -480,7 +482,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
       'Its narrow teeth could strip leaves from plants.',
       'Its fossils come from the Morrison Formation of the western United States.',
     ],
-    fossilsNeeded: 9, fossilWeight: 7,
+    fossilsNeeded: FOSSILS_TO_UNLOCK, fossilWeight: 7,
     art: { template: 'sauropod', body: '#7f9a68', dark: '#4c633c', accent: '#d8b875', pattern: 'stripes' },
   },
   argentinosaurus: {
@@ -495,7 +497,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
       'Its remains are incomplete, so estimates of its size differ.',
       'Titanosaurs were a successful group of long-necked plant eaters during the Cretaceous.',
     ],
-    fossilsNeeded: 14, fossilWeight: 4,
+    fossilsNeeded: FOSSILS_TO_UNLOCK, fossilWeight: 4,
     art: { template: 'sauropod', body: '#788da0', dark: '#485b6f', accent: '#cdb79a', pattern: 'spots' },
   },
   nigersaurus: {
@@ -510,7 +512,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
       'It cropped soft plants close to the ground.',
       'Its skull bones were remarkably thin and light.',
     ],
-    fossilsNeeded: 6, fossilWeight: 16,
+    fossilsNeeded: FOSSILS_TO_UNLOCK, fossilWeight: 16,
     art: { template: 'sauropod', body: '#ab9b63', dark: '#6c613b', accent: '#d9c999', pattern: 'spots' },
   },
 };

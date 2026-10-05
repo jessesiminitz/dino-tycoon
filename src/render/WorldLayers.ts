@@ -9,12 +9,10 @@ import { Terrain } from '../sim/terrain';
 import { lavaPreview } from '../sim/systems/eruption';
 import { floodForecast } from '../sim/systems/flood';
 import { TILE } from './tileset';
+import { FENCE_H, fenceDepth } from './worldDepth';
 
 const PADDOCK_TINTS = [0xf2c14e, 0x6ec6ff, 0xff8fb1, 0xb28dff, 0x7ee0b5, 0xffa257];
 const FOR_SALE = 0xff9f43;
-
-/** How tall each fence type stands, in world pixels. */
-const FENCE_H: Record<FenceTypeId, number> = { 1: 8, 2: 9, 3: 9, 4: 10, 5: 13, 6: 6 };
 
 /** Mixes a 0xRRGGBB colour toward white (amount > 0) or black (< 0). */
 function lighten(color: number, amount: number): number {
@@ -36,8 +34,9 @@ const GHOST_COLORS: Record<GhostStyle, number> = {
 export class WorldLayers {
   private paths: Phaser.GameObjects.Graphics;
   private overlay: Phaser.GameObjects.Graphics;
-  /** One graphics layer per row of the map, depth-sorted with dinos and people. */
+  /** Separate crosswise and end-on rows, sorted at their actual ground anchors. */
   private fenceRows: Phaser.GameObjects.Graphics[] = [];
+  private sideFenceRows: Phaser.GameObjects.Graphics[] = [];
   private gate: Phaser.GameObjects.Graphics;
   private ghost: Phaser.GameObjects.Graphics;
   private labels: Phaser.GameObjects.Text[] = [];
@@ -49,8 +48,8 @@ export class WorldLayers {
     this.paths = scene.add.graphics().setDepth(0.5);
     this.overlay = scene.add.graphics().setDepth(1);
     for (let y = 0; y <= sim.state.map.height; y++) {
-      // A fence along row edge y stands at world y*TILE: things further north are behind it.
-      this.fenceRows.push(scene.add.graphics().setDepth(4 + (y * TILE) / 10000 - 0.00001));
+      this.fenceRows.push(scene.add.graphics().setDepth(fenceDepth(y, 'h')));
+      if (y < sim.state.map.height) this.sideFenceRows.push(scene.add.graphics().setDepth(fenceDepth(y, 'v')));
     }
     this.gate = scene.add.graphics().setDepth(3);
     this.ghost = scene.add.graphics().setDepth(5);
@@ -172,6 +171,7 @@ export class WorldLayers {
 
   drawFences(): void {
     for (const g of this.fenceRows) g.clear();
+    for (const g of this.sideFenceRows) g.clear();
     const { state } = this.sim;
     const { width, height } = state.map;
     for (let y = 0; y <= height; y++)
@@ -184,8 +184,7 @@ export class WorldLayers {
       for (let x = 0; x <= width; x++) {
         const i = y * (width + 1) + x;
         const f = state.vFences[i] as FenceTypeId | 0;
-        // A north–south segment is sorted by its southern (front) end.
-        if (f) this.drawSegment(this.fenceRows[y + 1], { dir: 'v', x, y }, f, state.vFenceHp[i]);
+        if (f) this.drawSegment(this.sideFenceRows[y], { dir: 'v', x, y }, f, state.vFenceHp[i]);
       }
   }
 

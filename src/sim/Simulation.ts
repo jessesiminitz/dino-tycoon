@@ -1,4 +1,4 @@
-import { MAX_LOG, type GameState } from './GameState';
+import { MAX_LOG, unlockCompletedFossils, type GameState } from './GameState';
 import { applyCommand, type Command, type CommandResult } from './commands';
 import { computeRegions, type RegionMap } from './regions';
 import { Rng } from './rng';
@@ -46,7 +46,9 @@ export class Simulation {
   private actionListeners = new Set<(action: DinoAction) => void>();
   private regionCache?: { revision: number; map: RegionMap };
 
-  constructor(public state: GameState) {}
+  constructor(public state: GameState) {
+    unlockCompletedFossils(state);
+  }
 
   /** Selected speed with the automatic nighttime boost; pause remains zero. */
   get effectiveSpeed(): number {
