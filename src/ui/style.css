@@ -1369,13 +1369,12 @@ body:not(.in-park) #info {
   left: 0;
   right: 0;
   bottom: calc(var(--safe-bottom) + 10px);
-  height: 60px;
+  height: 64px;
   pointer-events: none;
 }
 
 .menu-parade img {
   flex: none;
-  height: 48px;
   image-rendering: pixelated;
 }
 

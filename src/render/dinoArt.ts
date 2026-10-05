@@ -17,6 +17,9 @@ import { BLENDER_ART } from './generated/blenderArt';
 type Key = 'B' | 'D' | 'F' | 'A' | 'G' | 'W' | 'E' | 'M';
 type Pt = [number, number];
 type Node3 = [number, number, number];
+export interface DinoPixelBounds { left: number; right: number; top: number; bottom: number }
+const paintedBounds = new WeakMap<HTMLCanvasElement, DinoPixelBounds>();
+export const dinoCanvasBounds = (canvas: HTMLCanvasElement): DinoPixelBounds => paintedBounds.get(canvas)!;
 
 class Sprite {
   readonly grid: (Key | null)[][];
@@ -672,9 +675,10 @@ function tint(hex: string, amount: number): string {
 }
 
 /** The painted key grid for a species (for tests and tools). */
-export function dinoShape(species: Species, frame = 0, baby = false, style: ArtStyle = ART_STYLE): (string | null)[][] {
+export function dinoShape(species: Species, frame = 0, baby = false, style: ArtStyle = ART_STYLE, scale = 1): (string | null)[][] {
   const s = shapeFor(species, frame, style);
-  return (baby ? babyGrid(s) : s).grid;
+  const factor = scale * (baby ? BABY_SCALE : 1);
+  return (factor === 1 ? s : scaledGrid(s, factor)).grid;
 }
 
 /**
@@ -686,18 +690,18 @@ export function dinoShape(species: Species, frame = 0, baby = false, style: ArtS
 const BABY_SCALE = 0.6;
 
 /**
- * Shrinks a sprite's key grid for a baby: each small pixel takes the most
+ * Resamples a sprite's key grid for park and baby sizes: each pixel takes the most
  * common key under it (if the area is mostly filled), and the eye always
  * survives so the little face stays readable.
  */
-function babyGrid(s: Sprite): Sprite {
-  const out = new Sprite(Math.ceil(s.w * BABY_SCALE), Math.ceil(s.h * BABY_SCALE));
+function scaledGrid(s: Sprite, scale: number): Sprite {
+  const out = new Sprite(Math.ceil(s.w * scale), Math.ceil(s.h * scale));
   for (let y = 0; y < out.h; y++)
     for (let x = 0; x < out.w; x++) {
-      const x0 = Math.floor(x / BABY_SCALE);
-      const x1 = Math.max(x0 + 1, Math.floor((x + 1) / BABY_SCALE));
-      const y0 = Math.floor(y / BABY_SCALE);
-      const y1 = Math.max(y0 + 1, Math.floor((y + 1) / BABY_SCALE));
+      const x0 = Math.floor(x / scale);
+      const x1 = Math.max(x0 + 1, Math.floor((x + 1) / scale));
+      const y0 = Math.floor(y / scale);
+      const y1 = Math.max(y0 + 1, Math.floor((y + 1) / scale));
       const counts = new Map<Key, number>();
       let filled = 0;
       let eye = false;
@@ -747,13 +751,13 @@ export function paintEgg(species: Species): HTMLCanvasElement {
   return canvas;
 }
 
-export function paintDino(species: Species, frame = 0, baby = false, style: ArtStyle = ART_STYLE): HTMLCanvasElement {
+export function paintDino(species: Species, frame = 0, baby = false, style: ArtStyle = ART_STYLE, scale = 1): HTMLCanvasElement {
   const grown = shapeFor(species, frame, style);
-  return paintDinoSprite(species, grown, baby);
+  return paintDinoSprite(species, grown, baby, scale);
 }
 
 /** Paint additional Blender clips with the same palette, baby scale and outline. */
-export function paintDinoRows(species: Species, rows: readonly string[], baby = false): HTMLCanvasElement {
+export function paintDinoRows(species: Species, rows: readonly string[], baby = false, scale = 1): HTMLCanvasElement {
   if (!rows.length || !rows[0].length || rows.some(row => row.length !== rows[0].length || /[^.BDFAGWEM]/.test(row))) {
     throw new RangeError('Invalid dinosaur role grid');
   }
@@ -761,11 +765,12 @@ export function paintDinoRows(species: Species, rows: readonly string[], baby = 
   rows.forEach((row, y) => {
     for (let x = 0; x < row.length; x++) grown.grid[y][x] = row[x] === '.' ? null : row[x] as Key;
   });
-  return paintDinoSprite(species, grown, baby);
+  return paintDinoSprite(species, grown, baby, scale);
 }
 
-function paintDinoSprite(species: Species, grown: Sprite, baby: boolean): HTMLCanvasElement {
-  const s = baby ? babyGrid(grown) : grown;
+function paintDinoSprite(species: Species, grown: Sprite, baby: boolean, scale: number): HTMLCanvasElement {
+  const factor = scale * (baby ? BABY_SCALE : 1);
+  const s = factor === 1 ? grown : scaledGrid(grown, factor);
   const { w, h } = s;
   // Babies are a touch paler and softer.
   const soften = (c: string) => (baby ? tint(c, 0.12) : c);
@@ -797,6 +802,7 @@ function paintDinoSprite(species: Species, grown: Sprite, baby: boolean): HTMLCa
   canvas.width = w + 2;
   canvas.height = h + 2;
   const ctx = canvas.getContext('2d')!;
+  const bounds = { left: w + 2, right: 0, top: h + 2, bottom: 0 };
   for (let y = -1; y <= h; y++) {
     for (let x = -1; x <= w; x++) {
       const c = at(x, y);
@@ -811,6 +817,10 @@ function paintDinoSprite(species: Species, grown: Sprite, baby: boolean): HTMLCa
         ctx.fillStyle = OUTLINE;
       } else continue;
       ctx.fillRect(x + 1, y + 1, 1, 1);
+      bounds.left = Math.min(bounds.left, x + 1);
+      bounds.right = Math.max(bounds.right, x + 2);
+      bounds.top = Math.min(bounds.top, y + 1);
+      bounds.bottom = Math.max(bounds.bottom, y + 2);
     }
   }
   // A dark seam where far-side limbs meet the body, so the legs read as separate.
@@ -818,5 +828,6 @@ function paintDinoSprite(species: Species, grown: Sprite, baby: boolean): HTMLCa
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++)
       if (at(x, y) === 'F' && [at(x - 1, y), at(x + 1, y), at(x, y - 1)].some((n) => n && n !== 'F')) ctx.fillRect(x + 1, y + 1, 1, 1);
+  paintedBounds.set(canvas, bounds);
   return canvas;
 }

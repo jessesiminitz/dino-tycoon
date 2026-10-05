@@ -1,5 +1,7 @@
 # Blender sprite authoring
 
+The park and title parade apply `src/render/dinoSize.ts` to all 28 dinosaurs. It derives a compressed display scale from registered lengths and painted silhouette widths, ignoring transparent canvas room. `dinoArt.ts` resamples palette-role grids while preserving eyes; `parkMotion.ts` paints scaled adult/baby atlases and scales walking distance consistently. Canonical sources, exported grids, catalog/guide art and native comparison galleries retain their original dimensions. Changing park display sizes does not require regenerating Blender sources. Painted frames record tight opaque bounds for local fence transparency; dinosaurs retain their normal ground depth instead of drawing their feet above walls.
+
 The canonical set contains **28 dinosaur species × four poses, 10 park buildings, 15 scenery types with 38 variants, and 16 terrain types with four tile variants each**. There are 224 canonical grids, plus 896 animation frames in the full-roster rollout below. Blender **4.5.14 LTS** renders extruded mesh profiles with CPU Cycles, flat emission region colors and an orthographic camera at native pixel resolution. Dinosaurs keep the game's species palettes, highlights, patterns, outlines and 60% baby painter; each building has its own palette. Blender artwork is the default in development and production.
 
 ## Review locally

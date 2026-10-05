@@ -1,6 +1,6 @@
 # Dino Tycoon: handoff notes
 
-Everything a fresh session needs to carry on. Last updated 2026-10-05, after easier fossil unlocks, longer brushing and fence drawing-order corrections.
+Everything a fresh session needs to carry on. Last updated 2026-10-05, after restoring little dinosaurs and correcting fence grounding.
 
 ## Where things stand (read this first)
 
@@ -16,7 +16,9 @@ Everything a fresh session needs to carry on. Last updated 2026-10-05, after eas
 
 - **Parade and nighttime pacing:** the title-screen parade reserves each dinosaur's actual sprite width and leaves a 48 CSS-pixel gap, including at the loop seam. Two matching rows scroll together at 30 px/s; reduced motion stops the parade. Nighttime (21:00–05:00) automatically multiplies the selected speed by three, then restores daytime pacing at dawn. Pause still freezes time and animation. At selected 1×, the night now takes about 27 seconds and a full day about 3 minutes 7 seconds. No simulation steps or hourly care/economy/event processing are skipped, and saves remain v21. Animal, environment and weather animation clocks use the effective speed. The clock tooltip/accessibility label explains nighttime acceleration without expanding the mobile HUD. See **Pacing validation** below. These changes remain local to the graphics branch.
 
-- **Fossils and fence visibility:** all 22 fossil-locked species now need **two bones**; the six starters remain available without digging. Loaded parks and `Simulation` honor previously earned counts of two or more without resetting bones, duplicating unlocks or changing save schema v21. Fossil brushing now auto-completes at **95%** of the fossil rather than 70%; large silhouettes are fitted into the pit instead of clipping. Objects and people share a logical ground anchor, end-on fences sort at their midpoint, and dinosaurs get priority over nearby live fence faces intersecting their silhouettes. Carried balloons/snacks, staff tools and jeep passengers sort with their owners instead of floating in front of every wall. Source artwork is unchanged. See **Fossil and depth validation** below. These changes remain local pending physical device review and deployment.
+- **Fossils and fence visibility:** all 22 fossil-locked species now need **two bones**; the six starters remain available without digging. Loaded parks and `Simulation` honor previously earned counts of two or more without resetting bones, duplicating unlocks or changing save schema v21. Fossil brushing now auto-completes at **95%** of the fossil rather than 70%; large silhouettes are fitted into the pit instead of clipping. Objects and people share a logical ground anchor, end-on fences sort at their midpoint, and carried balloons/snacks, staff tools and jeep passengers sort with their owners. The following size/grounding pass replaces the whole-dinosaur fence priority. Source artwork is unchanged. See **Fossil and depth validation** below. These changes remain local pending physical device review and deployment.
+
+- **Dinosaur size and grounding:** the daughter missed little Compsognathus. All 28 species now use a compressed size scale derived from their registered lengths and painted silhouette widths, excluding transparent canvas room. Small animals are small again, with faces preserved by resampling role grids rather than shrinking a GPU image. Babies remain smaller; both get a minimum 20×20 world-pixel touch target. The title parade uses a common scale instead of giving every animal the same height, retaining its 48px gaps. Dinosaurs stay at their normal ground depth; only nearby live fence sections overlapping their painted bounds soften to 30% opacity. Feet and shadows remain behind the wall, while faces stay readable. Walls restore opacity when animals move away, and only affected rows redraw. No save schema, physics positions, species balance, Blender models or generated grids changed. See **Size and grounding validation** below. These changes remain local pending physical iPhone/iPad review and deployment.
 
 - **Live and working:**
   - four challenges (The Great Escape, Fire Mountain, Flood Season, The Money Pit), in the 🧩 Challenges folder, unlocking in that order
@@ -62,7 +64,16 @@ Planted feet move backward relative to the body while lifted feet swing forward;
 
 **Source and regeneration:** [assets-source/README.md](assets-source/README.md) is the canonical workflow. Blender 4.5.14 LTS models and compressed `.blend` files live under `assets-source/`; generators are in `scripts/art/`. Render through Blender MCP or the documented Blender CLI, then run `npm run art:convert` and `npm run art:check`. PNG/JSON intermediates are ignored and must be regenerated on a fresh checkout. Runtime grids are checked in under `src/render/generated/`; Blender and MCP are not runtime dependencies. Canonical source files total about 6.7 MB; the 112 animation sources add about 12.7 MB. All source scenes are excluded from the shipped build.
 
-**Fossil and depth validation (2026-10-05):**
+**Size and grounding validation (2026-10-05):**
+
+- All **476 tests** passed (475 regular plus one performance test) at their default time limits; production build passed. Thirty new size cases protect the little Compsognathus, roster hierarchy and all 28 species' adult/baby faces and grounded poses. Depth regressions now protect local softening without lifting animals above walls. Walking distance uses the same species/baby scale as the painted frames, including tiny babies' shorter strides.
+- `check:fossil-depth` passed **672** species/baby/direction/fence-type cases with normal dinosaur ground depth, local fence softening and restored opacity after animals leave. Adult and baby Compsognathus retain the expanded touch target. Carried objects, tools, riders and people retain consistent wall ordering. Fossil fitting, 95% brushing, pause and restored speed still pass across phone/tablet layouts.
+- Native comparison art remains unchanged. Ignored captures are `docs/art-review/dinosaur-world-size-lineup.png` (all 28 beside visitors at a shared 2× scale), `little-compsognathus-phone.png` and `grounded-fence-before.png` / `grounded-fence-after.png` (the prior whole-sprite priority versus softened foreground walls).
+- `check:pacing` passed the full parade loop and seam at five screen sizes, reduced motion, 3× nighttime clocks and pause/dawn behavior. The parade now has one common zoom, with the largest sprite 64px tall; tiny animals are intentionally tiny. Phone catalogs, expansion galleries, palette/fossil parity and scaled adult/baby shadows passed `art:integration`.
+- Final `art:park-motion` passed all **1,792 resized adult/baby atlas frames**, **896** runtime walk/frame/baby/facing combinations and **3,584** native review combinations, plus real meals, nighttime rest, pause and rooted wind. Pixel-sized motion frames keep the canonical palette and readable faces; source/gallery art remains native. Cached textures stayed bounded at 379 / 388 with ambient animation off/on. Software-rendered desktop Chrome measured p95 frame times of **116.7 ms** for both and entity updates of **1.3 / 1.5 ms**; these are not physical Safari measurements.
+- Final `art:integration`, `art:motion-controls`, `check:pacing` and production `art:offline` passed. Production precache is 14 entries / **3,889.08 KiB**, under the PWA limit; the existing Vite chunk advisory remains. Save schema stays v21. Physical iPhone/iPad review, main integration and deployment remain pending.
+
+**Fossil and depth validation (2026-10-05, preceding pass):**
 
 - All **446 tests** passed (445 regular plus one performance test). The initial default run hit five existing 5-second timing limits (scenario generation, challenge setup/balance, long event simulation and music decoding); the complete rerun with `--testTimeout=30000` passed all assertions without changing timeout configuration. All five initially timed-out cases then passed at their original default limit in a 2.41-second targeted run. The separate strict performance check measured **0.454 ms average / 2.59 ms p99** per movement step in the 30-dinosaur / 150-visitor park.
 - The production build passed with 14 precache entries / **3,887.19 KiB**, under the PWA limit; the existing Vite chunk advisory remains. No Blender sources, generated grids or animation frames changed.
@@ -141,7 +152,7 @@ Run browser tours and performance comparisons sequentially on this machine to av
 
 ```sh
 npm run dev            # dev server (usually already running on :5173); /?quickstart skips the menu
-npm test               # 349 tests + 1 separate performance test (350 total)
+npm test               # 475 tests + 1 separate performance test (476 total)
 npm run build          # tsc --noEmit + vite build
 npm run icons          # regenerate Home Screen icons (dev server must be running)
 node scripts/checks/<name>.mjs   # browser checks (headless Chrome via puppeteer-core); see below
@@ -268,7 +279,8 @@ Always bump `SAVE_VERSION` and add a step to `migrate()` when the state shape ch
 
 - Pacing: keep daytime at 10 real seconds per game hour at 1×, with 3× and 8× available. On 2026-10-05 the owner requested faster nights; 21:00–05:00 now receives an automatic additional 3× boost, for a full day of about 3m 7s at selected 1×.
 - Fossils: the owner requested two bones per unlockable dinosaur and more time brushing. Use the shared two-bone target and 95% uncovering threshold; honor existing earned bones when loading parks.
-- Fence visibility: people and their carried objects should agree about walls. Favor dinosaur silhouettes against nearby fences so heads and feet stay readable; preserve ordinary depth ordering for distant scenery.
+- Dinosaur size: the daughter misses the little Compsognathus. Preserve the small/medium/giant hierarchy in both the park and parade, readable eyes and generous touch targets for tiny adults/babies.
+- Fence visibility: people and their carried objects should agree about walls. Keep dinosaur feet at their normal ground depth and soften only the obscuring fence sections; whole-sprite priority made dinosaurs appear to stand on walls. Restore opaque fences when animals move away.
 - Keep the game kid-friendly. Mess and pee/poop jokes are wanted but mild; cleanliness should not dominate.
 - Wants more depth: richer menus, milestones with unlock rewards, visible items, lively visitors.
 - Art should evoke classic DinoPark Tycoon (VGA palette, bevelled UI, 3/4 view), with good dino likeness.

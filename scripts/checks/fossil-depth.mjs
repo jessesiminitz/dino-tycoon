@@ -136,28 +136,24 @@ try {
     window.__originalEntityUpdate = e.update.bind(e);
     e.update = time => {
       window.__originalEntityUpdate(time);
-      for (let row = 0; row < scene.layers.sideFenceRows.length; row++) scene.layers.sideFenceRows[row].setDepth(window.__depthBefore ? fenceDepth(row + 1, 'h') : fenceDepth(row, 'v'));
-      for (const b of state.buildings) e.buildings.get(b.id).setDepth(window.__depthBefore ? depthAt((b.y + 1) * 16) : tileDepth(b.y));
-      for (const f of state.feeders) e.feeders.get(f.id).setDepth(window.__depthBefore ? depthAt((f.y + 1) * 16) : tileDepth(f.y));
-      for (const d of state.decor) scene.scenery.decor.get(d.id).setDepth(window.__depthBefore ? depthAt((d.y + 1) * 16) : tileDepth(d.y));
       if (window.__depthBefore) {
-        for (const d of state.dinos) e.dinos.get(d.id).setDepth(depthAt(e.dinoPosition(d).y));
-        for (const props of e.attachments.values()) props.setDepth(9);
+        for (const d of state.dinos) e.dinos.get(d.id).setDepth(wall + 0.00002);
+        e.obscuringFences.clear();
       }
     };
     return { fixed, behind: behind.depth < wall, front: front.depth > wall, follows, attachments: attachments.length,
-      dinos: state.dinos.every(d => e.dinos.get(d.id).depth > wall) };
+      dinos: state.dinos.every(d => e.dinos.get(d.id).depth === depthAt(e.dinoPosition(d).y) && e.dinos.get(d.id).depth < wall), softened: scene.layers.obscuredFences.size > 0 && [...scene.layers.fadedFenceRows.values()].every(g => g.alpha === 0.3) };
   });
   check('buildings, feeders, decor and people agree about the front wall', order.fixed && order.behind && order.front, order);
   check('balloons, snacks, janitor tools and riders sort with their owners', order.follows && order.attachments === 4);
-  check('nearby dinosaurs draw above the front wall', order.dinos);
+  check('dinosaurs stay grounded behind softened front wall sections', order.dinos && order.softened);
   for (const before of [true, false]) {
     await page.evaluate(before => {
       window.__depthBefore = before;
       window.__dino.game.loop.wake();
     }, before);
     await new Promise(resolve => setTimeout(resolve, 350));
-    await page.screenshot({ path: fileURLToPath(new URL(`fence-depth-${before ? 'before' : 'after'}.png`, out)) });
+    await page.screenshot({ path: fileURLToPath(new URL(`grounded-fence-${before ? 'before' : 'after'}.png`, out)) });
   }
   const roster = await page.evaluate(async () => {
     const { sim, game } = window.__dino, scene = game.scene.getScene('park'), e = scene.entities, state = sim.state;
@@ -169,12 +165,13 @@ try {
       state.hFences.fill(0); state.hFenceHp.fill(0); state.vFences.fill(0); state.vFenceHp.fill(0);
       for (let x = 14; x <= 31; x++) { const i = 21 * state.map.width + x; state.hFences[i] = type; state.hFenceHp[i] = 100; }
       scene.layers.drawFences();
-      const wall = scene.layers.fenceRows[21].depth;
       for (const species of SPECIES_IDS) for (const baby of [false, true]) for (const left of [false, true]) {
         const d = { ...window.__depthTemplate, id: 98000, species, baby, x: 24, px: 24, y: 20, py: 20, path: [], hunger: 0, sick: false, escaped: false };
         state.dinos = [d]; e.motions.delete(d.id); e.facingLeft.set(d.id, left); e.update(game.loop.now);
+        scene.layers.updateDinoOcclusion(e.obscuringFences);
         const img = e.dinos.get(d.id);
-        if (habitatOf(species) !== 'air' && img.depth <= wall) failures.push(`${species}:${baby}:${left}:${type}`);
+        if (img.depth !== depthAt(e.dinoPosition(d).y)) failures.push(`${species}: lifted ground depth`);
+        if (habitatOf(species) !== 'air' && !e.obscuringFences.has('h24,21')) failures.push(`${species}:${baby}:${left}:${type}`);
         cases++;
       }
     }
@@ -183,11 +180,54 @@ try {
     e.update(game.loop.now);
     const distant = e.dinos.get(98000).depth === depthAt(e.dinoPosition(state.dinos[0]).y);
     const graphics = [...e.attachments.values()];
-    state.visitors = []; state.staff = []; state.jeeps = []; e.update(game.loop.now);
-    return { cases, failures, distant, cleaned: e.attachments.size === 0 && graphics.every(g => !g.scene) };
+    state.visitors = []; state.staff = []; state.jeeps = []; state.dinos = []; e.update(game.loop.now); scene.layers.updateDinoOcclusion(e.obscuringFences);
+    return { cases, failures, distant, cleaned: e.attachments.size === 0 && graphics.every(g => !g.scene), restored: scene.layers.obscuredFences.size === 0 && [...scene.layers.fadedFenceRows.values()].every(g => g.commandBuffer.length === 0) };
   });
   check('all 28 species, babies and directions respect all six front fence types', roster.cases === 672 && roster.failures.length === 0, roster);
-  check('distant fences keep normal ordering and removed owners clean up their props', roster.distant && roster.cleaned);
+  check('distant fences keep normal ordering and removed owners clean up their props', roster.distant && roster.cleaned && roster.restored);
+  const sizes = await page.evaluate(async () => {
+    const { sim, game } = window.__dino, scene = game.scene.getScene('park'), e = scene.entities;
+    const { SPECIES, SPECIES_IDS } = await import('/src/sim/data/species.ts');
+    const { dinoWorldScale } = await import('/src/render/dinoSize.ts');
+    const { paintDino } = await import('/src/render/dinoArt.ts');
+    const template = window.__depthTemplate, failures = [];
+    for (const baby of [false, true]) {
+      const d = { ...template, id: 97000, species: 'compsognathus', baby, x: 18, px: 18, y: 20, py: 20, hunger: 0, path: [] };
+      sim.state.dinos = [d]; e.motions.delete(d.id); e.update(game.loop.now);
+      const b = e.dinos.get(d.id).getBounds();
+      const picked = e.dinoAt(b.centerX, b.centerY - 9.9);
+      if (picked?.id !== d.id) failures.push(`${baby}: tiny dinosaur lost its touch target`);
+    }
+    sim.state.dinos = [
+      { ...template, id: 97000, species: 'compsognathus', baby: false, x: 18, px: 18, y: 20, py: 20, hunger: 0, path: [] },
+      { ...template, id: 97001, species: 'tyrannosaurus', baby: false, x: 27, px: 27, y: 20, py: 20, hunger: 0, path: [] },
+    ];
+    for (const d of sim.state.dinos) e.motions.delete(d.id);
+    e.update(game.loop.now); scene.layers.updateDinoOcclusion(e.obscuringFences);
+    const comp = e.dinos.get(97000), rex = e.dinos.get(97001);
+    const small = comp.height < 20 && comp.width < rex.width / 2;
+    const lineup = document.createElement('canvas'); lineup.width = 1840; lineup.height = 1530;
+    const ctx = lineup.getContext('2d'); ctx.fillStyle = '#dde9cc'; ctx.fillRect(0, 0, lineup.width, lineup.height); ctx.imageSmoothingEnabled = false;
+    ctx.font = 'bold 28px sans-serif'; ctx.fillStyle = '#24372a'; ctx.fillText('Park dinosaur sizes · shared 2× pixel scale · visitor beside each animal', 24, 38);
+    const visitor = game.textures.get('visitor-0-0-a-n').getSourceImage();
+    for (const [i, id] of SPECIES_IDS.entries()) {
+      const x = i % 4 * 460, y = Math.floor(i / 4) * 210 + 50, base = y + 170;
+      ctx.fillStyle = '#bad39e'; ctx.fillRect(x + 12, base, 436, 2);
+      ctx.drawImage(visitor, x + 18, base - visitor.height * 2, visitor.width * 2, visitor.height * 2);
+      const sprite = paintDino(SPECIES[id], 0, false, 'blender', dinoWorldScale(id, 'blender'));
+      ctx.drawImage(sprite, x + 250 - sprite.width, base - sprite.height * 2, sprite.width * 2, sprite.height * 2);
+      ctx.font = '18px sans-serif'; ctx.fillStyle = '#24372a'; ctx.fillText(SPECIES[id].name, x + 16, y + 200);
+    }
+    window.__sizeLineup = lineup.toDataURL();
+    return { failures, small, comp: { width: comp.width, height: comp.height }, rex: { width: rex.width, height: rex.height } };
+  });
+  check('little Compsognathus and its baby retain a full touch target', sizes.small && sizes.failures.length === 0, sizes);
+  const { writeFileSync } = await import('node:fs');
+  const lineup = await page.evaluate(() => window.__sizeLineup);
+  writeFileSync(fileURLToPath(new URL('dinosaur-world-size-lineup.png', out)), Buffer.from(lineup.split(',')[1], 'base64'));
+  await page.evaluate(() => window.__dino.game.loop.wake());
+  await new Promise(resolve => setTimeout(resolve, 350));
+  await page.screenshot({ path: fileURLToPath(new URL('little-compsognathus-phone.png', out)) });
   finish(errors);
 } catch (error) {
   console.error(error);

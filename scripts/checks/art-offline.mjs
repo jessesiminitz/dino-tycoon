@@ -28,8 +28,8 @@ try {
   await expectedPage.goto(`${process.env.BASE_URL ?? 'http://localhost:5173'}/?art=blender`,{waitUntil:'networkidle0'});
   const expected=await expectedPage.evaluate(async()=>{
     const {paintDino}=await import('/src/render/dinoArt.ts');
-    const {SPECIES}=await import('/src/sim/data/species.ts');
-    return Object.keys(SPECIES).map(id=>paintDino(SPECIES[id]).toDataURL());
+    const {SPECIES}=await import('/src/sim/data/species.ts');const {dinoWorldScale}=await import('/src/render/dinoSize.ts');
+    return Object.keys(SPECIES).map(id=>paintDino(SPECIES[id],0,false,undefined,dinoWorldScale(id)).toDataURL());
   });
   const offlinePark=await expectedPage.evaluate(async()=>{const {stressPark}=await import('/src/dev/stressPark.ts');const state=stressPark();state.entrance={x:28,y:25};return state;});
   await expectedPage.close();

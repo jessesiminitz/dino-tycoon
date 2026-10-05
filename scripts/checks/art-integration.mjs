@@ -19,6 +19,7 @@ try {
     const { sim, game } = window.__dino;
     sim.setSpeed(0);
     const { paintDino, dinoShape } = await import('/src/render/dinoArt.ts');
+    const {dinoWorldScale}=await import('/src/render/dinoSize.ts');
     const { SPECIES } = await import('/src/sim/data/species.ts');
     const failures=[];
     for (const id of Object.keys(SPECIES)) {
@@ -30,8 +31,8 @@ try {
       if (paintDino(skin).toDataURL()===expected) failures.push(`${id} palette override ignored`);
       for (let f=0;f<4;f++) for (const baby of [false,true]) {
         const tex=game.textures.get(`dino-${id}-${f}${baby ? '-baby' : ''}`).getSourceImage();
-        if (tex.toDataURL()!==paintDino(sp,f,baby).toDataURL()) failures.push(`${id}:${f}:${baby} texture mismatch`);
-        const shape=dinoShape(sp,f,baby);
+        if (tex.toDataURL()!==paintDino(sp,f,baby,'blender',dinoWorldScale(id, 'blender')).toDataURL()) failures.push(`${id}:${f}:${baby} texture mismatch`);
+        const shape=dinoShape(sp,f,baby,'blender',dinoWorldScale(id, 'blender'));
         if (tex.width!==shape[0].length+2 || tex.height!==shape.length+2) failures.push(`${id} canvas anchor changed`);
       }
     }
@@ -53,11 +54,12 @@ try {
     const {SPECIES_IDS}=await import('/src/sim/data/species.ts');
     const {BLENDER_MOTION}=await import('/src/render/generated/blenderMotion.ts');
     const {motionWalkSpeed}=await import('/src/render/immersionMotion.ts');
+    const {dinoWorldScale}=await import('/src/render/dinoSize.ts');
     const failures=[],saved=sim.state.dinos;sim.state.hours=4;sim.speed=1;
     for(const [i,species] of SPECIES_IDS.entries())for(const left of [false,true]){
       const d={...saved[0],species,id:98000+i,x:22,px:left?23:21,y:20,py:20,baby:false,hunger:0};
       sim.state.dinos=[d];scene.entities.motions.delete(d.id);
-      const cycle=motionWalkSpeed(species)*BLENDER_MOTION[species].walk.durationMs/1000;
+      const cycle=motionWalkSpeed(species)*BLENDER_MOTION[species].walk.durationMs/1000*dinoWorldScale(species,'blender');
       for(let pose=0;pose<8;pose++){
         Object.defineProperty(sim,'stepProgress',{configurable:true,get:()=>pose*cycle/128});
         scene.entities.update(1000);const img=scene.entities.dinos.get(d.id);
@@ -72,9 +74,10 @@ try {
   check('every species selects all eight walk phases in both directions',animation.failures.length===0,animation.failures);
   check('pause freezes animal poses and positions',animation.frozen);
 
-  const tailShadows = await page.evaluate(() => {
+  const tailShadows = await page.evaluate(async () => {
     const {sim,game}=window.__dino,entities=game.scene.getScene('park').entities;
     const saved=sim.state.dinos,failures=[];
+    const {dinoWorldScale}=await import('/src/render/dinoSize.ts');
     const graphics=entities.shadows,fillEllipse=graphics.fillEllipse;
     const widths={"compsognathus":28,"velociraptor":36,"dilophosaurus":44,"allosaurus":56,"tyrannosaurus":66,"pachycephalosaurus":36,"parasaurolophus":50,"protoceratops":34,"triceratops":60,"stegosaurus":58,"ankylosaurus":54,"brachiosaurus":66,"spinosaurus":76,"therizinosaurus":56,"amargasaurus":70,"kentrosaurus":52,"styracosaurus":60,"carnotaurus":62,"yutyrannus":64,"iguanodon":60,"microraptor":34,"diplodocus":100,"argentinosaurus":104,"nigersaurus":64};
     let calls=[];
@@ -83,7 +86,7 @@ try {
       for(const [species,width] of Object.entries(widths)) for(const baby of [false,true]) {
         const d={...saved[0],id:99101,species,baby,x:22,px:22,y:20,py:20,path:[],hunger:0};
         sim.state.dinos=[d];entities.motions.delete(d.id);calls=[];entities.update(3000);
-        const scale=baby?.6:1,expected=(Math.ceil((width+16)*scale)+2-16*scale)*.7;
+        const scale=(baby?.6:1)*dinoWorldScale(species,'blender'),expected=Math.max(6,(Math.ceil((width+16)*scale)+2-16*scale)*.7);
         const actual=calls.at(-1)?.[2];
         // Baby resampling can round the wider canvas by one native pixel.
         if(actual===undefined||Math.abs(actual-expected)>.71)failures.push(`${species}:${baby} shadow ${actual}/${expected}`);

@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import type { Simulation } from '../sim/Simulation';
 import { FENCE_TYPES, type FenceTypeId } from '../sim/data/fences';
-import type { Edge } from '../sim/grid';
+import { edgeKey, type Edge } from '../sim/grid';
 import { isParcelOwned, parcelBuyBlocker, parcelGrid, parcelPrice, PARCEL, type Point } from '../sim/land';
 import { formatMoney } from '../ui/hud';
 import { hash2 } from '../sim/rng';
@@ -37,6 +37,8 @@ export class WorldLayers {
   /** Separate crosswise and end-on rows, sorted at their actual ground anchors. */
   private fenceRows: Phaser.GameObjects.Graphics[] = [];
   private sideFenceRows: Phaser.GameObjects.Graphics[] = [];
+  private fadedFenceRows = new Map<string, Phaser.GameObjects.Graphics>();
+  private obscuredFences = new Set<string>();
   private gate: Phaser.GameObjects.Graphics;
   private ghost: Phaser.GameObjects.Graphics;
   private labels: Phaser.GameObjects.Text[] = [];
@@ -170,22 +172,41 @@ export class WorldLayers {
   }
 
   drawFences(): void {
-    for (const g of this.fenceRows) g.clear();
-    for (const g of this.sideFenceRows) g.clear();
+    for (let row = 0; row <= this.sim.state.map.height; row++) this.drawFenceRow(row, 'h');
+    for (let row = 0; row < this.sim.state.map.height; row++) this.drawFenceRow(row, 'v');
+  }
+
+  /** Keep walls in front of feet, but let animals show through only the obscuring sections. */
+  updateDinoOcclusion(keys: ReadonlySet<string>): void {
+    if (keys.size === this.obscuredFences.size && [...keys].every(key => this.obscuredFences.has(key))) return;
+    const rows = new Set<string>();
+    for (const key of this.obscuredFences) if (!keys.has(key)) rows.add(`${key[0]}${key.slice(key.indexOf(',') + 1)}`);
+    for (const key of keys) if (!this.obscuredFences.has(key)) rows.add(`${key[0]}${key.slice(key.indexOf(',') + 1)}`);
+    this.obscuredFences = new Set(keys);
+    for (const key of rows) this.drawFenceRow(Number(key.slice(1)), key[0] as 'h' | 'v');
+  }
+
+  private drawFenceRow(row: number, dir: 'h' | 'v'): void {
+    const regular = (dir === 'h' ? this.fenceRows : this.sideFenceRows)[row].clear();
+    const rowKey = `${dir}${row}`;
+    let faded = this.fadedFenceRows.get(rowKey);
+    faded?.clear();
     const { state } = this.sim;
-    const { width, height } = state.map;
-    for (let y = 0; y <= height; y++)
-      for (let x = 0; x < width; x++) {
-        const i = y * width + x;
-        const f = state.hFences[i] as FenceTypeId | 0;
-        if (f) this.drawSegment(this.fenceRows[y], { dir: 'h', x, y }, f, state.hFenceHp[i]);
-      }
-    for (let y = 0; y < height; y++)
-      for (let x = 0; x <= width; x++) {
-        const i = y * (width + 1) + x;
-        const f = state.vFences[i] as FenceTypeId | 0;
-        if (f) this.drawSegment(this.sideFenceRows[y], { dir: 'v', x, y }, f, state.vFenceHp[i]);
-      }
+    const width = state.map.width + (dir === 'v' ? 1 : 0);
+    const fences = dir === 'h' ? state.hFences : state.vFences;
+    const condition = dir === 'h' ? state.hFenceHp : state.vFenceHp;
+    for (let x = 0; x < width; x++) {
+      const i = row * width + x, type = fences[i] as FenceTypeId | 0;
+      if (!type) continue;
+      const edge: Edge = { dir, x, y: row };
+      if (this.obscuredFences.has(edgeKey(edge))) {
+        if (!faded) {
+          faded = this.scene.add.graphics().setDepth(fenceDepth(row, dir)).setAlpha(0.3);
+          this.fadedFenceRows.set(rowKey, faded);
+        }
+        this.drawSegment(faded, edge, type, condition[i]);
+      } else this.drawSegment(regular, edge, type, condition[i]);
+    }
   }
 
   /** Gravel footpaths, with darker edges where a path meets grass. */

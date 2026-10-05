@@ -6,6 +6,7 @@ import { Simulation } from '../src/sim/Simulation';
 import { newGame } from '../src/sim/GameState';
 import { applyCommand } from '../src/sim/commands';
 import { pathEdges } from '../src/sim/grid';
+import { dinoWorldScale } from '../src/render/dinoSize';
 
 const input = { species:'carnotaurus' as const,baby:false,x:20,y:20,time:1000,paused:false,moving:false,asleep:false,ambient:true };
 
@@ -21,7 +22,7 @@ describe('park behavior animation',()=>{
     expect(advanceMotion(previous,{...input,x:500,time:9000,paused:true,asleep:true})).toBe(previous);
   });
   it('matches distance, direction and baby size instead of restarting at every tile',()=>{
-    const cycle=motionWalkSpeed(input.species)*BLENDER_MOTION[input.species].walk.durationMs/1000;
+    const cycle=motionWalkSpeed(input.species)*BLENDER_MOTION[input.species].walk.durationMs/1000*dinoWorldScale(input.species, 'blender');
     for(const direction of [-1,1])for(const baby of [false,true]){
       let previous: AnimalMotion|undefined;
       for(let step=0;step<16;step++){

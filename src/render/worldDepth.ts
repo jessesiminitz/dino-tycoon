@@ -1,5 +1,6 @@
 import type { GameState } from '../sim/GameState';
 import type { FenceTypeId } from '../sim/data/fences';
+import { edgeKey } from '../sim/grid';
 import { TERRAIN_TILE_SIZE as TILE } from './terrainArt';
 
 /** Logical ground contact shared by people, animals and tile-based objects. */
@@ -18,9 +19,10 @@ export const fenceDepth = (row: number, dir: 'h' | 'v'): number =>
 interface Bounds { left: number; right: number; top: number; bottom: number }
 type FenceState = Pick<GameState, 'map' | 'hFences' | 'vFences' | 'hFenceHp' | 'vFenceHp'>;
 
-/** Give a dinosaur priority over nearby fence faces that would cover its silhouette. */
-export function dinoDepth(state: FenceState, groundY: number, bounds: Bounds): number {
-  let depth = depthAt(groundY);
+/** Nearby foreground fence sections to soften, preserving the animal's ground depth. */
+export function obscuringFenceKeys(state: FenceState, groundY: number, bounds: Bounds): string[] {
+  const depth = depthAt(groundY);
+  const keys: string[] = [];
   const { width, height } = state.map;
   const firstRow = Math.max(0, Math.floor(groundY / TILE - 0.5));
   const lastRow = Math.min(height, Math.floor((bounds.bottom + MAX_FENCE_H + 1) / TILE));
@@ -35,8 +37,7 @@ export function dinoDepth(state: FenceState, groundY: number, bounds: Bounds): n
         const kind = state.hFences[i] as FenceTypeId | 0;
         if (kind && state.hFenceHp[i] > 0 && bounds.bottom > y - FENCE_H[kind] - 1 &&
             bounds.left < (col + 1) * TILE + 2 && bounds.right > col * TILE - 2) {
-          depth = Math.max(depth, horizontal + 2 * DEPTH_EPSILON);
-          break;
+          keys.push(edgeKey({ dir: 'h', x: col, y: row }));
         }
       }
     }
@@ -47,11 +48,10 @@ export function dinoDepth(state: FenceState, groundY: number, bounds: Bounds): n
         const kind = state.vFences[i] as FenceTypeId | 0;
         if (kind && state.vFenceHp[i] > 0 && bounds.bottom > y - FENCE_H[kind] - 1 &&
             bounds.left < col * TILE + 2 && bounds.right > col * TILE - 2) {
-          depth = Math.max(depth, vertical + 2 * DEPTH_EPSILON);
-          break;
+          keys.push(edgeKey({ dir: 'v', x: col, y: row }));
         }
       }
     }
   }
-  return depth;
+  return keys;
 }
