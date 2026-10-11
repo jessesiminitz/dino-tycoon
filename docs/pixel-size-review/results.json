@@ -1,11 +1,11 @@
 {
   "result": {
     "frames": 1792,
-    "compWidth": 7,
-    "compHeight": 5,
+    "compWidth": 14,
+    "compHeight": 8,
     "widths": {
       "microraptor": 4,
-      "compsognathus": 7,
+      "compsognathus": 14,
       "dimorphodon": 8,
       "protoceratops": 13,
       "velociraptor": 14,

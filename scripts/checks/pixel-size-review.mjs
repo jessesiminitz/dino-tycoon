@@ -53,7 +53,7 @@ try {
     return {frames,compWidth:b.right-b.left,compHeight:b.bottom-b.top,widths,failures};
   });
   check('all 1,792 pixel animation frames retain visible faces',result.failures.length===0,result);
-  check('Compsognathus is a tiny animal beside visitors',result.compWidth<=9&&result.compHeight<=6,result);
+  check('Compsognathus has its doubled, readable pixel size',result.compWidth>=12&&result.compWidth<=16&&result.compHeight>=6&&result.compHeight<=10,result);
   await page.screenshot({path:`${out}lineup.png`,fullPage:true});
   await (await page.$('[data-species="compsognathus"]')).screenshot({path:`${out}compsognathus.png`});
   writeFileSync(`${out}results.json`,JSON.stringify({result,errors},null,2));

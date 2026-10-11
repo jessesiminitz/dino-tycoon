@@ -1,5 +1,10 @@
 # Dino Tycoon: handoff notes
 
+## Compsognathus visibility adjustment — October 11, 2026
+
+The user requested twice the previous core-game size. Blender Compsognathus now has a 2× world-scale multiplier for adults and babies, including all animation clips; cartoon/original sizes and other species retain their scales. Motion stride and selection bounds use the shared scale.
+
+
 ## Local cartoon edition — October 11, 2026
 
 **Pixel size update:** the Blender pixel comparison (`?art=blender`) now uses a common six world pixels per registered metre, with only a five-pixel floor for the very smallest silhouettes. Compsognathus paints at about 7×5 pixels including its outline, beside a roughly 10-pixel-tall visitor; T. rex is about 74 pixels long and Argentinosaurus about 212. Large species may scale above their source resolution (up to 2.5×). Cartoon and original-painter sizes retain their preceding rules. Walking cycles receive the selected art style so gait distances match the corresponding body scale. The minimum 20×20 world-pixel dinosaur touch target remains intact. `scripts/checks/pixel-size-review.mjs` checks all 1,792 adult/baby frames and produces the visitor/species lineup under `docs/pixel-size-review/`.

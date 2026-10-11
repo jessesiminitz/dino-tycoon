@@ -2,7 +2,7 @@
 
 The pixel renderer previously used an 18-pixel minimum animal length and a compressed length exponent. That made Compsognathus disproportionately large and limited giant sauropods to near-native sprite dimensions.
 
-Blender pixel art now uses six world pixels per registered metre, with a five-pixel minimum for tiny silhouettes and a 2.5× maximum source scale. Size is calculated from painted silhouette width, excluding transparent tail/camera padding. Compsognathus is approximately 7×5 pixels including its outline; T. rex is approximately 74 pixels long, and Argentinosaurus approximately 212 pixels. Rasterization means these are approximate visual proportions, rather than a scientific scale diagram.
+Blender pixel art now uses six world pixels per registered metre, with a five-pixel minimum for tiny silhouettes and a 2.5× maximum source scale. Size is calculated from painted silhouette width, excluding transparent tail/camera padding. Compsognathus has a user-requested 2× visibility multiplier on its world scale (previously approximately 7×5 pixels including its outline); T. rex is approximately 74 pixels long, and Argentinosaurus approximately 212 pixels. Rasterization means these are approximate visual proportions, rather than a scientific scale diagram.
 
 Existing cartoon/original size rules are unchanged. Adult/baby walk cycles use the selected renderer's scale. Small animals retain the minimum 20×20 world-pixel selection area, without enlarging their artwork. Saves, species data and simulation rules are unchanged.
 

@@ -10,12 +10,14 @@ function visibleWidth(id: SpeciesId, frame = 0): number {
 }
 
 describe('park dinosaur sizes', () => {
-  it('restores a little Compsognathus beside people and the larger animals', () => {
+  it('doubles Compsognathus for visibility while keeping it smaller than large dinosaurs', () => {
     const comp = dinoShape(SPECIES.compsognathus, 0, false, 'blender', dinoWorldScale('compsognathus', 'blender'));
-    expect(comp.length).toBeLessThanOrEqual(4);
-    expect(visibleWidth('compsognathus')).toBeLessThanOrEqual(7);
-    expect(visibleWidth('tyrannosaurus')).toBeGreaterThan(9 * visibleWidth('compsognathus'));
-    expect(visibleWidth('diplodocus')).toBeGreaterThan(20 * visibleWidth('compsognathus'));
+    expect(comp.length).toBeGreaterThanOrEqual(6);
+    expect(comp.length).toBeLessThanOrEqual(8);
+    expect(visibleWidth('compsognathus')).toBeGreaterThanOrEqual(12);
+    expect(visibleWidth('compsognathus')).toBeLessThanOrEqual(14);
+    expect(visibleWidth('tyrannosaurus')).toBeGreaterThan(4 * visibleWidth('compsognathus'));
+    expect(visibleWidth('diplodocus')).toBeGreaterThan(10 * visibleWidth('compsognathus'));
   });
 
   it('keeps the small, medium and giant animals visibly different', () => {
@@ -44,11 +46,11 @@ describe('park dinosaur sizes', () => {
 
   it('uses a consistent length scale without the old tiny-dinosaur size floor', () => {
     for (const id of SPECIES_IDS) {
-      const expected = Math.max(5, SPECIES[id].lengthM * 6);
+      const expected = Math.max(5, SPECIES[id].lengthM * 6) * (id === 'compsognathus' ? 2 : 1);
       const longest = Math.max(...[0,1,2,3].map(frame => visibleWidth(id, frame)));
       // At tiny sizes, thin feather and wing tips disappear during resampling.
       expect(Math.abs(longest - expected), id).toBeLessThanOrEqual(habitatOf(id) === 'air' || expected <= 6 ? 3 : 2);
     }
-    expect(dinoWorldScale('compsognathus', 'blender')).toBeLessThan(dinoWorldScale('compsognathus', 'cartoon') / 2);
+    expect(dinoWorldScale('compsognathus', 'blender')).toBeLessThan(dinoWorldScale('compsognathus', 'cartoon'));
   });
 });
