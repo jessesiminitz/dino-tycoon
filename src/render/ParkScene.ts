@@ -546,15 +546,24 @@ export class ParkScene extends Phaser.Scene {
       const fed = state.hours - d.lastTreatHour < 1;
       const care: InfoAction[] = [
         {
-          label: '🍖',
+          label: d.escaped ? (sp.diet === 'carnivore' ? '🍖 Lure' : sp.diet === 'piscivore' ? '🐟 Lure' : '🥬 Lure') : '🍖',
           title: fed ? `${d.name} just had a treat` : `Give ${d.name} a treat (${formatMoney(TREAT_COST)})`,
           small: true,
-          disabled: d.escaped || fed || state.money < TREAT_COST,
+          disabled: fed || state.money < TREAT_COST,
           onClick: () => this.care(d.id, 'treatDino'),
         },
         { label: '✋', title: `Pat ${d.name}`, small: true, disabled: d.escaped, onClick: () => this.care(d.id, 'patDino') },
         { label: '📷', title: `Take a photo of ${d.name}`, small: true, onClick: () => this.takePhoto(d.id) },
       ];
+      if (d.escaped) {
+        this.hud.showInfo(`${dinoLabel(d)} · LOOSE · ${stats} · Lure with food, then bring home within one game hour.`, [
+          care[0],
+          { label: '🚁 Bring home $250', disabled: !fed || d.hunger >= 50 || state.money < 250,
+            onClick: () => { this.report(this.sim.dispatch({ type: 'rescueDino', id: d.id })); this.showSelection(); } },
+          { label: '📦', title: 'Move to a different paddock', small: true, onClick: () => this.ui.startMoving(d.id) },
+        ]);
+        return;
+      }
       if (d.baby) {
         const days = Math.ceil(hoursToGrow(state, d) / 24);
         this.hud.showInfo(`${dinoLabel(d)}${status ? ` · ${status}` : ''} · grows up in ${days} day${days === 1 ? '' : 's'} · ${stats}`, care);

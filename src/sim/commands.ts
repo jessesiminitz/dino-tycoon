@@ -28,6 +28,7 @@ export type Command =
   | { type: 'hatchEgg'; id: number }
   | { type: 'sellDino'; id: number }
   | { type: 'moveDino'; id: number; x: number; y: number }
+  | { type: 'rescueDino'; id: number }
   | { type: 'placeFeeder'; kind: FeederKind; x: number; y: number }
   | { type: 'removeFeeder'; id: number }
   | { type: 'refillFeeder'; id: number }
@@ -241,6 +242,22 @@ export function applyCommand(state: GameState, cmd: Command): CommandResult {
       state.parcelsOwned[cmd.py * parcelGrid(state.map).cols + cmd.px] = true;
       spend(state, 'land', price);
       return { ok: true, cost: price, message: `Bought land for ${usd(price)}` };
+    }
+
+    case 'rescueDino': {
+      const d = state.dinos.find((o) => o.id === cmd.id);
+      if (!d) return { ok: false, message: 'That dinosaur is gone' };
+      if (!d.escaped) return { ok: false, message: `${d.name} is already home` };
+      if (state.hours - d.lastTreatHour >= 1 || d.hunger >= 50)
+        return { ok: false, message: `Lure ${d.name} with food first. Hungry dinosaurs need another snack before transport.` };
+      const blocker = dinoSpotBlocker(state, d.species, d.homeX, d.homeY);
+      if (blocker) return { ok: false, message: `Its home needs attention: ${blocker}. Use Move to choose another paddock.` };
+      const cost = 250;
+      if (state.money < cost) return { ok: false, message: 'Rescue transport costs $250' };
+      Object.assign(d, { x: d.homeX, y: d.homeY, px: d.homeX, py: d.homeY, path: [], escaped: false });
+      for (const m of state.staff) if (m.task?.kind === 'recapture' && m.task.dinoId === d.id) m.task = null;
+      spend(state, 'maintenance', cost);
+      return { ok: true, cost, message: `🚁 Rescue complete! ${d.name} is safely home.`, effect: 'hearts' };
     }
 
     case 'moveDino': {

@@ -34,17 +34,17 @@ export function wouldSnap(d: Dino): boolean {
 }
 
 export function treatDino(state: GameState, id: number): CommandResult {
-  const d = reachable(state, id);
-  if (typeof d === 'string') return { ok: false, message: d };
+  const d = state.dinos.find((x) => x.id === id);
+  if (!d) return { ok: false, message: 'That dinosaur is gone' };
   if (state.hours - d.lastTreatHour < 1) return { ok: false, message: `${d.name} has just had a treat. Try again in a little while.` };
   if (state.money < TREAT_COST) return { ok: false, message: `Not enough money: treats cost $${TREAT_COST}` };
   spend(state, 'treats', TREAT_COST);
   d.lastTreatHour = state.hours;
   d.happiness = Math.min(100, d.happiness + TREAT_JOY);
-  d.hunger = Math.max(0, d.hunger - 5);
+  d.hunger = Math.max(0, d.hunger - (d.escaped ? 30 : 5));
   const diet = SPECIES[d.species].diet;
   const yum = diet === 'carnivore' ? 'gobbled up a meaty treat' : diet === 'piscivore' ? 'snapped up a fishy treat' : 'munched a crunchy treat';
-  return { ok: true, cost: TREAT_COST, message: `${dinoLabel(d)} ${yum}!`, effect: 'hearts' };
+  return { ok: true, cost: TREAT_COST, message: `${dinoLabel(d)} ${yum}!${d.escaped ? ' Calm enough now? Bring it home before it wanders off again!' : ''}`, effect: 'hearts' };
 }
 
 export function patDino(state: GameState, id: number): CommandResult {

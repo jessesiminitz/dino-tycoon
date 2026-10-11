@@ -1,5 +1,11 @@
 # Dino Tycoon: handoff notes
 
+## Active breakout rescue — October 11, 2026
+
+The Great Escape now starts with intact paddocks and fourteen loose dinosaurs, including two hungry carnivores. No missing fence sections to hunt. Select a loose animal, use its diet-specific food lure, then Bring home ($250) within one game hour. Loose-animal treats reduce hunger by 30; normal treats still reduce it by 5. `rescueDino` checks hunger, the recent lure, money and the original home before transporting; guards remain optional backup and Move offers an alternative paddock. Silver now rewards no losses and one calm day instead of fence repair and five days waiting. Existing v21 fields persist lure timing without a schema change. Old challenge saves retain their original damaged maps; start a fresh challenge to see the revised opening.
+
+`tests/rescue.test.ts` covers lure expiration, reload, hungry animals, insufficient funds, unsafe homes and duplicate rescue. Challenge balance now plays the active rescue route. `scripts/checks/rescue-review.mjs` verifies real food/rescue taps and fitting controls at two landscape phone sizes; screenshots are in `docs/rescue-review`. Full suite: 489 regular tests plus the performance test.
+
 ## Restore game proportions in the menu — October 11, 2026
 
 The user requested the game's relative species sizes again after the portrait enlargement. Menu sprites now use `dinoWorldScale` for the selected edition, including the existing 2× Compsognathus adjustment, and share one responsive parade zoom. Full motion canvases retain identical dimensions across all clips and frames; per-frame cropping/resizing was making animals such as Nigersaurus appear to stretch. Label/touch targets remain large independently of body size. Large land animals now give gentle nods; smaller hops and flutters scale with the animal's height, squash/stretch is removed, and treats animate only the authored chewing poses. Reaction clips start from the tap and reset correctly on return to walking. Park sizes, authored motion files, simulation and v21 saves retain their current behavior.

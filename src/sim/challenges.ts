@@ -6,8 +6,8 @@ import { isLand } from './terrain';
 
 /**
  * The Great Escape: a tidy little park where last night's storm broke the
- * fences. Every dinosaur is out wandering, fences are battered, and there's
- * one guard. Round everyone up (guards), mend the fences (workers).
+ * gate controls. The gates are secured again, but the animals are still loose.
+ * Find them, lure them with food and transport them home.
  */
 function greatEscape(b: ParkBuilder): void {
   b.prepare(-13, -15, 13, -1);
@@ -37,8 +37,8 @@ function greatEscape(b: ParkBuilder): void {
   b.building('snackstall', 1, -3);
   b.building('trashcan', -1, -2);
   for (const [x, y] of [[-12, -8], [12, -8]] as const) b.decor('bench', x, y);
-  b.hire('guard');
-  b.hire('janitor'); // the park's only worker is off sick
+  b.hire('worker');
+  b.hire('janitor');
 
   // Where each animal lives, before the storm.
   const { state } = b;
@@ -46,9 +46,8 @@ function greatEscape(b: ParkBuilder): void {
   const regions = computeRegions(state);
   const inPaddock = (i: number) => regions.regions[regions.tileRegion[i]]?.kind === 'paddock';
 
-  // The storm: every fence battered, a section of each paddock knocked flat.
-  b.wearFences(20, 60);
-  b.breakFences(18);
+  // The storm released the animals; their original paddocks remain safe.
+  // The keepers already secured the gates: rescue, not missing-edge hunting.
 
   // Everyone has wandered out onto the paths and lawns nearby.
   const outside: number[] = [];
@@ -63,7 +62,7 @@ function greatEscape(b: ParkBuilder): void {
     d.x = d.px = i % w;
     d.y = d.py = Math.floor(i / w);
     d.escaped = true;
-    d.hunger = 25;
+    d.hunger = d.species === 'velociraptor' || d.species === 'dilophosaurus' ? 65 : 25;
   }
   b.finish(30_000, 55);
 }

@@ -25,8 +25,9 @@ describe('challenge parks', () => {
     for (const d of s.dinos) {
       expect(d.escaped).toBe(true);
       expect(regions[tileRegion[d.y * w + d.x]]?.kind).not.toBe('paddock');
+      expect(regions[tileRegion[d.homeY * w + d.homeX]]?.kind).toBe('paddock');
     }
-    expect(s.staff.filter((m) => m.role === 'guard')).toHaveLength(1);
+    expect(s.staff.filter((m) => m.role === 'guard')).toHaveLength(0);
   });
 
   it('The Money Pit is big, overstaffed and deep in debt', () => {
@@ -64,7 +65,7 @@ describe('challenge goals and rules', () => {
     expect(goalValue(g, { kind: 'dinosHome', target: 100 })).toBe(0);
     for (const d of g.dinos) d.escaped = false;
     expect(goalValue(g, { kind: 'dinosHome', target: 100 })).toBe(100);
-    expect(goalValue(g, { kind: 'fencesOk', target: 90 })).toBeLessThan(90);
+    expect(goalValue(g, { kind: 'fencesOk', target: 90 })).toBe(100);
     g.stats.lastEscapeHour = g.hours - 24 * 3;
     expect(goalValue(g, { kind: 'calmDays', target: 5 })).toBe(3);
   });

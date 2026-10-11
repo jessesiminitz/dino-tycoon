@@ -259,20 +259,20 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
     id: 'great-escape',
     category: 'challenge',
     name: 'The Great Escape',
-    blurb: 'A storm knocked the power out overnight and every paddock is open. Round up the dinosaurs before the day is out!',
+    blurb: 'Dinosaurs are loose in the park! Find them, lure them with their favourite food, and bring them safely home.',
     difficulty: 1,
     startMoney: 30_000,
     seed: 4242,
     briefing: {
       icon: '🚨',
       story:
-        'Last night a storm knocked out the power and broke the fences. This morning every dinosaur is wandering the park, and visitors are hiding in the gift shop! Your one guard can’t catch them all alone, and your only worker is off sick.',
-      tip: 'Hire more 👮 guards (📊 Park → Staff) to bring dinosaurs home, and 🔧 workers to fix the fences. You can 🚪 close the park (📊 Park → Overview) to send visitors home while you sort it out.',
+        'A storm opened the gates overnight! The keepers have secured every paddock, but fourteen dinosaurs are still exploring the park. Two hungry carnivores are getting restless. Lead the rescue before opening day!',
+      tip: 'Tap a loose dinosaur → 🥬/🍖 Lure → 🚁 Bring home. Food calms it for one game hour; rescue hungry carnivores first! Close the park to protect visitors. Guards can help if you need backup.',
     },
     timeline: [
-      { hour: 2, text: '📻 Keeper’s radio: guards bring loose dinos home. The more guards, the faster it goes!', kind: 'info' },
-      { hour: 8, text: '📻 Keeper’s radio: broken fences let dinos straight back out. Workers fix them.', kind: 'info' },
-      { hour: 30, text: '📻 Keeper’s radio: the hungry raptor is looking for a snack. Get it home first!', kind: 'bad' },
+      { hour: 2, text: '📻 Rescue radio: find the raptor and Dilophosaurus first! Tap each, offer food, then Bring home.', kind: 'info' },
+      { hour: 8, text: '📻 Rescue radio: a food lure lasts one game hour. Finish each rescue before moving on to the next animal!', kind: 'info' },
+      { hour: 30, text: '📻 Rescue radio: still searching? Use the Dinosaurs list to find anyone still marked Escaped.', kind: 'bad' },
     ],
     loseIf: { dinosLostAbove: 3 },
     rounds: [
@@ -283,8 +283,8 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
       },
       {
         goals: [
-          { kind: 'fencesOk', target: 90 },
-          { kind: 'calmDays', target: 5 },
+          { kind: 'noLosses', target: 1 },
+          { kind: 'calmDays', target: 1 },
         ],
         days: 15,
         reward: { unlock: ['ankylosaurus'], money: 15_000 },

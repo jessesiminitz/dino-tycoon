@@ -100,11 +100,12 @@ describe('treats, pats and photos', () => {
     expect(applyCommand(s, { type: 'patDino', id: raptor.id })).toMatchObject({ effect: 'hearts' });
   });
 
-  it('no treats or pats for an animal on the loose, or without the money', () => {
+  it('food can lure loose animals, but pats need a paddock and treats need money', () => {
     const s = openPark();
     const d = s.dinos[0];
     d.escaped = true;
     expect(applyCommand(s, { type: 'patDino', id: d.id }).ok).toBe(false);
+    expect(applyCommand(s, { type: 'treatDino', id: d.id }).ok).toBe(true);
     d.escaped = false;
     s.money = 10;
     expect(applyCommand(s, { type: 'treatDino', id: d.id }).ok).toBe(false);

@@ -108,13 +108,14 @@ function play(s: GameState, days: number, each?: (s: GameState) => void) {
  * sensible player. Doing nothing must fail; sensible play must win.
  */
 describe('challenge balance', () => {
-it('The Great Escape: doing nothing fails; hiring guards and workers (and closing the gates) wins', () => {
+it('The Great Escape: doing nothing fails; active food lures and rescues win', () => {
   for (const mode of ['do nothing', 'sensible']) {
     const s = newPark('great-escape', 1);
     if (mode === 'sensible') {
-      for (let k = 0; k < 3; k++) applyCommand(s, { type: 'hireStaff', role: 'guard' });
-      applyCommand(s, { type: 'placeFeeder', kind: 'meat', x: s.entrance.x + 12, y: s.entrance.y - 9 });
-      for (let k = 0; k < 2; k++) applyCommand(s, { type: 'hireStaff', role: 'worker' });
+      for (const d of [...s.dinos].sort((a, b) => b.hunger - a.hunger)) {
+        expect(applyCommand(s, { type: 'treatDino', id: d.id }).ok).toBe(true);
+        expect(applyCommand(s, { type: 'rescueDino', id: d.id }).ok).toBe(true);
+      }
       applyCommand(s, { type: 'closePark' });
     }
     play(s, 30);
