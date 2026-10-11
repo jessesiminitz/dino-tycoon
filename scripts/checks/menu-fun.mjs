@@ -12,23 +12,28 @@ try {
  await page.waitForSelector('.menu-dino img');
  for(const [w,h] of [[1180,820],[667,375],[844,390],[390,844],[820,1180]]) {
   await page.setViewport({width:w,height:h});
-  const r=await page.evaluate(()=>{
+  const r=await page.evaluate(async()=>{
    const buttons=[...document.querySelectorAll('.menu-parade-group:first-child .menu-dino')];
-   const sizes=buttons.map(b=>{const i=b.querySelector('img'),r=i.getBoundingClientRect(),scale=Math.min(r.width/i.naturalWidth,r.height/i.naturalHeight);return {id:b.dataset.species,w:i.naturalWidth*scale,h:i.naturalHeight*scale};});
+   const {menuDinoSize,paintMenuDino}=await import('/src/render/menuDino.ts');
+   const sizes=buttons.map(b=>{const i=b.querySelector('img'),r=i.getBoundingClientRect(),scale=Math.min(r.width/i.naturalWidth,r.height/i.naturalHeight);const world=menuDinoSize(paintMenuDino(b.dataset.species));return {id:b.dataset.species,w:i.naturalWidth*scale,h:i.naturalHeight*scale,zoom:r.width/world.width};});
    const start=document.querySelector('[data-go="new"]').getBoundingClientRect(),parade=document.querySelector('.menu-parade').getBoundingClientRect();
-   return {count:buttons.length,comp:sizes.find(s=>s.id==='compsognathus'),minHeight:Math.min(...sizes.map(s=>s.h)),safe:start.bottom<=parade.top,overflow:document.documentElement.scrollWidth>innerWidth};
+   return {count:buttons.length,comp:sizes.find(s=>s.id==='compsognathus'),minHeight:Math.min(...sizes.map(s=>s.h)),zoomSpread:Math.max(...sizes.map(s=>s.zoom))-Math.min(...sizes.map(s=>s.zoom)),safe:start.bottom<=parade.top,overflow:document.documentElement.scrollWidth>innerWidth};
   });
-  check(`${w}x${h}: readable dinosaur portraits and unobstructed New park`,r.count===28&&r.comp.h>=40&&r.minHeight>=20&&r.safe&&!r.overflow,r);
+  check(`${w}x${h}: game-relative dinosaur sizes and unobstructed New park`,r.count===28&&r.comp.h>0&&r.minHeight>0&&r.zoomSpread<0.005&&r.safe&&!r.overflow,r);
   await page.screenshot({path:`${out}menu-${w}x${h}.png`});
  }
  await page.setViewport({width:1180,height:820});
  const before=await page.$eval('.menu-parade-group:nth-child(2) img',i=>i.src);
  await new Promise(r=>setTimeout(r,700));
  check('visible dinosaurs play authored walking frames',before!==await page.$eval('.menu-parade-group:nth-child(2) img',i=>i.src));
- for(const [id,reaction] of [['compsognathus','hop'],['pteranodon','flutter'],['mosasaurus','splash']]) {
+ for(const [id,reaction] of [['compsognathus','hop'],['pteranodon','flutter'],['mosasaurus','splash'],['nigersaurus','nod']]) {
   await page.evaluate(id=>{const track=document.querySelector('.menu-parade-track'),button=track.querySelector(`[data-species="${id}"]`);track.style.animation='none';track.style.transform=`translateX(${20-button.offsetLeft}px)`;},id);
   const selector=`.menu-parade-group:first-child [data-species="${id}"]`;
   await page.click(selector);
+  if(id==='compsognathus') {
+   await new Promise(r=>setTimeout(r,420));
+   check('tap animation keeps the body aspect ratio',await page.$eval(selector+' img',i=>{const m=new DOMMatrix(getComputedStyle(i).transform);return Math.abs(Math.hypot(m.a,m.b)-Math.hypot(m.c,m.d))<.001;}));
+  }
   check(`${id} answers a tap with ${reaction}`,await page.$eval(selector,(b,reaction)=>b.dataset.reaction===reaction,reaction));
   await page.click(selector);
   check(`${id} enjoys a snack on the next tap`,await page.$eval(selector,b=>b.dataset.reaction==='munch')&&await page.$eval('.menu-parade-hint',p=>p.textContent.includes('yum')));

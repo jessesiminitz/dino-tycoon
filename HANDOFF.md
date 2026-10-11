@@ -1,5 +1,12 @@
 # Dino Tycoon: handoff notes
 
+## Restore game proportions in the menu — October 11, 2026
+
+The user requested the game's relative species sizes again after the portrait enlargement. Menu sprites now use `dinoWorldScale` for the selected edition, including the existing 2× Compsognathus adjustment, and share one responsive parade zoom. Full motion canvases retain identical dimensions across all clips and frames; per-frame cropping/resizing was making animals such as Nigersaurus appear to stretch. Label/touch targets remain large independently of body size. Large land animals now give gentle nods; smaller hops and flutters scale with the animal's height, squash/stretch is removed, and treats animate only the authored chewing poses. Reaction clips start from the tap and reset correctly on return to walking. Park sizes, authored motion files, simulation and v21 saves retain their current behavior.
+
+`npm run check:menu-scale` checks all 896 adult frames per art style, fixed dimensions, game silhouette sizes and the common zoom. Nigersaurus contact sheets and results are under `docs/menu-scale-review`. `check:menu-fun` now verifies shared scale across desktop/phone/tablet layouts and includes Nigersaurus nod/chew interactions.
+
+
 ## Bigger, playful dinosaurs — October 11, 2026
 
 The title parade now uses native cropped portraits independently of world metre scales. Every species has a readable 192×98 fit box (160×66 in short landscape screens), labeled 44px+ tap targets and authored walking frames. T. rex, Compsognathus, Triceratops and Stegosaurus lead the same complete 28-species loop. Taps pause the scroll for hops/wiggles, aerial flutters or swimmer bobs; subsequent taps cycle through snacks/chewing and greetings. Only visible animals advance, frames are cached lazily, and animation stops after starting a park. Reduced motion and the animation setting provide a static, manually scrollable roster. Duplicate loop buttons are excluded from keyboard navigation; focusing an original animal brings it into view.
