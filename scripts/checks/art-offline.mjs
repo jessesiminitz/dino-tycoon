@@ -25,7 +25,7 @@ try {
   browser=await puppeteer.launch({executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true,
     args:['--use-angle=swiftshader','--enable-unsafe-swiftshader']});
   const expectedPage=await browser.newPage();
-  await expectedPage.goto(`${process.env.BASE_URL ?? 'http://localhost:5173'}/?art=${process.env.ART_STYLE ?? 'cartoon'}`,{waitUntil:'networkidle0'});
+  await expectedPage.goto(`${process.env.BASE_URL ?? 'http://localhost:5173'}/?art=${process.env.ART_STYLE ?? 'blender'}`,{waitUntil:'networkidle0'});
   const expected=await expectedPage.evaluate(async()=>{
     const {paintDino}=await import('/src/render/dinoArt.ts');
     const {SPECIES}=await import('/src/sim/data/species.ts');const {dinoWorldScale}=await import('/src/render/dinoSize.ts');

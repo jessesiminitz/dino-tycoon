@@ -37,3 +37,5 @@ Pushing to `main` runs the tests, builds and deploys to GitHub Pages.
 - `tests/`: Vitest tests for the simulation, including a worst-case performance benchmark.
 
 The Blender graphics workflow and comparison URLs are documented in [assets-source/README.md](assets-source/README.md). Run `npm run dev` and open `/scripts/art/review.html` to compare the T. rex, Triceratops and viewing tower prototypes. The art track stays separate from the release until visual and device review.
+
+The core game uses animated Blender pixel artwork with species-relative dinosaur sizes, including a much smaller Compsognathus. Play the [core game](https://jessesiminitz.github.io/dino-tycoon/) or the [cartoon alternative](https://jessesiminitz.github.io/dino-tycoon/?art=cartoon). Saves work across both styles.

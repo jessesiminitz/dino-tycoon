@@ -4,9 +4,9 @@
 
 **Pixel size update:** the Blender pixel comparison (`?art=blender`) now uses a common six world pixels per registered metre, with only a five-pixel floor for the very smallest silhouettes. Compsognathus paints at about 7×5 pixels including its outline, beside a roughly 10-pixel-tall visitor; T. rex is about 74 pixels long and Argentinosaurus about 212. Large species may scale above their source resolution (up to 2.5×). Cartoon and original-painter sizes retain their preceding rules. Walking cycles receive the selected art style so gait distances match the corresponding body scale. The minimum 20×20 world-pixel dinosaur touch target remains intact. `scripts/checks/pixel-size-review.mjs` checks all 1,792 adult/baby frames and produces the visitor/species lineup under `docs/pixel-size-review/`.
 
-The current checkout is on **`art/cartoon`**, branched locally from the latest Blender artwork. No GitHub access or deployment was used. The moved worktree link has been repaired against `/Volumes/Apple HDD 2TB/dino-tycoon/.git`.
+The artwork was developed on **`art/cartoon`** and is being promoted to `main` for GitHub Pages at the user’s request. The core/default style is Blender pixel art; `?art=cartoon` remains public. Validation: all 483 tests, TypeScript and production build passed. The moved worktree link has been repaired against `/Volumes/Apple HDD 2TB/dino-tycoon/.git`.
 
-Cartoon is now the default rendering style. Open `http://127.0.0.1:5173/` to play, or `/scripts/art/cartoon.html` to inspect the full art set and its animated behaviors. Development `?art=blender` and `?art=original` still provide comparisons.
+Blender pixel art is now the core/default rendering style, including the realistic size update. `?art=cartoon` selects the cartoon alternative in development and production; `?art=original` remains development-only. Public app icons match the pixel edition.
 
 The first playable cartoon pass covers 28 dinosaurs, four eight-frame clips each, adult/baby sizes, buildings, scenery, procedural terrain, visitors/staff, eggs, feeders, jeeps, fences, shop samples, interface and app icons. Most animal shapes are smooth curves derived from the editable local Blender contours; `cartoonRex.ts` gives the T. rex a bespoke rounded character and articulated poses based on the approved concept. This is a playable art-direction prototype, not a claim that every species exactly reproduces the generated concept illustration.
 
@@ -14,7 +14,7 @@ The first playable cartoon pass covers 28 dinosaurs, four eight-frame clips each
 
 The generated art pack is ~3.5 MB uncompressed and ~0.9 MB gzipped. It has its own production chunk so every precached file stays below the existing 5 MB limit. Simulation and saves remain v21.
 
-Run `npm run art:cartoon` with the local dev server for the exhaustive animation/size/transparency review and screenshots under `docs/cartoon-review/`. It also regenerates cartoon app icons from `iconArt.ts`. Physical iPhone/iPad performance and further character-design polish remain review items.
+Run `npm run art:cartoon` with the local dev server for the exhaustive animation/size/transparency review and screenshots under `docs/cartoon-review/`. App icons are regenerated separately with `npm run icons` so reviewing the cartoon alternative does not overwrite the core pixel icons. Physical iPhone/iPad performance and further character-design polish remain review items.
 
 Everything a fresh session needs to carry on. Last updated 2026-10-05, after restoring little dinosaurs and correcting fence grounding.
 

@@ -11,19 +11,14 @@ try {
   const page = await browser.newPage();
   page.on('pageerror', e => errors.push(e.message));
   await page.setViewport({width:1180,height:820});
-  await page.goto(`${base}/scripts/art/cartoon.html`, {waitUntil:'networkidle0'});
+  await page.goto(`${base}/scripts/art/cartoon.html?art=cartoon`, {waitUntil:'networkidle0'});
   await page.waitForSelector('#dinosaurs canvas');
   await page.click('#pause');
   await page.screenshot({path:`${out}gallery.png`,fullPage:true});
   const asset = await page.$('[data-asset="tyrannosaurus"]');
   await asset.screenshot({path:`${out}trex.png`});
-  const icons = await page.evaluate(async () => {
-    const {paintIcon}=await import('/src/render/iconArt.ts');
-    return {'apple-touch-icon.png':paintIcon(180).toDataURL(),'icon-192.png':paintIcon(192).toDataURL(),'icon-512.png':paintIcon(512).toDataURL(),'icon-maskable-512.png':paintIcon(512,.1).toDataURL()};
-  });
-  for(const [name,url] of Object.entries(icons))writeFileSync(fileURLToPath(new URL(`../../public/icons/${name}`,import.meta.url)),Buffer.from(url.split(',')[1],'base64'));
   check('all 69 cartoon asset types appear in gallery', await page.$$eval('article', a=>a.length) === 69);
-  await page.goto(`${base}/?quickstart&stress`, {waitUntil:'load'}); await ready(page);
+  await page.goto(`${base}/?art=cartoon&quickstart&stress`, {waitUntil:'load'}); await ready(page);
   const result = await page.evaluate(async exhaustive => {
     const {sim,game} = window.__dino, park = game.scene.getScene('park');
     sim.setSpeed(0);
