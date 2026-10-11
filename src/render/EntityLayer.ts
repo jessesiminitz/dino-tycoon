@@ -444,7 +444,7 @@ export class EntityLayer {
         const model = BLENDER_ART[d.species];
         const modelPadding = 'modelOffsetX' in model ? model.modelOffsetX : 0;
         const previous = this.motions.get(d.id);
-        const motion = advanceMotion(previous, {species:d.species,baby:d.baby,x,y,time:animalTime,offset:d.id*137,paused:this.sim.speed===0,moving,asleep,eatingSince:this.meals.get(d.id),ambient:getSettings().animation});
+        const motion = advanceMotion(previous, {species:d.species,baby:d.baby,x,y,time:animalTime,offset:d.id*137,paused:this.sim.speed===0,moving,asleep,eatingSince:this.meals.get(d.id),ambient:getSettings().animation,style:ART_STYLE});
         this.motions.set(d.id,motion);
         x=motion.x; y=motion.y;
         img.setTexture(motionTexture(this.scene,d.species,d.baby),`${motion.clip}-${motion.frame}`);

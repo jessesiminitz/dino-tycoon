@@ -4,7 +4,7 @@ import { BLENDER_MOTION } from './generated/blenderMotion';
 import { paintDinoRows, dinoCanvasBounds, type DinoPixelBounds } from './dinoArt';
 import { motionFrame, motionWalkSpeed, type MotionClip } from './immersionMotion';
 import { dinoWorldScale } from './dinoSize';
-import { ART_STYLE } from './artStyle';
+import { ART_STYLE, type ArtStyle } from './artStyle';
 import { cartoonMetadata, paintCartoonAsset } from './cartoonArt';
 
 export const MOTION_CLIPS: MotionClip[] = ['walk', 'idle', 'eat', 'rest'];
@@ -14,7 +14,7 @@ export function motionTexture(scene: Phaser.Scene, species: SpeciesId, baby: boo
   const key = `motion-${species}${baby ? '-baby' : ''}`;
   if (scene.textures.exists(key)) return key;
   const clips = BLENDER_MOTION[species];
-  const scale = dinoWorldScale(species, 'blender');
+  const scale = dinoWorldScale(species, ART_STYLE);
   const paint = (clip: MotionClip, frame: number) => ART_STYLE === 'cartoon'
     ? paintCartoonAsset(species, frame, SPECIES[species], baby, scale, clip)
     : paintDinoRows(SPECIES[species], clips[clip].frames[frame], baby, scale);
@@ -49,6 +49,7 @@ export interface AnimalMotion {
 export function advanceMotion(previous: AnimalMotion | undefined, input: {
   species: SpeciesId; baby: boolean; x: number; y: number; time: number;
   offset?: number; paused: boolean; moving: boolean; asleep: boolean; eatingSince?: number; ambient: boolean;
+  style?: ArtStyle;
 }): AnimalMotion {
   if (previous && input.paused) return previous;
   const delta = previous ? Math.hypot(input.x - previous.x, input.y - previous.y) : 0;
@@ -57,7 +58,7 @@ export function advanceMotion(previous: AnimalMotion | undefined, input: {
   const started = previous?.clip === clip ? previous.started : input.time-(clip==='idle'?(input.offset??0):0);
   let frame: number;
   if (clip === 'walk') {
-    const scale = dinoWorldScale(input.species, 'blender') * (input.baby ? .6 : 1);
+    const scale = dinoWorldScale(input.species, input.style ?? 'blender') * (input.baby ? .6 : 1);
     const cycle = motionWalkSpeed(input.species) * BLENDER_MOTION[input.species].walk.durationMs / 1000 * scale;
     frame = Math.floor(distance / Math.max(1e-6, cycle) * 8 + 1e-7) % 8;
   } else if (clip === 'eat') {

@@ -4,7 +4,7 @@ import { dinoFrameCount, dinoShape } from './dinoArt';
 
 const scales = new Map<string, number>();
 
-/** A readable park scale: small animals stay little, without filling the park with giants. */
+/** Pixel art uses one length scale; the cartoon edition keeps its readable compressed sizes. */
 export function dinoWorldScale(species: SpeciesId, style: ArtStyle = ART_STYLE): number {
   const key = `${species}:${style}`;
   const cached = scales.get(key);
@@ -20,8 +20,10 @@ export function dinoWorldScale(species: SpeciesId, style: ArtStyle = ART_STYLE):
     // Transparent canvas room for long tails must never determine body size.
     width = Math.max(width, right - left + 1);
   }
-  const target = Math.max(18, Math.min(200, 14 * SPECIES[species].lengthM ** 0.8));
-  const scale = Math.min(1.15, target / width);
+  const target = style === 'blender'
+    ? Math.max(5, 6 * SPECIES[species].lengthM)
+    : Math.max(18, Math.min(200, 14 * SPECIES[species].lengthM ** 0.8));
+  const scale = Math.min(style === 'blender' ? 2.5 : 1.15, target / width);
   scales.set(key, scale);
   return scale;
 }

@@ -11,6 +11,15 @@ import { dinoWorldScale } from '../src/render/dinoSize';
 const input = { species:'carnotaurus' as const,baby:false,x:20,y:20,time:1000,paused:false,moving:false,asleep:false,ambient:true };
 
 describe('park behavior animation',()=>{
+  it('matches the walking stride to the selected pixel or cartoon size',()=>{
+    for(const style of ['blender','cartoon'] as const){
+      const species='compsognathus';
+      const cycle=motionWalkSpeed(species)*BLENDER_MOTION[species].walk.durationMs/1000*dinoWorldScale(species,style);
+      const previous=advanceMotion(undefined,{...input,species,style,moving:true});
+      const next=advanceMotion(previous,{...input,species,style,moving:true,x:input.x+cycle/4});
+      expect(next.frame).toBe(2);
+    }
+  });
   it('shows real meals, then returns to idle; walking and sleeping take priority',()=>{
     expect(advanceMotion(undefined,{...input,eatingSince:800}).clip).toBe('eat');
     expect(advanceMotion(undefined,{...input,eatingSince:300}).clip).toBe('idle');

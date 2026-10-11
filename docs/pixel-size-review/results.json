@@ -1,0 +1,39 @@
+{
+  "result": {
+    "frames": 1792,
+    "compWidth": 7,
+    "compHeight": 5,
+    "widths": {
+      "microraptor": 4,
+      "compsognathus": 7,
+      "dimorphodon": 8,
+      "protoceratops": 13,
+      "velociraptor": 14,
+      "plesiosaurus": 22,
+      "pachycephalosaurus": 29,
+      "kentrosaurus": 32,
+      "styracosaurus": 35,
+      "pteranodon": 36,
+      "dilophosaurus": 44,
+      "ankylosaurus": 45,
+      "yutyrannus": 48,
+      "carnotaurus": 50,
+      "stegosaurus": 56,
+      "triceratops": 56,
+      "nigersaurus": 56,
+      "parasaurolophus": 59,
+      "allosaurus": 60,
+      "therizinosaurus": 62,
+      "iguanodon": 62,
+      "tyrannosaurus": 74,
+      "mosasaurus": 74,
+      "amargasaurus": 74,
+      "spinosaurus": 86,
+      "brachiosaurus": 134,
+      "diplodocus": 158,
+      "argentinosaurus": 212
+    },
+    "failures": []
+  },
+  "errors": []
+}
