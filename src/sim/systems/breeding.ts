@@ -36,6 +36,40 @@ export function hoursToGrow(state: GameState, d: Dino): number {
   return Math.max(0, d.bornHour + GROW_HOURS - state.hours);
 }
 
+/** Complete a ready egg exactly once; the interactive game calls this on tap three. */
+export function hatchEgg(state: GameState, id: number): Dino | undefined {
+  const egg = state.eggs.find(e => e.id === id);
+  if (!egg || hoursToHatch(state, egg.laidHour) > 0) return;
+  state.eggs.splice(state.eggs.indexOf(egg), 1);
+  const name = pickName(state, DINO_NAMES, state.dinos.map((d) => d.name));
+  const baby: Dino = {
+    id: state.nextId++,
+    species: egg.species,
+    name,
+    x: egg.x,
+    y: egg.y,
+    px: egg.x,
+    py: egg.y,
+    path: [],
+    hunger: 20,
+    health: 100,
+    happiness: 90,
+    bornHour: state.hours,
+    sick: false,
+    escaped: false,
+    homeX: egg.x,
+    homeY: egg.y,
+    baby: true,
+    lastTreatHour: NEVER,
+    lastPatHour: NEVER,
+    huntRestUntil: NEVER,
+  };
+  state.dinos.push(baby);
+  state.stats.hatched++;
+
+  return baby;
+}
+
 /**
  * Hourly: babies grow up, eggs hatch, and happy pairs lay. A pair is two
  * grown-ups of the same species in the same paddock, both happy and fed, in a
@@ -54,33 +88,9 @@ export function hourlyBreeding(ctx: SimContext): void {
 
   for (const egg of [...state.eggs]) {
     if (hoursToHatch(state, egg.laidHour) > 0) continue;
-    state.eggs.splice(state.eggs.indexOf(egg), 1);
-    const name = pickName(state, DINO_NAMES, state.dinos.map((d) => d.name));
-    const baby: Dino = {
-      id: state.nextId++,
-      species: egg.species,
-      name,
-      x: egg.x,
-      y: egg.y,
-      px: egg.x,
-      py: egg.y,
-      path: [],
-      hunger: 20,
-      health: 100,
-      happiness: 90,
-      bornHour: state.hours,
-      sick: false,
-      escaped: false,
-      homeX: egg.x,
-      homeY: egg.y,
-      baby: true,
-      lastTreatHour: NEVER,
-      lastPatHour: NEVER,
-      huntRestUntil: NEVER,
-    };
-    state.dinos.push(baby);
-    state.stats.hatched++;
-    ctx.emit({ text: `🐣 A baby ${SPECIES[egg.species].name} hatched! Say hello to ${name}.`, kind: 'good' });
+    if (ctx.interactiveHatching && habitatOf(egg.species) !== 'water') continue;
+    const baby = hatchEgg(state, egg.id)!;
+    ctx.emit({ text: `🐣 A baby ${SPECIES[egg.species].name} hatched! Say hello to ${baby.name}.`, kind: 'good', birth: { dinoId: baby.id } });
   }
 
   if (state.eggs.length + state.dinos.filter((d) => d.baby).length >= nurseryCap(state)) return;

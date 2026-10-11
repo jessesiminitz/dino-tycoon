@@ -1,0 +1,37 @@
+.hatch-dialog {
+  box-sizing: border-box; width: min(420px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px); overflow: auto; padding: 22px;
+  border: 4px solid #614731; border-radius: 18px; background: #fff5d9;
+  color: #352919; text-align: center; box-shadow: 0 12px 60px #0006;
+  font-family: inherit;
+}
+.hatch-dialog::backdrop { background: #172b29ba; }
+.hatch-dialog h2 { margin: 0 0 10px; font-size: 24px; }
+.hatch-dialog p { margin: 8px 0; }
+.hatch-egg { display: block; width: 180px; height: 200px; margin: 8px auto; padding: 0; border: 0; background: none; cursor: pointer; touch-action: manipulation; }
+.hatch-egg svg { width: 100%; height: 100%; }
+.egg-shell { fill: #f1dda8; stroke: #775636; stroke-width: 5; }
+.egg-crack { fill: none; stroke: #614731; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; opacity: 0; }
+.hatch-egg[data-cracks="1"] .crack-one, .hatch-egg[data-cracks="2"] .egg-crack { opacity: 1; }
+.hatch-egg[data-cracks="1"] svg { transform: rotate(-5deg); }
+.hatch-egg[data-cracks="2"] svg { transform: rotate(5deg); }
+.hatch-progress { font-weight: bold; }
+.hatch-stage { display: grid; place-items: center; height: 145px; margin: 12px 0; background: radial-gradient(ellipse, #f5da84 0, #fff5d900 70%); }
+.hatch-stage canvas { max-width: 100%; max-height: 135px; width: 100%; height: 120px; object-fit: contain; image-rendering: pixelated; }
+.cartoon .hatch-stage canvas { image-rendering: auto; }
+.hatch-revealed { animation: hatch-pop 400ms ease-out; }
+@keyframes hatch-pop { from { transform: scale(.25); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.hatch-name-form label { display: block; font-weight: bold; margin-bottom: 8px; }
+.hatch-name-form label span { font-weight: normal; }
+.hatch-name-form input { box-sizing: border-box; width: 100%; min-height: 44px; border: 2px solid #a88b62; border-radius: 8px; padding: 10px; font: inherit; font-size: 16px; }
+.hatch-name-form button { width: 100%; min-height: 44px; }
+.hatch-error { color: #a12a20; }
+.hatch-dialog :focus-visible { outline: 3px solid #177b89; outline-offset: 3px; }
+@media (max-height: 480px) {
+  .hatch-dialog { padding: 12px 18px; }
+  .hatch-dialog h2 { font-size: 21px; }
+  .hatch-egg { width: 126px; height: 140px; margin: 0 auto; }
+  .hatch-stage { height: 85px; margin: 4px 0; }
+  .hatch-stage canvas { height: 75px; }
+}
+@media (prefers-reduced-motion: reduce) { .hatch-revealed { animation: none; } }

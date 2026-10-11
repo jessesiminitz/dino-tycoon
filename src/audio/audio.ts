@@ -7,7 +7,7 @@ import type { SpeciesId } from '../sim/data/species';
  * All sound is synthesised with Web Audio: no audio files to download or license.
  * iOS only allows audio after a user gesture, so the context starts on the first tap.
  */
-export type Sfx = 'click' | 'build' | 'cash' | 'error' | 'roar' | 'alert' | 'chime' | 'fanfare' | 'sad' | 'thunder' | 'chirp' | 'snap' | 'shutter' | 'brush' | 'cheer' | 'splash' | 'flap';
+export type Sfx = 'click' | 'build' | 'cash' | 'error' | 'roar' | 'alert' | 'chime' | 'fanfare' | 'sad' | 'thunder' | 'chirp' | 'snap' | 'shutter' | 'brush' | 'cheer' | 'splash' | 'flap' | 'crack';
 
 let ctx: AudioContext | null = null;
 let sfxGain: GainNode;
@@ -141,7 +141,7 @@ function burst(start: number, dur: number, vol: number, freq: number, q = 1): vo
 
 const lastPlayed = new Map<Sfx, number>();
 /** Minimum gap between repeats of the same sound, so bursts of events don't stack up. */
-const MIN_GAP_MS: Partial<Record<Sfx, number>> = { alert: 700, cash: 120, chime: 300, click: 40, brush: 90, cheer: 1500, splash: 600, flap: 600 };
+const MIN_GAP_MS: Partial<Record<Sfx, number>> = { alert: 700, cash: 120, chime: 300, click: 40, brush: 90, cheer: 1500, splash: 600, flap: 600, crack: 0 };
 
 export function playSfx(name: Sfx): void {
   if (!ctx || !getSettings().sfx) return;
@@ -150,6 +150,11 @@ export function playSfx(name: Sfx): void {
   lastPlayed.set(name, now);
   const t = ctx.currentTime;
   switch (name) {
+    case 'crack':
+      // Dry shell snap followed by smaller shell fragments.
+      burst(t, 0.035, 0.45, 3200, 1.1);
+      burst(t + 0.025, 0.07, 0.2, 1800, 0.7);
+      return tone('triangle', 230, t, 0.045, 0.1, sfxGain, 95);
     case 'click':
       return tone('square', 880, t, 0.04, 0.08);
     case 'build':

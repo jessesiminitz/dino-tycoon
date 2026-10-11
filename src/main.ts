@@ -17,6 +17,8 @@ import { audioDebug, initAudio, onSong, playSfx, type Sfx } from './audio/audio'
 import { getSettings } from './ui/settings';
 import { ART_STYLE } from './render/artStyle';
 import './ui/cartoon.css';
+import { mountHatching } from './ui/hatching';
+import './ui/hatching.css';
 
 if (ART_STYLE === 'cartoon') document.body.classList.add('cartoon');
 
@@ -61,6 +63,7 @@ function startGame(state: GameState, slot: SlotId): void {
     if (e.outcome === 'milestone' || e.outcome === 'won') recordMedals(sim.state.scenario.id, sim.state.scenario.round);
   });
   mountBriefing(sim);
+  mountHatching(sim, saveCurrent);
   document.body.classList.add('in-park');
 
   const game = new Phaser.Game({
@@ -126,7 +129,7 @@ function eventSound(text: string, kind: string, outcome?: 'won' | 'lost' | 'mile
 initAudio();
 // Every button gives a little click.
 document.addEventListener('click', (e) => {
-  if ((e.target as HTMLElement).closest('button')) playSfx('click');
+  if ((e.target as HTMLElement).closest('button') && !(e.target as HTMLElement).closest('[data-hatch-egg]')) playSfx('click');
 });
 
 async function boot(): Promise<void> {

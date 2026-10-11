@@ -38,6 +38,7 @@ type EventListener = (event: GameEvent) => void;
  */
 export class Simulation {
   speed: Speed = 1;
+  interactiveHatching = false;
   /** Bumped whenever the built world changes (fences built or broken, land), so renderers and paddocks update. */
   worldRevision = 0;
   private accumulator = 0;
@@ -95,6 +96,7 @@ export class Simulation {
     const rng = new Rng(state.rngState);
     const ctx: SimContext = {
       state,
+      interactiveHatching: this.interactiveHatching,
       rng,
       regions: this.regions(),
       emit: (e) => this.emitEvent(e),
@@ -129,6 +131,7 @@ export class Simulation {
 
   dispatch(cmd: Command): CommandResult {
     const result = applyCommand(this.state, cmd);
+    if (result.ok && cmd.type === 'hatchEgg') this.emitEvent({ text: result.message, kind: 'good' });
     // A decision's outcome goes in the park log like any other news.
     if (result.ok && cmd.type === 'chooseOption') this.emitEvent({ text: result.message, kind: 'info' });
     if (result.ok) {

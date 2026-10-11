@@ -69,6 +69,32 @@ try {
   const before=await page.screenshot();await new Promise(resolve=>setTimeout(resolve,800));const after=await page.screenshot();
   check('offline populated park keeps animating',!before.equals(after));
   await page.screenshot({path:`${out}/blender-offline.png`});
+  if (process.env.REVIEW_HATCHING === '1') {
+    // Return to the menu so pagehide saves finish before preparing a ready egg.
+    await page.goto('http://127.0.0.1:4175/dino-tycoon/',{waitUntil:'load'});
+    await page.waitForSelector('[data-play="1"]',{visible:true});
+    const beforeHatched=await page.evaluate(()=>{
+      const key='dino-tycoon:slot:1',rec=JSON.parse(localStorage.getItem(key));
+      rec.state.eggs=[{id:rec.state.nextId++,species:'tyrannosaurus',x:4,y:4,laidHour:rec.state.hours-48}];
+      rec.savedAt=Date.now()+1000;
+      localStorage.setItem(key,JSON.stringify(rec));return rec.state.stats.hatched;
+    });
+    await page.reload({waitUntil:'load'});
+    await tap('[data-play="1"]');
+    await page.waitForSelector('[data-hatch-egg]',{visible:true});
+    for(let i=1;i<=2;i++) {
+      await tap('[data-hatch-egg]');
+      check(`offline production egg tap ${i} keeps the baby unhatched`,await page.evaluate(({i,beforeHatched})=>document.querySelector('[data-hatch-egg]').dataset.cracks===String(i)&&JSON.parse(localStorage.getItem('dino-tycoon:slot:1')).state.stats.hatched===beforeHatched,{i,beforeHatched}));
+    }
+    await tap('[data-hatch-egg]');
+    check('offline production third tap saves exactly one matching baby',await page.evaluate(beforeHatched=>{
+      const s=JSON.parse(localStorage.getItem('dino-tycoon:slot:1')).state;
+      return s.stats.hatched===beforeHatched+1&&s.eggs.length===0&&s.dinos.at(-1).species==='tyrannosaurus'&&s.dinos.at(-1).baby&&document.querySelector('.hatch-stage canvas').dataset.species==='tyrannosaurus';
+    },beforeHatched));
+    await page.type('#hatch-name','Offline Pip');
+    await tap('.hatch-name-form button');
+    check('offline production baby naming persists',await page.evaluate(()=>JSON.parse(localStorage.getItem('dino-tycoon:slot:1')).state.dinos.at(-1).name==='Offline Pip'&&!document.querySelector('.hatch-dialog').open));
+  }
   finish(errors);
 } finally {if(browser){let timer;await Promise.race([browser.close(),new Promise(resolve=>{timer=setTimeout(()=>{browser.disconnect();browser.process()?.kill('SIGKILL');resolve();},10000);})]);clearTimeout(timer);}await new Promise(resolve=>server.close(resolve));}
 process.exit(process.exitCode??0);

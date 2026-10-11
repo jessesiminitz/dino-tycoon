@@ -132,6 +132,34 @@ describe('baby dinosaurs', () => {
     expect(ctx.events.some((t) => /all grown up/.test(t))).toBe(true);
   });
 
+  it('interactive hatching keeps ready eggs in saves until the player opens them', () => {
+    const s = openPark();
+    const ctx = ctxFor(s);
+    ctx.interactiveHatching = true;
+    s.eggs.push({ id: 8000, species: 'compsognathus', x: 4, y: 4, laidHour: s.hours - HATCH_HOURS });
+    hourlyBreeding(ctx);
+    expect(s.eggs).toHaveLength(1);
+    expect(s.stats.hatched).toBe(0);
+    const restored = migrate(JSON.parse(JSON.stringify(s)))!;
+    expect(applyCommand(restored, { type: 'hatchEgg', id: 8000 }).ok).toBe(true);
+    expect(restored.eggs).toHaveLength(0);
+    expect(restored.dinos.at(-1)).toMatchObject({ species: 'compsognathus', baby: true, x: 4, y: 4 });
+    expect(restored.stats.hatched).toBe(1);
+    expect(applyCommand(restored, { type: 'hatchEgg', id: 8000 }).ok).toBe(false);
+    expect(restored.stats.hatched).toBe(1);
+  });
+
+  it('cannot open an unready egg and still gives sea reptiles live young', () => {
+    const s = openPark();
+    s.eggs.push({ id: 8001, species: 'triceratops', x: 4, y: 4, laidHour: s.hours });
+    expect(applyCommand(s, { type: 'hatchEgg', id: 8001 }).ok).toBe(false);
+    const ctx = ctxFor(s); ctx.interactiveHatching = true;
+    s.eggs.push({ id: 8002, species: 'mosasaurus', x: 4, y: 4, laidHour: s.hours - HATCH_HOURS });
+    hourlyBreeding(ctx);
+    expect(s.dinos.at(-1)).toMatchObject({ species: 'mosasaurus', baby: true });
+    expect(s.eggs.map(e => e.id)).toEqual([8001]);
+  });
+
   it('keeps eggs and babies to a sensible share of the park', () => {
     const s = openPark();
     expect(nurseryCap(s)).toBe(4);

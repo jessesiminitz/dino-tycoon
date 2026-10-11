@@ -1,3 +1,4 @@
+import { hatchEgg } from './systems/breeding';
 import { patDino, treatDino, type CareEffect } from './systems/care';
 import { noteRequestAction } from './systems/requests';
 import { answerChoice } from './systems/choices';
@@ -24,6 +25,7 @@ export type Command =
   | { type: 'removeFences'; edges: Edge[] }
   | { type: 'buyParcel'; px: number; py: number }
   | { type: 'buyDino'; species: SpeciesId; x: number; y: number }
+  | { type: 'hatchEgg'; id: number }
   | { type: 'sellDino'; id: number }
   | { type: 'moveDino'; id: number; x: number; y: number }
   | { type: 'placeFeeder'; kind: FeederKind; x: number; y: number }
@@ -543,6 +545,12 @@ export function applyCommand(state: GameState, cmd: Command): CommandResult {
       state.stats.photos++;
       noteRequestAction(state, 'photo', d);
       return { ok: true, cost: 0, message: 'Say cheese!' };
+    }
+
+    case 'hatchEgg': {
+      const baby = hatchEgg(state, cmd.id);
+      return baby ? { ok: true, cost: 0, message: `🐣 A baby ${SPECIES[baby.species].name} hatched! Say hello to ${baby.name}.` }
+        : { ok: false, message: 'This egg is not ready to hatch' };
     }
 
     case 'rename': {

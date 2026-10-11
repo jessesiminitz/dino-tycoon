@@ -4,6 +4,7 @@ import type { RegionMap } from '../regions';
 import type { Rng } from '../rng';
 
 export interface GameEvent {
+  birth?: { dinoId: number };
   text: string;
   kind: 'info' | 'good' | 'bad';
   /** Set when this event completes a round of milestones or ends a scenario. */
@@ -14,6 +15,8 @@ export interface GameEvent {
 
 /** What a system gets each step: the state, seeded randomness, current regions and an event sink. */
 export interface SimContext {
+  /** Ready land eggs wait for the player; headless simulations hatch automatically. */
+  interactiveHatching?: boolean;
   state: GameState;
   rng: Rng;
   regions: RegionMap;

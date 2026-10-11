@@ -1,5 +1,10 @@
 # Dino Tycoon: handoff notes
 
+## Interactive baby reveal — October 11, 2026
+
+The live game opts into interactive hatching through `mountHatching`: ready land eggs stay in the existing v21 save until the third tap dispatches `hatchEgg`. Headless simulations retain automatic births. A native dialog pauses the park with the shared pause holder, traps focus, shows successive shell cracks with synthesized crack SFX, and reveals the matching species' baby artwork. The congratulations screen offers an optional name using the existing rename command, then saves and restores the preceding speed. Concurrent eggs are presented one at a time; unfinished eggs reopen after reload. Sea reptiles retain live birth and receive the species-specific celebration/name screen directly. No save schema change. `npm run check:hatching` checks every species, taps, naming/save, reload, queuing, audio activation and phone/tablet layouts; screenshots go under `docs/hatching-review`.
+
+
 ## Compsognathus visibility adjustment — October 11, 2026
 
 The user requested twice the previous core-game size. Blender Compsognathus now has a 2× world-scale multiplier for adults and babies, including all animation clips; cartoon/original sizes and other species retain their scales. Motion stride and selection bounds use the shared scale.
