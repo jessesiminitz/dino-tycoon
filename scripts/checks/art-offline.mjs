@@ -27,9 +27,9 @@ try {
   const expectedPage=await browser.newPage();
   await expectedPage.goto(`${process.env.BASE_URL ?? 'http://localhost:5173'}/?art=${process.env.ART_STYLE ?? 'blender'}`,{waitUntil:'networkidle0'});
   const expected=await expectedPage.evaluate(async()=>{
-    const {paintDino}=await import('/src/render/dinoArt.ts');
-    const {SPECIES}=await import('/src/sim/data/species.ts');const {dinoWorldScale}=await import('/src/render/dinoSize.ts');
-    return Object.keys(SPECIES).map(id=>paintDino(SPECIES[id],0,false,undefined,dinoWorldScale(id)).toDataURL());
+    const {paintMenuDino}=await import('/src/render/menuDino.ts');
+    const {SPECIES_IDS}=await import('/src/sim/data/species.ts');
+    return SPECIES_IDS.map(id=>paintMenuDino(id).toDataURL());
   });
   const offlinePark=await expectedPage.evaluate(async()=>{const {stressPark}=await import('/src/dev/stressPark.ts');const state=stressPark();state.entrance={x:28,y:25};return state;});
   await expectedPage.close();
@@ -39,7 +39,7 @@ try {
   await page.goto('http://127.0.0.1:4175/dino-tycoon/',{waitUntil:'networkidle0'});
   await page.waitForSelector('[data-go="new"]',{visible:true});
   const active=await page.evaluate(expected=>{
-    const images=[...document.querySelectorAll('.menu-parade img')].map(i=>i.src);
+    const images=[...document.querySelectorAll('.menu-parade img')].map(i=>i.dataset.poster);
     return expected.every(src=>images.includes(src)) && !window.__dino;
   },expected);
   check('production build uses the new art with production dev hooks stripped',active);
@@ -59,7 +59,7 @@ try {
   await page.reload({waitUntil:'load'});
   await page.waitForSelector('[data-play="1"]',{visible:true});
   check('new menu art is present after offline restart',await page.evaluate(expected=>{
-    const images=[...document.querySelectorAll('.menu-parade img')].map(i=>i.src);
+    const images=[...document.querySelectorAll('.menu-parade img')].map(i=>i.dataset.poster);
     return expected.every(src=>images.includes(src));
   },expected));
   await tap('[data-play="1"]');

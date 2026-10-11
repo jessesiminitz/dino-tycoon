@@ -1,0 +1,18 @@
+import { habitatOf, SPECIES, type SpeciesId } from '../sim/data/species';
+import type { MotionClip } from './immersionMotion';
+export type DinoReactionAction = 'pat' | 'treat';
+export const REACTION_MS = 1200;
+export interface DinoReaction { clip?: MotionClip; frame: number; lift: number; angle: number }
+
+/** Player gestures use a real-time clock, so a paused park can still answer a pat. */
+export function dinoReaction(id: SpeciesId, action: DinoReactionAction, elapsed: number, animate = true): DinoReaction {
+  if (elapsed < 0 || elapsed >= REACTION_MS) return {frame:0,lift:0,angle:0};
+  const t = elapsed / REACTION_MS;
+  if (action === 'treat') return {clip:'eat',frame:animate ? Math.min(7,Math.floor(t*8)) : 0,lift:0,angle:0};
+  const habitat = habitatOf(id);
+  const pulse = Math.sin(t * Math.PI * 2) * Math.sin(t * Math.PI);
+  const height = habitat === 'air' ? 5 : habitat === 'water' ? 2 : SPECIES[id].size <= 2 ? 3 : 1.5;
+  return {clip:habitat==='air' ? 'walk' : 'idle',frame:animate ? Math.floor(t*8)%8 : 0,
+    lift:animate ? (habitat==='water' ? pulse : Math.abs(pulse))*height : 0,
+    angle:animate ? pulse*(habitat==='air'?5:3) : 0};
+}

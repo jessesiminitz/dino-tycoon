@@ -4,10 +4,8 @@ import { challengeUnlocked, bestMedals } from './challengeRecords';
 import { ISLAND_SHAPE_IDS, ISLAND_SHAPES, type IslandShape } from '../sim/island';
 import { paintMinimap, paintParkMinimap } from '../render/minimap';
 import { BUILD_IDS, CHALLENGE_IDS, MEDALS, SCENARIOS, type ScenarioId } from '../sim/data/scenarios';
-import { SPECIES, SPECIES_IDS } from '../sim/data/species';
 import { goalLabel } from '../sim/goals';
-import { paintDino } from '../render/dinoArt';
-import { dinoWorldScale } from '../render/dinoSize';
+import { mountMenuParade } from './menuParade';
 import {
   deleteSlot,
   exportFileName,
@@ -46,33 +44,7 @@ export function showMenu(handlers: MenuHandlers): void {
   const body = root.querySelector<HTMLElement>('.menu-body')!;
   root.classList.remove('hidden');
 
-  // A parade of dinosaurs across the bottom of the title screen.
-  const parade = root.querySelector<HTMLElement>('.menu-parade')!;
-  if (!parade.childElementCount) {
-    const track = document.createElement('div');
-    track.className = 'menu-parade-track';
-    const group = document.createElement('div');
-    group.className = 'menu-parade-group';
-    const canvases = SPECIES_IDS.map(id => paintDino(SPECIES[id], 0, false, undefined, dinoWorldScale(id)));
-    const zoom = 64 / Math.max(...canvases.map(canvas => canvas.height));
-    for (const canvas of canvases) {
-      const img = document.createElement('img');
-      img.src = canvas.toDataURL();
-      img.alt = '';
-      // Reserve the full silhouette, including the newly lengthened tails.
-      img.style.width = `${canvas.width * zoom}px`;
-      img.style.height = `${canvas.height * zoom}px`;
-      group.appendChild(img);
-    }
-    // Identical rows make the seam continuous, with the same gap at the join.
-    track.append(group, group.cloneNode(true));
-    parade.appendChild(track);
-    new ResizeObserver(() => {
-      // All species travel together at 30 px/s, independent of screen width.
-      const width = group.getBoundingClientRect().width;
-      if (width > 0) track.style.animationDuration = `${width / 30}s`;
-    }).observe(group);
-  }
+  if (!root.querySelector('.menu-dino')) mountMenuParade(root);
 
   let slots: Record<SlotId, SaveRecord | null> = { 1: null, 2: null, 3: null };
   /** When set, the next slot choice overwrites with this state (new park or import). */

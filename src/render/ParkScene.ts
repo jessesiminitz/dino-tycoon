@@ -335,7 +335,7 @@ export class ParkScene extends Phaser.Scene {
     if (!r.ok) return this.report(r);
     this.hud.toast(r.message, r.effect === 'snap' ? 'error' : 'ok');
     if (r.effect) {
-      this.entities.careEffect(id, r.effect);
+      this.entities.careEffect(id, r.effect, type === 'treatDino' ? 'treat' : 'pat');
       playSfx(r.effect === 'snap' ? 'snap' : 'chirp');
     }
     this.showSelection();

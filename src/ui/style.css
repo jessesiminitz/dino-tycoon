@@ -1351,61 +1351,39 @@ body:not(.in-park) #info {
   margin-top: 10px;
 }
 
-.menu:not([data-screen='main']) .menu-parade {
-  display: none;
+.menu:not([data-screen='main']) .menu[data-screen='main'] .menu-content { height: calc(100% - 174px); padding-bottom: 14px; }
+.menu-parade { position: absolute; left: 0; right: 0; bottom: calc(var(--safe-bottom) + 6px); height: 158px; overflow: hidden; }
+.menu-parade-hint { margin: 0 0 4px; text-align: center; color: #fff4cc; font-size: 12px; text-shadow: 1px 2px 0 #173b4a; min-height: 20px; }
+.menu-parade-track { display: flex; width: max-content; animation: parade 180s linear infinite; }
+.menu-parade-track.is-playing, .menu-parade-track:has(.menu-dino:focus-visible) { animation-play-state: paused; }
+.menu-parade-group { display: flex; align-items: flex-end; gap: 48px; padding-right: 48px; min-width: 100vw; flex: none; }
+.menu-dino { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 204px; height: 128px; flex: none; padding: 6px 0; border: 0; box-shadow: none; background: transparent; touch-action: manipulation; cursor: pointer; }
+.menu-dino img { width: 192px; height: 98px; object-fit: contain; image-rendering: pixelated; transform-origin: center bottom; pointer-events: none; }
+.menu-dino-name { color: #fff4cc; text-shadow: 1px 2px 0 #173b4a; font-size: 10px; white-space: nowrap; }
+.menu-dino:focus-visible { outline: 3px solid #fff4cc; outline-offset: -3px; border-radius: 12px; }
+.menu-dino[data-reaction='hop'] img { animation: menu-hop .6s ease-in-out 3; }
+.menu-dino[data-reaction='wiggle'] img { animation: menu-wiggle .45s ease-in-out 4; }
+.menu-dino[data-reaction='flutter'] img { animation: menu-flutter .6s ease-in-out 3; }
+.menu-dino[data-reaction='splash'] img { animation: menu-splash .9s ease-in-out 2; }
+.menu-dino[data-reaction='munch'] img { animation: menu-munch .45s ease-in-out 4; }
+@keyframes parade { from { transform: translateX(-50%); } to { transform: translateX(0); } }
+@keyframes menu-hop { 40% { transform: translateY(-14px) rotate(-4deg); } 70% { transform: scale(1.06,.94); } }
+@keyframes menu-wiggle { 25% { transform: rotate(-7deg); } 75% { transform: rotate(7deg); } }
+@keyframes menu-flutter { 50% { transform: translateY(-18px) rotate(5deg); } }
+@keyframes menu-splash { 50% { transform: translateY(14px) rotate(-6deg); } }
+@keyframes menu-munch { 50% { transform: translateY(3px) rotate(3deg); } }
+@media (max-height: 480px) {
+  .menu[data-screen='main'] .menu-content { height: calc(100% - 118px); padding-top: 8px; }
+  .menu[data-screen='main'] .menu-title { font-size: 32px; }
+  .menu[data-screen='main'] .menu-title br { display: none; }
+  .menu-parade { height: 110px; }
+  .menu-dino { width: 172px; height: 84px; padding: 0; }
+  .menu-dino img { width: 160px; height: 66px; }
 }
-
-.menu:not([data-screen='main']) .menu-title {
-  font-size: 22px;
-  margin-bottom: 4px;
-}
-
-.menu:not([data-screen='main']) .menu-title br {
-  display: none;
-}
-
-.menu-parade {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: calc(var(--safe-bottom) + 10px);
-  height: 64px;
-  pointer-events: none;
-}
-
-.menu-parade img {
-  flex: none;
-  image-rendering: pixelated;
-}
-
-.menu-parade-track {
-  display: flex;
-  width: max-content;
-  animation: parade 180s linear infinite;
-}
-
-.menu-parade-group {
-  display: flex;
-  align-items: flex-end;
-  gap: 48px;
-  padding-right: 48px;
-  min-width: 100vw;
-  flex: none;
-}
-
-@keyframes parade {
-  from {
-    transform: translateX(-50%);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .menu-parade-track {
-    animation: none;
-  }
+  .menu-parade { overflow-x: auto; }
+  .menu-parade-track { animation: none; }
+  .menu-dino[data-reaction] img { animation: none; }
 }
 
 .scenario-grid {
@@ -2695,3 +2673,8 @@ body:not(.in-park) #info {
     font-size: 13px;
   }
 }
+
+body.cartoon .menu-dino { border: 0; box-shadow: none; background: transparent; }
+
+.menu-parade.motion-off { overflow-x: auto; }
+.menu-parade.motion-off .menu-parade-track, .menu-parade.motion-off .menu-dino img { animation: none; }

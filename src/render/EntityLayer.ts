@@ -1,3 +1,4 @@
+import { dinoReaction, type DinoReactionAction, type DinoReaction } from './dinoReaction';
 import { addPaintedTexture, fitPaintedImage } from './paintedTexture';
 import { paintCartoonPerson } from './cartoonArt';
 import Phaser from 'phaser';
@@ -118,7 +119,7 @@ export class EntityLayer {
   private eggs = new Map<number, Phaser.GameObjects.Image>();
   private jeeps = new Map<number, Phaser.GameObjects.Image>();
   /** Hearts and "Nope!" bubbles over animals that were just treated or patted. */
-  private effects: { dinoId: number; kind: CareEffect; start: number; label?: Phaser.GameObjects.Text }[] = [];
+  private effects: { dinoId: number; kind: CareEffect; action: DinoReactionAction; start: number; label?: Phaser.GameObjects.Text }[] = [];
   private markers: Phaser.GameObjects.Graphics;
   /** Litter and messes on the ground, under everyone's feet. */
   private dirt: Phaser.GameObjects.Graphics;
@@ -126,6 +127,7 @@ export class EntityLayer {
   private shadows: Phaser.GameObjects.Graphics;
   /** Shared animation clock: freezes with the simulation, including flyers/idle motion. */
   private animalTime = 0;
+  private reactionTime = 0;
   private lastUpdateTime?: number;
   private motions = new Map<number, AnimalMotion>();
   private meals = new Map<number, number>();
@@ -221,8 +223,9 @@ export class EntityLayer {
   }
 
   /** Show how an animal reacted to a treat or pat. */
-  careEffect(dinoId: number, kind: CareEffect): void {
-    this.effects.push({ dinoId, kind, start: this.animalTime });
+  careEffect(dinoId: number, kind: CareEffect, action: DinoReactionAction = 'pat'): void {
+    this.effects = this.effects.filter(e => { if (e.dinoId !== dinoId) return true; e.label?.destroy(); return false; });
+    this.effects.push({ dinoId, kind, action, start: this.reactionTime });
   }
 
   /** The sprite drawn for a dino (for photos). */
@@ -269,6 +272,7 @@ export class EntityLayer {
   update(time: number): void {
     const elapsed = this.lastUpdateTime === undefined ? 0 : Math.max(0, Math.min(250, time - this.lastUpdateTime));
     this.lastUpdateTime = time;
+    this.reactionTime += elapsed;
     if (this.sim.speed !== 0) this.animalTime += elapsed * this.sim.effectiveSpeed;
     const animalTime = this.animalTime;
     time = animalTime;
@@ -289,7 +293,7 @@ export class EntityLayer {
     const sh = this.shadows.clear();
     sh.fillStyle(0x000000, 0.22);
     this.drawDirt(time);
-    this.drawEffects(g, time);
+    this.drawEffects(g, this.reactionTime);
 
     this.drawFootfalls();
     // Feeders
@@ -414,11 +418,10 @@ export class EntityLayer {
     }
     if (this.selection?.kind === 'egg' && !state.eggs.some((e) => e.id === this.selection!.id)) this.selection = null;
 
-    // A happy hop for animals that just got hearts.
-    const hops = new Map<number, number>();
+    const reactions = new Map<number, DinoReaction>();
     for (const e of this.effects) {
-      const t = (time - e.start) / EFFECT_MS;
-      if (e.kind === 'hearts' && t < 0.35) hops.set(e.dinoId, -Math.round(Math.sin((t / 0.35) * Math.PI) * 3));
+      const d = state.dinos.find(d => d.id === e.dinoId);
+      if (d && e.kind === 'hearts') reactions.set(e.dinoId, dinoReaction(d.species,e.action,this.reactionTime-e.start,getSettings().animation));
     }
 
     // Dinosaurs
@@ -430,6 +433,7 @@ export class EntityLayer {
         img = this.scene.add.image(0, 0, dinoKey(d.species)).setOrigin(0.5, 1);
         this.dinos.set(d.id, img);
       }
+      const reaction = reactions.get(d.id);
       const moving = d.x !== d.px || d.y !== d.py;
       if (this.sim.speed !== 0 && d.x !== d.px) this.facingLeft.set(d.id, d.x < d.px);
       let { x, y } = this.dinoPosition(d);
@@ -447,7 +451,7 @@ export class EntityLayer {
         const motion = advanceMotion(previous, {species:d.species,baby:d.baby,x,y,time:animalTime,offset:d.id*137,paused:this.sim.speed===0,moving,asleep,eatingSince:this.meals.get(d.id),ambient:getSettings().animation,style:ART_STYLE});
         this.motions.set(d.id,motion);
         x=motion.x; y=motion.y;
-        img.setTexture(motionTexture(this.scene,d.species,d.baby),`${motion.clip}-${motion.frame}`);
+        img.setTexture(motionTexture(this.scene,d.species,d.baby),`${reaction?.clip ?? motion.clip}-${reaction?.clip ? reaction.frame : motion.frame}`);
         fitPaintedImage(img);
         img.setCrop();
         if (habitat === 'water') {
@@ -458,7 +462,7 @@ export class EntityLayer {
           sh.lineStyle(1,0xe8f6fb,.55).strokeEllipse(Math.round(x),Math.round(y)-2,(img.displayWidth-16*scale)*.8,4);
         } else {
           const lift=habitat==='air' && !asleep ? FLY_HEIGHT+Math.round(Math.sin(animalTime/520+d.id)*2) : 0;
-          img.setPosition(Math.round(x),Math.round(y)-lift+(hops.get(d.id)??0));
+          img.setPosition(Math.round(x),Math.round(y)-lift);
           // Transparent tail room does not increase the body's ground shadow.
           const groundWidth = img.displayWidth-(16+2*modelPadding)*scale;
           sh.fillStyle(0x000000,.22).fillEllipse(Math.round(x),Math.round(y)-1,Math.max(6,groundWidth*(habitat==='air'?.45:.7)),habitat==='air'?3:Math.max(4,(img.displayHeight-8*scale)*.14));
@@ -493,13 +497,24 @@ export class EntityLayer {
       } else {
         img.setTexture(dinoKey(d.species, walkFrame(dinoFrameCount(d.species), moving, this.sim.stepProgress, this.sim.speed === 0, asleep), d.baby));
         fitPaintedImage(img);
-        img.setPosition(Math.round(x), Math.round(y) + bob + (hops.get(d.id) ?? 0));
+        img.setPosition(Math.round(x), Math.round(y) + bob);
         sh.fillEllipse(Math.round(x), Math.round(y) - 1, img.displayWidth * 0.7, Math.max(4, img.displayHeight * 0.14));
       }
+      if (reaction) img.y -= reaction.lift;
+      img.setAngle(reaction?.angle ?? 0);
       img.setFlipX(this.facingLeft.get(d.id) ?? false);
       const bounds = img.getBounds();
       const opaque = (img.frame.customData as { dinoBounds?: DinoPixelBounds }).dinoBounds;
-      if (opaque) {
+      if (opaque && img.angle !== 0) {
+        // Keep fence masking aligned with the painted body during a head wiggle.
+        const matrix = img.getWorldTransformMatrix();
+        const left = img.flipX ? img.width - opaque.right : opaque.left;
+        const right = img.flipX ? img.width - opaque.left : opaque.right;
+        const corners = [[left,opaque.top],[right,opaque.top],[left,opaque.bottom],[right,opaque.bottom]]
+          .map(([ox,oy]) => matrix.transformPoint(ox-img.displayOriginX,oy-img.displayOriginY));
+        const xs = corners.map(p=>p.x), ys = corners.map(p=>p.y);
+        bounds.setTo(Math.min(...xs),Math.min(...ys),Math.max(...xs)-Math.min(...xs),Math.max(...ys)-Math.min(...ys));
+      } else if (opaque) {
         const left = bounds.left, top = bounds.top;
         bounds.setTo(left + (img.flipX ? img.displayWidth - opaque.right * img.scaleX : opaque.left * img.scaleX), top + opaque.top * img.scaleY,
           (opaque.right - opaque.left) * img.scaleX, (opaque.bottom - opaque.top) * img.scaleY);

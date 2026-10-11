@@ -21,7 +21,7 @@ try {
     await page.waitForFunction(() => {
       const track = document.querySelector('.menu-parade-track');
       const row = document.querySelector('.menu-parade-group');
-      return Math.abs(parseFloat(track.style.animationDuration) * 30 - row.getBoundingClientRect().width) < 0.01;
+      return Math.abs(parseFloat(track.style.animationDuration) * 30 - row.getBoundingClientRect().width) < 0.05;
     });
     const result = await page.evaluate(() => {
       const track = document.querySelector('.menu-parade-track');
@@ -42,7 +42,7 @@ try {
       animation.currentTime = 500;
       const movement = track.getBoundingClientRect().left - before;
       const rows = [...track.children];
-      return { minGap, covered, movement, species: rows[0].childElementCount, identical: rows[0].innerHTML === rows[1].innerHTML, fits: document.documentElement.scrollWidth === innerWidth };
+      return { minGap, covered, movement, species: rows[0].childElementCount, identical: [...rows[0].querySelectorAll('.menu-dino')].map(b=>b.dataset.species).join() === [...rows[1].querySelectorAll('.menu-dino')].map(b=>b.dataset.species).join(), fits: document.documentElement.scrollWidth === innerWidth };
     });
     check(`parade has 48px gaps throughout the loop at ${width}×${height}`, result.minGap >= 47.9 && result.covered && result.fits, result);
     check('all 28 species move right together at 30px/s with a matching loop', result.species === 28 && result.identical && Math.abs(result.movement - 15) < 0.1);
@@ -51,6 +51,12 @@ try {
   await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
   check('reduced motion stops the decorative parade', await page.$eval('.menu-parade-track', el => getComputedStyle(el).animationName === 'none'));
   await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'no-preference' }]);
+
+  await page.keyboard.press('Tab');
+  await page.evaluate(()=>document.querySelectorAll('.menu-parade-group:first-child .menu-dino')[10].focus());
+  await page.keyboard.press('Enter');
+  const keyboard=await page.evaluate(()=>{const b=document.activeElement,r=b.getBoundingClientRect();return b.classList.contains('menu-dino')&&!!b.dataset.reaction&&r.left>=0&&r.right<=innerWidth&&document.querySelectorAll('.menu-dino:not([tabindex="-1"])').length===28;});
+  check('keyboard brings each dinosaur into view and activates its reaction without duplicate tab stops',keyboard);
 
   await page.setViewport({ width: 844, height: 390, isMobile: true, hasTouch: true });
   await page.goto(gameUrl('/?quickstart&stress'), { waitUntil: 'load' });

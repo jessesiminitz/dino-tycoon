@@ -1,5 +1,12 @@
 # Dino Tycoon: handoff notes
 
+## Bigger, playful dinosaurs — October 11, 2026
+
+The title parade now uses native cropped portraits independently of world metre scales. Every species has a readable 192×98 fit box (160×66 in short landscape screens), labeled 44px+ tap targets and authored walking frames. T. rex, Compsognathus, Triceratops and Stegosaurus lead the same complete 28-species loop. Taps pause the scroll for hops/wiggles, aerial flutters or swimmer bobs; subsequent taps cycle through snacks/chewing and greetings. Only visible animals advance, frames are cached lazily, and animation stops after starting a park. Reduced motion and the animation setting provide a static, manually scrollable roster. Duplicate loop buttons are excluded from keyboard navigation; focusing an original animal brings it into view.
+
+Park pats and treats now animate species-specific full-body reactions through `dinoReaction.ts`: happy bobs/head wiggles, wing flutters, swimmer dips and eight chewing poses. A separate real-time presentation clock lets deliberate care reactions and hearts finish while simulation time is paused, without moving the dinosaur's simulation position. Reactions return to normal poses cleanly and body motion respects the animation setting. Saves remain v21. `npm run check:menu-fun` checks menu sizes, taps and paused care; `menu-pacing.mjs` checks all loop sizes plus keyboard access, and `art:offline` compares stable native menu posters rather than transient walking frames.
+
+
 ## Interactive baby reveal — October 11, 2026
 
 The live game opts into interactive hatching through `mountHatching`: ready land eggs stay in the existing v21 save until the third tap dispatches `hatchEgg`. Headless simulations retain automatic births. A native dialog pauses the park with the shared pause holder, traps focus, shows successive shell cracks with synthesized crack SFX, and reveals the matching species' baby artwork. The congratulations screen offers an optional name using the existing rename command, then saves and restores the preceding speed. Concurrent eggs are presented one at a time; unfinished eggs reopen after reload. Sea reptiles retain live birth and receive the species-specific celebration/name screen directly. No save schema change. `npm run check:hatching` checks every species, taps, naming/save, reload, queuing, audio activation and phone/tablet layouts; screenshots go under `docs/hatching-review`.
