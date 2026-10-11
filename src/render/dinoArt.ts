@@ -2,6 +2,7 @@ import { hash2 } from '../sim/rng';
 import type { Species, SpeciesId } from '../sim/data/species';
 import { ART_STYLE, type ArtStyle } from './artStyle';
 import { BLENDER_ART } from './generated/blenderArt';
+import { cartoonMetadata, paintCartoonAsset, paintCartoonEgg } from './cartoonArt';
 
 /**
  * Dinosaur sprites, built per species from simple shapes (tapered limbs,
@@ -19,7 +20,7 @@ type Pt = [number, number];
 type Node3 = [number, number, number];
 export interface DinoPixelBounds { left: number; right: number; top: number; bottom: number }
 const paintedBounds = new WeakMap<HTMLCanvasElement, DinoPixelBounds>();
-export const dinoCanvasBounds = (canvas: HTMLCanvasElement): DinoPixelBounds => paintedBounds.get(canvas)!;
+export const dinoCanvasBounds = (canvas: HTMLCanvasElement): DinoPixelBounds => cartoonMetadata(canvas)?.bounds ?? paintedBounds.get(canvas)!;
 
 class Sprite {
   readonly grid: (Key | null)[][];
@@ -645,12 +646,12 @@ export function hasOriginalDinoArt(id: SpeciesId): boolean {
 
 /** Number of poses available in the active art set. */
 export function dinoFrameCount(id: SpeciesId, style: ArtStyle = ART_STYLE): number {
-  return style === 'blender' || !hasOriginalDinoArt(id) ? blenderDino(id)?.frames.length ?? 2 : 2;
+  return style !== 'original' || !hasOriginalDinoArt(id) ? blenderDino(id)?.frames.length ?? 2 : 2;
 }
 
 /** One shape resolver keeps canvases, babies and fossil masks in agreement. */
 function shapeFor(species: Species, frame: number, style: ArtStyle): Sprite {
-  const candidate = style === 'blender' || !hasOriginalDinoArt(species.id) ? blenderDino(species.id) : undefined;
+  const candidate = style !== 'original' || !hasOriginalDinoArt(species.id) ? blenderDino(species.id) : undefined;
   const count = candidate?.frames.length ?? 2;
   if (!Number.isInteger(frame) || frame < 0 || frame >= count) throw new RangeError(`Invalid ${species.id} pose ${frame}`);
   if (!candidate) {
@@ -721,6 +722,7 @@ function scaledGrid(s: Sprite, scale: number): Sprite {
 
 /** A speckled egg in the species' colours (about the size of a baby's head). */
 export function paintEgg(species: Species): HTMLCanvasElement {
+  if (ART_STYLE === 'cartoon') return paintCartoonEgg(species.art.accent);
   const w = 9;
   const h = 11;
   const canvas = document.createElement('canvas');
@@ -752,6 +754,7 @@ export function paintEgg(species: Species): HTMLCanvasElement {
 }
 
 export function paintDino(species: Species, frame = 0, baby = false, style: ArtStyle = ART_STYLE, scale = 1): HTMLCanvasElement {
+  if (style === 'cartoon') return paintCartoonAsset(species.id, frame, species, baby, scale);
   const grown = shapeFor(species, frame, style);
   return paintDinoSprite(species, grown, baby, scale);
 }

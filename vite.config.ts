@@ -20,7 +20,15 @@ export default defineConfig({
   },
   build: {
     target: 'es2020',
-    chunkSizeWarningLimit: 2000, // Phaser is ~1.2 MB on its own
+    chunkSizeWarningLimit: 4000, // Cartoon contour pack is ~3.5 MB before transfer compression.
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('/src/render/generated/cartoonGeometry.json')) return 'cartoon-art';
+          if (id.includes('/node_modules/phaser/')) return 'phaser';
+        },
+      },
+    },
   },
   plugins: [
     VitePWA({

@@ -1,3 +1,5 @@
+import { addPaintedTexture, fitPaintedImage } from './paintedTexture';
+import { paintCartoonPerson } from './cartoonArt';
 import Phaser from 'phaser';
 import { accidentKind, type Building, type Dino, type Feeder, type Staff, type Visitor } from '../sim/GameState';
 import { STAFF_ROLES, type StaffRole } from '../sim/data/staff';
@@ -64,6 +66,7 @@ const LEGS: Record<0 | 1, string[]> = { 0: ['.L.L.', '.L.L.'], 1: ['.L.L.', 'L..
 
 /** Adults, and shorter kids; a poncho turns the shirt (and hood) bright yellow. */
 function paintVisitor(look: number, frame: 0 | 1, kid: boolean, poncho: boolean): HTMLCanvasElement {
+  if (ART_STYLE === 'cartoon') return paintCartoonPerson(poncho ? PONCHO : SHIRTS[look % SHIRTS.length], SKIN[look % SKIN.length], poncho ? PONCHO : HAIR[look % HAIR.length], frame, kid);
   const rows = kid
     ? ['.HHH.', '.SSS.', 'TTTTT', 'STTTS', '.LLL.', LEGS[frame][1]]
     : ['.HHH.', '.SSS.', 'TTTTT', 'STTTS', '.TTT.', '.LLL.', ...LEGS[frame]];
@@ -76,6 +79,7 @@ function paintVisitor(look: number, frame: 0 | 1, kid: boolean, poncho: boolean)
 }
 
 function paintStaff(role: StaffRole, frame: 0 | 1): HTMLCanvasElement {
+  if (ART_STYLE === 'cartoon') return paintCartoonPerson(UNIFORMS[role].U, '#ffdb9b', UNIFORMS[role].C, frame, false, true);
   if (role === 'mascot') {
     // A cheerful green dino costume, tail and all.
     const rows = [
@@ -137,26 +141,26 @@ export class EntityLayer {
     private sim: Simulation,
   ) {
     for (const id of SPECIES_IDS) {
-      for (let frame = 0; frame < dinoFrameCount(id); frame++)
+      for (let frame = 0; frame < (ART_STYLE === 'cartoon' ? 1 : dinoFrameCount(id)); frame++)
         for (const baby of [false, true])
           if (!scene.textures.exists(dinoKey(id, frame, baby))) {
             const canvas = paintDino(SPECIES[id], frame, baby, undefined, dinoWorldScale(id));
-            Object.assign(scene.textures.addCanvas(dinoKey(id, frame, baby), canvas)!.get().customData, { dinoBounds: dinoCanvasBounds(canvas) });
+            Object.assign(addPaintedTexture(scene, dinoKey(id, frame, baby), canvas)!.get().customData, { dinoBounds: dinoCanvasBounds(canvas) });
           }
-      if (!scene.textures.exists(eggKey(id))) scene.textures.addCanvas(eggKey(id), paintEgg(SPECIES[id]));
+      if (!scene.textures.exists(eggKey(id))) addPaintedTexture(scene, eggKey(id), paintEgg(SPECIES[id]));
     }
     for (const kind of Object.keys(FEEDER_TYPES) as FeederKind[]) {
-      for (const full of [true, false]) scene.textures.addCanvas(feederKey(kind, full), paintFeeder(kind, full));
+      for (const full of [true, false]) addPaintedTexture(scene, feederKey(kind, full), paintFeeder(kind, full));
     }
     for (const frame of [0, 1] as const) {
       for (let look = 0; look < VISITOR_LOOKS; look++)
         for (const kid of [false, true])
           for (const poncho of [false, true])
-            scene.textures.addCanvas(visitorKey(look, frame, kid, poncho), paintVisitor(look, frame, kid, poncho));
-      for (const role of STAFF_ROLES) scene.textures.addCanvas(staffKey(role, frame), paintStaff(role, frame));
+            addPaintedTexture(scene, visitorKey(look, frame, kid, poncho), paintVisitor(look, frame, kid, poncho));
+      for (const role of STAFF_ROLES) addPaintedTexture(scene, staffKey(role, frame), paintStaff(role, frame));
     }
-    for (const kind of Object.keys(BUILDING_TYPES) as BuildingKind[]) scene.textures.addCanvas(buildingKey(kind), paintBuilding(kind));
-    if (!scene.textures.exists(JEEP_KEY)) scene.textures.addCanvas(JEEP_KEY, paintJeep());
+    for (const kind of Object.keys(BUILDING_TYPES) as BuildingKind[]) addPaintedTexture(scene, buildingKey(kind), paintBuilding(kind));
+    if (!scene.textures.exists(JEEP_KEY)) addPaintedTexture(scene, JEEP_KEY, paintJeep());
     this.markers = scene.add.graphics().setDepth(9);
     this.shadows = scene.add.graphics().setDepth(3.9);
     this.dirt = scene.add.graphics().setDepth(3.85);
@@ -228,7 +232,7 @@ export class EntityLayer {
 
   /** Where a dino is drawn right now (feet position, world pixels). */
   dinoPosition(d: Dino): { x: number; y: number } {
-    if (ART_STYLE === 'blender' && this.sim.speed === 0) {
+    if (ART_STYLE !== 'original' && this.sim.speed === 0) {
       const motion = this.motions.get(d.id);
       if (motion) return { x: motion.x, y: motion.y };
     }
@@ -299,6 +303,7 @@ export class EntityLayer {
         this.feeders.set(f.id, img);
       }
       img.setTexture(feederKey(f.kind, f.stock > 0));
+      fitPaintedImage(img);
       // Stock bar under the trough.
       const cap = FEEDER_TYPES[f.kind].capacity;
       g.fillStyle(0x1b1b14, 0.9).fillRect(f.x * TILE + 2, f.y * TILE + 15, 12, 2);
@@ -336,7 +341,7 @@ export class EntityLayer {
       j.riders.forEach((r, i) => {
         const v = state.visitors.find((q) => q.id === r.id);
         const hx = Math.round(x) + Math.round((i - 1.5) * 3) - (img.flipX ? -2 : 2); // seats behind the windscreen
-        const hy = Math.round(y) + bump - img.height + 1;
+        const hy = Math.round(y) + bump - img.displayHeight + 1;
         riders!.fillStyle(0x1b1b14, 1).fillRect(hx - 2, hy - 1, 4, 5);
         riders!.fillStyle(parseInt(SKIN[(v?.look ?? i) % SKIN.length].slice(1), 16), 1).fillRect(hx - 1, hy, 2, 2);
         riders!.fillStyle(parseInt(SHIRTS[(v?.look ?? i) % SHIRTS.length].slice(1), 16), 1).fillRect(hx - 1, hy + 2, 2, 2);
@@ -353,12 +358,13 @@ export class EntityLayer {
       const moving = v.x !== v.px || v.y !== v.py;
       const stride = moving && this.sim.stepProgress >= 0.5;
       img.setTexture(visitorKey(v.look, stride ? 1 : 0, v.kid, v.items.includes('poncho')));
+      fitPaintedImage(img);
       const vx = Math.round(x);
       const vy = Math.round(y) + (moving && !stride ? -1 : 0);
       img.setPosition(vx, vy);
       sh.fillEllipse(vx, Math.round(y) - 1, 7, 3);
       img.setDepth(depthAt(y));
-      if (v.items.length || v.snack || v.sodaUntil > 0) this.drawCarried(propsFor(`visitor:${v.id}`, img.depth), v, vx, vy, img.height);
+      if (v.items.length || v.snack || v.sodaUntil > 0) this.drawCarried(propsFor(`visitor:${v.id}`, img.depth), v, vx, vy, img.displayHeight);
       if (this.selection?.kind === 'visitor' && this.selection.id === v.id) {
         g.lineStyle(1, 0xf2c14e, 1).strokeEllipse(Math.round(x), Math.round(y), 9, 4);
       }
@@ -373,6 +379,7 @@ export class EntityLayer {
       const working = m.task !== null && m.progress > 0;
       const walking = Math.abs(m.x - m.px) + Math.abs(m.y - m.py) > 0.01;
       img.setTexture(staffKey(m.role, walking && Math.floor(time / 150) % 2 === 1 ? 1 : 0));
+      fitPaintedImage(img);
       img.setPosition(Math.round(x), Math.round(y) + (working && Math.floor(time / 180) % 2 === 0 ? -1 : 0));
       img.setDepth(depthAt(y));
       sh.fillEllipse(Math.round(x), Math.round(y) - 1, 8, 3);
@@ -433,7 +440,7 @@ export class EntityLayer {
       const habitat = habitatOf(d.species);
       const scale = dinoWorldScale(d.species) * (d.baby ? .6 : 1);
       const asleep = isAsleep(state, d);
-      if (ART_STYLE === 'blender') {
+      if (ART_STYLE !== 'original') {
         const model = BLENDER_ART[d.species];
         const modelPadding = 'modelOffsetX' in model ? model.modelOffsetX : 0;
         const previous = this.motions.get(d.id);
@@ -441,19 +448,20 @@ export class EntityLayer {
         this.motions.set(d.id,motion);
         x=motion.x; y=motion.y;
         img.setTexture(motionTexture(this.scene,d.species,d.baby),`${motion.clip}-${motion.frame}`);
+        fitPaintedImage(img);
         img.setCrop();
         if (habitat === 'water') {
           // Padding is above the animal; preserve the original submerged fraction.
           const shown=Math.round((BLENDER_MOTION[d.species].walk.height-8)*WATERLINE*scale)+Math.round(8*scale)+1;
-          img.setCrop(0,0,img.width,shown);
-          img.setPosition(Math.round(x),Math.round(y)-2+img.height-shown);
-          sh.lineStyle(1,0xe8f6fb,.55).strokeEllipse(Math.round(x),Math.round(y)-2,(img.width-16*scale)*.8,4);
+          img.setCrop(0,0,img.width,shown / img.scaleY);
+          img.setPosition(Math.round(x),Math.round(y)-2+img.displayHeight-shown);
+          sh.lineStyle(1,0xe8f6fb,.55).strokeEllipse(Math.round(x),Math.round(y)-2,(img.displayWidth-16*scale)*.8,4);
         } else {
           const lift=habitat==='air' && !asleep ? FLY_HEIGHT+Math.round(Math.sin(animalTime/520+d.id)*2) : 0;
           img.setPosition(Math.round(x),Math.round(y)-lift+(hops.get(d.id)??0));
           // Transparent tail room does not increase the body's ground shadow.
-          const groundWidth = img.width-(16+2*modelPadding)*scale;
-          sh.fillStyle(0x000000,.22).fillEllipse(Math.round(x),Math.round(y)-1,Math.max(6,groundWidth*(habitat==='air'?.45:.7)),habitat==='air'?3:Math.max(4,(img.height-8*scale)*.14));
+          const groundWidth = img.displayWidth-(16+2*modelPadding)*scale;
+          sh.fillStyle(0x000000,.22).fillEllipse(Math.round(x),Math.round(y)-1,Math.max(6,groundWidth*(habitat==='air'?.45:.7)),habitat==='air'?3:Math.max(4,(img.displayHeight-8*scale)*.14));
         }
         if (getSettings().animation && this.sim.speed!==0 && moving && previous && motion.frame!==previous.frame && this.scene.cameras.main.worldView.contains(x,y)) {
           const walk=BLENDER_MOTION[d.species].walk;
@@ -469,41 +477,44 @@ export class EntityLayer {
       } else if (habitat === 'water') {
         // Swimming: flippers keep stroking; only the top of the animal shows above the water.
         img.setTexture(dinoKey(d.species, Math.floor(animalTime / (900 / dinoFrameCount(d.species)) + d.id) % dinoFrameCount(d.species), d.baby));
-        const shown = Math.round(img.height * WATERLINE);
-        img.setCrop(0, 0, img.width, shown);
-        img.setPosition(Math.round(x), Math.round(y) - 2 + (img.height - shown) + (Math.sin(animalTime / 700 + d.id) > 0.6 ? 1 : 0));
-        sh.lineStyle(1, 0xe8f6fb, 0.75).strokeEllipse(Math.round(x), Math.round(y) - 2, img.width * 0.8, 4);
+        fitPaintedImage(img);
+        const shown = Math.round(img.displayHeight * WATERLINE);
+        img.setCrop(0, 0, img.width, shown / img.scaleY);
+        img.setPosition(Math.round(x), Math.round(y) - 2 + (img.displayHeight - shown) + (Math.sin(animalTime / 700 + d.id) > 0.6 ? 1 : 0));
+        sh.lineStyle(1, 0xe8f6fb, 0.75).strokeEllipse(Math.round(x), Math.round(y) - 2, img.displayWidth * 0.8, 4);
       } else if (habitat === 'air') {
         // Flying: always flapping, bobbing about a tile up, with a shadow on the ground below (asleep: settled on the ground).
         const flapping = !asleep;
         img.setTexture(dinoKey(d.species, flapping ? Math.floor(animalTime / (480 / dinoFrameCount(d.species)) + d.id) % dinoFrameCount(d.species) : 0, d.baby));
+        fitPaintedImage(img);
         const lift = flapping ? FLY_HEIGHT + Math.round(Math.sin(animalTime / 520 + d.id) * 2) : 0;
         img.setPosition(Math.round(x), Math.round(y) - lift);
-        sh.fillEllipse(Math.round(x), Math.round(y) - 1, img.width * 0.45, 3);
+        sh.fillEllipse(Math.round(x), Math.round(y) - 1, img.displayWidth * 0.45, 3);
       } else {
         img.setTexture(dinoKey(d.species, walkFrame(dinoFrameCount(d.species), moving, this.sim.stepProgress, this.sim.speed === 0, asleep), d.baby));
+        fitPaintedImage(img);
         img.setPosition(Math.round(x), Math.round(y) + bob + (hops.get(d.id) ?? 0));
-        sh.fillEllipse(Math.round(x), Math.round(y) - 1, img.width * 0.7, Math.max(4, img.height * 0.14));
+        sh.fillEllipse(Math.round(x), Math.round(y) - 1, img.displayWidth * 0.7, Math.max(4, img.displayHeight * 0.14));
       }
       img.setFlipX(this.facingLeft.get(d.id) ?? false);
       const bounds = img.getBounds();
       const opaque = (img.frame.customData as { dinoBounds?: DinoPixelBounds }).dinoBounds;
       if (opaque) {
         const left = bounds.left, top = bounds.top;
-        bounds.setTo(left + (img.flipX ? img.width - opaque.right : opaque.left), top + opaque.top,
-          opaque.right - opaque.left, opaque.bottom - opaque.top);
+        bounds.setTo(left + (img.flipX ? img.displayWidth - opaque.right * img.scaleX : opaque.left * img.scaleX), top + opaque.top * img.scaleY,
+          (opaque.right - opaque.left) * img.scaleX, (opaque.bottom - opaque.top) * img.scaleY);
       }
       // Swimmers' cropped-away pixels cannot overlap a fence above the waterline.
       if (habitat === 'water') bounds.bottom = Math.min(bounds.bottom, y - 2);
       img.setDepth(depthAt(y));
       for (const key of obscuringFenceKeys(state, y, bounds)) this.obscuringFences.add(key);
 
-      const top = ART_STYLE==='blender' ? Math.round(img.y)-img.height+Math.round(8*scale)-3 : Math.round(y)-img.height-3;
+      const top = ART_STYLE!=='original' ? Math.round(img.y)-img.displayHeight+Math.round(8*scale)-3 : Math.round(y)-img.displayHeight-3;
       const cx = Math.round(x);
       if (d.escaped) {
         // Escaped: pulsing orange ring and a double "!".
         const pulse = Math.floor(time / 300) % 2 === 0;
-        g.lineStyle(1, 0xff9f43, pulse ? 1 : 0.5).strokeEllipse(cx, Math.round(y), Math.max(14, img.width), 6);
+        g.lineStyle(1, 0xff9f43, pulse ? 1 : 0.5).strokeEllipse(cx, Math.round(y), Math.max(14, img.displayWidth), 6);
         g.fillStyle(0x1b1b14, 1).fillRect(cx - 4, top - 7, 8, 9);
         g.fillStyle(0xff9f43, 1).fillRect(cx - 3, top - 6, 2, 4).fillRect(cx - 3, top - 1, 2, 2);
         g.fillRect(cx + 1, top - 6, 2, 4).fillRect(cx + 1, top - 1, 2, 2);
@@ -526,7 +537,7 @@ export class EntityLayer {
         g.fillStyle(0xff5a4a, 1).fillRect(Math.round(x) - 1, top - 6, 2, 4).fillRect(Math.round(x) - 1, top - 1, 2, 2);
       }
       if (this.selection?.kind === 'dino' && this.selection.id === d.id) {
-        g.lineStyle(1, 0xf2c14e, 1).strokeEllipse(Math.round(x), Math.round(y), Math.max(12, img.width * 0.8), 5);
+        g.lineStyle(1, 0xf2c14e, 1).strokeEllipse(Math.round(x), Math.round(y), Math.max(12, img.displayWidth * 0.8), 5);
       }
     }
     for (const [id, img] of this.dinos) {
@@ -573,7 +584,7 @@ export class EntityLayer {
         e.label?.destroy();
         return false;
       }
-      const top = img.y - img.height - 2;
+      const top = img.y - img.displayHeight - 2;
       if (e.kind === 'hearts') {
         for (let i = 0; i < 3; i++) {
           const ti = t - i * 0.15;
@@ -581,12 +592,14 @@ export class EntityLayer {
           const hx = Math.round(img.x + (i - 1) * 6 + Math.sin(ti * 8 + i) * 2);
           const hy = Math.round(top - ti * 14);
           g.fillStyle(0xff5a7a, 1 - ti);
-          for (const [row, bits] of HEART.entries()) for (let c = 0; c < bits.length; c++) if (bits[c] === 'X') g.fillRect(hx - 2 + c, hy + row, 1, 1);
+          if (ART_STYLE === 'cartoon') {
+            g.fillCircle(hx-1,hy+1,1.5).fillCircle(hx+1,hy+1,1.5).fillTriangle(hx-2.3,hy+1,hx+2.3,hy+1,hx,hy+4);
+          } else for (const [row, bits] of HEART.entries()) for (let c = 0; c < bits.length; c++) if (bits[c] === 'X') g.fillRect(hx - 2 + c, hy + row, 1, 1);
         }
       } else {
         if (!e.label) {
           e.label = this.scene.add
-            .text(0, 0, 'Nope!', { fontFamily: 'Silkscreen, monospace', fontSize: '8px', color: '#ffffff', backgroundColor: '#b3261e', padding: { x: 2, y: 1 } })
+            .text(0, 0, 'Nope!', { fontFamily: ART_STYLE === 'cartoon' ? 'Trebuchet MS, sans-serif' : 'Silkscreen, monospace', fontSize: '8px', color: '#ffffff', backgroundColor: '#b3261e', padding: { x: 2, y: 1 } })
             .setResolution(4)
             .setOrigin(0.5, 1)
             .setDepth(9.5);
@@ -699,7 +712,11 @@ export class EntityLayer {
     const live = new Set<number>();
     for (const e of entities) {
       live.add(e.id);
-      if (!sprites.has(e.id)) sprites.set(e.id, create(e));
+      if (!sprites.has(e.id)) {
+        const image = create(e);
+        fitPaintedImage(image);
+        sprites.set(e.id, image);
+      }
     }
     for (const [id, img] of sprites) {
       if (!live.has(id)) {

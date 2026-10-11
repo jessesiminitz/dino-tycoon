@@ -15,6 +15,10 @@ import { mountBriefing } from './ui/briefing';
 import { recordMedals } from './ui/challengeRecords';
 import { audioDebug, initAudio, onSong, playSfx, type Sfx } from './audio/audio';
 import { getSettings } from './ui/settings';
+import { ART_STYLE } from './render/artStyle';
+import './ui/cartoon.css';
+
+if (ART_STYLE === 'cartoon') document.body.classList.add('cartoon');
 
 /** Saves the running park, if there is one. Set when a park starts. */
 let saveCurrent: () => void = () => {};
@@ -63,7 +67,8 @@ function startGame(state: GameState, slot: SlotId): void {
     type: Phaser.AUTO,
     parent: 'game',
     backgroundColor: '#1b3a4b',
-    pixelArt: true,
+    pixelArt: ART_STYLE !== 'cartoon',
+    antialias: ART_STYLE === 'cartoon',
     scale: {
       mode: Phaser.Scale.RESIZE,
       width: window.innerWidth,

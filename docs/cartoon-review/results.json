@@ -1,0 +1,9 @@
+{
+  "result": {
+    "tested": 1792,
+    "atlasMB": 116.08642578125,
+    "geometryAssets": 53,
+    "failures": []
+  },
+  "errors": []
+}

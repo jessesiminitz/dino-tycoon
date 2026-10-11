@@ -1,4 +1,5 @@
 import { calendar, type GameState } from '../sim/GameState';
+import { ART_STYLE } from '../render/artStyle';
 import type { Simulation, Speed } from '../sim/Simulation';
 import { FEEDER_TYPES } from '../sim/data/feeders';
 import { habitatOf, SPECIES } from '../sim/data/species';
@@ -20,6 +21,7 @@ import type { UiState } from './uiState';
 import type { GameEvent } from '../sim/systems/context';
 
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+const compactMoney = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', notation: 'compact', maximumFractionDigits: 1 });
 export const formatMoney = (n: number) => money.format(n);
 
 const TOAST_MS = 3200;
@@ -188,6 +190,11 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
       lastWidth = width;
       fitHud();
     }
+    if (ART_STYLE === 'cartoon' && hudEl.classList.contains('fit-3')) {
+      moneyEl.textContent = compactMoney.format(state.money);
+    }
+    moneyEl.title = money.format(state.money);
+    moneyEl.setAttribute('aria-label', money.format(state.money));
     guestsEl.textContent = String(state.visitors.length);
     guestsEl.hidden = state.visitors.length === 0;
     moneyEl.classList.toggle('negative', state.money < 0);

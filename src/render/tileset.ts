@@ -19,7 +19,7 @@ export function createTextures(scene: Phaser.Scene): void {
   for (let t = 0; t < TERRAIN_COUNT; t++) {
     for (let v = 0; v < VARIANTS; v++) {
       const ox = (t * VARIANTS + v) * TILE;
-      ctx.drawImage(paintTerrainTile(t as Terrain, v), ox, 0);
+      ctx.drawImage(paintTerrainTile(t as Terrain, v), ox, 0, TILE, TILE);
     }
   }
   tex.refresh();

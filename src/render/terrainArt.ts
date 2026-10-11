@@ -1,3 +1,4 @@
+import { paintCartoonTerrain } from './cartoonArt';
 import { hash2 } from '../sim/rng';
 import { Terrain } from '../sim/terrain';
 import { ART_STYLE, type ArtStyle } from './artStyle';
@@ -194,6 +195,7 @@ const PAINTERS: Record<Terrain, Painter> = {
 
 /** Opaque tile with baked Blender facets; tile IDs and placement stay stable. */
 export function paintTerrainTile(terrain: Terrain, variant = 0, style: ArtStyle = ART_STYLE): HTMLCanvasElement {
+  if (style === 'cartoon') return paintCartoonTerrain(terrain, variant);
   const id = TERRAIN_ART_IDS[terrain];
   const asset = BLENDER_TERRAIN[id];
   if (!asset || !Number.isInteger(variant) || variant < 0 || variant >= asset.frames.length) throw new RangeError('Invalid terrain tile');

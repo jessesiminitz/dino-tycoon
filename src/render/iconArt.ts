@@ -1,5 +1,7 @@
 import { SPECIES } from '../sim/data/species';
 import { paintDino } from './dinoArt';
+import { ART_STYLE } from './artStyle';
+import { drawCartoonRex } from './cartoonRex';
 
 /** The icon is painted on this pixel grid, then scaled up so the pixels stay crisp. */
 const GRID = 128;
@@ -13,6 +15,18 @@ const CROP = { x: 4, y: 12, size: 112 };
  * icons, which platforms crop to a circle) while the sky still fills the edges.
  */
 export function paintIcon(size: number, inset = 0): HTMLCanvasElement {
+  if (ART_STYLE === 'cartoon') {
+    const canvas = document.createElement('canvas');canvas.width=size;canvas.height=size;
+    const ctx=canvas.getContext('2d')!;
+    ctx.fillStyle='#438f80';ctx.fillRect(0,0,size,size);
+    const pad=(.07+inset)*size;
+    ctx.fillStyle='#ffe9a5';ctx.beginPath();ctx.arc(size/2,size/2,size/2-pad,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#292823';ctx.lineWidth=size*.012;ctx.stroke();
+    ctx.save();ctx.beginPath();ctx.arc(size/2,size/2,size/2-pad,0,Math.PI*2);ctx.clip();
+    ctx.translate(size*.5,size*.5);const scale=size/(62+inset*50);ctx.scale(scale,scale);ctx.translate(-87,-29);
+    drawCartoonRex(ctx,0,'idle',false);ctx.restore();
+    return canvas;
+  }
   const art = document.createElement('canvas');
   art.width = GRID;
   art.height = GRID;

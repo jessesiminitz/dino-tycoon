@@ -1,3 +1,4 @@
+import { ART_STYLE } from './artStyle';
 import Phaser from 'phaser';
 import type { Simulation } from '../sim/Simulation';
 import { FENCE_TYPES, type FenceTypeId } from '../sim/data/fences';
@@ -227,6 +228,15 @@ export class WorldLayers {
           this.drawBridge(g, x, y, walk);
           continue;
         }
+        if (ART_STYLE === 'cartoon') {
+          g.fillStyle(0xe8c896).fillRect(ox,oy,TILE,TILE);
+          g.lineStyle(.6,0xa78156,.7);
+          if (!walk(x,y-1)) g.lineBetween(ox,oy+.3,ox+TILE,oy+.3);
+          if (!walk(x,y+1)) g.lineBetween(ox,oy+TILE-.3,ox+TILE,oy+TILE-.3);
+          if (!walk(x-1,y)) g.lineBetween(ox+.3,oy,ox+.3,oy+TILE);
+          if (!walk(x+1,y)) g.lineBetween(ox+TILE-.3,oy,ox+TILE-.3,oy+TILE);
+          continue;
+        }
         g.fillStyle(0xcdb58a, 1).fillRect(ox, oy, TILE, TILE);
         g.fillStyle(0xb89f73, 1);
         for (let k = 0; k < 6; k++) {
@@ -340,7 +350,46 @@ export class WorldLayers {
    * seen end-on as a narrow band. Worn fences (< 50%) have gaps; broken ones
    * are fallen posts and rubble.
    */
+  /** Smooth outlined rails and posts, with the same ground anchors and damage gaps. */
+  private drawCartoonFence(g: Phaser.GameObjects.Graphics, e: Edge, f: FenceTypeId, hp: number): void {
+    const t = FENCE_TYPES[f], h = FENCE_H[f];
+    const x = e.x * TILE, y = e.y * TILE, horizontal = e.dir === 'h';
+    const dx = horizontal ? TILE : 0, dy = horizontal ? 0 : TILE;
+    const rail = (height: number, width: number, color: number) => {
+      const segments = hp < 50 ? [[0,.36],[.64,1]] : [[0,1]];
+      for (const [a,b] of segments) {
+        g.lineStyle(width + .8, 0x24231c).lineBetween(x+dx*a,y+dy*a-height,x+dx*b,y+dy*b-height);
+        g.lineStyle(width, color).lineBetween(x+dx*a,y+dy*a-height,x+dx*b,y+dy*b-height);
+      }
+    };
+    if (hp <= 0) {
+      g.lineStyle(2.5,t.rail).lineBetween(x+2,y+1,x+dx*.7+2,y+dy*.7+2);
+      g.lineStyle(1,0xe65f49).lineBetween(x+dx*.4,y+dy*.4-2,x+dx*.7,y+dy*.7-2);
+    } else if (f === 4 || f === 6) {
+      if (horizontal) {
+        g.fillStyle(t.rail).fillRoundedRect(x,y-h,TILE,h,1);
+        g.lineStyle(.6,0x363126).strokeRoundedRect(x,y-h,TILE,h,1);
+        if (f === 6) for (let i=0;i<3;i++) g.lineStyle(.4,t.post).strokeEllipse(x+3+i*5,y-h*.5,6,h*.65);
+      } else rail(h*.5,2,t.rail);
+    } else {
+      rail(h-1,1.5,t.rail); rail(2,1.3,t.rail);
+      if (f === 2 || f === 5) {
+        g.lineStyle(.45,t.rail,.7);
+        for (let i=2;i<TILE;i+=3) {
+          if (hp < 50 && i > 5 && i < 11) continue;
+          g.lineBetween(x+dx*i/TILE,y+dy*i/TILE-h+2,x+dx*(i+2)/TILE,y+dy*(i+2)/TILE-2);
+        }
+      } else if (f === 3) rail(h*.5,.6,0xffe565);
+    }
+    for (const [px,py] of [[x,y],[x+dx,y+dy]]) {
+      const ph = hp <= 0 ? 3 : h;
+      g.fillStyle(0x24231c).fillRoundedRect(px-1.7,py-ph-1,3.4,ph+2,1);
+      g.fillStyle(t.post).fillRoundedRect(px-1,py-ph,2,ph+1,.6);
+    }
+  }
+
   private drawSegment(g: Phaser.GameObjects.Graphics, e: Edge, f: FenceTypeId, hp: number): void {
+    if (ART_STYLE === 'cartoon') { this.drawCartoonFence(g, e, f, hp); return; }
     const t = FENCE_TYPES[f];
     const H = FENCE_H[f];
     const x0 = e.x * TILE;

@@ -1,3 +1,4 @@
+import { addPaintedTexture, fitPaintedImage } from './paintedTexture';
 import Phaser from 'phaser';
 import type { Simulation } from '../sim/Simulation';
 import { ALL_DECOR_KINDS, type DecorKind } from '../sim/data/decor';
@@ -61,7 +62,7 @@ export class SceneryLayer {
     private sim: Simulation,
   ) {
     const tex = (key: string, paint: () => HTMLCanvasElement) => {
-      if (!scene.textures.exists(key)) scene.textures.addCanvas(key, paint());
+      if (!scene.textures.exists(key)) addPaintedTexture(scene, key, paint());
     };
     FOREST_TREES.forEach((paint, kind) => {
       for (let v = 0; v < TREE_VARIANTS; v++) tex(treeKey(kind, v), () => paint(kind * 31 + v * 7));
@@ -93,12 +94,14 @@ export class SceneryLayer {
             .image(x * TILE + TILE / 2 + jitter, base, treeKey(kind, Math.floor(hash2(x, y, 5) * TREE_VARIANTS)))
             .setOrigin(0.5, 1)
             .setDepth(tileDepth(y));
+          fitPaintedImage(img);
           this.trees.set(i, img);
         } else if (t === Terrain.Sand && h < PALM_CHANCE && Math.max(Math.abs(x - gate.x), Math.abs(y - gate.y)) > 2) {
           const img = scene.add
             .image(x * TILE + TILE / 2 + jitter, base, `palm-${Math.floor(hash2(x, y, 6) * TREE_VARIANTS)}`)
             .setOrigin(0.5, 1)
             .setDepth(tileDepth(y));
+          fitPaintedImage(img);
           this.trees.set(i, img);
         } else if (t === Terrain.Grass && h < LONE_TREE_CHANCE + BUSH_CHANCE) {
           // Open grassland gets the odd lone tree or bush.
@@ -107,12 +110,14 @@ export class SceneryLayer {
             .image(x * TILE + TILE / 2 + jitter, base, key)
             .setOrigin(0.5, 1)
             .setDepth(tileDepth(y));
+          fitPaintedImage(img);
           this.trees.set(i, img);
         } else if (t === Terrain.Marsh && h < REED_CHANCE) {
           const img = scene.add
             .image(x * TILE + TILE / 2 + jitter, base - 2, `reeds-${Math.floor(hash2(x, y, 10) * 3)}`)
             .setOrigin(0.5, 1)
             .setDepth(tileDepth(y));
+          fitPaintedImage(img);
           this.trees.set(i, img);
         } else if (t === Terrain.Mountain) {
           const v = map.volcano;
@@ -133,7 +138,7 @@ export class SceneryLayer {
     if (v) {
       this.volcanoBase = (v.y + 2) * TILE + 4;
       const volcanoDepth = depthAt(this.volcanoBase - (TILE - FOOT_Y));
-      scene.add.image(v.x * TILE + TILE / 2, this.volcanoBase, 'volcano').setOrigin(0.5, 1).setDepth(volcanoDepth);
+      fitPaintedImage(scene.add.image(v.x * TILE + TILE / 2, this.volcanoBase, 'volcano').setOrigin(0.5, 1).setDepth(volcanoDepth));
       this.volcanoGlow.setDepth(volcanoDepth + 0.00001);
     }
     this.refresh();
@@ -162,6 +167,7 @@ export class SceneryLayer {
         .image(d.x * TILE + TILE / 2, base, decorKey(d.kind))
         .setOrigin(0.5, 1)
         .setDepth(tileDepth(d.y));
+      fitPaintedImage(img);
       this.decor.set(d.id, img);
     }
     for (const [id, img] of this.decor) {
@@ -267,11 +273,12 @@ export class SceneryLayer {
         const base = root ?? img.texture.key;
         if (!/^(tree-|palm-|bush-|reeds-|decor-(tree|palm|flowers)$)/.test(base)) continue;
         if (!root) img.setData('rootTexture', base);
-        if (!enabled) { img.setTexture(base); continue; }
-        if (!img.visible || img.x < view.left-40 || img.x > view.right+40 || img.y < view.top-8 || img.y-img.height > view.bottom) continue;
+        if (!enabled) { img.setTexture(base); fitPaintedImage(img); continue; }
+        if (!img.visible || img.x < view.left-40 || img.x > view.right+40 || img.y < view.top-8 || img.y-img.displayHeight > view.bottom) continue;
         const phase = time / 1700 + hash2(Math.floor(img.x), Math.floor(img.y), 31)*Math.PI*2;
         const strength = this.sim.state.stormHours > 0 ? 3 : 2;
         img.setTexture(swayTexture(this.scene,base),3+Math.round(Math.sin(phase)*strength));
+        fitPaintedImage(img);
         if(this.plants.length<24)this.plants.push(img);
       }
     }
@@ -283,7 +290,7 @@ export class SceneryLayer {
     for (const [i, plant] of this.plants.entries()) {
       const phase = (time/4200+i*.173)%1;
       const x = Math.round(plant.x-8+phase*(storm?32:20));
-      const y = Math.round(plant.y-plant.height*.6+phase*22);
+      const y = Math.round(plant.y-plant.displayHeight*.6+phase*22);
       if(i%3===0)g.fillStyle(storm?0x97ae63:0xc3ca71,Math.sin(phase*Math.PI)*.55).fillRect(x,y,2,1);
       if(dark>.3 && !storm && i<12){
         const glow = Math.max(0,Math.sin(time/650+i*2))*.7*dark;

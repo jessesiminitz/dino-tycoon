@@ -1,0 +1,15 @@
+{
+  "result": {
+    "tested": 128,
+    "atlasMB": 13.35498046875,
+    "geometryAssets": 53,
+    "failures": []
+  },
+  "behavior": {
+    "eating": true,
+    "pause": true,
+    "rest": true,
+    "saved": true
+  },
+  "errors": []
+}

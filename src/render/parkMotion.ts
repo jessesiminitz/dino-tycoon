@@ -4,6 +4,8 @@ import { BLENDER_MOTION } from './generated/blenderMotion';
 import { paintDinoRows, dinoCanvasBounds, type DinoPixelBounds } from './dinoArt';
 import { motionFrame, motionWalkSpeed, type MotionClip } from './immersionMotion';
 import { dinoWorldScale } from './dinoSize';
+import { ART_STYLE } from './artStyle';
+import { cartoonMetadata, paintCartoonAsset } from './cartoonArt';
 
 export const MOTION_CLIPS: MotionClip[] = ['walk', 'idle', 'eat', 'rest'];
 
@@ -13,15 +15,18 @@ export function motionTexture(scene: Phaser.Scene, species: SpeciesId, baby: boo
   if (scene.textures.exists(key)) return key;
   const clips = BLENDER_MOTION[species];
   const scale = dinoWorldScale(species, 'blender');
-  const sample = paintDinoRows(SPECIES[species], clips.walk.frames[0], baby, scale);
+  const paint = (clip: MotionClip, frame: number) => ART_STYLE === 'cartoon'
+    ? paintCartoonAsset(species, frame, SPECIES[species], baby, scale, clip)
+    : paintDinoRows(SPECIES[species], clips[clip].frames[frame], baby, scale);
+  const sample = paint('walk', 0);
   const width = sample.width, height = sample.height;
   const sheet = document.createElement('canvas');
   sheet.width = width * 8; sheet.height = height * 4;
   const ctx = sheet.getContext('2d')!;
   const bounds = new Map<string, DinoPixelBounds>();
   for (const [row, clip] of MOTION_CLIPS.entries()) {
-    clips[clip].frames.forEach((rows, frame) => {
-      const canvas = paintDinoRows(SPECIES[species], rows, baby, scale);
+    clips[clip].frames.forEach((_rows, frame) => {
+      const canvas = paint(clip, frame);
       ctx.drawImage(canvas, frame * width, row * height);
       bounds.set(`${clip}-${frame}`, dinoCanvasBounds(canvas));
     });
@@ -30,7 +35,7 @@ export function motionTexture(scene: Phaser.Scene, species: SpeciesId, baby: boo
   for (const [row, clip] of MOTION_CLIPS.entries()) {
     for (let frame = 0; frame < 8; frame++) {
       const name = `${clip}-${frame}`;
-      Object.assign(texture.add(name, 0, frame * width, row * height, width, height)!.customData, { dinoBounds: bounds.get(name) });
+      Object.assign(texture.add(name, 0, frame * width, row * height, width, height)!.customData, { dinoBounds: bounds.get(name), renderResolution: cartoonMetadata(sample)?.resolution ?? 1 });
     }
   }
   return key;

@@ -35,6 +35,7 @@ import { TerrainFx } from './TerrainFx';
 import { SceneryLayer } from './SceneryLayer';
 import { getSettings } from '../ui/settings';
 import { playCall, playSfx, type Sfx } from '../audio/audio';
+import { ART_STYLE } from './artStyle';
 
 /** How often (ms) the info panel refreshes while a dino or feeder is selected. */
 const INFO_REFRESH_MS = 250;
@@ -118,7 +119,7 @@ export class ParkScene extends Phaser.Scene {
     const worldH = map.height * TILE;
     const cam = this.cameras.main;
     cam.setBackgroundColor('#1e5a96');
-    cam.setRoundPixels(true);
+    cam.setRoundPixels(ART_STYLE !== 'cartoon');
     // Start zoomed in on the gate, where the player's land is.
     cam.setZoom(Phaser.Math.Clamp(Math.floor(Math.min(cam.width / worldW, cam.height / worldH) * 3), 2, MAX_ZOOM));
     this.fitBounds();

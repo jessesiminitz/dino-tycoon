@@ -1,5 +1,7 @@
 import { FENCE_TYPES, NET, type FenceTypeId } from '../sim/data/fences';
 import { paintSprite } from './pixels';
+import { ART_STYLE } from './artStyle';
+import { cartoonCanvas } from './cartoonArt';
 
 /**
  * Little pictures for the build screens: things that are drawn as tiles or
@@ -13,6 +15,20 @@ export function paintFenceSample(id: FenceTypeId): HTMLCanvasElement {
   const t = FENCE_TYPES[id];
   const rail = hex(t.rail);
   const post = hex(t.post);
+  if (ART_STYLE === 'cartoon') {
+    const [canvas, ctx] = cartoonCanvas(34, 20);ctx.lineWidth=.8;ctx.strokeStyle='#292823';
+    if (id === 4 || id === 6) {
+      ctx.fillStyle=rail;ctx.beginPath();ctx.roundRect(2,6,30,11,2);ctx.fill();ctx.stroke();
+      if(id===6)for(let i=0;i<5;i++){ctx.beginPath();ctx.ellipse(5+i*6,12,3.6,3,0,0,Math.PI*2);ctx.stroke();}
+    } else {
+      ctx.strokeStyle=rail;ctx.lineWidth=2;
+      for(const y of [6,14]){ctx.beginPath();ctx.moveTo(3,y);ctx.lineTo(30,y);ctx.stroke();}
+      if(id===2||id===NET){ctx.lineWidth=.6;for(let x=4;x<29;x+=3){ctx.beginPath();ctx.moveTo(x,6);ctx.lineTo(x+3,14);ctx.stroke();}}
+      for(const x of [3,16,29]){ctx.fillStyle=post;ctx.strokeStyle='#292823';ctx.lineWidth=.6;ctx.beginPath();ctx.roundRect(x-1.2,2,2.4,16,.8);ctx.fill();ctx.stroke();}
+      if(id===3){ctx.strokeStyle='#fff38d';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(9,5);ctx.lineTo(7,9);ctx.lineTo(11,9);ctx.lineTo(9,12);ctx.stroke();}
+    }
+    return canvas;
+  }
   return paintSprite(34, 20, (px) => {
     if (id === 6) {
       // Sandbags: two staggered rows of bags.
@@ -47,6 +63,12 @@ export function paintFenceSample(id: FenceTypeId): HTMLCanvasElement {
 
 /** A strip of footpath, or of safari track with its two ruts. */
 export function paintPathSample(track: boolean): HTMLCanvasElement {
+  if (ART_STYLE === 'cartoon') {
+    const [canvas, ctx] = cartoonCanvas(34,18);ctx.fillStyle=track?'#ba9163':'#e8c896';ctx.strokeStyle='#a78156';ctx.lineWidth=.8;
+    ctx.beginPath();ctx.roundRect(1,3,32,12,2);ctx.fill();ctx.stroke();
+    if(track){ctx.strokeStyle='#745235';for(const y of [6,12]){ctx.beginPath();ctx.moveTo(2,y);ctx.lineTo(32,y);ctx.stroke();}}
+    return canvas;
+  }
   return paintSprite(34, 18, (px) => {
     for (let y = 3; y < 15; y++)
       for (let x = 1; x < 33; x++) {
@@ -59,6 +81,10 @@ export function paintPathSample(track: boolean): HTMLCanvasElement {
 
 /** A little pond with ripples. */
 export function paintPondSample(): HTMLCanvasElement {
+  if (ART_STYLE === 'cartoon') {
+    const [canvas, ctx]=cartoonCanvas(34,20);ctx.lineWidth=1;ctx.strokeStyle='#ba9e63';ctx.fillStyle='#71c9dc';ctx.beginPath();ctx.ellipse(17,10,15,8,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.strokeStyle='#dff9fc';for(const y of [7,12]){ctx.beginPath();ctx.moveTo(10,y);ctx.bezierCurveTo(13,y-1,16,y+1,23,y);ctx.stroke();}return canvas;
+  }
   return paintSprite(34, 20, (px) => {
     for (let y = 2; y < 18; y++)
       for (let x = 1; x < 33; x++) {
@@ -71,6 +97,11 @@ export function paintPondSample(): HTMLCanvasElement {
 
 /** A patch of marsh with reeds, for the Drain tool. */
 export function paintMarshSample(): HTMLCanvasElement {
+  if (ART_STYLE === 'cartoon') {
+    const [canvas, ctx]=cartoonCanvas(34,20);ctx.fillStyle='#8fbc82';ctx.beginPath();ctx.roundRect(1,3,32,14,3);ctx.fill();
+    ctx.fillStyle='#70b8bb';ctx.beginPath();ctx.ellipse(12,12,8,3,0,0,Math.PI*2);ctx.ellipse(25,8,5,2,0,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#5f8144';ctx.lineWidth=1;for(const x of [4,7,19,21,29]){ctx.beginPath();ctx.moveTo(x,12);ctx.quadraticCurveTo(x-1,8,x+1,4);ctx.stroke();}return canvas;
+  }
   return paintSprite(34, 20, (px) => {
     for (let y = 3; y < 17; y++)
       for (let x = 1; x < 33; x++) {
@@ -90,6 +121,10 @@ export function withCross(art: HTMLCanvasElement): HTMLCanvasElement {
   ctx.globalAlpha = 0.55;
   ctx.drawImage(art, 0, 0);
   ctx.globalAlpha = 1;
+  if (ART_STYLE === 'cartoon') {
+    const pad=out.width*.2;ctx.strokeStyle='#d9352b';ctx.lineWidth=Math.min(out.width,out.height)*.1;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(pad,pad);ctx.lineTo(out.width-pad,out.height-pad);ctx.moveTo(out.width-pad,pad);ctx.lineTo(pad,out.height-pad);ctx.stroke();return out;
+  }
   ctx.fillStyle = '#d9352b';
   const size = Math.min(out.width, out.height) - 4;
   const x0 = Math.round((out.width - size) / 2);

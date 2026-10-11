@@ -1,0 +1,43 @@
+/* The cartoon renderer shares the existing accessible controls and layout. */
+body.cartoon {
+  --panel: #fff1c9;
+  --panel-hi: #fff9e6;
+  --panel-lo: #d3a05b;
+  --panel-edge: #292823;
+  --text: #292823;
+  --muted: #6a614a;
+  --accent: #ffc64d;
+  --accent-ink: #89511b;
+  --head: #427f74;
+  --head-ink: #fff1a8;
+  --pixel-font: 'Trebuchet MS', 'Arial Rounded MT Bold', system-ui, sans-serif;
+  font-family: var(--pixel-font);
+  font-size-adjust: none;
+}
+body.cartoon button, body.cartoon input, body.cartoon select, body.cartoon textarea {
+  font-family: var(--pixel-font);
+}
+body.cartoon img, body.cartoon canvas { image-rendering: auto; }
+body.cartoon button {
+  border-color: #343128;
+  border-radius: 9px;
+  box-shadow: 0 2px 0 rgba(47,40,25,.2);
+}
+body.cartoon .panel, body.cartoon .sheet, body.cartoon .info,
+body.cartoon .shop-card, body.cartoon .guide-item, body.cartoon .modal-content {
+  border-color: #343128;
+  border-radius: 12px;
+}
+body.cartoon h1, body.cartoon h2, body.cartoon h3 { font-family: var(--pixel-font); }
+body.cartoon .hud { border-bottom-color: #343128; }
+body.cartoon .toolbar { border-top-color: #343128; }
+body.cartoon .rotate-hint { display: none; }
+body.cartoon .hud.fit-3 #hud-money { font-size: 13px; }
+@media (max-width: 600px) {
+  body.cartoon .hud { flex-wrap: wrap; justify-content: flex-end; gap: 5px; }
+  body.cartoon .hud > .hud-group:first-child { flex: 1 1 100%; justify-content: space-between; }
+  body.cartoon .hud .hud-btn { min-width: 44px; padding: 2px; }
+  body.cartoon .hud .hud-btn span { display: none; }
+  body.cartoon #hud-money { font-size: 13px; }
+  body.cartoon #hud-clock { font-size: 12px; }
+}

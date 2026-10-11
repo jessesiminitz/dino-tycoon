@@ -1,5 +1,19 @@
 # Dino Tycoon: handoff notes
 
+## Local cartoon edition — October 11, 2026
+
+The current checkout is on **`art/cartoon`**, branched locally from the latest Blender artwork. No GitHub access or deployment was used. The moved worktree link has been repaired against `/Volumes/Apple HDD 2TB/dino-tycoon/.git`.
+
+Cartoon is now the default rendering style. Open `http://127.0.0.1:5173/` to play, or `/scripts/art/cartoon.html` to inspect the full art set and its animated behaviors. Development `?art=blender` and `?art=original` still provide comparisons.
+
+The first playable cartoon pass covers 28 dinosaurs, four eight-frame clips each, adult/baby sizes, buildings, scenery, procedural terrain, visitors/staff, eggs, feeders, jeeps, fences, shop samples, interface and app icons. Most animal shapes are smooth curves derived from the editable local Blender contours; `cartoonRex.ts` gives the T. rex a bespoke rounded character and articulated poses based on the approved concept. This is a playable art-direction prototype, not a claim that every species exactly reproduces the generated concept illustration.
+
+`scripts/art/export_cartoon.py` reads existing `.blend` files without overwriting them. It exports shared high-precision contours to `src/render/generated/cartoonGeometry.json`; `cartoonArt.ts` paints those directly to supersampled canvases without palette-grid quantization. World textures use 2× resolution and scale back to logical world dimensions; gallery/source-sized assets use 4×. Animation atlases remain lazy. The complete 56 adult/baby atlas set is approximately 116 MB; typical parks load only the species they contain.
+
+The generated art pack is ~3.5 MB uncompressed and ~0.9 MB gzipped. It has its own production chunk so every precached file stays below the existing 5 MB limit. Simulation and saves remain v21.
+
+Run `npm run art:cartoon` with the local dev server for the exhaustive animation/size/transparency review and screenshots under `docs/cartoon-review/`. It also regenerates cartoon app icons from `iconArt.ts`. Physical iPhone/iPad performance and further character-design polish remain review items.
+
 Everything a fresh session needs to carry on. Last updated 2026-10-05, after restoring little dinosaurs and correcting fence grounding.
 
 ## Where things stand (read this first)
