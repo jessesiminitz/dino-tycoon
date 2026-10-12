@@ -44,9 +44,10 @@ describe('park dinosaur sizes', () => {
     }
   });
 
-  it('uses a consistent length scale without the old tiny-dinosaur size floor', () => {
+  it('uses the shared length scale with the requested small-dinosaur and flyer visibility boosts', () => {
     for (const id of SPECIES_IDS) {
-      const expected = Math.max(5, SPECIES[id].lengthM * 6) * (id === 'compsognathus' ? 2 : 1);
+      const expected = Math.max(5, SPECIES[id].lengthM * 6) * (id === 'compsognathus' ? 2 : 1)
+        * (habitatOf(id) === 'air' ? 1.5 : 1);
       const longest = Math.max(...[0,1,2,3].map(frame => visibleWidth(id, frame)));
       // At tiny sizes, thin feather and wing tips disappear during resampling.
       expect(Math.abs(longest - expected), id).toBeLessThanOrEqual(habitatOf(id) === 'air' || expected <= 6 ? 3 : 2);

@@ -10,7 +10,9 @@ import { Terrain } from '../sim/terrain';
 import { lavaPreview } from '../sim/systems/eruption';
 import { floodForecast } from '../sim/systems/flood';
 import { TILE } from './tileset';
-import { FENCE_H, fenceDepth } from './worldDepth';
+import { FENCE_H, fenceDepth, depthAt } from './worldDepth';
+import { aviaryRoof } from './aviaryRoof';
+import { paintParkEntrance } from './entranceArt';
 
 const PADDOCK_TINTS = [0xf2c14e, 0x6ec6ff, 0xff8fb1, 0xb28dff, 0x7ee0b5, 0xffa257];
 const FOR_SALE = 0xff9f43;
@@ -40,7 +42,8 @@ export class WorldLayers {
   private sideFenceRows: Phaser.GameObjects.Graphics[] = [];
   private fadedFenceRows = new Map<string, Phaser.GameObjects.Graphics>();
   private obscuredFences = new Set<string>();
-  private gate: Phaser.GameObjects.Graphics;
+  private gate: Phaser.GameObjects.Image;
+  private roofs: Phaser.GameObjects.Graphics;
   private ghost: Phaser.GameObjects.Graphics;
   private labels: Phaser.GameObjects.Text[] = [];
 
@@ -54,7 +57,11 @@ export class WorldLayers {
       this.fenceRows.push(scene.add.graphics().setDepth(fenceDepth(y, 'h')));
       if (y < sim.state.map.height) this.sideFenceRows.push(scene.add.graphics().setDepth(fenceDepth(y, 'v')));
     }
-    this.gate = scene.add.graphics().setDepth(3);
+    const entrance = paintParkEntrance(ART_STYLE);
+    const gateKey = `park-entrance-${ART_STYLE}`;
+    if (!scene.textures.exists(gateKey)) scene.textures.addCanvas(gateKey, entrance);
+    this.gate = scene.add.image(0, 0, gateKey).setOrigin(.5, 1).setDisplaySize(96, 64).setDepth(4.9);
+    this.roofs = scene.add.graphics().setDepth(4.8);
     this.ghost = scene.add.graphics().setDepth(5);
     this.drawGate();
   }
@@ -175,6 +182,23 @@ export class WorldLayers {
   drawFences(): void {
     for (let row = 0; row <= this.sim.state.map.height; row++) this.drawFenceRow(row, 'h');
     for (let row = 0; row < this.sim.state.map.height; row++) this.drawFenceRow(row, 'v');
+  }
+
+  /** Light curved netting covers completed aviaries while keeping flyers visible. */
+  drawAviaryRoofs(): void {
+    const g = this.roofs.clear();
+    for (const region of this.sim.regions().regions) {
+      if (!region.covered) continue;
+      for (const panel of aviaryRoof(region.tiles, this.sim.state.map.width, TILE, FENCE_H[5])) {
+        const [a,b,c,d] = panel.corners;
+        g.fillStyle(0xcde6da, .035);
+        g.fillPoints(panel.corners, true);
+        g.lineStyle(.5, 0xdfe3d6, .24).lineBetween(a.x,a.y,d.x,d.y);
+        g.lineStyle(panel.rib ? 1.2 : .5, panel.rib ? 0x667e73 : 0xdfe3d6, panel.rib ? .65 : .3)
+          .lineBetween(a.x,a.y,b.x,b.y);
+        g.lineStyle(.5,0xdfe3d6,.25).lineBetween(d.x,d.y,c.x,c.y);
+      }
+    }
   }
 
   /** Keep walls in front of feet, but let animals show through only the obscuring sections. */
@@ -496,18 +520,7 @@ export class WorldLayers {
   }
 
   private drawGate(): void {
-    const g = this.gate.clear();
     const { x, y } = this.sim.state.entrance;
-    const ox = x * TILE;
-    const oy = y * TILE;
-    // Two posts, a lintel and a little yellow sign.
-    g.fillStyle(0x5a3b1f, 1);
-    g.fillRect(ox + 2, oy + 3, 2, 12);
-    g.fillRect(ox + 12, oy + 3, 2, 12);
-    g.fillRect(ox + 1, oy + 2, 14, 2);
-    g.fillStyle(0xf2c14e, 1);
-    g.fillRect(ox + 4, oy - 2, 8, 5);
-    g.fillStyle(0x1b1b1b, 1);
-    g.fillRect(ox + 6, oy, 4, 1);
+    this.gate.setPosition(x * TILE + TILE / 2, y * TILE + TILE).setDepth(depthAt((y + 1) * TILE));
   }
 }

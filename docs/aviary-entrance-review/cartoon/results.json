@@ -1,0 +1,92 @@
+{
+  "results": [
+    {
+      "width": 1180,
+      "height": 820,
+      "result": {
+        "failures": [],
+        "sizes": {
+          "pteranodon": {
+            "scale": 1.69331186471575,
+            "baseline": 1.1288745764771666,
+            "width": 180.53640816809687
+          },
+          "dimorphodon": {
+            "scale": 0.654443913303929,
+            "baseline": 0.43629594220261936,
+            "width": 59.20573167478104
+          }
+        },
+        "covered": 1
+      },
+      "lifecycle": {
+        "open": 0,
+        "closed": 7840
+      },
+      "entrance": {
+        "width": 96,
+        "height": 64,
+        "visible": true
+      }
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "result": {
+        "failures": [],
+        "sizes": {
+          "pteranodon": {
+            "scale": 1.69331186471575,
+            "baseline": 1.1288745764771666,
+            "width": 180.53640816809687
+          },
+          "dimorphodon": {
+            "scale": 0.654443913303929,
+            "baseline": 0.43629594220261936,
+            "width": 59.20573167478104
+          }
+        },
+        "covered": 1
+      },
+      "lifecycle": {
+        "open": 0,
+        "closed": 7840
+      },
+      "entrance": {
+        "width": 96,
+        "height": 64,
+        "visible": true
+      }
+    },
+    {
+      "width": 667,
+      "height": 375,
+      "result": {
+        "failures": [],
+        "sizes": {
+          "pteranodon": {
+            "scale": 1.69331186471575,
+            "baseline": 1.1288745764771666,
+            "width": 180.53640816809687
+          },
+          "dimorphodon": {
+            "scale": 0.654443913303929,
+            "baseline": 0.43629594220261936,
+            "width": 59.20573167478104
+          }
+        },
+        "covered": 1
+      },
+      "lifecycle": {
+        "open": 0,
+        "closed": 7840
+      },
+      "entrance": {
+        "width": 96,
+        "height": 64,
+        "visible": true
+      }
+    }
+  ],
+  "errors": []
+}

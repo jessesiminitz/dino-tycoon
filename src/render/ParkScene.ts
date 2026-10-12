@@ -186,6 +186,7 @@ export class ParkScene extends Phaser.Scene {
     this.syncTerrain();
     this.layers.drawFences();
     this.layers.drawPaths();
+    this.layers.drawAviaryRoofs();
     this.scenery?.refresh();
     this.layers.drawOverlay(this.ui.mode === 'land', this.selectedParcel);
   }

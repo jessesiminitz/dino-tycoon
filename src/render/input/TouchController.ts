@@ -4,7 +4,6 @@ export const MIN_ZOOM = 1;
 export const MAX_ZOOM = 6;
 
 const TAP_SLOP_PX = 10;
-const TAP_MAX_MS = 300;
 const LONG_PRESS_MS = 450;
 /** After the last finger lifts, how long to wait before clearing touches the browser never ended. */
 const STALE_TOUCH_MS = 80;
@@ -25,6 +24,7 @@ const STALE_TOUCH_MS = 80;
 export class TouchController extends Phaser.Events.EventEmitter {
   private cam: Phaser.Cameras.Scene2D.Camera;
   private downAt = 0;
+  private pressActive = false;
   private downX = 0;
   private downY = 0;
   private moved = false;
@@ -73,6 +73,7 @@ export class TouchController extends Phaser.Events.EventEmitter {
     this.cancelLongPress();
     this.cancelDraw();
     this.multiTouch = false;
+    this.pressActive = false;
     this.pinchDist = 0;
     this.moved = false;
     if (wasPinching) this.settleZoom(this.cam.width / 2, this.cam.height / 2);
@@ -98,6 +99,7 @@ export class TouchController extends Phaser.Events.EventEmitter {
 
   private onDown(pointer: Phaser.Input.Pointer): void {
     this.zoomTween?.stop();
+    this.pressActive = true;
     const active = this.activePointers();
 
     if (active.length >= 2) {
@@ -172,6 +174,8 @@ export class TouchController extends Phaser.Events.EventEmitter {
 
   private onUp(pointer: Phaser.Input.Pointer): void {
     this.cancelLongPress();
+    const wasActive = this.pressActive;
+    this.pressActive = false;
     const remaining = this.activePointers().length;
 
     if (this.multiTouch) {
@@ -201,8 +205,10 @@ export class TouchController extends Phaser.Events.EventEmitter {
       this.emit('drawcancel');
     }
 
-    if (!this.moved && !this.mousePan && pointer.upTime - this.downAt < TAP_MAX_MS) {
-      this.emitWorld('tap', pointer);
+    if (wasActive && !this.moved && !this.mousePan) {
+      // Slow taps must not disappear between tap and long-press thresholds.
+      // If a busy frame delayed the timer, still deliver the held press once.
+      this.emitWorld(pointer.upTime - this.downAt >= LONG_PRESS_MS ? 'longpress' : 'tap', pointer);
     }
   }
 

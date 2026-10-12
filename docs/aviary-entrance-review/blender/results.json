@@ -1,0 +1,92 @@
+{
+  "results": [
+    {
+      "width": 1180,
+      "height": 820,
+      "result": {
+        "failures": [],
+        "sizes": {
+          "pteranodon": {
+            "scale": 1.0384615384615383,
+            "baseline": 0.6923076923076923,
+            "width": 53
+          },
+          "dimorphodon": {
+            "scale": 0.29999999999999993,
+            "baseline": 0.19999999999999996,
+            "width": 11
+          }
+        },
+        "covered": 1
+      },
+      "lifecycle": {
+        "open": 0,
+        "closed": 7840
+      },
+      "entrance": {
+        "width": 96,
+        "height": 64,
+        "visible": true
+      }
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "result": {
+        "failures": [],
+        "sizes": {
+          "pteranodon": {
+            "scale": 1.0384615384615383,
+            "baseline": 0.6923076923076923,
+            "width": 53
+          },
+          "dimorphodon": {
+            "scale": 0.29999999999999993,
+            "baseline": 0.19999999999999996,
+            "width": 11
+          }
+        },
+        "covered": 1
+      },
+      "lifecycle": {
+        "open": 0,
+        "closed": 7840
+      },
+      "entrance": {
+        "width": 96,
+        "height": 64,
+        "visible": true
+      }
+    },
+    {
+      "width": 667,
+      "height": 375,
+      "result": {
+        "failures": [],
+        "sizes": {
+          "pteranodon": {
+            "scale": 1.0384615384615383,
+            "baseline": 0.6923076923076923,
+            "width": 53
+          },
+          "dimorphodon": {
+            "scale": 0.29999999999999993,
+            "baseline": 0.19999999999999996,
+            "width": 11
+          }
+        },
+        "covered": 1
+      },
+      "lifecycle": {
+        "open": 0,
+        "closed": 7840
+      },
+      "entrance": {
+        "width": 96,
+        "height": 64,
+        "visible": true
+      }
+    }
+  ],
+  "errors": []
+}

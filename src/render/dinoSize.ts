@@ -1,4 +1,4 @@
-import { SPECIES, type SpeciesId } from '../sim/data/species';
+import { habitatOf, SPECIES, type SpeciesId } from '../sim/data/species';
 import { ART_STYLE, type ArtStyle } from './artStyle';
 import { dinoFrameCount, dinoShape } from './dinoArt';
 
@@ -23,8 +23,9 @@ export function dinoWorldScale(species: SpeciesId, style: ArtStyle = ART_STYLE):
   const target = style === 'blender'
     ? Math.max(5, 6 * SPECIES[species].lengthM)
     : Math.max(18, Math.min(200, 14 * SPECIES[species].lengthM ** 0.8));
-  // Keep the smallest park resident easy to see at the user's preferred size.
-  const visibilityBoost = style === 'blender' && species === 'compsognathus' ? 2 : 1;
+  // The user's visibility adjustments apply to adults, babies and menu poses.
+  const visibilityBoost = (style === 'blender' && species === 'compsognathus' ? 2 : 1)
+    * (habitatOf(species) === 'air' ? 1.5 : 1);
   const scale = Math.min(style === 'blender' ? 2.5 : 1.15, target / width) * visibilityBoost;
   scales.set(key, scale);
   return scale;
