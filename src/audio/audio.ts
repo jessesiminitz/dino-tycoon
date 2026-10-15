@@ -1,6 +1,6 @@
 import { getSettings, onSettings, type Settings } from '../ui/settings';
 import { decodeRag, type Note, type Rag } from './ragNotes';
-import { callFor } from './calls';
+import { synthesizeCall } from './callSynthesis';
 import type { SpeciesId } from '../sim/data/species';
 
 /**
@@ -213,75 +213,31 @@ export function playSfx(name: Sfx): void {
   }
 }
 
-/** An animal's call (see calls.ts): synthesised from an oscillator, a filter and a little noise. */
+/** Original evidence-informed calls share the existing SFX setting and volume bus. */
+const callBuffers = new Map<string, AudioBuffer>();
+let callVariant = 0;
+let lastCall = -Infinity;
 export function playCall(species: SpeciesId, baby = false): void {
   if (!ctx || !getSettings().sfx) return;
   const now = performance.now();
   if (now - lastCall < 350) return;
   lastCall = now;
-  const { kind, pitch: f, length: len, volume } = callFor(species, baby);
-  const t = ctx.currentTime;
-  const v = 0.16 * volume;
-  switch (kind) {
-    case 'roar':
-      voice('sawtooth', [[0, f * 1.3], [len * 0.3, f], [len, f * 0.75]], t, len, v * 1.1, { type: 'bandpass', from: 520, to: 240, q: 1 });
-      return burst(t, len, 0.35 * volume, 320, 0.7);
-    case 'bellow':
-      return voice('square', [[0, f], [len, f * 0.85]], t, len, v * 0.7, { type: 'lowpass', from: 700, to: 450, q: 0.8 }, 6);
-    case 'honk':
-      voice('triangle', [[0, f], [len * 0.4, f * 1.05], [len, f * 0.95]], t, len * 0.55, v * 1.2, { type: 'lowpass', from: 1300, to: 900, q: 1 }, 5);
-      return voice('triangle', [[0, f * 1.25], [len * 0.45, f * 1.2]], t + len * 0.45, len * 0.55, v, { type: 'lowpass', from: 1300, to: 800, q: 1 }, 5);
-    case 'chirp':
-      for (let i = 0; i < 3; i++) tone('sine', f, t + i * (len / 2.5), len / 3, v * 0.6, sfxGain, f * 1.5);
-      return;
-    case 'screech':
-      return voice('sawtooth', [[0, f], [len * 0.4, f * 1.45], [len, f * 1.1]], t, len, v * 0.6, { type: 'bandpass', from: 1500, to: 1900, q: 2 });
-    case 'song':
-      return voice('sine', [[0, f * 1.2], [len * 0.5, f * 1.3], [len, f * 0.8]], t, len, v * 1.3, { type: 'lowpass', from: 900, to: 600, q: 0.7 }, 4);
+  const variant = callVariant++ % 3;
+  const key = `${species}:${baby}:${variant}:${ctx.sampleRate}`;
+  let buffer = callBuffers.get(key);
+  if (!buffer) {
+    const samples = synthesizeCall(species, baby, ctx.sampleRate, variant);
+    buffer = ctx.createBuffer(1, samples.length, ctx.sampleRate);
+    buffer.getChannelData(0).set(samples);
+    // Bounded to roughly a few MB even when browsing the complete roster.
+    if (callBuffers.size >= 32) callBuffers.delete(callBuffers.keys().next().value!);
+    callBuffers.set(key, buffer);
   }
-}
-let lastCall = 0;
-
-/**
- * One voice: an oscillator following a pitch path [time, Hz][], through a
- * sweeping filter, with an optional vibrato (Hz) and a soft attack and release.
- */
-function voice(
-  type: OscillatorType,
-  path: [number, number][],
-  start: number,
-  dur: number,
-  vol: number,
-  filter: { type: BiquadFilterType; from: number; to: number; q: number },
-  vibrato = 0,
-): void {
-  if (!ctx) return;
-  const o = ctx.createOscillator();
-  o.type = type;
-  o.frequency.setValueAtTime(path[0][1], start);
-  for (const [at, hz] of path.slice(1)) o.frequency.linearRampToValueAtTime(hz, start + at);
-  if (vibrato) {
-    const lfo = ctx.createOscillator();
-    const depth = ctx.createGain();
-    lfo.frequency.value = vibrato;
-    depth.gain.value = path[0][1] * 0.04;
-    lfo.connect(depth).connect(o.frequency);
-    lfo.start(start);
-    lfo.stop(start + dur + 0.1);
-  }
-  const f = ctx.createBiquadFilter();
-  f.type = filter.type;
-  f.Q.value = filter.q;
-  f.frequency.setValueAtTime(filter.from, start);
-  f.frequency.linearRampToValueAtTime(filter.to, start + dur);
-  const g = ctx.createGain();
-  g.gain.setValueAtTime(0.0001, start);
-  g.gain.exponentialRampToValueAtTime(vol, start + Math.min(0.06, dur / 4));
-  g.gain.setValueAtTime(vol, start + dur * 0.7);
-  g.gain.exponentialRampToValueAtTime(0.0001, start + dur + 0.1);
-  o.connect(f).connect(g).connect(sfxGain);
-  o.start(start);
-  o.stop(start + dur + 0.15);
+  const source = ctx.createBufferSource(); source.buffer = buffer;
+  const level = ctx.createGain(); level.gain.value = .28;
+  source.connect(level).connect(sfxGain);
+  source.onended = () => { source.disconnect(); level.disconnect(); };
+  source.start();
 }
 
 // --- Ambience: birdsong by day, crickets at night, very quietly. ---

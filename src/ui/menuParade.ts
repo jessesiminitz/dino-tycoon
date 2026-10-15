@@ -65,7 +65,8 @@ export function mountMenuParade(root: HTMLElement): void {
       button.dataset.reaction = reaction;
       status.textContent = snack ? `${SPECIES[animal.id].name} says yum!` : `${SPECIES[animal.id].name} says hello!`;
       track.classList.add('is-playing');
-      if (snack) playSfx('chirp'); else { playCall(animal.id); if (habitat === 'water') playSfx('splash'); }
+      playCall(animal.id);
+      if (!snack && habitat === 'water') playSfx('splash');
     });
   }
   const resize = new ResizeObserver(() => {

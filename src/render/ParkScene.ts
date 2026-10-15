@@ -337,7 +337,11 @@ export class ParkScene extends Phaser.Scene {
     this.hud.toast(r.message, r.effect === 'snap' ? 'error' : 'ok');
     if (r.effect) {
       this.entities.careEffect(id, r.effect, type === 'treatDino' ? 'treat' : 'pat');
-      playSfx(r.effect === 'snap' ? 'snap' : 'chirp');
+      if (r.effect === 'snap') playSfx('snap');
+      else {
+        const dino = this.sim.state.dinos.find(d => d.id === id);
+        if (dino) playCall(dino.species, dino.baby);
+      }
     }
     this.showSelection();
   }

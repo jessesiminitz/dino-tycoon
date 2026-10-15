@@ -58,6 +58,11 @@ try {
   const keyboard=await page.evaluate(()=>{const b=document.activeElement,r=b.getBoundingClientRect();return b.classList.contains('menu-dino')&&!!b.dataset.reaction&&r.left>=0&&r.right<=innerWidth&&document.querySelectorAll('.menu-dino:not([tabindex="-1"])').length===28;});
   check('keyboard brings each dinosaur into view and activates its reaction without duplicate tab stops',keyboard);
 
+  await page.click('[data-go="settings"]');
+  check('decorative parade stays off the settings screen',await page.$eval('.menu-parade',el=>getComputedStyle(el).display==='none'));
+  await page.click('[data-go="main"]');
+  check('parade returns on the title screen',await page.$eval('.menu-parade',el=>getComputedStyle(el).display!=='none'));
+
   await page.setViewport({ width: 844, height: 390, isMobile: true, hasTouch: true });
   await page.goto(gameUrl('/?quickstart&stress'), { waitUntil: 'load' });
   await ready(page);

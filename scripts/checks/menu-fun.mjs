@@ -23,9 +23,10 @@ try {
   await page.screenshot({path:`${out}menu-${w}x${h}.png`});
  }
  await page.setViewport({width:1180,height:820});
- const before=await page.$eval('.menu-parade-group:nth-child(2) img',i=>i.src);
- await new Promise(r=>setTimeout(r,700));
- check('visible dinosaurs play authored walking frames',before!==await page.$eval('.menu-parade-group:nth-child(2) img',i=>i.src));
+ // Only visible animals animate. A fixed duplicate can be off-screen after resize.
+ await page.evaluate(()=>{window.__paradeBefore=new Map([...document.querySelectorAll('.menu-dino img')].filter(i=>{const r=i.getBoundingClientRect();return r.right>0&&r.left<innerWidth;}).map(i=>[i,i.src]));});
+ const walking=await page.waitForFunction(()=>[...window.__paradeBefore].some(([i,src])=>{const r=i.getBoundingClientRect();return r.right>0&&r.left<innerWidth&&i.src!==src;}),{timeout:5000,polling:120}).then(()=>true,()=>false);
+ check('visible dinosaurs play authored walking frames',walking);
  for(const [id,reaction] of [['compsognathus','hop'],['pteranodon','flutter'],['mosasaurus','splash'],['nigersaurus','nod']]) {
   await page.evaluate(id=>{const track=document.querySelector('.menu-parade-track'),button=track.querySelector(`[data-species="${id}"]`);track.style.animation='none';track.style.transform=`translateX(${20-button.offsetLeft}px)`;},id);
   const selector=`.menu-parade-group:first-child [data-species="${id}"]`;
