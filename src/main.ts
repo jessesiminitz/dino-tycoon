@@ -8,6 +8,7 @@ import { WeatherScene } from './render/WeatherScene';
 import { loadSlot, saveSlot, setBootDirective, takeBootDirective, type SlotId } from './save/storage';
 import { mountHud } from './ui/hud';
 import { showMenu } from './ui/menu';
+import { fitVisibleViewport } from './ui/viewport';
 import { mountPauseMenu, offerUpdate, showOutcome } from './ui/overlays';
 import { UiState } from './ui/uiState';
 import { mountTutorial } from './ui/tutorial';
@@ -19,6 +20,8 @@ import { ART_STYLE } from './render/artStyle';
 import './ui/cartoon.css';
 import { mountHatching } from './ui/hatching';
 import './ui/hatching.css';
+
+fitVisibleViewport();
 
 if (ART_STYLE === 'cartoon') document.body.classList.add('cartoon');
 

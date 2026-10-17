@@ -1,5 +1,13 @@
 # Dino Tycoon: handoff notes
 
+## Keep the bottom of the screen visible — October 17, 2026
+
+The full-screen UI now uses the visual viewport height and vertical offset, rather than assuming the layout viewport is entirely visible. `fitVisibleViewport()` updates --app-height/--app-top at startup, window resize, and visualViewport resize/scroll (browser controls or keyboard movement). CSS uses a fixed, layout-containing body so the game canvas, title, bottom tools and every fixed dialog share those visible bounds, including shops/hatching dialogs appended directly to body. Dynamic viewport units provide the CSS fallback; photo/dig sizing and parade scale also use the visible height. Menu options still scroll behind the parade, and existing safe-area insets remain applied.
+
+`viewport-review.mjs` simulates a 375px layout with only 305px visible, a 250px viewport offset 30px, and restoration to full height. It checks title/scrollable content/parade bounds, Settings reachability, game/canvas/camera resizing, bottom toolbar safety with a 22px inset, and a visible runtime shop. Standard phone landscape, portrait and desktop sizes are checked too. The visual viewport mismatch is simulated in Chrome; this is not a physical Safari device check. Screenshots/results are in docs/viewport-review for both editions. No save changes.
+
+Validation: all 500 tests, production build, and viewport-review in both art editions passed.
+
 ## Full-screen title scrolling, playful calls and twelve parks — October 17, 2026
 
 The title content scrolls at full screen height, passing behind the foreground dinosaur parade. Bottom padding lets lower options scroll above the dinosaurs. Transparent gaps pass pointer gestures through; dinosaur buttons remain interactive, and reduced-motion/manual parade browsing remains available. Parade sizes and game proportions are unchanged. Secondary screens continue hiding the parade.
