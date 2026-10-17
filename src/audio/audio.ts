@@ -213,10 +213,11 @@ export function playSfx(name: Sfx): void {
   }
 }
 
-/** Original evidence-informed calls share the existing SFX setting and volume bus. */
+/** Playful species calls share the existing SFX setting and volume bus. */
 const callBuffers = new Map<string, AudioBuffer>();
 let callVariant = 0;
 let lastCall = -Infinity;
+let activeCall: { source: AudioBufferSourceNode; level: GainNode } | null = null;
 export function playCall(species: SpeciesId, baby = false): void {
   if (!ctx || !getSettings().sfx) return;
   const now = performance.now();
@@ -234,9 +235,16 @@ export function playCall(species: SpeciesId, baby = false): void {
     callBuffers.set(key, buffer);
   }
   const source = ctx.createBufferSource(); source.buffer = buffer;
-  const level = ctx.createGain(); level.gain.value = .28;
+  // Fade the previous voice before starting another, avoiding stacked loud calls.
+  if (activeCall) {
+    activeCall.level.gain.cancelScheduledValues(ctx.currentTime);
+    activeCall.level.gain.setTargetAtTime(0, ctx.currentTime, .015);
+    activeCall.source.stop(ctx.currentTime + .08);
+  }
+  const level = ctx.createGain(); level.gain.value = .85;
+  activeCall = { source, level };
   source.connect(level).connect(sfxGain);
-  source.onended = () => { source.disconnect(); level.disconnect(); };
+  source.onended = () => { if (activeCall?.source === source) activeCall = null; source.disconnect(); level.disconnect(); };
   source.start();
 }
 

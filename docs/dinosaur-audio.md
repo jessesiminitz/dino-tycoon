@@ -1,6 +1,8 @@
-# Dinosaur voices: evidence and sound design
+# Dinosaur voices: playful sound design and inspiration
 
-These are original, procedural **evidence-informed interpretations**, not recordings, fossil-accurate reconstructions, or measured species pitches. Pitch, rhythm, roughness and baby scaling are artistic choices. There is no known recording of a non-avian dinosaur.
+The current mix uses original, procedural **playful animal-inspired voices**, with expressive pitch sweeps and brighter growl harmonics for small speakers. Calls play at roughly three times their previous gain, with a brief fade between overlapping calls.
+
+These are artistic interpretations, not recordings, fossil-accurate reconstructions, or measured species pitches. Pitch, rhythm, roughness and baby scaling are artistic choices. There is no known recording of a non-avian dinosaur.
 
 - [Riede et al., 2016, *Coos, booms, and hoots*](https://doi.org/10.1111/evo.12988) describes closed-mouth calls in living birds and infers that at least some extinct dinosaurs could have made such calls. It does not establish the voice of T. rex or any other particular game species. The large theropods and sauropods receive soft-edged low booms and throaty pulses inspired by living archosaurs, rather than mammalian movie roars.
 - [Sandia / New Mexico Museum crest modelling, 1997](https://www.sandia.gov/labnews/1997/12/19/dinosaur-story/) used CT scans to model the resonance of Parasaurolophus air passages and produced low-frequency, pitch-changing sounds. The researchers modelled alternatives with and without vocal cords. Our Parasaurolophus call layers a low voice and resonant overtones; it is **not** that CT model, a copy of its sound, or proof of its exact natural call.

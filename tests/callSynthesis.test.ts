@@ -17,6 +17,14 @@ describe('procedural dinosaur voices', () => {
       expect(step).toBeLessThan(.55);
     }
   });
+  it('carries large voices above the bass range for small speakers', () => {
+    for (const id of ['tyrannosaurus', 'brachiosaurus', 'triceratops'] as const) {
+      const samples = synthesizeCall(id, false, 22050);
+      const high = new Float32Array(samples.length), alpha = Math.exp(-2 * Math.PI * 300 / 22050);
+      for (let i = 1; i < samples.length; i++) high[i] = alpha * (high[i - 1] + samples[i] - samples[i - 1]);
+      expect(rms(high) / rms(samples)).toBeGreaterThan(.25);
+    }
+  });
   it('retains softer shorter babies and distinct repeat variations', () => {
     const adult=synthesizeCall('tyrannosaurus',false,22050);
     const baby=synthesizeCall('tyrannosaurus',true,22050);

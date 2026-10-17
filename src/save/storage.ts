@@ -2,13 +2,13 @@ import { calendar, migrate, SAVE_VERSION, type GameState } from '../sim/GameStat
 import type { ScenarioId } from '../sim/data/scenarios';
 
 /**
- * Three park slots. IndexedDB is the main store; every save also writes a
+ * Twelve park slots. IndexedDB is the main store; every save also writes a
  * synchronous localStorage mirror, because iOS can kill a backgrounded web
  * app before an async IndexedDB write finishes. Loading takes whichever copy
  * is newer.
  */
-export type SlotId = 1 | 2 | 3;
-export const SLOT_IDS: SlotId[] = [1, 2, 3];
+export const SLOT_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
+export type SlotId = typeof SLOT_IDS[number];
 
 export interface SaveSummary {
   scenario: ScenarioId;
@@ -104,10 +104,11 @@ export function saveSlot(slot: SlotId, state: GameState): void {
   const rec: SaveRecord = { slot, savedAt: Date.now(), summary: summarize(state), state };
   try {
     localStorage.setItem(MIRROR_KEY(slot), JSON.stringify(rec));
-    localStorage.setItem(LAST_SLOT_KEY, String(slot));
   } catch {
     // Storage full or blocked: IndexedDB below may still work.
   }
+  // A full mirror must not prevent Continue from remembering an IndexedDB save.
+  try { localStorage.setItem(LAST_SLOT_KEY, String(slot)); } catch { /* Storage blocked. */ }
   // Structured clone keeps IndexedDB's copy independent of the live state.
   void idb('readwrite', (s) => s.put(structuredClone(rec)));
 }

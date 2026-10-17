@@ -1353,10 +1353,10 @@ body:not(.in-park) #info {
 
 .menu { --parade-dino-height: clamp(132px, 18vh, 210px); }
 .menu:not([data-screen='main']) .menu-parade { display: none; }
-.menu[data-screen='main'] .menu-content { height: calc(100% - var(--parade-dino-height) - 78px); padding-bottom: 14px; }
-.menu-parade { position: absolute; left: 0; right: 0; bottom: calc(var(--safe-bottom) + 6px); height: calc(var(--parade-dino-height) + 62px); overflow: hidden; }
+.menu[data-screen='main'] .menu-content { padding-bottom: calc(var(--parade-dino-height) + var(--safe-bottom) + 100px); }
+.menu-parade { pointer-events: none; position: absolute; left: 0; right: 0; bottom: calc(var(--safe-bottom) + 6px); height: calc(var(--parade-dino-height) + 62px); overflow: hidden; }
 .menu-parade-hint { margin: 0 0 4px; text-align: center; color: #fff4cc; font-size: 12px; text-shadow: 1px 2px 0 #173b4a; min-height: 20px; }
-.menu-parade-track { display: flex; width: max-content; animation: parade 180s linear infinite; }
+.menu-parade-track { pointer-events: none; display: flex; width: max-content; animation: parade 180s linear infinite; }
 .menu-parade-track.is-playing, .menu-parade-track:has(.menu-dino:focus-visible) { animation-play-state: paused; }
 .menu-parade-group { display: flex; align-items: flex-end; gap: 48px; padding-right: 48px; min-width: 100vw; flex: none; }
 .menu-dino { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: max(108px, calc(var(--dino-width) * var(--parade-dino-height) + 12px)); height: calc(var(--parade-dino-height) + 30px); flex: none; padding: 6px 0; border: 0; box-shadow: none; background: transparent; touch-action: manipulation; cursor: pointer; }
@@ -1377,14 +1377,14 @@ body:not(.in-park) #info {
 @keyframes menu-nod { 50% { transform: translateY(2px); } }
 @media (max-height: 480px) {
   .menu[data-screen='main'] { --parade-dino-height: 90px; }
-  .menu[data-screen='main'] .menu-content { height: calc(100% - 156px); padding-top: 8px; }
+  .menu[data-screen='main'] .menu-content { padding-top: 8px; }
   .menu[data-screen='main'] .menu-title { font-size: 32px; }
   .menu[data-screen='main'] .menu-title br { display: none; }
   .menu-parade { height: 146px; }
   .menu-dino { height: 120px; padding: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .menu-parade { overflow-x: auto; }
+  .menu-parade { overflow-x: auto; pointer-events: auto; }
   .menu-parade-track { animation: none; }
   .menu-dino[data-reaction] img { animation: none; }
 }
@@ -2679,5 +2679,8 @@ body:not(.in-park) #info {
 
 body.cartoon .menu-dino { border: 0; box-shadow: none; background: transparent; }
 
-.menu-parade.motion-off { overflow-x: auto; }
+.menu-parade.motion-off { overflow-x: auto; pointer-events: auto; }
 .menu-parade.motion-off .menu-parade-track, .menu-parade.motion-off .menu-dino img { animation: none; }
+
+/* Keep dinosaur taps active while gaps in the foreground parade pass menu gestures through. */
+.menu-dino { pointer-events: auto; }

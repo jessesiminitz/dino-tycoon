@@ -1,0 +1,38 @@
+{
+  "results": [
+    {
+      "width": 667,
+      "height": 375,
+      "layout": {
+        "height": 375,
+        "menu": 375,
+        "scrollHeight": 477
+      },
+      "newSlot": 4,
+      "highSlot": 12
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "layout": {
+        "height": 390,
+        "menu": 390,
+        "scrollHeight": 477
+      },
+      "newSlot": 4,
+      "highSlot": 12
+    },
+    {
+      "width": 1180,
+      "height": 820,
+      "layout": {
+        "height": 820,
+        "menu": 820,
+        "scrollHeight": 820
+      },
+      "newSlot": 4,
+      "highSlot": 12
+    }
+  ],
+  "errors": []
+}

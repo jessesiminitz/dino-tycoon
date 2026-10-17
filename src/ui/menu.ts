@@ -43,7 +43,7 @@ export function showMenu(handlers: MenuHandlers): void {
 
   if (!root.querySelector('.menu-dino')) mountMenuParade(root);
 
-  let slots: Record<SlotId, SaveRecord | null> = { 1: null, 2: null, 3: null };
+  let slots: Record<SlotId, SaveRecord | null> = Object.fromEntries(SLOT_IDS.map(slot => [slot, null])) as Record<SlotId, SaveRecord | null>;
   /** When set, the next slot choice overwrites with this state (new park or import). */
   let pendingState: GameState | null = null;
   let confirmDelete: SlotId | null = null;
@@ -71,7 +71,7 @@ export function showMenu(handlers: MenuHandlers): void {
         ${mode === 'overwrite' ? `<button class="action-btn" data-use="${slot}">Use this slot</button>` : ''}</li>`;
     }
     const s = rec.summary;
-    const info = `<span><b>${SCENARIOS[s.scenario].name}</b> · ${STATUS_LABEL[s.status]}<br>
+    const info = `<span><b>Park ${slot} · ${SCENARIOS[s.scenario].name}</b> · ${STATUS_LABEL[s.status]}<br>
       <small>Day ${s.day} · ${money.format(s.money)} · ${s.dinos} dinos · reputation ${s.reputation} · saved ${ago(rec.savedAt)}</small></span>`;
     if (mode === 'overwrite') {
       return `<li class="slot">${info}<button class="action-btn danger" data-use="${slot}">Replace</button></li>`;
@@ -126,7 +126,7 @@ export function showMenu(handlers: MenuHandlers): void {
     } else if (screen === 'load') {
       const overwrite = pendingState !== null;
       body.innerHTML = `
-        <h2>${overwrite ? 'All three park slots are in use. Replace one?' : 'Your parks'}</h2>
+        <h2>${overwrite ? `All ${SLOT_IDS.length} park slots are in use. Replace one?` : `Your parks · ${SLOT_IDS.length} save slots`}</h2>
         <ul class="slots">${SLOT_IDS.map((s) => slotRow(s, slots[s], overwrite ? 'overwrite' : 'load')).join('')}</ul>
         ${overwrite ? '' : `<label class="menu-btn file-btn">Import a save file<input type="file" accept="application/json,.json" data-import hidden></label>`}
         <p class="note import-error" hidden></p>

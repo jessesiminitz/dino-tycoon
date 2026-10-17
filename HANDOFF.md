@@ -1,5 +1,17 @@
 # Dino Tycoon: handoff notes
 
+## Full-screen title scrolling, playful calls and twelve parks — October 17, 2026
+
+The title content scrolls at full screen height, passing behind the foreground dinosaur parade. Bottom padding lets lower options scroll above the dinosaurs. Transparent gaps pass pointer gestures through; dinosaur buttons remain interactive, and reduced-motion/manual parade browsing remains available. Parade sizes and game proportions are unchanged. Secondary screens continue hiding the parade.
+
+Species calls now play at .85 gain instead of .28, with brighter harmonics, audible growl formants and expressive pitch contours. The bass-only emphasis is reduced so large voices carry on small speakers. These are playful animal-inspired interpretations; research notes remain background inspiration, not an accuracy claim. Babies stay higher, shorter and softer; the existing SFX switch/volume still applies. A new call fades the previous voice over 80 ms to prevent stacked loud calls. No new recordings or runtime audio downloads. The listening gallery/WAV previews are regenerated.
+
+Save slots expand from three to twelve with unchanged IndexedDB keys/schema and existing slots preserved. Menu initialization and full-slot guidance derive from SLOT_IDS; occupied rows display their park number. Continue metadata is written separately from the synchronous mirror so mirror quota failures do not prevent remembering the current IndexedDB park. No GameState shape/version change. Storage tests exercise all twelve slots, preservation, import, delete, boot directives and mirror quota handling. A synthesis regression checks audible energy above 300 Hz for large voices.
+
+`menu-saves-review.mjs` checks full-height title layout, scrolling Settings clear of the parade, twelve rows with the first three occupied, automatically starting in slot four, and loading a persisted park twelve through the menu. It covers two landscape phones and desktop in both editions; screenshots/results are under docs/menu-saves-review. Desktop naturally needs no scroll when the menu fits. Leaving a running park updates Continue to that park, so the higher-slot check explicitly uses Load park. Existing menu-fun checks cover proportional sizing, animation, taps/snacks, reduced motion and paused park care. Calls review checks gesture unlock, adult/baby buffers and mute.
+
+Validation: 499 regular tests plus the performance test (500 total), production build, both menu-fun editions, both menu-saves-review editions at three sizes, and calls-review passed. Calls review verifies the actual .85 voice gain and running audio context after a gesture, as well as mute.
+
 ## Free play first and combined marsh lagoons — October 17, 2026
 
 New park goes directly to the island picker and creates a sandbox/free-play park. Scenario and challenge launch cards are set aside; their simulation definitions, records and existing saved parks remain loadable. Island Back returns to the title. No save migration or deletion.

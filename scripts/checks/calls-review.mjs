@@ -25,9 +25,9 @@ try {
   const filename=`${c.id}${c.baby?'-baby':''}.wav`;await writeFile(`${out}/${filename}`,b);
   links.push(`<article><h2>${c.name}${c.baby?' · baby':''}</h2><audio controls preload="none" src="${filename}"></audio></article>`);
  }
- await writeFile(`${out}/index.html`,`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dinosaur voice previews</title><style>body{max-width:760px;margin:36px auto;padding:20px;background:#f4f0dc;color:#24352a;font:18px system-ui}article{padding:12px;border-bottom:1px solid #b9c4ad}h2{font-size:20px}audio{width:100%}</style><h1>Dinosaur voice previews</h1><p>Original, evidence-informed sound design. These are plausible interpretations, not exact reconstructions. Marine reptile and pterosaur voices are especially speculative.</p>${links.join('')}<p><a href="../dinosaur-audio.md">Research and design notes</a></p></html>`);
+ await writeFile(`${out}/index.html`,`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dinosaur voice previews</title><style>body{max-width:760px;margin:36px auto;padding:20px;background:#f4f0dc;color:#24352a;font:18px system-ui}article{padding:12px;border-bottom:1px solid #b9c4ad}h2{font-size:20px}audio{width:100%}</style><h1>Dinosaur voice previews</h1><p>Original, playful animal-inspired sound design, with brighter growls and chirps for small speakers. These are artistic interpretations, not reconstructions of real dinosaur voices.</p>${links.join('')}<p><a href="../dinosaur-audio.md">Research and design notes</a></p></html>`);
  // Capture actual game playback, not just the pure renderer.
- await page.evaluate(()=>{const original=AudioBufferSourceNode.prototype.start;window.__voiceBuffers=[];AudioBufferSourceNode.prototype.start=function(...args){if(this.buffer&&this.buffer.duration>.1&&!this.loop)window.__voiceBuffers.push(this.buffer.duration);return original.apply(this,args);};});
+ await page.evaluate(()=>{const connect=AudioBufferSourceNode.prototype.connect;window.__voiceLevels=[];AudioBufferSourceNode.prototype.connect=function(destination,...args){if(this.buffer&&this.buffer.duration>.1&&!this.loop&&destination.gain)window.__voiceLevels.push(destination.gain.value);return connect.call(this,destination,...args);};const original=AudioBufferSourceNode.prototype.start;window.__voiceBuffers=[];AudioBufferSourceNode.prototype.start=function(...args){if(this.buffer&&this.buffer.duration>.1&&!this.loop)window.__voiceBuffers.push(this.buffer.duration);return original.apply(this,args);};});
  await (await page.$('[data-go="settings"]')).click();
  const playback=await page.evaluate(async()=>{
   const loaded=path=>performance.getEntriesByType('resource').find(e=>new URL(e.name).pathname===path)?.name ?? path;
@@ -37,9 +37,11 @@ try {
   await new Promise(r=>setTimeout(r,400));playCall('tyrannosaurus',true);
   const played=window.__voiceBuffers.slice();await new Promise(r=>setTimeout(r,400));
   updateSettings({sfx:false});playCall('velociraptor');
-  return {count,played,mutedCount:window.__voiceBuffers.length,debug:audioDebug()};
+  return {levels:window.__voiceLevels.slice(),count,played,mutedCount:window.__voiceBuffers.length,debug:audioDebug()};
  });
  check('adult and baby game calls create audible buffers',playback.count===1&&playback.played.length===2&&playback.played[0]>playback.played[1],playback);
+ check('calls use the louder voice mix',playback.levels.length===2&&playback.levels.every(v=>Math.abs(v-.85)<.001),playback.levels);
+ check('gesture unlocks a running audio context with audible SFX volume',playback.debug.state==='running'&&playback.debug.sfx>0,playback.debug);
  check('sound-effects toggle suppresses new calls',playback.mutedCount===2,playback);
  await page.evaluate(async()=>{const entry=performance.getEntriesByType('resource').find(e=>new URL(e.name).pathname==='/src/ui/settings.ts');const {updateSettings}=await import(entry?.name??'/src/ui/settings.ts');updateSettings({sfx:true});});
  await page.click('[data-go="main"]');
