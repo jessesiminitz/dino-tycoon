@@ -1,5 +1,15 @@
 # Dino Tycoon: handoff notes
 
+## Free play first and combined marsh lagoons — October 17, 2026
+
+New park goes directly to the island picker and creates a sandbox/free-play park. Scenario and challenge launch cards are set aside; their simulation definitions, records and existing saved parks remain loadable. Island Back returns to the title. No save migration or deletion.
+
+Fences now offers Marsh / Lagoon fence. `UiState.lagoonFence` is a transient tool preset using the existing concrete boundary type. A rectangular fence drag calls `planLagoon`/`buildLagoon`: the whole site is checked, concrete boundary sections are built/repaired, the centre becomes Pond, and a one-tile dry shore remains inside the fence so the existing region model recognizes a usable lagoon. Natural marsh on the shore is drained. The preview includes fence, water and shore preparation costs; blocked ground, internal partitions, paths/tracks, objects, animals, eggs, people in the water area, unowned land and insufficient funds cannot cause partial construction. Existing clear pond tiles can be reused, and completed lagoons do not charge again. Minimum outer size is 3×3; larger lagoons are needed for animal space.
+
+Gardening lists decorations only. Pond creation is part of the fence preset; marsh drainage moves to Remove (tap/drag), with cost in the preview. The legacy `digPonds`/`drainMarsh` simulation commands remain available to saved-game support, builders and tests. Water-animal habitat guidance points to Fences. Existing v21 terrain/fence representations are reused.
+
+Three new habitat tests cover immediate animal/feeder placement, exact cost, repeat prevention, reversed drags, natural marsh and atomic failures. `lagoon-review.mjs` checks the free-play menu, real fence-shop drags, pond area/price, immediate water-dinosaur and feeder eligibility, decoration-only Garden, and Remove draining at two phone sizes. Screenshots/results are in `docs/lagoon-review`. `habitats-check.mjs` now uses the combined fence gesture instead of the retired Garden/Pond picker. Validation: 496 regular tests plus the performance test, production build, both art editions on two phone sizes, and the existing lagoon/aviary regression check passed.
+
 ## Evidence-informed calls and a more visible title parade — October 14, 2026
 
 `callSynthesis.ts` replaces the species call oscillator presets with original deterministic PCM synthesis: drifting harmonics, filtered breath, irregular pulses, soft envelopes and headroom normalization. Large voices use low booms/coos/grunts; only Parasaurolophus gets a crest-resonance voice. Small theropods use clucks; pterosaur and marine reptile voices remain explicitly speculative (no whale-song claim). Baby calls remain higher, shorter and softer. `audio.ts` plays three subtle variations through the existing SFX bus/toggle and retains the 350 ms debounce, with a bounded 32-buffer cache and source cleanup. Greetings, title snacks and positive park care now use the species voice instead of a generic chirp; the hungry-animal snap stays a short effect. No downloaded recordings, audio assets in the runtime precache, or save changes.

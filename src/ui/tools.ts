@@ -6,7 +6,7 @@ import { POND_COST } from '../sim/commands';
 import { BRIDGE_COST, BUILDING_TYPES, DRAIN_COST, PATH_COST, TRACK_COST, type BuildingKind } from '../sim/data/economy';
 import { DECOR_KINDS, DECOR_TYPES, type DecorKind } from '../sim/data/decor';
 import { paintBuilding, paintDecor, paintTrough } from '../render/sceneryArt';
-import { paintFenceSample, paintMarshSample, paintPathSample, paintPondSample, withCross } from '../render/shopArt';
+import { paintFenceSample, paintPathSample, paintPondSample, withCross } from '../render/shopArt';
 import { mountShop, type Shop, type ShopItem } from './shop';
 import type { Mode, UiState } from './uiState';
 
@@ -79,7 +79,7 @@ const wear = (perDay: number) => (perDay <= 1 ? 'very slowly' : perDay <= 2.5 ? 
 
 function fenceItems(): ShopItem[] {
   const strongest = Math.max(...FENCE_TYPE_IDS.map((id) => FENCE_TYPES[id].strength));
-  return FENCE_TYPE_IDS.map((id) => {
+  const items: ShopItem[] = FENCE_TYPE_IDS.map((id) => {
     const t = FENCE_TYPES[id];
     return {
       id: String(id),
@@ -96,6 +96,14 @@ function fenceItems(): ShopItem[] {
       cost: t.cost,
     };
   });
+  const lagoonArt=paintPondSample(), lagoonPen=lagoonArt.getContext('2d')!;
+  lagoonPen.strokeStyle='#8a8373'; lagoonPen.lineWidth=3;
+  lagoonPen.strokeRect(3,3,lagoonArt.width-6,lagoonArt.height-6);
+  items.push({ id: 'lagoon', art: lagoonArt, name: 'Marsh / Lagoon fence', tag: '🌊 Water habitat',
+    facts: [['Price', `${$(FENCE_TYPES[4].cost)}/fence + ${$(POND_COST)}/water tile`], ['Dry marsh shore', `${$(DRAIN_COST)} a tile`], ['Boundary', 'Concrete with a dry shore inside']],
+    blurb: 'Drag a rectangle to build the fence and fill its centre with water in one step. Keep a dry shore inside for a complete lagoon.',
+    button: 'Choose lagoon', cost: 0 });
+  return items;
 }
 
 function pathItems(): ShopItem[] {
@@ -154,26 +162,6 @@ function gardenItems(): ShopItem[] {
     facts.push(['Cheers up', stars(t.charm, 3)]);
     return { id: kind, art: paintDecor(kind), name: t.name, facts, blurb: `${t.description} Visitors nearby are happier.`, button: `Build · ${$(t.cost)}`, cost: t.cost };
   });
-  items.push({
-    id: 'pond',
-    art: paintPondSample(),
-    name: 'Pond',
-    tag: '🌊 Lagoon',
-    facts: [['Price', `${$(POND_COST)} a tile`]],
-    blurb: 'Dig water into grass or sand. A pond inside a paddock makes a lagoon for sea reptiles.',
-    button: `Choose · ${$(POND_COST)}`,
-    cost: POND_COST,
-  });
-  items.push({
-    id: 'drain',
-    art: paintMarshSample(),
-    name: 'Drain marsh',
-    tag: '🪏 Dry out',
-    facts: [['Price', `${$(DRAIN_COST)} a tile`]],
-    blurb: 'Marsh is too soggy to build on. Drag over it to drain it into firm grass.',
-    button: `Choose · ${$(DRAIN_COST)}`,
-    cost: DRAIN_COST,
-  });
   return items;
 }
 
@@ -191,14 +179,14 @@ export function mountTools(sim: Simulation, ui: UiState): void {
   const current: Record<ShopMode, () => string> = {
     building: () => ui.buildingKind,
     feeder: () => ui.feederKind,
-    fence: () => String(ui.fenceType),
+    fence: () => ui.lagoonFence ? 'lagoon' : String(ui.fenceType),
     path: () => `${ui.pathTrack ? 'track' : 'path'}${ui.pathErase ? '-erase' : ''}`,
     decor: () => ui.decorKind,
   };
   const pick: Record<ShopMode, (id: string) => void> = {
     building: (id) => ui.setBuildingKind(id as BuildingKind),
     feeder: (id) => ui.setFeederKind(id as FeederKind),
-    fence: (id) => ui.setFenceType(Number(id) as FenceTypeId),
+    fence: (id) => id === 'lagoon' ? ui.setLagoonFence() : ui.setFenceType(Number(id) as FenceTypeId),
     path: (id) => ui.setPathErase(id.endsWith('-erase'), id.startsWith('track')),
     decor: (id) => ui.setDecorKind(id as DecorKind | 'pond' | 'drain'),
   };

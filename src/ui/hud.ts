@@ -81,9 +81,10 @@ function modeHint(ui: UiState, state: GameState): string | null {
     case 'select':
       return null;
     case 'fence':
+      if (ui.lagoonFence) return 'Drag a rectangle to build a marsh lagoon: concrete fence, dry shore and water together · at least 3 × 3 tiles';
       return 'Drag from one corner to the opposite corner to fence a box (drag straight for a single line) · two fingers to move the map';
     case 'demolish':
-      return 'Drag along fences or paths to remove them · tap a fence, path, building, feeder or garden item to remove it';
+      return 'Drag along fences or paths to remove them · tap to remove objects or drain marsh';
     case 'land':
       return 'Plots marked FOR SALE border your land · tap one to buy it';
     case 'feeder':

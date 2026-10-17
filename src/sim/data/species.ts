@@ -526,7 +526,7 @@ export const HABITAT_LABELS: Record<Habitat, string> = { land: '🌳 Paddock', w
 /** Where each kind of animal needs to live, for the catalog and guide. */
 export const HABITAT_HELP: Record<Habitat, string> = {
   land: 'a fenced paddock',
-  water: 'a lagoon: a pond inside a fenced paddock (dig one with Garden → Pond)',
+  water: 'a lagoon: build one with Fences → Marsh / Lagoon fence',
   air: 'an aviary: a paddock fenced all the way round with aviary net',
 };
 export const STARTER_SPECIES = SPECIES_IDS.filter((id) => SPECIES[id].starter);

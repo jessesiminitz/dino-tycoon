@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import type { Simulation } from '../sim/Simulation';
-import { drainBlocker, MOVE_DINO_COST, planFences, planPaths, planTracks, pondDigBlocker, POND_COST, refillCost, repairCost } from '../sim/commands';
+import { drainBlocker, MOVE_DINO_COST, planFences, planLagoon, planPaths, planTracks, pondDigBlocker, POND_COST, refillCost, repairCost } from '../sim/commands';
 import { DRAIN_COST } from '../sim/data/economy';
 import { stationStatus } from '../sim/systems/rides';
 import { STAFF_TYPES } from '../sim/data/staff';
@@ -276,6 +276,7 @@ export class ParkScene extends Phaser.Scene {
       case 'land':
         return this.selectParcel(wx, wy);
       case 'fence': {
+        if (this.ui.lagoonFence) { this.hud.showHint(); return; }
         const edge = this.edgeNear(wx, wy);
         if (edge) this.commitEdges([edge]);
         return;
@@ -294,6 +295,7 @@ export class ParkScene extends Phaser.Scene {
         const w = this.sim.state.map.width;
         if (this.sim.state.paths[ty * w + tx]) return this.report(this.sim.dispatch({ type: 'removePaths', tiles: [ty * w + tx] }));
         if (this.sim.state.tracks[ty * w + tx]) return this.report(this.sim.dispatch({ type: 'removeTracks', tiles: [ty * w + tx] }));
+        if (this.sim.state.map.tiles[ty * w + tx] === Terrain.Marsh) return this.report(this.sim.dispatch({ type: 'drainMarsh', tiles: [ty*w+tx] }));
         if (this.sim.state.map.tiles[ty * w + tx] === Terrain.Pond) this.report(this.sim.dispatch({ type: 'fillPonds', tiles: [ty * w + tx] }));
         return;
       }
@@ -700,7 +702,7 @@ export class ParkScene extends Phaser.Scene {
     const bridged = this.sim.state.paths[ty * this.sim.state.map.width + tx] === 1;
     const NATURE_TIPS: Partial<Record<Terrain, string>> = {
       [Terrain.River]: bridged ? 'wooden bridge' : 'lay a path across it to build a bridge · makes a natural paddock wall',
-      [Terrain.Marsh]: 'too soggy to build on · drain it with 🌳 Garden → Drain marsh',
+      [Terrain.Marsh]: 'too soggy to build on · drain it with Remove to drain it',
       [Terrain.LavaRock]: 'old cooled lava: bare but solid',
       [Terrain.HotSpring]: 'visitors love to watch it steam',
       [Terrain.Waterfall]: 'visitors love the view',
@@ -843,13 +845,15 @@ export class ParkScene extends Phaser.Scene {
   /** Remove tool drag: fences along the line and any path tiles under it. */
   private commitDemolish(edges: Edge[], tiles: number[]): void {
     const pathTiles = tiles.filter((i) => this.sim.state.paths[i]);
+    const marshTiles = tiles.filter(i => this.sim.state.map.tiles[i] === Terrain.Marsh);
     const pondTiles = tiles.filter((i) => this.sim.state.map.tiles[i] === Terrain.Pond);
     const trackTiles = tiles.filter((i) => this.sim.state.tracks[i]);
     const hasFence = edges.some((e) => fenceTypeAt(this.sim.state, e));
-    if (!hasFence && pathTiles.length === 0 && pondTiles.length === 0 && trackTiles.length === 0) return this.report({ ok: false, message: 'Nothing to remove there' });
+    if (!hasFence && pathTiles.length === 0 && pondTiles.length === 0 && trackTiles.length === 0 && marshTiles.length === 0) return this.report({ ok: false, message: 'Nothing to remove there' });
     const results = [];
     if (hasFence) results.push(this.sim.dispatch({ type: 'removeFences', edges }));
     if (pathTiles.length) results.push(this.sim.dispatch({ type: 'removePaths', tiles: pathTiles }));
+    if (marshTiles.length) results.push(this.sim.dispatch({ type: 'drainMarsh', tiles: marshTiles }));
     if (pondTiles.length) results.push(this.sim.dispatch({ type: 'fillPonds', tiles: pondTiles }));
     if (trackTiles.length) results.push(this.sim.dispatch({ type: 'removeTracks', tiles: trackTiles }));
     const ok = results.filter((r) => r.ok);
@@ -895,6 +899,14 @@ export class ParkScene extends Phaser.Scene {
   private previewEdges(edges: Edge[]): void {
     const { state } = this.sim;
     if (this.ui.mode === 'fence') {
+      if (this.ui.lagoonFence) {
+        const plan=planLagoon(state,edges), blocked=!!plan.reason||plan.cost>state.money;
+        this.layers.drawGhost(edges.map(edge=>({edge,style:blocked?'blocked':'build'})),
+          plan.tiles.map(i=>({x:i%state.map.width,y:Math.floor(i/state.map.width),style:blocked?'blocked':'build'})));
+        this.hud.showInfo(plan.reason || `Marsh lagoon · ${plan.tiles.length} new water tiles · ${formatMoney(plan.cost)}${blocked?' · not enough money!':''}`);
+        return;
+      }
+
       const fence = this.ui.fenceType;
       const plan = planFences(state, edges, fence);
       const building = new Set(plan.build);
@@ -920,19 +932,22 @@ export class ParkScene extends Phaser.Scene {
       const w = state.map.width;
       const pathTiles = (this.drag?.tiles ?? []).filter((i) => state.paths[i]);
       refund += pathTiles.length * PATH_COST * PATH_REFUND;
-      this.layers.drawGhost(ghost, pathTiles.map((i) => ({ x: i % w, y: Math.floor(i / w), style: 'remove' as GhostStyle })));
+      const marshTiles = (this.drag?.tiles ?? []).filter(i=>state.map.tiles[i]===Terrain.Marsh);
+      refund -= marshTiles.length * DRAIN_COST;
+      this.layers.drawGhost(ghost, [...pathTiles,...marshTiles].map((i) => ({ x: i % w, y: Math.floor(i / w), style: 'remove' as GhostStyle })));
       const parts = [
         count ? `${count} fence segment${count === 1 ? '' : 's'}` : '',
         pathTiles.length ? `${pathTiles.length} path tile${pathTiles.length === 1 ? '' : 's'}` : '',
+        marshTiles.length ? `${marshTiles.length} marsh tiles (drain)` : '',
       ].filter(Boolean);
-      this.hud.showInfo(parts.length ? `Remove ${parts.join(' and ')} · +${formatMoney(Math.floor(refund))}` : 'Nothing to remove along this line');
+      this.hud.showInfo(parts.length ? `Remove ${parts.join(' and ')} · ${refund >= 0 ? '+' : 'cost '}${formatMoney(Math.abs(Math.floor(refund)))}` : 'Nothing to remove along this line');
     }
   }
 
   private commitEdges(edges: Edge[]): void {
     const r =
       this.ui.mode === 'fence'
-        ? this.sim.dispatch({ type: 'buildFences', edges, fence: this.ui.fenceType })
+        ? this.ui.lagoonFence ? this.sim.dispatch({ type: 'buildLagoon', edges }) : this.sim.dispatch({ type: 'buildFences', edges, fence: this.ui.fenceType })
         : this.sim.dispatch({ type: 'removeFences', edges });
     this.report(r);
   }

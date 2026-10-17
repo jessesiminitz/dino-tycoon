@@ -9,7 +9,7 @@ import { fenceAt, fenceBlocker, fenceHp, fenceTypeAt, setFence, setFenceHp } fro
 import { REPAIR_COST_FRACTION, STAFF_NAMES, STAFF_TYPES, type StaffRole } from './data/staff';
 import { DECOR_REFUND, DECOR_TYPES, type DecorKind } from './data/decor';
 import { bedAt } from './fossilBeds';
-import { edgeKey, type Edge } from './grid';
+import { boxEdges, edgeKey, type Edge } from './grid';
 import { isTileOwned, parcelBuyBlocker, parcelGrid, parcelPrice } from './land';
 import { DINO_NAMES, habitatOf, SPECIES, type SpeciesId } from './data/species';
 import { DINO_RESALE, FEEDER_REFUND, FEEDER_TYPES, type FeederKind } from './data/feeders';
@@ -22,6 +22,7 @@ import { pathBlocker, tileOccupant, touchesWalkway } from './paths';
 
 export type Command =
   | { type: 'buildFences'; edges: Edge[]; fence: FenceTypeId }
+  | { type: 'buildLagoon'; edges: Edge[] }
   | { type: 'removeFences'; edges: Edge[] }
   | { type: 'buyParcel'; px: number; py: number }
   | { type: 'buyDino'; species: SpeciesId; x: number; y: number }
@@ -105,14 +106,14 @@ export function pickName(state: GameState, pool: string[], taken: string[]): str
 function tileBlocker(state: GameState, x: number, y: number): string | null {
   const t = terrainAt(state.map, x, y);
   if (t === undefined || !isLand(t)) return 'Needs dry land';
-  if (!isBuildable(t)) return 'Too soggy to build on: drain the marsh first (🌳 Garden → Drain marsh)';
+  if (!isBuildable(t)) return 'Too soggy to build on: drain the marsh first (Remove → tap or drag marsh)';
   if (!isTileOwned(state, x, y)) return "You don't own this land";
   return null;
 }
 
 /** Why a sea reptile (or a floating fish feeder) can't go on this tile, or null if it's pond water you own. */
 function pondBlocker(state: GameState, x: number, y: number): string | null {
-  if (terrainAt(state.map, x, y) !== Terrain.Pond) return 'Needs pond water: dig a pond with 🌳 Garden → Pond';
+  if (terrainAt(state.map, x, y) !== Terrain.Pond) return 'Needs pond water: build water with 🚧 Fences → Marsh / Lagoon fence';
   if (!isTileOwned(state, x, y)) return "You don't own this pond";
   return null;
 }
@@ -120,6 +121,44 @@ function pondBlocker(state: GameState, x: number, y: number): string | null {
 /** Digging a pond costs this per tile; filling one in refunds a little. */
 export const POND_COST = 250;
 export const POND_REFUND = 0.25;
+
+/** Preview and commit share this all-or-nothing lagoon plan. One dry tile of shore
+ * inside the wall gives the water a single enclosed paddock in the region model. */
+export function planLagoon(state: GameState, input: Edge[]) {
+  const edges = uniqueEdges(input), tiles: number[] = [], shore: number[] = [];
+  let reason = '', cost = 0;
+  const fail = (message: string) => ({ edges, tiles, shore, cost: 0, reason: message });
+  if (!edges.length || edges.some(e => !Number.isInteger(e.x) || !Number.isInteger(e.y) || !['h','v'].includes(e.dir))) return fail('Drag a rectangle for the lagoon');
+  const xs = edges.flatMap(e => [e.x, e.x + (e.dir === 'h' ? 1 : 0)]);
+  const ys = edges.flatMap(e => [e.y, e.y + (e.dir === 'v' ? 1 : 0)]);
+  const left = Math.min(...xs), right = Math.max(...xs), top = Math.min(...ys), bottom = Math.max(...ys);
+  if (right-left < 3 || bottom-top < 3) return fail('Drag a box at least 3 × 3 tiles, including its shore');
+  if (left < 0 || top < 0 || right > state.map.width || bottom > state.map.height) return fail('Keep the lagoon on the map');
+  const expected = new Set(boxEdges(left,top,right,bottom).map(edgeKey));
+  if (expected.size !== edges.length || edges.some(e => !expected.has(edgeKey(e)))) return fail('The lagoon needs a complete rectangular boundary');
+  const boundary = planFences(state, edges, 4);
+  if (boundary.blocked) return fail(boundary.blockReason);
+  cost = boundary.cost;
+  const w = state.map.width;
+  for (let y=top;y<bottom;y++) for(let x=left;x<right;x++) {
+    const i=y*w+x, t=state.map.tiles[i];
+    const water=x>left&&x<right-1&&y>top&&y<bottom-1;
+    if (!isTileOwned(state,x,y)) return fail("You don't own the whole lagoon area");
+    if (x===state.entrance.x&&y===state.entrance.y) return fail('Keep the park entrance outside the lagoon');
+    if (state.dinos.some(d=>d.x===x&&d.y===y)||state.eggs.some(e=>e.x===x&&e.y===y)) return fail('Move animals and eggs out of the lagoon area first');
+    if (state.paths[i]||state.tracks[i]||tileOccupant(state,x,y)) return fail('Choose a clear area without paths, tracks or objects');
+    if (water && (state.staff.some(p=>Math.floor(p.x)===x&&Math.floor(p.y)===y)||state.visitors.some(p=>p.x===x&&p.y===y))) return fail('Wait for people to leave the water area');
+    if (t===Terrain.Pond && water) continue;
+    if (!DIGGABLE.includes(t)) return fail('Choose grass, sand or marsh with a dry shore around the water');
+    if (water) { tiles.push(i); cost+=POND_COST; }
+    else if (t===Terrain.Marsh) { shore.push(i); cost+=DRAIN_COST; }
+  }
+  // Existing pond tiles must also be checked for internal partitions.
+  for(let y=top;y<bottom;y++) for(let x=left;x<right;x++) {
+    if (x>left&&fenceTypeAt(state,{dir:'v',x,y}) || y>top&&fenceTypeAt(state,{dir:'h',x,y})) reason='Remove internal fences before making the lagoon';
+  }
+  return { edges: boundary.build, tiles, shore, cost, reason };
+}
 /** Ground a pond can be dug in (forest and rock are too much work). */
 const DIGGABLE = [Terrain.Grass, Terrain.Sand, Terrain.Marsh];
 
@@ -195,6 +234,17 @@ export function refillCost(state: GameState, id: number): number {
 /** Validates and applies a command. The only way the player changes GameState. */
 export function applyCommand(state: GameState, cmd: Command): CommandResult {
   switch (cmd.type) {
+    case 'buildLagoon': {
+      const plan = planLagoon(state, cmd.edges);
+      if (plan.reason) return { ok: false, message: plan.reason };
+      if (plan.cost > state.money) return { ok: false, message: `Not enough money: need ${usd(plan.cost)}` };
+      if (!plan.edges.length&&!plan.tiles.length&&!plan.shore.length) return { ok: false, message: 'This lagoon is already complete' };
+      for (const e of plan.edges) setFence(state,e,4);
+      for (const i of plan.tiles) state.map.tiles[i]=Terrain.Pond;
+      for (const i of plan.shore) state.map.tiles[i]=Terrain.Grass;
+      spend(state,'construction',plan.cost);
+      return { ok: true, cost: plan.cost, message: `Built a marsh lagoon with water, shore and concrete fencing (${usd(plan.cost)})` };
+    }
     case 'buildFences': {
       const plan = planFences(state, cmd.edges, cmd.fence);
       if (plan.build.length === 0) {

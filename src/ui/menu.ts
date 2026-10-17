@@ -1,10 +1,8 @@
 import { newGame, type GameState } from '../sim/GameState';
 import { newPark } from '../sim/challenges';
-import { challengeUnlocked, bestMedals } from './challengeRecords';
 import { ISLAND_SHAPE_IDS, ISLAND_SHAPES, type IslandShape } from '../sim/island';
-import { paintMinimap, paintParkMinimap } from '../render/minimap';
-import { BUILD_IDS, CHALLENGE_IDS, MEDALS, SCENARIOS, type ScenarioId } from '../sim/data/scenarios';
-import { goalLabel } from '../sim/goals';
+import { paintMinimap } from '../render/minimap';
+import { SCENARIOS } from '../sim/data/scenarios';
 import { mountMenuParade } from './menuParade';
 import {
   deleteSlot,
@@ -18,10 +16,9 @@ import {
 } from '../save/storage';
 import { renderSettings } from './settings';
 
-type Screen = 'main' | 'new' | 'island' | 'load' | 'settings';
+type Screen = 'main' | 'island' | 'load' | 'settings';
 
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
-const stars = (n: number) => (n === 0 ? 'Free play' : '★'.repeat(n) + '☆'.repeat(3 - n));
 const STATUS_LABEL = { playing: 'In progress', won: '🏆 Won', lost: 'Ended', free: 'Free play' } as const;
 
 function ago(ts: number): string {
@@ -38,7 +35,7 @@ export interface MenuHandlers {
   start(state: GameState, slot: SlotId): void;
 }
 
-/** The title screen: continue, new park (pick a scenario), load/export/import/delete parks, settings. */
+/** The title screen: continue, new free-play park, load/export/import/delete parks, settings. */
 export function showMenu(handlers: MenuHandlers): void {
   const root = document.getElementById('menu')!;
   const body = root.querySelector<HTMLElement>('.menu-body')!;
@@ -52,15 +49,7 @@ export function showMenu(handlers: MenuHandlers): void {
   let confirmDelete: SlotId | null = null;
   /** The Sandbox island being chosen: its shape, size and seed (🎲 picks a new seed). */
   const island = { shape: 'classic' as IslandShape, big: false, seed: (Math.random() * 2 ** 32) >>> 0 };
-  /** Which folder the New Park screen shows. */
-  let folder: 'builds' | 'challenges' = 'builds';
   const previews = new Map<string, string>();
-  /** A challenge's prebuilt park, as a map preview. */
-  const parkPreview = (id: ScenarioId) => {
-    const key = `park:${id}`;
-    if (!previews.has(key)) previews.set(key, paintParkMinimap(newPark(id, 1)).toDataURL());
-    return previews.get(key)!;
-  };
   /** A map preview as an image URL (cached: generating an island takes a few milliseconds). */
   const preview = (seed: number, shape: IslandShape, big = false) => {
     const key = `${seed}:${shape}:${big}`;
@@ -112,50 +101,9 @@ export function showMenu(handlers: MenuHandlers): void {
           <button class="menu-btn" data-go="settings">Settings</button>
         </div>
         <p class="note version">Version ${__APP_VERSION__} · ${__BUILD_DATE__}</p>`;
-    } else if (screen === 'new') {
-      const tabs = `<div class="folder-tabs" role="tablist">
-          <button class="folder-tab ${folder === 'builds' ? 'active' : ''}" data-folder="builds" role="tab">🏗️ New builds<small>Start from an empty island</small></button>
-          <button class="folder-tab ${folder === 'challenges' ? 'active' : ''}" data-folder="challenges" role="tab">🧩 Challenges<small>Fix a park in trouble</small></button>
-        </div>`;
-      if (folder === 'challenges') {
-        body.innerHTML = `${tabs}
-          <div class="scenario-grid">${CHALLENGE_IDS.map((id, i) => {
-            const sc = SCENARIOS[id];
-            const open = challengeUnlocked(id);
-            const best = bestMedals(id);
-            const medals = best ? `Best: ${MEDALS.slice(0, best).map((m) => m.icon).join('')}` : 'Not won yet';
-            const lock = open ? '' : `<span class="tag locked-tag">🔒 Earn a medal in ${SCENARIOS[CHALLENGE_IDS[i - 1]].name} to unlock</span>`;
-            return `<button class="scenario-card ${open ? '' : 'locked'}" ${open ? `data-scenario="${id}"` : 'disabled'}>
-              <img class="map-preview" alt="" src="${parkPreview(id)}">
-              <span class="scenario-head"><b>${sc.briefing?.icon ?? ''} ${sc.name}</b><span class="stars">${stars(sc.difficulty)}</span></span>
-              <span class="note">${sc.blurb}</span>
-              ${lock || `<span class="note">${medals} · start with ${money.format(sc.startMoney)}</span>`}
-            </button>`;
-          }).join('')}</div>
-          <p class="note">More challenges are on the way: floods, a volcano waking up and a staff strike.</p>
-          <button class="menu-btn back" data-go="main">Back</button>`;
-        return;
-      }
-      body.innerHTML = `${tabs}
-        <div class="scenario-grid">${BUILD_IDS.map((id) => {
-          const sc = SCENARIOS[id];
-          const first = sc.rounds[0];
-          const goals = first ? first.goals.map((g) => `<li>${goalLabel(g)}</li>`).join('') : '';
-          const map = sc.seed !== null ? `<img class="map-preview" alt="" src="${preview(sc.seed, sc.island ?? 'classic')}">` : '';
-          const attr = id === 'sandbox' ? 'data-go="island"' : `data-scenario="${id}"`;
-          return `<button class="scenario-card" ${attr}>
-            ${map}
-            <span class="scenario-head"><b>${sc.name}</b><span class="stars">${stars(sc.difficulty)}</span></span>
-            <span class="note">${sc.blurb}</span>
-            ${goals ? `<ul>${goals}</ul><span class="note">🥉 Bronze within ${first.days} days, then 🥈 Silver and 🥇 Gold · start with ${money.format(sc.startMoney)}</span>` : `<span class="note">Start with ${money.format(sc.startMoney)}</span>`}
-            ${sc.tutorial ? '<span class="tag">Includes a tutorial</span>' : ''}
-            ${id === 'sandbox' ? '<span class="tag">Choose your island</span>' : ''}
-          </button>`;
-        }).join('')}</div>
-        <button class="menu-btn back" data-go="main">Back</button>`;
     } else if (screen === 'island') {
       body.innerHTML = `
-        <h2>Sandbox: choose your island</h2>
+        <h2>Choose your island</h2><p class="note">Build your dinosaur park at your own pace.</p>
         <div class="island-grid">${ISLAND_SHAPE_IDS.map((shape) => {
           const info = ISLAND_SHAPES[shape];
           return `<button class="island-card ${shape === island.shape ? 'active' : ''}" data-shape="${shape}">
@@ -173,7 +121,7 @@ export function showMenu(handlers: MenuHandlers): void {
         </div>
         <div class="menu-buttons">
           <button class="menu-btn primary" data-start-sandbox>Start building</button>
-          <button class="menu-btn back" data-go="new">Back</button>
+          <button class="menu-btn back" data-go="main">Back</button>
         </div>`;
     } else if (screen === 'load') {
       const overwrite = pendingState !== null;
@@ -208,7 +156,7 @@ export function showMenu(handlers: MenuHandlers): void {
     const d = el.dataset;
     if (d.go) {
       if (d.go === 'main') pendingState = null;
-      go(d.go as Screen);
+      go(d.go === 'new' ? 'island' : d.go as Screen);
     } else if (d.shape) {
       island.shape = d.shape as IslandShape;
       render('island');
@@ -220,11 +168,6 @@ export function showMenu(handlers: MenuHandlers): void {
       render('island');
     } else if ('startSandbox' in d) {
       placeNew(newPark('sandbox', island.seed, { shape: island.shape, big: island.big }));
-    } else if (d.folder) {
-      folder = d.folder as typeof folder;
-      render('new');
-    } else if (d.scenario) {
-      placeNew(newPark(d.scenario as ScenarioId, (Math.random() * 2 ** 32) >>> 0));
     } else if (d.use && pendingState) {
       begin(pendingState, Number(d.use) as SlotId);
     } else if (d.play) {

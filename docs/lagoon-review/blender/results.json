@@ -1,0 +1,35 @@
+{
+  "results": [
+    {
+      "width": 844,
+      "area": {
+        "x": 29,
+        "y": 33,
+        "free": true
+      },
+      "built": {
+        "water": 16,
+        "home": "paddock",
+        "money": 41200,
+        "release": true,
+        "feeder": true
+      }
+    },
+    {
+      "width": 667,
+      "area": {
+        "x": 21,
+        "y": 33,
+        "free": true
+      },
+      "built": {
+        "water": 16,
+        "home": "paddock",
+        "money": 41200,
+        "release": true,
+        "feeder": true
+      }
+    }
+  ],
+  "errors": []
+}

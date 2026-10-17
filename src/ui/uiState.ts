@@ -12,6 +12,7 @@ type Listener = (ui: UiState) => void;
 export class UiState {
   mode: Mode = 'select';
   fenceType: FenceTypeId = 1;
+  lagoonFence = false;
   feederKind: FeederKind = 'plants';
   buildingKind: BuildingKind = 'restaurant';
   /** A garden item, 'pond' to dig water (for lagoons), or 'drain' to dry out marsh. */
@@ -37,7 +38,14 @@ export class UiState {
   }
 
   setFenceType(type: FenceTypeId): void {
+    this.lagoonFence = false;
     this.fenceType = type;
+    this.emit();
+  }
+
+  setLagoonFence(): void {
+    this.fenceType = 4;
+    this.lagoonFence = true;
     this.emit();
   }
 

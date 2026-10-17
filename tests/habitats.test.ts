@@ -132,3 +132,41 @@ describe('aviaries', () => {
     expect(applyCommand(s, { type: 'buyDino', species: 'triceratops', x: 5, y: 5 }).ok).toBe(true);
   });
 });
+
+describe('one-step marsh lagoons', () => {
+  const rectangle = () => [...pathEdges(3,3,13,13,true),...pathEdges(3,3,13,13,false)];
+  it('builds a usable enclosed lagoon, keeps a dry shore, and charges only once', () => {
+    const s=field(), before=s.money;
+    const result=applyCommand(s,{type:'buildLagoon',edges:rectangle()});
+    expect(result.ok).toBe(true);
+    expect(s.money).toBe(before-40*200-64*250);
+    expect(s.map.tiles[idx(3,3)]).toBe(Terrain.Grass);
+    expect(s.map.tiles[idx(5,5)]).toBe(Terrain.Pond);
+    const regions=computeRegions(s);
+    expect(regions.regions[regions.tileRegion[idx(5,5)]]?.kind).toBe('paddock');
+    expect(applyCommand(s,{type:'buildLagoon',edges:rectangle()}).ok).toBe(false);
+    expect(applyCommand(s,{type:'buyDino',species:'plesiosaurus',x:5,y:5}).ok).toBe(true);
+    expect(applyCommand(s,{type:'placeFeeder',kind:'fish',x:6,y:5}).ok).toBe(true);
+  });
+  it('rejects blocked or unaffordable lagoons without changing fences, terrain or money', () => {
+    for(const blocker of ['path','animal','funds','internal','line','ownership'] as const) {
+      const s=field();
+      if(blocker==='path')s.paths[idx(5,5)]=1;
+      if(blocker==='animal')s.eggs.push({id:555,x:5,y:5,species:'protoceratops',laidHour:0} as typeof s.eggs[number]);
+      if(blocker==='funds')s.money=1;
+      if(blocker==='internal')applyCommand(s,{type:'buildFences',edges:[{dir:'h',x:6,y:6}],fence:1});
+      if(blocker==='ownership')s.parcelsOwned.fill(false);
+      const before=JSON.stringify(s);
+      const edges=blocker==='line'?pathEdges(3,3,13,3,true):rectangle();
+      expect(applyCommand(s,{type:'buildLagoon',edges}).ok,blocker).toBe(false);
+      expect(JSON.stringify(s),blocker).toBe(before);
+    }
+  });
+  it('turns natural marsh into water with a drained shore and supports reversed drags', () => {
+    const s=field();
+    for(let y=3;y<13;y++)for(let x=3;x<13;x++)s.map.tiles[idx(x,y)]=Terrain.Marsh;
+    expect(applyCommand(s,{type:'buildLagoon',edges:[...pathEdges(13,13,3,3,true),...pathEdges(13,13,3,3,false)]}).ok).toBe(true);
+    expect(s.map.tiles[idx(3,3)]).toBe(Terrain.Grass);
+    expect(s.map.tiles[idx(8,8)]).toBe(Terrain.Pond);
+  });
+});
