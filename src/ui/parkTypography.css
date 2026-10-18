@@ -1,0 +1,53 @@
+/* One readable type scale across in-park panels, shops, settings and dialogs. */
+body.in-park :is(.modal, .hatch-dialog) {
+  --park-font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --pixel-font: var(--park-font);
+  --park-text: 14px;
+  --park-small: 12px;
+  --park-heading: 18px;
+  --park-section: 15px;
+  font-family: var(--park-font);
+  font-size: var(--park-text);
+  font-size-adjust: none;
+  line-height: 1.4;
+}
+
+body.in-park :is(.modal, .hatch-dialog) :is(button, input, select, textarea, h2, h3) {
+  font-family: var(--park-font);
+  font-size-adjust: none;
+}
+
+body.in-park :is(.modal, .hatch-dialog) h2 {
+  font-size: var(--park-heading);
+  line-height: 1.25;
+}
+
+body.in-park :is(.modal, .hatch-dialog) :is(h3, .chart figcaption) {
+  font-size: var(--park-section);
+  line-height: 1.3;
+}
+
+body.in-park :is(.modal, .hatch-dialog) :is(button, .panel-body, .guide-detail, .guide-stats, .need, .loan) {
+  font-size: var(--park-text);
+  line-height: 1.4;
+}
+
+body.in-park :is(.modal, .hatch-dialog) button {
+  min-height: var(--tap);
+}
+
+body.in-park :is(.modal, .hatch-dialog) :is(small, .note, .fact, .shop-tag, .diet, .species-card dl,
+  .stat-label, .who .sub, .thoughts, .person-card .task, .sayings li, .sticker figcaption, .sticker-new) {
+  font-size: var(--park-small);
+  line-height: 1.4;
+}
+
+body.in-park :is(.modal, .hatch-dialog) :is(.stat-value, .stepper-value, .step-btn, .modal-close) {
+  font-size: var(--park-heading);
+  line-height: 1.25;
+}
+
+/* Keep editable fields at 16px to avoid Safari zooming on focus. */
+body.in-park :is(.modal, .hatch-dialog) :is(input:not([type='range']):not([type='checkbox']), select, textarea) {
+  font-size: 16px;
+}

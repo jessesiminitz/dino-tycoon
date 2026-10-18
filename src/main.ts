@@ -20,6 +20,7 @@ import { ART_STYLE } from './render/artStyle';
 import './ui/cartoon.css';
 import { mountHatching } from './ui/hatching';
 import './ui/hatching.css';
+import './ui/parkTypography.css';
 
 fitVisibleViewport();
 

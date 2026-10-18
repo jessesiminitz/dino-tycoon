@@ -1,5 +1,11 @@
 # Dino Tycoon: handoff notes
 
+## Standardized in-park menu typography — October 18, 2026
+
+`parkTypography.css`, imported after the theme/hatching styles, gives every in-park .modal and native .hatch-dialog the same system font and disables the inherited VT323 font-size adjustment. The main title and map HUD retain their existing typography. Reports, People, News, requests, shops, catalog, guide, pause/settings and hatch dialogs use 14px body/control text, 12px secondary text, 18px panel headings/numeric values and 15px section headings. Local --pixel-font points to the menu font so legacy/cartoon heading and control rules resolve consistently. Name/text inputs remain 16px to avoid Safari focus zoom; menu buttons keep at least 44px height, including short-screen pause buttons. No save or gameplay changes.
+
+`typography-review.mjs` opens each report tab, People/News/requests/catalog/guide, fence shop and pause/settings at 667×375, 844×390 and 1180×820, in both editions. It checks actual computed family, size and font-size-adjust, heading hierarchy, button size/tap height, panel bounds and content overflow, plus a native hatch-dialog fixture. Screenshots and results are under docs/typography-review. All 500 tests, production build and both browser review runs passed. Phone overview/settings screenshots were visually inspected.
+
 ## Keep the bottom of the screen visible — October 17, 2026
 
 The full-screen UI now uses the visual viewport height and vertical offset, rather than assuming the layout viewport is entirely visible. `fitVisibleViewport()` updates --app-height/--app-top at startup, window resize, and visualViewport resize/scroll (browser controls or keyboard movement). CSS uses a fixed, layout-containing body so the game canvas, title, bottom tools and every fixed dialog share those visible bounds, including shops/hatching dialogs appended directly to body. Dynamic viewport units provide the CSS fallback; photo/dig sizing and parade scale also use the visible height. Menu options still scroll behind the parade, and existing safe-area insets remain applied.

@@ -1,0 +1,5001 @@
+{
+  "results": [
+    {
+      "width": 667,
+      "name": "overview",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [],
+      "sections": [
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        }
+      ],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        },
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        },
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        }
+      ],
+      "card": {
+        "top": 8,
+        "bottom": 367,
+        "width": 651
+      },
+      "overflow": [
+        {
+          "class": "panel-body",
+          "extra": 0
+        }
+      ],
+      "viewport": {
+        "width": 667,
+        "height": 375
+      }
+    },
+    {
+      "width": 667,
+      "name": "staff",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [],
+      "sections": [
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        }
+      ],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        }
+      ],
+      "card": {
+        "top": 8,
+        "bottom": 367,
+        "width": 651
+      },
+      "overflow": [
+        {
+          "class": "panel-body",
+          "extra": 0
+        }
+      ],
+      "viewport": {
+        "width": 667,
+        "height": 375
+      }
+    },
+    {
+      "width": 667,
+      "name": "finances",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [],
+      "sections": [],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        }
+      ],
+      "card": {
+        "top": 8,
+        "bottom": 367,
+        "width": 651
+      },
+      "overflow": [
+        {
+          "class": "panel-body",
+          "extra": 0
+        }
+      ],
+      "viewport": {
+        "width": 667,
+        "height": 375
+      }
+    },
+    {
+      "width": 667,
+      "name": "bank",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [],
+      "sections": [
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        }
+      ],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        }
+      ],
+      "card": {
+        "top": 8,
+        "bottom": 367,
+        "width": 651
+      },
+      "overflow": [
+        {
+          "class": "panel-body",
+          "extra": 0
+        }
+      ],
+      "viewport": {
+        "width": 667,
+        "height": 375
+      }
+    },
+    {
+      "width": 667,
+      "name": "people",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [],
+      "sections": [],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        }
+      ],
+      "card": {
+        "top": 8,
+        "bottom": 367,
+        "width": 651
+      },
+      "overflow": [
+        {
+          "class": "panel-body people-body",
+          "extra": 0
+        }
+      ],
+      "viewport": {
+        "width": 667,
+        "height": 375
+      }
+    },
+    {
+      "width": 667,
+      "name": "news",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [
+        {
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px"
+        }
+      ],
+      "sections": [],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        }
+      ],
+      "card": {
+        "top": 8,
+        "bottom": 367,
+        "width": 651
+      },
+      "overflow": [
+        {
+          "class": "log-list panel-body",
+          "extra": 0
+        }
+      ],
+      "viewport": {
+        "width": 667,
+        "height": 375
+      }
+    },
+    {
+      "width": 667,
+      "name": "requests",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [
+        {
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px"
+        }
+      ],
+      "sections": [],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        }
+      ],
+      "card": {
+        "top": 8,
+        "bottom": 367,
+        "width": 651
+      },
+      "overflow": [
+        {
+          "class": "panel-body requests-body",
+          "extra": 0
+        }
+      ],
+      "viewport": {
+        "width": 667,
+        "height": 375
+      }
+    },
+    {
+      "width": 667,
+      "name": "dinosaurs",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [
+        {
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px"
+        }
+      ],
+      "sections": [
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        }
+      ],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        }
+      ],
+      "card": {
+        "top": 8,
+        "bottom": 367,
+        "width": 651
+      },
+      "overflow": [
+        {
+          "class": "species-grid",
+          "extra": 0
+        }
+      ],
+      "viewport": {
+        "width": 667,
+        "height": 375
+      }
+    },
+    {
+      "width": 667,
+      "name": "guide",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [],
+      "sections": [
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        }
+      ],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        }
+      ],
+      "card": {
+        "top": 8,
+        "bottom": 367,
+        "width": 651
+      },
+      "overflow": [
+        {
+          "class": "guide-detail",
+          "extra": 0
+        }
+      ],
+      "viewport": {
+        "width": 667,
+        "height": 375
+      }
+    },
+    {
+      "width": 667,
+      "name": "fences",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [
+        {
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px"
+        }
+      ],
+      "sections": [
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        }
+      ],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        }
+      ],
+      "card": {
+        "top": 8,
+        "bottom": 367,
+        "width": 651
+      },
+      "overflow": [
+        {
+          "class": "species-grid shop-grid",
+          "extra": 0
+        }
+      ],
+      "viewport": {
+        "width": 667,
+        "height": 375
+      }
+    },
+    {
+      "width": 667,
+      "name": "pause",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [
+        {
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px"
+        }
+      ],
+      "sections": [],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        }
+      ],
+      "card": {
+        "top": 68.25,
+        "bottom": 306.75,
+        "width": 420
+      },
+      "overflow": [],
+      "viewport": {
+        "width": 667,
+        "height": 375
+      }
+    },
+    {
+      "width": 667,
+      "name": "settings",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [
+        {
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px"
+        }
+      ],
+      "sections": [],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        }
+      ],
+      "card": {
+        "top": 8,
+        "bottom": 367,
+        "width": 420
+      },
+      "overflow": [],
+      "viewport": {
+        "width": 667,
+        "height": 375
+      }
+    },
+    {
+      "width": 844,
+      "name": "overview",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [],
+      "sections": [
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        }
+      ],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        },
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        },
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        }
+      ],
+      "card": {
+        "top": 8,
+        "bottom": 382,
+        "width": 828
+      },
+      "overflow": [
+        {
+          "class": "panel-body",
+          "extra": 0
+        }
+      ],
+      "viewport": {
+        "width": 844,
+        "height": 390
+      }
+    },
+    {
+      "width": 844,
+      "name": "staff",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [],
+      "sections": [
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        }
+      ],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        }
+      ],
+      "card": {
+        "top": 8,
+        "bottom": 382,
+        "width": 828
+      },
+      "overflow": [
+        {
+          "class": "panel-body",
+          "extra": 0
+        }
+      ],
+      "viewport": {
+        "width": 844,
+        "height": 390
+      }
+    },
+    {
+      "width": 844,
+      "name": "finances",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [],
+      "sections": [],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        }
+      ],
+      "card": {
+        "top": 8,
+        "bottom": 382,
+        "width": 828
+      },
+      "overflow": [
+        {
+          "class": "panel-body",
+          "extra": 0
+        }
+      ],
+      "viewport": {
+        "width": 844,
+        "height": 390
+      }
+    },
+    {
+      "width": 844,
+      "name": "bank",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [],
+      "sections": [
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        }
+      ],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        }
+      ],
+      "card": {
+        "top": 8,
+        "bottom": 382,
+        "width": 828
+      },
+      "overflow": [
+        {
+          "class": "panel-body",
+          "extra": 0
+        }
+      ],
+      "viewport": {
+        "width": 844,
+        "height": 390
+      }
+    },
+    {
+      "width": 844,
+      "name": "people",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [],
+      "sections": [],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        }
+      ],
+      "card": {
+        "top": 8,
+        "bottom": 382,
+        "width": 828
+      },
+      "overflow": [
+        {
+          "class": "panel-body people-body",
+          "extra": 0
+        }
+      ],
+      "viewport": {
+        "width": 844,
+        "height": 390
+      }
+    },
+    {
+      "width": 844,
+      "name": "news",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [
+        {
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px"
+        }
+      ],
+      "sections": [],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        }
+      ],
+      "card": {
+        "top": 8,
+        "bottom": 382,
+        "width": 828
+      },
+      "overflow": [
+        {
+          "class": "log-list panel-body",
+          "extra": 0
+        }
+      ],
+      "viewport": {
+        "width": 844,
+        "height": 390
+      }
+    },
+    {
+      "width": 844,
+      "name": "requests",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [
+        {
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px"
+        }
+      ],
+      "sections": [],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        }
+      ],
+      "card": {
+        "top": 8,
+        "bottom": 382,
+        "width": 828
+      },
+      "overflow": [
+        {
+          "class": "panel-body requests-body",
+          "extra": 0
+        }
+      ],
+      "viewport": {
+        "width": 844,
+        "height": 390
+      }
+    },
+    {
+      "width": 844,
+      "name": "dinosaurs",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [
+        {
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px"
+        }
+      ],
+      "sections": [
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        }
+      ],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        }
+      ],
+      "card": {
+        "top": 8,
+        "bottom": 382,
+        "width": 828
+      },
+      "overflow": [
+        {
+          "class": "species-grid",
+          "extra": 0
+        }
+      ],
+      "viewport": {
+        "width": 844,
+        "height": 390
+      }
+    },
+    {
+      "width": 844,
+      "name": "guide",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [],
+      "sections": [
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        }
+      ],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        }
+      ],
+      "card": {
+        "top": 8,
+        "bottom": 382,
+        "width": 828
+      },
+      "overflow": [
+        {
+          "class": "guide-detail",
+          "extra": 0
+        }
+      ],
+      "viewport": {
+        "width": 844,
+        "height": 390
+      }
+    },
+    {
+      "width": 844,
+      "name": "fences",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [
+        {
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px"
+        }
+      ],
+      "sections": [
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        }
+      ],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        }
+      ],
+      "card": {
+        "top": 8,
+        "bottom": 382,
+        "width": 828
+      },
+      "overflow": [
+        {
+          "class": "species-grid shop-grid",
+          "extra": 0
+        }
+      ],
+      "viewport": {
+        "width": 844,
+        "height": 390
+      }
+    },
+    {
+      "width": 844,
+      "name": "pause",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [
+        {
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px"
+        }
+      ],
+      "sections": [],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        }
+      ],
+      "card": {
+        "top": 75.75,
+        "bottom": 314.25,
+        "width": 420
+      },
+      "overflow": [],
+      "viewport": {
+        "width": 844,
+        "height": 390
+      }
+    },
+    {
+      "width": 844,
+      "name": "settings",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [
+        {
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px"
+        }
+      ],
+      "sections": [],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        }
+      ],
+      "card": {
+        "top": 8,
+        "bottom": 382,
+        "width": 420
+      },
+      "overflow": [],
+      "viewport": {
+        "width": 844,
+        "height": 390
+      }
+    },
+    {
+      "width": 1180,
+      "name": "overview",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [],
+      "sections": [
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        }
+      ],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        },
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        },
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        }
+      ],
+      "card": {
+        "top": 30,
+        "bottom": 790,
+        "width": 980
+      },
+      "overflow": [
+        {
+          "class": "panel-body",
+          "extra": 0
+        }
+      ],
+      "viewport": {
+        "width": 1180,
+        "height": 820
+      }
+    },
+    {
+      "width": 1180,
+      "name": "staff",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [],
+      "sections": [
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        }
+      ],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        }
+      ],
+      "card": {
+        "top": 30,
+        "bottom": 790,
+        "width": 980
+      },
+      "overflow": [
+        {
+          "class": "panel-body",
+          "extra": 0
+        }
+      ],
+      "viewport": {
+        "width": 1180,
+        "height": 820
+      }
+    },
+    {
+      "width": 1180,
+      "name": "finances",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [],
+      "sections": [],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        }
+      ],
+      "card": {
+        "top": 30,
+        "bottom": 790,
+        "width": 980
+      },
+      "overflow": [
+        {
+          "class": "panel-body",
+          "extra": 0
+        }
+      ],
+      "viewport": {
+        "width": 1180,
+        "height": 820
+      }
+    },
+    {
+      "width": 1180,
+      "name": "bank",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [],
+      "sections": [
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        }
+      ],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        }
+      ],
+      "card": {
+        "top": 30,
+        "bottom": 790,
+        "width": 980
+      },
+      "overflow": [
+        {
+          "class": "panel-body",
+          "extra": 0
+        }
+      ],
+      "viewport": {
+        "width": 1180,
+        "height": 820
+      }
+    },
+    {
+      "width": 1180,
+      "name": "people",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [],
+      "sections": [],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        }
+      ],
+      "card": {
+        "top": 30,
+        "bottom": 790,
+        "width": 980
+      },
+      "overflow": [
+        {
+          "class": "panel-body people-body",
+          "extra": 0
+        }
+      ],
+      "viewport": {
+        "width": 1180,
+        "height": 820
+      }
+    },
+    {
+      "width": 1180,
+      "name": "news",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [
+        {
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px"
+        }
+      ],
+      "sections": [],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        }
+      ],
+      "card": {
+        "top": 30,
+        "bottom": 790,
+        "width": 980
+      },
+      "overflow": [
+        {
+          "class": "log-list panel-body",
+          "extra": 0
+        }
+      ],
+      "viewport": {
+        "width": 1180,
+        "height": 820
+      }
+    },
+    {
+      "width": 1180,
+      "name": "requests",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [
+        {
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px"
+        }
+      ],
+      "sections": [],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        }
+      ],
+      "card": {
+        "top": 30,
+        "bottom": 790,
+        "width": 980
+      },
+      "overflow": [
+        {
+          "class": "panel-body requests-body",
+          "extra": 0
+        }
+      ],
+      "viewport": {
+        "width": 1180,
+        "height": 820
+      }
+    },
+    {
+      "width": 1180,
+      "name": "dinosaurs",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [
+        {
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px"
+        }
+      ],
+      "sections": [
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        }
+      ],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        }
+      ],
+      "card": {
+        "top": 30,
+        "bottom": 790,
+        "width": 980
+      },
+      "overflow": [
+        {
+          "class": "species-grid",
+          "extra": 0
+        }
+      ],
+      "viewport": {
+        "width": 1180,
+        "height": 820
+      }
+    },
+    {
+      "width": 1180,
+      "name": "guide",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [],
+      "sections": [
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        }
+      ],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        }
+      ],
+      "card": {
+        "top": 30,
+        "bottom": 790,
+        "width": 980
+      },
+      "overflow": [
+        {
+          "class": "guide-detail",
+          "extra": 0
+        }
+      ],
+      "viewport": {
+        "width": 1180,
+        "height": 820
+      }
+    },
+    {
+      "width": 1180,
+      "name": "fences",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [
+        {
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px"
+        }
+      ],
+      "sections": [
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        },
+        {
+          "size": 15,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.5px"
+        }
+      ],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px",
+          "icon": true
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        }
+      ],
+      "card": {
+        "top": 30,
+        "bottom": 790,
+        "width": 980
+      },
+      "overflow": [
+        {
+          "class": "species-grid shop-grid",
+          "extra": 0
+        }
+      ],
+      "viewport": {
+        "width": 1180,
+        "height": 820
+      }
+    },
+    {
+      "width": 1180,
+      "name": "pause",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [
+        {
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px"
+        }
+      ],
+      "sections": [],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        }
+      ],
+      "card": {
+        "top": 276.75,
+        "bottom": 543.25,
+        "width": 420
+      },
+      "overflow": [],
+      "viewport": {
+        "width": 1180,
+        "height": 820
+      }
+    },
+    {
+      "width": 1180,
+      "name": "settings",
+      "base": {
+        "size": 14,
+        "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+        "adjust": "none",
+        "line": "19.6px"
+      },
+      "headings": [
+        {
+          "size": 18,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "22.5px"
+        }
+      ],
+      "sections": [],
+      "buttons": [
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        },
+        {
+          "height": 44,
+          "size": 14,
+          "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+          "adjust": "none",
+          "line": "19.6px",
+          "icon": false
+        }
+      ],
+      "card": {
+        "top": 147.75,
+        "bottom": 672.25,
+        "width": 420
+      },
+      "overflow": [],
+      "viewport": {
+        "width": 1180,
+        "height": 820
+      }
+    }
+  ],
+  "hatch": {
+    "body": {
+      "size": "14px",
+      "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+      "adjust": "none"
+    },
+    "heading": {
+      "size": "18px",
+      "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+      "adjust": "none"
+    },
+    "input": {
+      "size": "16px",
+      "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+      "adjust": "none"
+    },
+    "button": {
+      "size": "14px",
+      "family": "system-ui, -apple-system, \"system-ui\", \"Segoe UI\", sans-serif",
+      "adjust": "none"
+    }
+  },
+  "errors": []
+}
