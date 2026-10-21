@@ -123,7 +123,7 @@ describe('fossil digs', () => {
     const restored = migrate(JSON.parse(JSON.stringify(s)))!;
     expect(restored.unlockedSpecies).toEqual([...STARTER_SPECIES, 'tyrannosaurus', 'argentinosaurus']);
     expect(restored.fossils).toEqual(s.fossils);
-    expect(restored.version).toBe(21);
+    expect(restored.version).toBe(22);
     expect(migrate(JSON.parse(JSON.stringify(restored)))?.unlockedSpecies).toEqual(restored.unlockedSpecies);
     const inMemory = new Simulation(s);
     expect(inMemory.state.unlockedSpecies).toEqual(restored.unlockedSpecies);

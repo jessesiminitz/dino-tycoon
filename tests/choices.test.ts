@@ -44,6 +44,7 @@ function openPark(): GameState {
 
 
 import { answerChoice, CHOICE_EVENTS, CHOICE_HOURS, choiceEvent, hourlyChoices } from '../src/sim/systems/choices';
+import { LANDING_STEPS } from '../src/sim/port';
 import { Simulation } from '../src/sim/Simulation';
 import { STEPS_PER_HOUR } from '../src/sim/systems/dinos';
 import { computeRegions } from '../src/sim/regions';
@@ -98,7 +99,8 @@ describe('decisions', () => {
     const s = openPark();
     s.hours = 4; // 12:00
     const sim = new Simulation(s);
-    for (let i = 0; i < STEPS_PER_HOUR; i++) sim.step();
+    // Through the hour, and until the 13:00 ferry's passengers reach the gate.
+    for (let i = 0; i < STEPS_PER_HOUR + LANDING_STEPS; i++) sim.step();
     expect(s.visitors.length).toBeGreaterThan(0);
     present(s, 'storm');
     const r = sim.dispatch({ type: 'chooseOption', option: 0 });
@@ -165,7 +167,7 @@ describe('decisions', () => {
     delete raw.pendingChoice;
     delete raw.stats.closedDay;
     const m = migrate(raw)!;
-    expect(m.version).toBe(21);
+    expect(m.version).toBe(22);
     expect(m.pendingChoice).toBeNull();
     expect(m.stats.closedDay).toBe(0);
   });

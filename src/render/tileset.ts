@@ -10,6 +10,9 @@ export const TILE = TERRAIN_TILE_SIZE;
 export const VARIANTS = 4;
 export const TILESET_KEY = 'terrain-tiles';
 export const CURSOR_KEY = 'tile-cursor';
+export const OPEN_SEA_KEY = 'open-sea';
+/** How far (world px) the open sea reaches past the map edge. */
+export const OPEN_SEA_MARGIN = 64 * TILE;
 
 /** Paints the terrain tileset (TERRAIN_COUNT × VARIANTS tiles in one row) and the selection cursor. */
 export function createTextures(scene: Phaser.Scene): void {
@@ -19,6 +22,12 @@ export function createTextures(scene: Phaser.Scene): void {
   baseTiles = [];
   for (let t = 0; t < TERRAIN_COUNT; t++) for (let v = 0; v < VARIANTS; v++) baseTiles.push(paintTerrainTile(t as Terrain, v));
   paintTileset(tex, 'summer');
+  // Open sea past the map edge, so ferries sailing in cross water, not a seam.
+  if (!scene.textures.exists(OPEN_SEA_KEY)) {
+    const sea = scene.textures.createCanvas(OPEN_SEA_KEY, TILE * 2, TILE * 2)!;
+    for (let v = 0; v < VARIANTS; v++) sea.getContext().drawImage(baseTiles[Terrain.DeepWater * VARIANTS + v], (v % 2) * TILE, Math.floor(v / 2) * TILE);
+    sea.refresh();
+  }
 
   const cur = scene.textures.createCanvas(CURSOR_KEY, TILE, TILE);
   if (!cur) throw new Error('Could not create cursor canvas');

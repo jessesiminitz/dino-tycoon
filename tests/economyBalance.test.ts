@@ -12,7 +12,7 @@ import type { SpeciesId } from '../src/sim/data/species';
 import { emptyLedger } from '../src/sim/finance';
 
 const W = 64, H = 40;
-/** A tidy standard park: a path along y=20, `paddocks` 10×8 paddocks either side, 4 herbivores each, shops and staff. */
+/** A tidy standard park: a path along y=20, `paddocks` 10×8 paddocks either side, 4 herbivores each, shops, staff and ferries. */
 function standardPark(paddocks: number, mix: SpeciesId[]): { s: GameState; capital: number } {
   const s = newGame(5);
   s.map = { width: W, height: H, tiles: new Array(W * H).fill(Terrain.Grass), heights: new Array(W * H).fill(5), shape: 'classic' };
@@ -40,6 +40,15 @@ function standardPark(paddocks: number, mix: SpeciesId[]): { s: GameState; capit
   for (const [kind, x, y] of [['restaurant', 31, 32], ['snackstall', 33, 32], ['restroom', 31, 34], ['giftshop', 33, 34], ['trashcan', 31, 36], ['snackstall', 33, 30], ['restroom', 31, 30]] as const)
     if (!applyCommand(s, { type: 'placeBuilding', kind, x, y }).ok) throw new Error(`no room for ${kind}`);
   for (const role of ['worker', 'janitor', 'vet', ...Array(Math.floor(paddocks / 3)).fill('worker')] as const) applyCommand(s, { type: 'hireStaff', role });
+  // A port to match: the starting jetty, a pier with two big ferries, or a full harbor.
+  const fleet = paddocks >= 10 ? 3 : paddocks >= 4 ? 2 : 1;
+  for (let k = 1; k < fleet; k++) {
+    applyCommand(s, { type: 'upgradePort' });
+    applyCommand(s, { type: 'buyFerry', size: 'large' });
+  }
+  if (fleet > 1) applyCommand(s, { type: 'upgradeFerry', index: 0 });
+  // Open a week later, so the measured days fall in fall: about an average season for visitors.
+  s.hours += 7 * 24;
   const capital = start - s.money;
   s.money = 50_000;
   s.finance.today = emptyLedger(); s.finance.month = emptyLedger();

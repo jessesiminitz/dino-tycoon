@@ -13,6 +13,8 @@ import { generateFossilBeds, type FossilBed } from './fossilBeds';
 import { isParcelOwned, PARCEL } from './land';
 import { visitorName, type Topic } from './data/thoughts';
 import { hash2 } from './rng';
+import { newPort, type PortState } from './port';
+import { FERRY_TYPES, LEGACY_PORT, PORT_LEVELS } from './data/port';
 
 export const MAP_WIDTH = 64;
 export const MAP_HEIGHT = 48;
@@ -21,7 +23,7 @@ export const BIG_MAP_WIDTH = 96;
 export const BIG_MAP_HEIGHT = 72;
 export const STARTING_MONEY = 50_000;
 export const START_HOUR = 8;
-export const SAVE_VERSION = 21;
+export const SAVE_VERSION = 22;
 
 export interface Dino {
   id: number;
@@ -387,6 +389,8 @@ export interface GameState {
   eruption: Eruption | null;
   /** Floods in the rainy season (Flood Season), or null. */
   flood: FloodState | null;
+  /** The ferry port every visitor arrives through. */
+  port: PortState;
   /** Next id for dinos, feeders and other entities. */
   nextId: number;
 }
@@ -455,6 +459,7 @@ export function newGame(seed: number, island: IslandOptions = {}): GameState {
     pendingChoice: null,
     eruption: null,
     flood: null,
+    port: newPort(),
     nextId: 1,
   };
   state.fossilBeds = bedsFor(state);
@@ -523,6 +528,10 @@ export function stateProblem(state: GameState): string | null {
   for (const k of ['paths', 'tracks', 'hFences', 'vFences', 'hFenceHp', 'vFenceHp', 'parcelsOwned', 'dinos', 'feeders', 'unlockedSpecies', 'buildings', 'visitors', 'staff', 'fossilBeds', 'decor', 'log', 'messes', 'reviews', 'eggs', 'requests', 'jeeps'])
     if (!Array.isArray(s[k])) return `missing ${k}`;
   for (const k of ['finance', 'stats', 'fossils']) if (!isObj(s[k])) return `missing ${k}`;
+  const port = s.port;
+  if (!isObj(port) || !isNum(port.level) || !(port.level in PORT_LEVELS) || !Array.isArray(port.ferries) || port.ferries.length < 1) return 'missing port';
+  if (!port.ferries.every((f) => typeof f === 'string' && f in FERRY_TYPES)) return 'unknown ferry';
+  for (const k of ['aboard', 'loads']) if (!Array.isArray(port[k])) return 'missing port';
   const sc = s.scenario;
   if (!isObj(sc) || !(String(sc.id) in SCENARIOS) || !isNum(sc.round) || !Array.isArray(sc.earned)) return 'missing scenario';
   if (!state.unlockedSpecies.every((id) => id in SPECIES)) return 'unknown species';
@@ -682,6 +691,12 @@ function upgrade(raw: { version?: number } & Record<string, unknown>): GameState
   if (raw.version === 20) {
     (raw as unknown as GameState).flood = null;
     raw.version = 21;
+  }
+  if (raw.version === 21) {
+    // Parks from before the port keep about the arrivals the old 150-visitor limit allowed.
+    (raw as unknown as GameState).port = newPort(LEGACY_PORT.level, LEGACY_PORT.ferries);
+    normalizeFinance(raw.finance as Finance);
+    raw.version = 22;
   }
   return raw.version === SAVE_VERSION ? (raw as unknown as GameState) : null;
 }

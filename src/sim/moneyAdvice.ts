@@ -6,6 +6,7 @@ import { loanPayment } from './finance';
 import { touchesWalkway } from './paths';
 import type { RegionMap } from './regions';
 import { fairPrice, parkAppeal } from './systems/visitors';
+import { portUpkeep } from './port';
 
 export interface CostLine {
   label: string;
@@ -74,6 +75,8 @@ export function dailyCosts(state: GameState, regions: RegionMap): { lines: CostL
         : undefined;
     lines.push({ label: `${all.length} ${t.name.toLowerCase()}${all.length === 1 || t.name.endsWith('s') ? '' : 's'}`, perDay: all.length * t.upkeep, hint });
   }
+  const n = state.port.ferries.length;
+  lines.push({ label: `Ferry port (${n} ferr${n === 1 ? 'y' : 'ies'})`, perDay: portUpkeep(state.port) });
   const decor = state.decor.reduce((sum, d) => sum + DECOR_TYPES[d.kind].upkeep, 0);
   if (decor) lines.push({ label: 'Garden upkeep', perDay: decor });
   const loans = state.finance.loans.reduce((sum, l) => {

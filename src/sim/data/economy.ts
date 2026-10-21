@@ -83,7 +83,8 @@ export const MAX_DEBT = 100_000;
 export const LOAN_MONTHLY_RATE = 0.015;
 export const LOAN_TERM_MONTHS = 12;
 
-export const MAX_VISITORS = 150;
+/** A safety limit on people in the park at once, so phones keep up. The ferries set the real limit (36 an hour at most). */
+export const MAX_VISITORS = 300;
 
 /** Souvenirs visitors buy and carry around (and you can see on them). */
 export type ItemKind = 'plush' | 'hat' | 'balloon' | 'poncho' | 'umbrella';

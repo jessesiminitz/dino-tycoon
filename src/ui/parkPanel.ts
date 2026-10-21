@@ -21,8 +21,10 @@ import { formatMoney, type Hud } from './hud';
 import { dailyCosts } from '../sim/moneyAdvice';
 import { calendar } from '../sim/GameState';
 import { playSfx } from '../audio/audio';
+import { PORT_BUTTONS, portCommand, portTab } from './portPanel';
+import { ferryCapacity } from '../sim/port';
 
-type Tab = 'goals' | 'overview' | 'staff' | 'finances' | 'bank';
+type Tab = 'goals' | 'overview' | 'port' | 'staff' | 'finances' | 'bank';
 
 /** Validated against the beige panel surface with the dataviz palette checker (all checks pass). */
 const BAR_COLOR = '#2a78d6';
@@ -88,7 +90,8 @@ export function mountParkPanel(sim: Simulation, hud: Hud): { open(tab?: Tab): vo
           <button class="step-btn" data-price="${TICKET_STEP}" aria-label="Raise price" ${state.ticketPrice >= MAX_TICKET_PRICE ? 'disabled' : ''}>+</button>
         </div>
         <p class="note">Visitors think about <b>${formatMoney(fair)}</b> is fair for what’s on show, ${priceNote}
-          Expect about <b>${perHour.toFixed(1)}</b> new visitors an hour while open (08:00–18:00).</p>
+          About <b>${perHour.toFixed(1)}</b> people want to come each hour while open (08:00–18:00), and the ferries seat <b>${ferryCapacity(state.port)}</b> an hour.</p>
+        ${perHour > ferryCapacity(state.port) ? '<button class="action-btn secondary" data-goto="port">⛴️ The ferries are full: open the Port</button>' : ''}
       </section>
       <section class="panel-section">
         <h3>Gates</h3>
@@ -315,7 +318,9 @@ export function mountParkPanel(sim: Simulation, hud: Hud): { open(tab?: Tab): vo
         ? goalsTab()
         : tab === 'overview'
           ? overview()
-          : tab === 'staff'
+          : tab === 'port'
+            ? portTab(sim)
+            : tab === 'staff'
             ? staffTab()
             : tab === 'finances'
               ? finances()
@@ -323,9 +328,14 @@ export function mountParkPanel(sim: Simulation, hud: Hud): { open(tab?: Tab): vo
   }
 
   body.addEventListener('click', (e) => {
-    const el = (e.target as HTMLElement).closest<HTMLElement>('[data-price],[data-loan],[data-repay],[data-hire],[data-fire],[data-close],.bar');
+    const el = (e.target as HTMLElement).closest<HTMLElement>(`[data-price],[data-loan],[data-repay],[data-hire],[data-fire],[data-close],[data-goto],.bar,${PORT_BUTTONS}`);
     if (!el) return;
-    if ('close' in el.dataset) act(sim.dispatch({ type: 'closePark' }));
+    const port = portCommand(el);
+    if (port) act(sim.dispatch(port));
+    else if (el.dataset.goto) {
+      tab = el.dataset.goto as Tab;
+      render();
+    } else if ('close' in el.dataset) act(sim.dispatch({ type: 'closePark' }));
     else if (el.dataset.price) act(sim.dispatch({ type: 'setTicketPrice', price: sim.state.ticketPrice + Number(el.dataset.price) }));
     else if (el.dataset.loan) act(sim.dispatch({ type: 'takeLoan', amount: Number(el.dataset.loan) }));
     else if (el.dataset.repay) act(sim.dispatch({ type: 'repayLoan', id: Number(el.dataset.repay) }));

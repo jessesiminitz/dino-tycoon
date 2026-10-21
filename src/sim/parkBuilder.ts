@@ -12,6 +12,8 @@ import { boxEdges, tileLine } from './grid';
 import { parcelGrid, PARCEL } from './land';
 import { Rng } from './rng';
 import { isSea, Terrain } from './terrain';
+import { newPort } from './port';
+import { LEGACY_PORT } from './data/port';
 
 /**
  * Builds a prebuilt park for a challenge with the same commands a player
@@ -183,7 +185,7 @@ export class ParkBuilder {
 
   /**
    * Done: the real bank balance, a clean set of books (building the park
-   * isn't this owner's spending), and a starting reputation.
+   * isn't this owner's spending), a working port and a starting reputation.
    */
   finish(money: number, reputation: number): void {
     const { state } = this;
@@ -192,6 +194,8 @@ export class ParkBuilder {
     state.finance.loans = loans;
     state.money = money;
     state.reputation = reputation;
+    // An established park already runs a pier and two big ferries.
+    state.port = newPort(LEGACY_PORT.level, LEGACY_PORT.ferries);
     state.log = [];
   }
 }

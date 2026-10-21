@@ -106,6 +106,7 @@ export class WeatherScene extends Phaser.Scene {
     for (const b of state.buildings) if (LIT_BUILDINGS.has(b.kind)) add(b.x * TILE + TILE / 2, b.y * TILE + TILE / 2, LIGHTS.building);
     add(state.entrance.x * TILE + TILE / 2, state.entrance.y * TILE + TILE / 2, LIGHTS.gate);
     for (const j of state.jeeps) add(j.x * TILE + TILE / 2, j.y * TILE + TILE / 2, LIGHTS.jeep);
+    for (const l of (park as unknown as { port?: { lights(): { x: number; y: number; radius: number }[] } }).port?.lights() ?? []) add(l.x, l.y, l.radius);
     // Only what's on screen (with a margin for the glow).
     const { width, height } = this.scale;
     return out.filter((l) => l.x > -l.r && l.y > -l.r && l.x < width + l.r && l.y < height + l.r);

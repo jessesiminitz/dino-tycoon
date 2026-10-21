@@ -12,9 +12,11 @@ import { allFenceEdges, fenceHp } from '../src/sim/fences';
 import { SPECIES } from '../src/sim/data/species';
 import { isTileOwned, parcelBuyBlocker, parcelGrid, PARCEL } from '../src/sim/land';
 import { isBuildable } from '../src/sim/terrain';
-import { boxEdges } from '../src/sim/grid';
+import { boxEdges, type Edge } from '../src/sim/grid';
 import { lavaPreview } from '../src/sim/systems/eruption';
 import type { SpeciesId } from '../src/sim/data/species';
+import { FERRY_TYPES, PORT_LEVELS } from '../src/sim/data/port';
+import { fitsPort } from '../src/sim/port';
 
 /** Moves a dinosaur into the paddock at (x, y) with room, or returns false. */
 function moveInto(s: GameState, dinoId: number, px: number, py: number): boolean {
@@ -90,6 +92,18 @@ function buyLand(s: GameState): boolean {
     if (!parcelBuyBlocker(s, px, py)) options.push({ px, py, d: Math.abs(px * PARCEL + 4 - ex) + Math.abs(py * PARCEL + 4 - ey) });
   options.sort((a, b) => a.d - b.d);
   return options.some((o) => applyCommand(s, { type: 'buyParcel', px: o.px, py: o.py }).ok);
+}
+
+/** When the ferries turned many visitors away yesterday, adds a ferry, a bigger boat or a bigger port (keeping `reserve`). */
+function growPort(s: GameState, reserve: number): void {
+  if (s.port.lastTurnedAway < 20) return;
+  const can = (cost: number) => s.money > cost + reserve;
+  const small = s.port.ferries.findIndex((f) => f !== 'large');
+  if (s.port.ferries.length < PORT_LEVELS[s.port.level].berths) {
+    if (can(FERRY_TYPES.large.cost)) applyCommand(s, { type: 'buyFerry', size: 'large' });
+  } else if (small >= 0 && fitsPort(s.port.level, 'large')) {
+    if (can(FERRY_TYPES.large.cost)) applyCommand(s, { type: 'upgradeFerry', index: small });
+  } else if (PORT_LEVELS[s.port.level + 1] && can(PORT_LEVELS[s.port.level + 1].cost)) applyCommand(s, { type: 'upgradePort' });
 }
 
 function play(s: GameState, days: number, each?: (s: GameState) => void) {
@@ -200,12 +214,13 @@ it('Fire Mountain: doing nothing loses dinosaurs to the lava; saving them earns 
 it('Flood Season: doing nothing leaves dinosaurs in the water; high ground, sandbags, a pump and a vet win Gold', () => {
   for (const mode of ['do nothing', 'sensible']) {
     const s = newPark('flood-season', 1);
+    const edges: Edge[] = [];
     if (mode === 'sensible') {
       const { x, y } = s.entrance;
       applyCommand(s, { type: 'hireStaff', role: 'vet' });
       applyCommand(s, { type: 'hireStaff', role: 'guard' });
       // Sandbags along both banks, leaving the bridge path open, and a pump house by the bridge.
-      const edges = [];
+
       for (let dx = -13; dx <= 13; dx++) if (dx !== 0) edges.push({ dir: 'h' as const, x: x + dx, y: y - 12 }, { dir: 'h' as const, x: x + dx, y: y - 10 });
       expect(applyCommand(s, { type: 'buildFences', edges, fence: 6 }).ok).toBe(true);
       expect(applyCommand(s, { type: 'placeBuilding', kind: 'pump', x: x + 1, y: y - 14 }).ok).toBe(true);
@@ -213,6 +228,8 @@ it('Flood Season: doing nothing leaves dinosaurs in the water; high ground, sand
     const ev = play(s, 40, (st) => {
       if (mode !== 'sensible') return;
       const { hour } = calendar(st);
+      // Storms knock sandbags about: patch them up each morning.
+      if (hour === 7) for (const e of edges) if (fenceHp(st, e) < 100) applyCommand(st, { type: 'repairFence', edge: e });
       if (hour === 10 && st.money > 20000 && st.flood!.survived >= 3) {
         buyOne(st, st.dinos.length % 2 ? 'parasaurolophus' : 'protoceratops');
         applyCommand(st, { type: 'setTicketPrice', price: Math.round(fairPrice(parkAppeal(st, computeRegions(st)))) });
@@ -242,6 +259,8 @@ it('The Money Pit: doing nothing goes broke; cutting waste, fair tickets and new
     const ev = play(s, 120, (st) => {
       if (mode !== 'sensible') return;
       for (const l of [...st.finance.loans]) if (st.money > l.balance + 15000) applyCommand(st, { type: 'repayLoan', id: l.id });
+      // More ferries when they run full: they soon pay for themselves.
+      if (calendar(st).hour === 9) growPort(st, 15000);
       // Spare money goes on new dinosaurs for the empty paddocks (cheapest species, a few a day).
       if (calendar(st).hour === 9 && st.money > 25000 && st.dinos.length < 32) {
         const regions = computeRegions(st);

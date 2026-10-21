@@ -23,6 +23,8 @@ import { perStep } from './dinos';
 import { tryAttractions } from './rides';
 import { ASH_ARRIVALS } from './eruption';
 import { isFlooded } from './flood';
+import { boardFerries } from './ferries';
+import { seasonalDemand, yearDay } from '../seasons';
 
 /** Tiles (Chebyshev distance) within which a visitor can see a dinosaur. */
 const VIEW_RADIUS = 4;
@@ -229,14 +231,14 @@ export function fairPrice(appeal: number): number {
   return Math.round(5 + 2.2 * Math.sqrt(Math.max(0, appeal)));
 }
 
-/** Expected new visitors per open hour. */
+/** Visitors who want to come each open hour (the ferries may not have room for them all). */
 export function expectedArrivals(state: GameState, regions: RegionMap): number {
   const appeal = parkAppeal(state, regions);
   const priceFactor = Math.max(0, Math.min(1.5, 2 - state.ticketPrice / fairPrice(appeal)));
   const weather = state.stormHours > 0 ? STORM_ARRIVALS : 1;
   // Ash from an eruption keeps people away.
   const ash = state.eruption && state.hours < state.eruption.ashUntil ? ASH_ARRIVALS : 1;
-  return (2 + appeal * 0.25) * (0.5 + state.reputation / 100) * priceFactor * weather * ash;
+  return (2 + appeal * 0.25) * (0.5 + state.reputation / 100) * priceFactor * weather * ash * seasonalDemand(yearDay(state));
 }
 
 /** An open building of this kind beside (x, y): a flooded one is closed. */
@@ -379,11 +381,17 @@ export function hourlyVisitors(ctx: SimContext): void {
   if (hour < OPEN_HOUR || hour > LAST_ENTRY_HOUR) return;
   if (state.stats.closedDay === day) return; // closed early today
   const expected = expectedArrivals(state, regions);
-  let n = Math.floor(expected) + (rng.chance(expected % 1) ? 1 : 0);
+  const n = Math.floor(expected) + (rng.chance(expected % 1) ? 1 : 0);
+  boardFerries(ctx, n);
+}
+
+/** New visitors step off the ferry and pay at the gate, liking or grumbling at the price. */
+export function admitVisitors(ctx: SimContext, n: number): void {
+  const { state, regions } = ctx;
   n = Math.min(n, MAX_VISITORS - state.visitors.length);
+  if (n <= 0) return;
   const fair = fairPrice(parkAppeal(state, regions));
   const pricePenalty = state.ticketPrice > fair ? Math.min(30, (state.ticketPrice / fair - 1) * 40) : 0;
-
   for (let i = 0; i < n; i++) {
     const v = spawnVisitor(ctx, START_SATISFACTION - pricePenalty, state.ticketPrice);
     if (pricePenalty >= 5) think(state, v, 'price', false, { price: usd(state.ticketPrice) });

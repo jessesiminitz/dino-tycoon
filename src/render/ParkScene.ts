@@ -27,8 +27,11 @@ import { TREAT_COST } from '../sim/systems/care';
 import { calendar } from '../sim/GameState';
 import { formatMoney } from '../ui/hud';
 import type { UiState } from '../ui/uiState';
-import { createTextures, CURSOR_KEY, TILE, TILESET_KEY, tileIndex } from './tileset';
+import { createTextures, CURSOR_KEY, OPEN_SEA_KEY, OPEN_SEA_MARGIN, TILE, TILESET_KEY, tileIndex } from './tileset';
 import { SeasonLayer } from './SeasonLayer';
+import { PortLayer } from './PortLayer';
+import { isPortTile } from '../sim/port';
+import { FERRY_TYPES, PORT_LEVELS } from '../sim/data/port';
 import { MAX_ZOOM, TouchController } from './input/TouchController';
 import { WorldLayers, type GhostStyle } from './WorldLayers';
 import { EntityLayer } from './EntityLayer';
@@ -71,6 +74,8 @@ export class ParkScene extends Phaser.Scene {
   private terrainFx!: TerrainFx;
   private seasons!: SeasonLayer;
   private scenery!: SceneryLayer;
+  /** The ferry port (read by the weather scene for its night lights). */
+  port!: PortLayer;
   private infoRefreshAt = 0;
   private worldTime = 0;
   private boundsZoom = 0;
@@ -109,6 +114,8 @@ export class ParkScene extends Phaser.Scene {
     const tileset = tilemap.addTilesetImage(TILESET_KEY, TILESET_KEY, TILE, TILE, 0, 0);
     if (!tileset) throw new Error('Tileset failed to load');
     this.ground = tilemap.createLayer(0, tileset, 0, 0)!;
+    const pad = OPEN_SEA_MARGIN;
+    this.add.tileSprite(-pad, -pad, map.width * TILE + pad * 2, map.height * TILE + pad * 2, OPEN_SEA_KEY).setOrigin(0).setDepth(-1);
     this.drawnTerrain = Uint8Array.from(map.tiles);
     this.terrainFx = new TerrainFx(this, map);
     this.seasons = new SeasonLayer(this, this.sim);
@@ -116,6 +123,7 @@ export class ParkScene extends Phaser.Scene {
 
     this.layers = new WorldLayers(this, this.sim);
     this.entities = new EntityLayer(this, this.sim);
+    this.port = new PortLayer(this, this.sim);
     this.cursor = this.add.image(0, 0, CURSOR_KEY).setOrigin(0).setVisible(false).setDepth(10);
 
     const worldW = map.width * TILE;
@@ -166,6 +174,7 @@ export class ParkScene extends Phaser.Scene {
     this.seasons.update();
     this.terrainFx.update(ambientTime);
     this.scenery.update(ambientTime);
+    this.port.update(this.worldTime);
     if ((this.entities.selection || this.selectedFence) && time >= this.infoRefreshAt) {
       this.infoRefreshAt = time + INFO_REFRESH_MS;
       this.showSelection();
@@ -699,6 +708,17 @@ export class ParkScene extends Phaser.Scene {
       return;
     }
     this.cursor.setPosition(tx * TILE, ty * TILE).setVisible(true);
+
+    const { port } = this.sim.state;
+    const site = this.port.site;
+    if (isPortTile(site, tx, ty) || (ty > site.y1 && ty <= site.y1 + 2 && tx >= site.headX0 - 2 && tx <= site.headX1 + 2)) {
+      const seats = port.ferries.reduce((n, f) => n + FERRY_TYPES[f].seats, 0);
+      this.hud.showInfo(`⚓ Ferry port: ${PORT_LEVELS[port.level].name} · ${port.ferries.length} ferr${port.ferries.length === 1 ? 'y' : 'ies'} · ${seats} visitors an hour`, {
+        label: 'Port',
+        onClick: () => this.hud.openPort(),
+      });
+      return;
+    }
 
     const parts = [TERRAIN_NAMES[t]];
     const bed = bedAt(this.sim.state.fossilBeds, tx, ty);

@@ -9,7 +9,7 @@ import { hash2 } from '../sim/rng';
 import { Terrain } from '../sim/terrain';
 import { lavaPreview } from '../sim/systems/eruption';
 import { floodForecast } from '../sim/systems/flood';
-import { TILE } from './tileset';
+import { OPEN_SEA_MARGIN, TILE } from './tileset';
 import { FENCE_H, fenceDepth, depthAt } from './worldDepth';
 import { aviaryRoof } from './aviaryRoof';
 import { paintParkEntrance } from './entranceArt';
@@ -93,13 +93,14 @@ export class WorldLayers {
         const x0 = px * size;
         const y0 = py * size;
         const forSale = landMode && parcelBuyBlocker(state, px, py) === null;
-        if (!forSale) {
-          g.fillStyle(0x000000, landMode ? 0.45 : 0.32);
-          g.fillRect(x0, y0, size, size);
-          continue;
-        }
-        g.fillStyle(0x000000, 0.2);
-        g.fillRect(x0, y0, size, size);
+        // Plots on the map's edge carry their shade out over the open sea beyond it.
+        const left = px === 0 ? OPEN_SEA_MARGIN : 0;
+        const top = py === 0 ? OPEN_SEA_MARGIN : 0;
+        const right = px === cols - 1 ? OPEN_SEA_MARGIN : 0;
+        const bottom = py === rows - 1 ? OPEN_SEA_MARGIN : 0;
+        g.fillStyle(0x000000, forSale ? 0.2 : landMode ? 0.45 : 0.32);
+        g.fillRect(x0 - left, y0 - top, size + left + right, size + top + bottom);
+        if (!forSale) continue;
         // Diagonal hatching, clipped to the plot.
         g.lineStyle(2, FOR_SALE, 0.55);
         for (let c = -size + 8; c < size; c += 12) {
@@ -166,10 +167,11 @@ export class WorldLayers {
         if (!isParcelOwned(state, px, py)) continue;
         const x0 = px * size;
         const y0 = py * size;
-        if (!isParcelOwned(state, px, py - 1)) g.lineBetween(x0, y0, x0 + size, y0);
-        if (!isParcelOwned(state, px, py + 1)) g.lineBetween(x0, y0 + size, x0 + size, y0 + size);
-        if (!isParcelOwned(state, px - 1, py)) g.lineBetween(x0, y0, x0, y0 + size);
-        if (!isParcelOwned(state, px + 1, py)) g.lineBetween(x0 + size, y0, x0 + size, y0 + size);
+        // (None along the map's edge: there is only open sea beyond it.)
+        if (py > 0 && !isParcelOwned(state, px, py - 1)) g.lineBetween(x0, y0, x0 + size, y0);
+        if (py < rows - 1 && !isParcelOwned(state, px, py + 1)) g.lineBetween(x0, y0 + size, x0 + size, y0 + size);
+        if (px > 0 && !isParcelOwned(state, px - 1, py)) g.lineBetween(x0, y0, x0, y0 + size);
+        if (px < cols - 1 && !isParcelOwned(state, px + 1, py)) g.lineBetween(x0 + size, y0, x0 + size, y0 + size);
       }
     }
 

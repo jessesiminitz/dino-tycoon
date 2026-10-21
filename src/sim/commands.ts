@@ -19,6 +19,8 @@ import { isBuildable, isLand, Terrain, terrainAt } from './terrain';
 import { BRIDGE_COST, BUILDING_REFUND, BUILDING_TYPES, DRAIN_COST, LOAN_AMOUNTS, MAX_TICKET_PRICE, PATH_COST, PATH_REFUND, type BuildingKind, TRACK_COST } from './data/economy';
 import { earn, loanBlocker, spend } from './finance';
 import { pathBlocker, tileOccupant, touchesWalkway } from './paths';
+import { FERRY_SIZES, FERRY_TRADE_IN, FERRY_TYPES, PORT_LEVELS, type FerrySize } from './data/port';
+import { fitsPort } from './port';
 
 export type Command =
   | { type: 'buildFences'; edges: Edge[]; fence: FenceTypeId }
@@ -55,7 +57,11 @@ export type Command =
   | { type: 'chooseOption'; option: number }
   | { type: 'treatDino'; id: number }
   | { type: 'patDino'; id: number }
-  | { type: 'photoDino'; id: number };
+  | { type: 'photoDino'; id: number }
+  | { type: 'upgradePort' }
+  | { type: 'buyFerry'; size: FerrySize }
+  | { type: 'upgradeFerry'; index: number }
+  | { type: 'sellFerry'; index: number };
 
 export type CommandResult =
   | { ok: true; message: string; cost: number; /** How the animal reacted, for the park view. */ effect?: CareEffect }
@@ -91,6 +97,9 @@ export function planFences(state: GameState, edges: Edge[], fence: FenceTypeId) 
   }
   return { build, blocked, blockReason, cost: build.length * FENCE_TYPES[fence].cost };
 }
+
+/** What trading a ferry in for a bigger one costs. */
+export const ferryUpgradePrice = (from: FerrySize, to: FerrySize) => FERRY_TYPES[to].cost - Math.floor(FERRY_TYPES[from].cost * FERRY_TRADE_IN);
 
 /** A random name from `pool`, avoiding ones already `taken` while any are left. */
 export function pickName(state: GameState, pool: string[], taken: string[]): string {
@@ -457,6 +466,50 @@ export function applyCommand(state: GameState, cmd: Command): CommandResult {
       state.buildings.splice(state.buildings.indexOf(b), 1);
       earn(state, 'sales', refund);
       return { ok: true, cost: -refund, message: `Demolished ${BUILDING_TYPES[b.kind].name.toLowerCase()}, salvaged ${usd(refund)}` };
+    }
+
+    case 'upgradePort': {
+      const next = PORT_LEVELS[state.port.level + 1];
+      if (!next) return { ok: false, message: `Your ${PORT_LEVELS[state.port.level].name.toLowerCase()} is as big as a port gets` };
+      if (next.cost > state.money) return { ok: false, message: `Not enough money: need ${usd(next.cost)}` };
+      spend(state, 'construction', next.cost);
+      state.port.level++;
+      return { ok: true, cost: next.cost, message: `⚓ Built a ${next.name.toLowerCase()} for ${usd(next.cost)}: room for ${next.berths} ferries` };
+    }
+
+    case 'buyFerry': {
+      const type = FERRY_TYPES[cmd.size];
+      const level = PORT_LEVELS[state.port.level];
+      if (!type) return { ok: false, message: 'Unknown boat' };
+      if (state.port.ferries.length >= level.berths) return { ok: false, message: `Every berth is taken: build a bigger port for more ferries` };
+      if (!fitsPort(state.port.level, cmd.size)) return { ok: false, message: `A ${type.name.toLowerCase()} needs a bigger port` };
+      if (type.cost > state.money) return { ok: false, message: `Not enough money: need ${usd(type.cost)}` };
+      spend(state, 'construction', type.cost);
+      state.port.ferries.push(cmd.size);
+      return { ok: true, cost: type.cost, message: `⛴️ Bought a ${type.name.toLowerCase()} for ${usd(type.cost)}: ${type.seats} more seats every hour` };
+    }
+
+    case 'upgradeFerry': {
+      const size = state.port.ferries[cmd.index];
+      if (!size) return { ok: false, message: 'No such ferry' };
+      const bigger = FERRY_SIZES[FERRY_SIZES.indexOf(size) + 1];
+      if (!bigger) return { ok: false, message: 'That is already the biggest ferry' };
+      if (!fitsPort(state.port.level, bigger)) return { ok: false, message: `A ${FERRY_TYPES[bigger].name.toLowerCase()} needs a bigger port` };
+      const price = ferryUpgradePrice(size, bigger);
+      if (price > state.money) return { ok: false, message: `Not enough money: need ${usd(price)}` };
+      spend(state, 'construction', price);
+      state.port.ferries[cmd.index] = bigger;
+      return { ok: true, cost: price, message: `⛴️ Traded up to a ${FERRY_TYPES[bigger].name.toLowerCase()} for ${usd(price)}` };
+    }
+
+    case 'sellFerry': {
+      const size = state.port.ferries[cmd.index];
+      if (!size) return { ok: false, message: 'No such ferry' };
+      if (state.port.ferries.length <= 1) return { ok: false, message: 'Visitors need at least one ferry to reach the island' };
+      const refund = Math.floor(FERRY_TYPES[size].cost * FERRY_TRADE_IN);
+      state.port.ferries.splice(cmd.index, 1);
+      earn(state, 'sales', refund);
+      return { ok: true, cost: -refund, message: `Sold the ${FERRY_TYPES[size].name.toLowerCase()} for ${usd(refund)}` };
     }
 
     case 'closePark': {

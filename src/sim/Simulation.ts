@@ -9,6 +9,7 @@ import { hourlyRequests, updateRequests } from './systems/requests';
 import { stepJeeps } from './systems/rides';
 import { hourlyChoices } from './systems/choices';
 import { hourlyVisitors, stepVisitors } from './systems/visitors';
+import { landFerries } from './systems/ferries';
 import { hourlyEconomy } from './systems/economy';
 import { hourlyFences, hourlyHealth, stepEscapes } from './systems/incidents';
 import { stepStaff } from './systems/staff';
@@ -126,6 +127,7 @@ export class Simulation {
       hourlyRequests(ctx);
       hourlyChoices(ctx);
     }
+    landFerries(ctx);
     state.rngState = rng.snapshot;
   }
 

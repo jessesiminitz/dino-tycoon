@@ -87,3 +87,15 @@ export function groundTone(t: number): GroundTone {
   if (t < 19.5) return 'golden';
   return 'dull';
 }
+
+// --- Visitors -------------------------------------------------------------
+
+/** How far demand swings either side of normal: summer holidays peak, winter is quiet. */
+export const SEASON_DEMAND_SWING = 0.25;
+/** Year-day of the summer peak (mid-summer). */
+const PEAK_DAY = DAYS_PER_SEASON * 1.5;
+
+/** Demand multiplier through the year. It averages exactly 1 over a year. */
+export function seasonalDemand(t: number): number {
+  return 1 + SEASON_DEMAND_SWING * Math.cos((2 * Math.PI * (t - PEAK_DAY)) / DAYS_PER_YEAR);
+}

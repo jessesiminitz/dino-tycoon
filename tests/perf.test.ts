@@ -2,12 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { Simulation } from '../src/sim/Simulation';
 import { STEPS_PER_HOUR } from '../src/sim/systems/dinos';
 import { stressPark } from '../src/dev/stressPark';
+import { MAX_VISITORS } from '../src/sim/data/economy';
 
 describe('performance', () => {
   it('a worst-case park simulates well within a frame budget', () => {
     const s = stressPark();
     expect(s.dinos.length).toBe(30);
-    expect(s.visitors.length).toBe(150);
+    expect(s.visitors.length).toBe(MAX_VISITORS);
     const sim = new Simulation(s);
     // Warm up, then time two game days (at 4× speed that's ~48 s of play).
     for (let i = 0; i < STEPS_PER_HOUR * 6; i++) sim.step();

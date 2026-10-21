@@ -4,6 +4,7 @@ import { SPECIES_IDS } from '../sim/data/species';
 import type { Edge } from '../sim/grid';
 import { parcelGrid } from '../sim/land';
 import { spawnVisitor } from '../sim/systems/visitors';
+import { MAX_VISITORS } from '../sim/data/economy';
 import { Rng } from '../sim/rng';
 import { computeRegions } from '../sim/regions';
 import { Terrain } from '../sim/terrain';
@@ -11,7 +12,7 @@ import { Terrain } from '../sim/terrain';
 // Shared by the performance test and the in-browser frame-time check. Not part of the game build.
 /**
  * Worst-case park: the full 64×48 map owned, a grid of 12 paddocks, 30 dinos,
- * 150 visitors on a path network, 12 staff and plenty of feeders.
+ * A park full of visitors (MAX_VISITORS) on a path network, 12 staff and plenty of feeders.
  */
 export function stressPark(): GameState {
   const s = newGame(123);
@@ -53,7 +54,7 @@ export function stressPark(): GameState {
     applyCommand(s, { type: 'hireStaff', role });
   }
   const ctx = { state: s, rng: new Rng(5), regions: computeRegions(s), emit() {}, invalidateWorld() {} };
-  for (let i = 0; i < 150; i++) spawnVisitor(ctx, 60, 20);
+  for (let i = 0; i < MAX_VISITORS; i++) spawnVisitor(ctx, 60, 20);
   return s;
 }
 

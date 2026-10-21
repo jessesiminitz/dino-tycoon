@@ -1,5 +1,30 @@
 # Dino Tycoon: handoff notes
 
+## Ferry port and seasonal crowds — October 21, 2026
+
+Every visitor now arrives by ferry, and crowds follow the seasons (recommendations A and B from the DinoPark research). Saves are **v22**: the `port` field was added, and finance ledgers gain a `ferries` expense category.
+
+- **Rules** (`sim/data/port.ts`, `sim/port.ts`, `sim/systems/ferries.ts`): each open hour (08:00–18:00), the hour's demand (`expectedArrivals`, now × `seasonalDemand`) boards the ferries. Seats are shared round the boats; anyone without a seat is counted in `port.turnedAway`, and the news reports it at 19:00 if it reaches 8 or more. Each ferry docks at its slot in the hour (`dockStep`). Its passengers reach the gate `LANDING_STEPS` (3) steps later, where `admitVisitors` charges admission. Ferries carry nobody on a day the park closes early.
+- **Upgrades** (Park report → **Port** tab, or tap the pier → Port):
+  - **Port:** Jetty (start: 1 berth, up to a Ferry), Pier ($5,000: 2 berths, Big ferries allowed), Harbor ($12,000: 3 berths).
+  - **Ferries:** Water taxi (6 seats, $1,500), Ferry (9, $3,500), Big ferry (12, $7,000).
+  - **Trade-ins:** trading up costs the new boat's price minus half the old one's. Selling returns half. A park must keep at least one ferry.
+  - **Running costs:** charged at midnight under "Ferries & port".
+  - **Capacity:** a new park seats 9 visitors an hour; a full harbor seats 36.
+- **Visitor limit:** `MAX_VISITORS` rose from 150 to 300 as a phone-safety limit; the ferries are now the real limit. The perf test now fills the stress park to 300 and still passes.
+- **Existing saves and challenge parks** get a Pier with two Big ferries (24 an hour), slightly more than the old 150-visitor limit allowed (`LEGACY_PORT`, also set in `ParkBuilder.finish`).
+- **Seasons:** demand is ×1.25 at mid-summer and ×0.75 at mid-winter on a smooth cosine, averaging exactly 1 over the 28-day year. The season news lines now mention crowds.
+- **Art** (`render/PortLayer.ts`, `render/portArt.ts`):
+  - **Port:** the pier runs straight south from the gate (boardwalk over any beach) until its head and berths are open water. It is a jetty, a wooden pier with a T-head and ticket hut, or a stone harbor with a lighthouse.
+  - **Ferries:** code-painted for both art editions. They sail in from the south-west with a wake, tie up, drop a gangway, and up to 10 passengers walk to the gate as the real visitors arrive. Then they sail off south-east. The first ferry stays moored overnight with lit windows. The lamp and lighthouse glow at night.
+  - **Open sea past the map edge** (`OPEN_SEA_KEY` tile sprite): ferries near a gate close to the map edge no longer cross a seam. Unowned edge parcels carry their shade out over it, and the property line is no longer drawn along the map edge.
+- **Balance:**
+  - `economyBalance` gives its standard parks a matching port (jetty, pier and 2 big ferries, full harbor) and measures in fall, an average season. Net per day: $2.2k, $4.1k, $13.7k.
+  - In `challengeBalance`, the sensible Money Pit run adds ferries when they turn 20+ people away (Gold on day 88, $301k). The sensible Flood Season run patches storm-damaged sandbags each morning: without that, a different storm pattern breached them.
+  - Challenge targets are unchanged.
+
+Validation: 521 tests (12 new in `tests/port.test.ts`) and the production build passed. `scripts/checks/port-check.mjs` screenshots all three port levels, arriving/docked/landing ferries and the night mooring. It also taps the pier into the Port tab and builds a pier and buys a ferry there. It passed in both editions. `hud-check`, `info-overlap`, `overflow-check`, `typography-review` and `seasons-check` passed. Physical iPhone/iPad review is still to do.
+
 ## Visible seasons — October 21, 2026
 
 The island now has a 28-day year: four seasons of 7 days each (`src/sim/seasons.ts`). Seasons are derived from `state.hours`, so saves stay v21. Day 1 is spring day 4, so a new park opens green and in blossom. The HUD clock shows the season icon (🌸 ☀️ 🍂 ❄️); its tooltip names the season and the day within it. A news item announces each new season at 07:00.
@@ -8,7 +33,7 @@ The island now has a 28-day year: four seasons of 7 days each (`src/sim/seasons.
 - **Ground** (`render/SeasonLayer.ts`): grassy tiles are fresh in spring, golden in fall and dull in winter (the tileset canvas is repainted when the tone changes). Snow is a separate tile layer at depth 0.2, under paths, fences and buildings, so walkways look cleared. It settles late in fall, covers the island in winter and melts in early spring. Mountains and high ground keep it longest; beaches and forest floors hold less; it never lies on water, lava or hot springs. The snow tiles threshold one seamless 64-px drift pattern at 10 coverage levels, so a thaw creeps across the map without tile seams.
 - **Snowfall:** `WeatherScene` draws drifting flakes in six-hour spells while snow is settling (late fall to early winter).
 - **Setting:** "Season scenery" (`seasonScenery`, default on) sits beside World animation in Settings. Off shows summer all year. Flakes also need World animation.
-- **Not included: seasonal visitor numbers.** Recommendation A from the DinoPark research (busy and quiet seasons per island, equal yearly average) was tried and removed. Even a ±10% swing cut the Money Pit "sensible" run from $301k to $237k (±20%: $193k), short of its $250k Gold goal. The 150-visitor cap clips busy-season gains while quiet seasons hurt in full. It needs the capacity lever (recommendation B) or a challenge rebalance first; ask the owner.
+- **Seasonal visitor numbers** were added later with the ferry port (see above).
 
 Validation: all 509 tests (10 new in `tests/seasons.test.ts`) and the production build passed. `scripts/checks/seasons-check.mjs` screenshots opening day, thaw, blossom, summer, turning, fall colour, first snow and winter, checks the Season scenery switch, and writes an enlarged plant gallery (`tour/season-gallery.png`). It passed in both the pixel and cartoon editions. `hud-check`, `info-overlap`, `menu-pacing` and the pause/settings overflow check passed. In software-rendered Chrome, generating a season's new textures took up to about 0.3 s once per change of look; physical iPhone/iPad timing is unmeasured.
 
@@ -427,6 +452,7 @@ Shared helpers are in `scripts/checks/lib.mjs`: `HERE` (the folder as a real pat
 | `log-check.mjs`, `rag-check.mjs`, `repro-place.mjs` | alert log, music playback, build a paddock, feeder and dino by touch, and delete paths |
 | `pause-check.mjs` | popups keep a paused park paused; overlapping popups resume only when both close |
 | `seasons-check.mjs` | the year in screenshots (thaw, blossom, summer, fall colour, first snow, winter), the Season scenery switch, and an enlarged plant gallery |
+| `port-check.mjs` | jetty, pier and harbor with ferries arriving, docked and landing passengers, the night mooring, and tapping the pier into the Port tab to upgrade |
 | `care-check.mjs`, `habitats-check.mjs`, `attractions-check.mjs` | treat, pat ("Nope!") and photo; lagoon, aviary and dragging a pond; safari and the Paths shop |
 
 Scripts that step the sim by hand should use 16 steps per game-hour.

@@ -1225,6 +1225,18 @@ body.has-tracker .toasts {
   border-bottom: 1px solid rgba(60, 45, 20, 0.12);
 }
 
+.ferry-row {
+  flex-wrap: wrap;
+}
+
+.ferry-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 /* ---------- Title screen, pause menu, scenario result ---------- */
 
 body:not(.in-park) #hud,

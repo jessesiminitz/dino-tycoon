@@ -75,6 +75,8 @@ export interface Hud {
   /** Show the current tool's usage hint (or hide the panel in Look mode). */
   showHint(): void;
   toast(text: string, kind?: 'ok' | 'error'): void;
+  /** Opens the Park report at the ferry port. */
+  openPort(): void;
 }
 
 function modeHint(ui: UiState, state: GameState): string | null {
@@ -300,6 +302,9 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
     },
     showHint() {
       hud.showInfo(modeHint(ui, sim.state));
+    },
+    openPort() {
+      parkPanel.open('port');
     },
     toast(text, kind = 'ok') {
       const el = document.createElement('div');

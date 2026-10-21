@@ -1,5 +1,7 @@
 import { addPaintedTexture, fitPaintedImage } from './paintedTexture';
 import Phaser from 'phaser';
+import { isPortTile, portSite } from '../sim/port';
+import { PORT_LEVELS } from '../sim/data/port';
 import type { Simulation } from '../sim/Simulation';
 import { ALL_DECOR_KINDS, type DecorKind } from '../sim/data/decor';
 import { hash2 } from '../sim/rng';
@@ -156,6 +158,9 @@ export class SceneryLayer {
     for (let i = 0; i < state.paths.length; i++) if (state.paths[i]) busy.add(i);
     for (const o of [...state.buildings, ...state.feeders, ...state.decor]) busy.add(o.y * w + o.x);
     busy.add(state.entrance.y * w + state.entrance.x);
+    // Keep the boardwalk to the ferry port clear, at its biggest.
+    const site = portSite(state.map, state.entrance, PORT_LEVELS.length - 1);
+    for (let y = site.y0; y <= site.y1; y++) for (let x = site.headX0; x <= site.headX1; x++) if (isPortTile(site, x, y)) busy.add(y * w + x);
     for (let i = 0; i < state.map.tiles.length; i++) if (state.map.tiles[i] === Terrain.Pond) busy.add(i); // dug ponds
     // Reeds go when their marsh is drained; trees burn when lava reaches them.
     const scorched = (i: number) => state.map.tiles[i] === Terrain.Lava || state.map.tiles[i] === Terrain.LavaRock;

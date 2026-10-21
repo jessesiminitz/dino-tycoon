@@ -28,10 +28,10 @@ const usd = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`;
 
 const SEASON_NEWS_HOUR = 7;
 const SEASON_NEWS: Record<Season, string> = {
-  spring: 'The snow is melting and the trees are budding.',
-  summer: 'Everything is green and the days are warm.',
-  fall: 'The leaves are turning gold and red.',
-  winter: 'Snow is settling over the island. Brrr!',
+  spring: 'The snow is melting and the trees are budding. Visitors are coming back.',
+  summer: 'Everything is green and the days are warm. Holiday crowds are on the way: check your ferries have room!',
+  fall: 'The leaves are turning gold and red, and the summer crowds are thinning.',
+  winter: 'Snow is settling over the island. Brrr! Fewer visitors come in winter.',
 };
 
 /** First morning of a new season: say so in the news. */

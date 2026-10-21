@@ -63,14 +63,14 @@ describe('twelve new dinosaurs', () => {
     }
   });
 
-  it('loads old v21 rosters and round-trips the new animals without a schema change', () => {
+  it('loads saved rosters and round-trips the new animals without a schema change', () => {
     const before = newGame(7);
     const legacy = JSON.parse(JSON.stringify(before));
     expect(migrate(legacy)?.unlockedSpecies).toEqual(before.unlockedSpecies);
     const s = park(); s.unlockedSpecies = [...SPECIES_IDS];
     for (const species of EXPANSION_SPECIES_IDS) expect(applyCommand(s, { type: 'buyDino', species, x: 4, y: 4 }).ok).toBe(true);
     const restored = migrate(JSON.parse(JSON.stringify(s)));
-    expect(SAVE_VERSION).toBe(21);
+    expect(SAVE_VERSION).toBe(22);
     expect(restored?.dinos).toEqual(s.dinos);
     expect(restored?.unlockedSpecies).toEqual(s.unlockedSpecies);
   });

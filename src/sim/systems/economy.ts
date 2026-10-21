@@ -4,6 +4,7 @@ import { STAFF_TYPES } from '../data/staff';
 import { DECOR_TYPES } from '../data/decor';
 import { emptyLedger, loanPayment, operatingProfit, spend } from '../finance';
 import type { SimContext } from './context';
+import { portUpkeep } from '../port';
 
 const HISTORY_MONTHS = 12;
 const usd = (n: number) => `${n < 0 ? '-' : ''}$${Math.abs(Math.round(n)).toLocaleString('en-US')}`;
@@ -19,6 +20,7 @@ export function hourlyEconomy(ctx: SimContext): void {
   for (const m of state.staff) spend(state, 'wages', STAFF_TYPES[m.role].wage);
   for (const b of state.buildings) spend(state, 'upkeep', BUILDING_TYPES[b.kind].upkeep);
   for (const d of state.decor) if (DECOR_TYPES[d.kind].upkeep) spend(state, 'upkeep', DECOR_TYPES[d.kind].upkeep);
+  spend(state, 'ferries', portUpkeep(state.port));
   state.stats.bestDayVisitors = Math.max(state.stats.bestDayVisitors, finance.today.visitors);
   const dayProfit = operatingProfit(finance.today);
   state.stats.profitStreak = dayProfit > 0 ? state.stats.profitStreak + 1 : 0;
