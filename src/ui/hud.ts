@@ -1,3 +1,4 @@
+import { currentSeason, DAYS_PER_SEASON, SEASON_INFO } from '../sim/seasons';
 import { calendar, type GameState } from '../sim/GameState';
 import { ART_STYLE } from '../render/artStyle';
 import type { Simulation, Speed } from '../sim/Simulation';
@@ -179,10 +180,13 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
     // Minutes tick by in quarter hours, so the clock visibly moves on slow days.
     const minutes = Math.floor((sim.stepProgressInHour * 60) / 15) * 15;
     const time = `${String(hour).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-    clockEl.textContent = hudEl.classList.contains('fit-3') ? `D${day} ${time}` : `Day ${day} · ${time}`;
-    clockEl.title = sim.speed === 0 ? 'Paused' : sim.effectiveSpeed !== sim.speed
+    const { season, day: seasonDay } = currentSeason(state);
+    const { icon, name } = SEASON_INFO[season];
+    clockEl.textContent = hudEl.classList.contains('fit-3') ? `${icon}D${day} ${time}` : `${icon} Day ${day} · ${time}`;
+    const seasonNote = `${name}, day ${seasonDay} of ${DAYS_PER_SEASON}`;
+    clockEl.title = `${seasonNote} · ${sim.speed === 0 ? 'Paused' : sim.effectiveSpeed !== sim.speed
       ? `Night fast-forward · ${sim.effectiveSpeed}× speed until 05:00`
-      : `${sim.speed}× speed`;
+      : `${sim.speed}× speed`}`;
     clockEl.setAttribute('aria-label', `${clockEl.textContent} · ${clockEl.title}`);
     const width = moneyEl.textContent.length + clockEl.textContent.length;
     const left = hudEl.querySelector<HTMLElement>('.hud-group')!;

@@ -28,6 +28,7 @@ import { calendar } from '../sim/GameState';
 import { formatMoney } from '../ui/hud';
 import type { UiState } from '../ui/uiState';
 import { createTextures, CURSOR_KEY, TILE, TILESET_KEY, tileIndex } from './tileset';
+import { SeasonLayer } from './SeasonLayer';
 import { MAX_ZOOM, TouchController } from './input/TouchController';
 import { WorldLayers, type GhostStyle } from './WorldLayers';
 import { EntityLayer } from './EntityLayer';
@@ -68,6 +69,7 @@ export class ParkScene extends Phaser.Scene {
   private layers!: WorldLayers;
   private entities!: EntityLayer;
   private terrainFx!: TerrainFx;
+  private seasons!: SeasonLayer;
   private scenery!: SceneryLayer;
   private infoRefreshAt = 0;
   private worldTime = 0;
@@ -109,6 +111,7 @@ export class ParkScene extends Phaser.Scene {
     this.ground = tilemap.createLayer(0, tileset, 0, 0)!;
     this.drawnTerrain = Uint8Array.from(map.tiles);
     this.terrainFx = new TerrainFx(this, map);
+    this.seasons = new SeasonLayer(this, this.sim);
     this.scenery = new SceneryLayer(this, this.sim);
 
     this.layers = new WorldLayers(this, this.sim);
@@ -160,6 +163,7 @@ export class ParkScene extends Phaser.Scene {
     this.layers.updateDinoOcclusion(this.entities.obscuringFences);
     if(this.sim.speed!==0)this.worldTime+=Math.min(250,Math.max(0,delta))*this.sim.effectiveSpeed;
     const ambientTime=getSettings().animation?this.worldTime:0;
+    this.seasons.update();
     this.terrainFx.update(ambientTime);
     this.scenery.update(ambientTime);
     if ((this.entities.selection || this.selectedFence) && time >= this.infoRefreshAt) {
@@ -214,7 +218,10 @@ export class ParkScene extends Phaser.Scene {
       this.ground.putTileAt(tileIndex(tiles[i], x, y), x, y);
       changed = true;
     }
-    if (changed) this.terrainFx.rebuild();
+    if (changed) {
+      this.terrainFx.rebuild();
+      this.seasons.rebuild();
+    }
   }
 
   /** Garden tool with Pond (dig) or Drain marsh picked: tap or drag over ground. */

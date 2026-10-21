@@ -20,6 +20,8 @@ import { getSettings } from '../ui/settings';
 import { calendar } from '../sim/GameState';
 import { lightAt } from './daylight';
 import { depthAt, tileDepth, FOOT_Y } from './worldDepth';
+import { snowCover, yearDay } from '../sim/seasons';
+import { paintSeasonalPlant, plantKind, plantLook, type PlantLook } from './seasonArt';
 
 const TREE_VARIANTS = 3;
 /** Beach tiles that get a palm (away from the gate). */
@@ -56,6 +58,8 @@ export class SceneryLayer {
   private windEnabled = true;
   private plants: Phaser.GameObjects.Image[] = [];
   private ambience: Phaser.GameObjects.Graphics;
+  /** The game hour (or 'off') the plants were last dressed for. */
+  private seasonKey = '';
 
   constructor(
     private scene: Phaser.Scene,
@@ -169,6 +173,7 @@ export class SceneryLayer {
         .setDepth(tileDepth(d.y));
       fitPaintedImage(img);
       this.decor.set(d.id, img);
+      this.seasonKey = ''; // dress the new plant for the season
     }
     for (const [id, img] of this.decor) {
       if (!live.has(id)) {
@@ -226,6 +231,7 @@ export class SceneryLayer {
 
   /** Volcano smoke and glow, fountain sparkle, see-through trees. */
   update(time: number): void {
+    this.dressForSeason();
     this.fadeTreesInFront();
     this.updateWind(time);
     const g = this.fx.clear();
@@ -262,6 +268,45 @@ export class SceneryLayer {
     }
   }
 
+  /** Once a game hour: give every tree, bush and reed bed its look for the time of year. */
+  private dressForSeason(): void {
+    const { state } = this.sim;
+    const enabled = getSettings().seasonScenery;
+    const key = enabled ? String(state.hours) : 'off';
+    if (key === this.seasonKey) return;
+    this.seasonKey = key;
+    const t = yearDay(state);
+    const snow = snowCover(t);
+    for (const img of [...this.trees.values(), ...this.decor.values()]) {
+      let plain = img.getData('plainTexture') as string | undefined;
+      if (!plain) {
+        plain = (img.getData('rootTexture') as string | undefined) ?? img.texture.key;
+        img.setData('plainTexture', plain);
+      }
+      const kind = plantKind(plain);
+      if (kind === 'none') continue;
+      const look = enabled ? plantLook(kind, t, snow, hash2(Math.floor(img.x), Math.floor(img.y), 607)) : 'green';
+      const want = look === 'green' ? plain : this.seasonalTexture(plain, look);
+      if ((img.getData('rootTexture') ?? img.texture.key) === want) continue;
+      img.setData('rootTexture', want);
+      img.setTexture(want);
+      fitPaintedImage(img);
+      this.windTick = -1; // sway the new look
+    }
+  }
+
+  private seasonalTexture(plain: string, look: PlantLook): string {
+    const key = `${plain}~${look}`;
+    if (this.scene.textures.exists(key)) return key;
+    const base = this.scene.textures.get(plain);
+    const res = Number((base.get().customData as { renderResolution?: number }).renderResolution ?? 1);
+    let seed = 0;
+    for (const ch of plain) seed = (seed * 31 + ch.charCodeAt(0)) % 9973;
+    const texture = this.scene.textures.addCanvas(key, paintSeasonalPlant(base.getSourceImage() as HTMLCanvasElement, look, res, seed))!;
+    Object.assign(texture.get().customData, { renderResolution: res });
+    return key;
+  }
+
   private updateWind(time: number): void {
     const enabled = getSettings().animation;
     const tick = Math.floor(time / 120);
@@ -271,7 +316,7 @@ export class SceneryLayer {
       for (const img of [...this.trees.values(), ...this.decor.values()]) {
         const root = img.getData('rootTexture') as string | undefined;
         const base = root ?? img.texture.key;
-        if (!/^(tree-|palm-|bush-|reeds-|decor-(tree|palm|flowers)$)/.test(base)) continue;
+        if (!/^(tree-|palm-|bush-|reeds-|decor-(tree|palm|flowers)(~|$))/.test(base)) continue;
         if (!root) img.setData('rootTexture', base);
         if (!enabled) { img.setTexture(base); fitPaintedImage(img); continue; }
         if (!img.visible || img.x < view.left-40 || img.x > view.right+40 || img.y < view.top-8 || img.y-img.displayHeight > view.bottom) continue;

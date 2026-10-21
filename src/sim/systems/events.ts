@@ -7,6 +7,7 @@ import { allFenceEdges, fenceAt, fenceHp, setFenceHp } from '../fences';
 import type { SimContext } from './context';
 import { spawnVisitor } from './visitors';
 import { SCENARIOS } from '../data/scenarios';
+import { currentSeason, SEASON_INFO, type Season } from '../seasons';
 
 /** Rough hourly odds; e.g. a storm every ~12 days on average. */
 export const EVENT_CHANCES = {
@@ -25,11 +26,29 @@ const FILTHY_LITTER = 40;
 
 const usd = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`;
 
+const SEASON_NEWS_HOUR = 7;
+const SEASON_NEWS: Record<Season, string> = {
+  spring: 'The snow is melting and the trees are budding.',
+  summer: 'Everything is green and the days are warm.',
+  fall: 'The leaves are turning gold and red.',
+  winter: 'Snow is settling over the island. Brrr!',
+};
+
+/** First morning of a new season: say so in the news. */
+function announceSeason(ctx: SimContext): void {
+  const { season, day } = currentSeason(ctx.state);
+  if (day !== 1) return;
+  const { name, icon } = SEASON_INFO[season];
+  ctx.emit({ text: `${icon} ${name} is here! ${SEASON_NEWS[season]}`, kind: 'info' });
+}
+
 /** Hourly: run an ongoing storm, and maybe start something new. */
 export function hourlyEvents(ctx: SimContext): void {
   const { state, rng } = ctx;
   const { hour } = calendar(state);
   const open = hour >= OPEN_HOUR && hour <= LAST_ENTRY_HOUR;
+
+  if (hour === SEASON_NEWS_HOUR && state.hours > 24) announceSeason(ctx);
 
   if (state.stormHours > 0) {
     stormHour(ctx);

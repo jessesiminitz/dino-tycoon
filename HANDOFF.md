@@ -1,5 +1,17 @@
 # Dino Tycoon: handoff notes
 
+## Visible seasons — October 21, 2026
+
+The island now has a 28-day year: four seasons of 7 days each (`src/sim/seasons.ts`). Seasons are derived from `state.hours`, so saves stay v21. Day 1 is spring day 4, so a new park opens green and in blossom. The HUD clock shows the season icon (🌸 ☀️ 🍂 ❄️); its tooltip names the season and the day within it. A news item announces each new season at 07:00.
+
+- **Trees and plants** (`render/seasonArt.ts`, applied hourly in `SceneryLayer.dressForSeason`): broadleaf trees, bushes and garden trees go bare → buds → blossom (about half of them) or fresh green → summer green → turning → gold/orange/red → falling → bare twigs. Each plant is staggered by up to a day, so a forest changes gradually. Conifers, cycads, tree ferns, giants and palms stay green and get snow caps. Reeds go golden in fall and winter. Seasonal textures are generated lazily from the finished sprite (`<key>~<look>`), so this works for the Blender, cartoon and original painters. Wind sway uses the seasonal texture as its root.
+- **Ground** (`render/SeasonLayer.ts`): grassy tiles are fresh in spring, golden in fall and dull in winter (the tileset canvas is repainted when the tone changes). Snow is a separate tile layer at depth 0.2, under paths, fences and buildings, so walkways look cleared. It settles late in fall, covers the island in winter and melts in early spring. Mountains and high ground keep it longest; beaches and forest floors hold less; it never lies on water, lava or hot springs. The snow tiles threshold one seamless 64-px drift pattern at 10 coverage levels, so a thaw creeps across the map without tile seams.
+- **Snowfall:** `WeatherScene` draws drifting flakes in six-hour spells while snow is settling (late fall to early winter).
+- **Setting:** "Season scenery" (`seasonScenery`, default on) sits beside World animation in Settings. Off shows summer all year. Flakes also need World animation.
+- **Not included: seasonal visitor numbers.** Recommendation A from the DinoPark research (busy and quiet seasons per island, equal yearly average) was tried and removed. Even a ±10% swing cut the Money Pit "sensible" run from $301k to $237k (±20%: $193k), short of its $250k Gold goal. The 150-visitor cap clips busy-season gains while quiet seasons hurt in full. It needs the capacity lever (recommendation B) or a challenge rebalance first; ask the owner.
+
+Validation: all 509 tests (10 new in `tests/seasons.test.ts`) and the production build passed. `scripts/checks/seasons-check.mjs` screenshots opening day, thaw, blossom, summer, turning, fall colour, first snow and winter, checks the Season scenery switch, and writes an enlarged plant gallery (`tour/season-gallery.png`). It passed in both the pixel and cartoon editions. `hud-check`, `info-overlap`, `menu-pacing` and the pause/settings overflow check passed. In software-rendered Chrome, generating a season's new textures took up to about 0.3 s once per change of look; physical iPhone/iPad timing is unmeasured.
+
 ## Standardized in-park menu typography — October 18, 2026
 
 `parkTypography.css`, imported after the theme/hatching styles, gives every in-park .modal and native .hatch-dialog the same system font and disables the inherited VT323 font-size adjustment. The main title and map HUD retain their existing typography. Reports, People, News, requests, shops, catalog, guide, pause/settings and hatch dialogs use 14px body/control text, 12px secondary text, 18px panel headings/numeric values and 15px section headings. Local --pixel-font points to the menu font so legacy/cartoon heading and control rules resolve consistently. Name/text inputs remain 16px to avoid Safari focus zoom; menu buttons keep at least 44px height, including short-screen pause buttons. No save or gameplay changes.
@@ -414,6 +426,7 @@ Shared helpers are in `scripts/checks/lib.mjs`: `HERE` (the folder as a real pat
 | `items-check.mjs` | carried items, pee and poop, litter, dung, janitor, trash can |
 | `log-check.mjs`, `rag-check.mjs`, `repro-place.mjs` | alert log, music playback, build a paddock, feeder and dino by touch, and delete paths |
 | `pause-check.mjs` | popups keep a paused park paused; overlapping popups resume only when both close |
+| `seasons-check.mjs` | the year in screenshots (thaw, blossom, summer, fall colour, first snow, winter), the Season scenery switch, and an enlarged plant gallery |
 | `care-check.mjs`, `habitats-check.mjs`, `attractions-check.mjs` | treat, pat ("Nope!") and photo; lagoon, aviary and dragging a pond; safari and the Paths shop |
 
 Scripts that step the sim by hand should use 16 steps per game-hour.

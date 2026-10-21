@@ -5,6 +5,8 @@ import { calendar } from '../sim/GameState';
 import { getSettings } from '../ui/settings';
 import { TILE } from './tileset';
 import { lightAt } from './daylight';
+import { snowFalling, yearDay } from '../sim/seasons';
+import { hash2 } from '../sim/rng';
 
 /** Night sky over the park, and how much of it a full night puts on screen. */
 const NIGHT = 0x0a1430;
@@ -15,6 +17,9 @@ const LIGHTS = { lamp: 3.2, building: 2.2, gate: 3, jeep: 1.6 } as const;
 const LIT_BUILDINGS = new Set(['restaurant', 'snackstall', 'giftshop', 'restroom', 'station', 'tower', 'petting']);
 
 const DROPS = 140;
+const FLAKES = 90;
+/** Share of six-hour spells in the snowy weeks when it is actually snowing. */
+const SNOWY_SPELLS = 0.6;
 const FADE_PER_MS = 1 / 1500;
 /** Chance per frame (at 60 fps) of a lightning flash during a storm. */
 const LIGHTNING_CHANCE = 0.004;
@@ -41,6 +46,8 @@ export class WeatherScene extends Phaser.Scene {
   /** What the night layer was last drawn for: it's only redrawn when this changes. */
   private nightKey = '';
   private drops: Drop[] = [];
+  private flakes: Drop[] = [];
+  private snowing = 0;
   private intensity = 0;
   private flash = 0;
 
@@ -74,6 +81,7 @@ export class WeatherScene extends Phaser.Scene {
     this.scale.on('resize', (size: Phaser.Structs.Size) => this.night.resize(size.width, size.height));
     this.g = this.add.graphics();
     for (let i = 0; i < DROPS; i++) this.drops.push(this.newDrop(true));
+    for (let i = 0; i < FLAKES; i++) this.flakes.push(this.newDrop(true));
   }
 
   private newDrop(anywhere: boolean): Drop {
@@ -136,6 +144,27 @@ export class WeatherScene extends Phaser.Scene {
     return warm * strength;
   }
 
+  /** Flakes drifting down while snow is settling late in fall and early in winter. */
+  private drawSnowfall(g: Phaser.GameObjects.Graphics, delta: number): void {
+    const settings = getSettings();
+    const t = yearDay(this.sim.state, this.sim.stepProgressInHour);
+    const spell = Math.floor(this.sim.state.hours / 6);
+    const falling = settings.seasonScenery && settings.animation && snowFalling(t) && hash2(spell, 5, 8123) < SNOWY_SPELLS;
+    this.snowing = Phaser.Math.Clamp(this.snowing + (falling ? 1 : -1) * delta * FADE_PER_MS, 0, 1);
+    if (this.snowing <= 0) return;
+    const { height } = this.scale;
+    const pace = delta * this.sim.effectiveSpeed * 0.12;
+    const shown = Math.round(FLAKES * this.snowing);
+    for (let i = 0; i < shown; i++) {
+      const f = this.flakes[i];
+      f.y += f.speed * pace;
+      f.x += Math.sin((f.y + i * 37) / 40) * 0.25 * f.speed * Math.min(1, pace);
+      if (f.y > height) Object.assign(f, this.newDrop(false));
+      const size = f.speed > 0.85 ? 2 : 1;
+      g.fillStyle(0xffffff, 0.85 * this.snowing).fillRect(Math.round(f.x), Math.round(f.y), size, size);
+    }
+  }
+
   update(_time: number, delta: number): void {
     if (this.sim.speed === 0) delta = 0;
     const warm = this.drawNight();
@@ -146,6 +175,7 @@ export class WeatherScene extends Phaser.Scene {
     const { width, height } = this.scale;
     // Sunset and sunrise glow.
     if (warm > 0.01) g.fillStyle(0xff8a3a, 0.16 * warm).fillRect(0, 0, width, height);
+    this.drawSnowfall(g, delta);
     if (this.intensity <= 0) return;
 
     g.fillStyle(0x0b1a2a, 0.3 * this.intensity).fillRect(0, 0, width, height);
