@@ -151,11 +151,13 @@ def quadruped(scene, phase, asset):
             base=ellipse_edge(cx,cy,rx,ry,x)+1.5
             profile(scene,'plate'+str(i),[(x-2,base),(x-1,base-5+i*.5),(x+2,base-1),(x+2,base+2)],'A',-3)
             profile(scene,'plate_light'+str(i),[(x-1,base-3.5+i*.5),(x+1,base-1),(x-1,base-1)],'G',-4)
-        for i,x in enumerate((-12,-5,3,11,18)):
-            base=profile_edge(tail,x)+1
-            limb(scene,'tail_spike'+str(i),[(x,base,.85),(x-2.5,base-6.5+i*.5,.25)],'W',-3)
-            attach(scene,'tail_spike'+str(i),'tail',x)
-        profile(scene,'shoulder_spike',[(31,22),(30,28),(34,24)],'W',-5)
+        # Plates give way to tall spikes from mid-back to the tail tip, all raked backward;
+        # the long parascapular spike juts back from the shoulder, low on the flank.
+        for i,x in enumerate((-10,-2,6,14,21)):
+            base=(profile_edge(tail,x) if x <= 18 else ellipse_edge(cx,cy,rx,ry,x))+1
+            limb(scene,'tail_spike'+str(i),[(x,base,1.1),(x-4.5,base-5.5-i*.4,.35)],'W',-3)
+            if x <= 18: attach(scene,'tail_spike'+str(i),'tail',x)
+        profile(scene,'shoulder_spike',[(37,20.5),(28,22.5),(36,24)],'W',-5)
         limb(scene,'neck',[(36,24,3),(42,26,2)],'B',-1)
         ellipse(scene,'head',46,26,4.5,2.5,'B',-4)
         eye(scene,45,25)
