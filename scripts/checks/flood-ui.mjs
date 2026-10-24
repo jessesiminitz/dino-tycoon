@@ -14,7 +14,7 @@ const start = async () => {
   await page.goto('http://localhost:5173/', { waitUntil: 'load' });
   await page.evaluate(() => localStorage.setItem('dino-tycoon-challenges', JSON.stringify({ 'great-escape': 1, 'fire-mountain': 1 })));
   await page.reload({ waitUntil: 'load' }); await sleep(800);
-  await click('[data-go="new"]'); await click('[data-folder="challenges"]');
+  await click('[data-go="challenges"]'); await click('[data-folder="challenges"]');
 };
 await start();
 await shot('0-menu');

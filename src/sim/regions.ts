@@ -1,6 +1,6 @@
 import type { GameState } from './GameState';
 import { FENCE_TYPES, NET, type FenceTypeId } from './data/fences';
-import { fenceAt } from './fences';
+import { fenceAt, fenceTypeAt } from './fences';
 import { isTileOwned } from './land';
 import { isGround, isLand, Terrain } from './terrain';
 
@@ -29,8 +29,11 @@ export interface RegionMap {
  *  - 'public'  contains the park gate: the visitor grounds.
  *  - 'paddock' lies entirely on land you own and is closed off from the gate.
  *  - 'wild'    touches land you don't own, so it isn't enclosed.
+ * With `asBuilt`, broken fences still count: the paddocks as built, which an
+ * animal only leaves by stepping out through the gap.
  */
-export function computeRegions(state: GameState): RegionMap {
+export function computeRegions(state: GameState, asBuilt = false): RegionMap {
+  const blocker = asBuilt ? fenceTypeAt : fenceAt;
   const { width, height, tiles } = state.map;
   const tileRegion = new Int32Array(width * height).fill(-1);
   const regions: Region[] = [];
@@ -82,7 +85,7 @@ export function computeRegions(state: GameState): RegionMap {
           water.add(n);
           continue;
         }
-        const fence = fenceAt(state, { dir, x: ex, y: ey });
+        const fence = blocker(state, { dir, x: ex, y: ey });
         if (fence !== 0) {
           noteFence(fence);
           continue;

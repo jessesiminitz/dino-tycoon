@@ -1,5 +1,5 @@
 import { computeRegions } from './regions';
-import { startScenario, type GameState, type IslandOptions } from './GameState';
+import { startScenario, type GameState, type IslandOptions, type ParkOptions } from './GameState';
 import type { ScenarioId } from './data/scenarios';
 import { ParkBuilder } from './parkBuilder';
 import { isLand } from './terrain';
@@ -231,8 +231,8 @@ const SETUPS: Partial<Record<ScenarioId, (b: ParkBuilder) => void>> = {
 };
 
 /** A new park for any scenario: an empty island for New Builds, or the prebuilt park for a challenge. */
-export function newPark(id: ScenarioId, randomSeed: number, island: IslandOptions = {}): GameState {
-  const state = startScenario(id, randomSeed, island);
+export function newPark(id: ScenarioId, randomSeed: number, island: IslandOptions = {}, options: ParkOptions = {}): GameState {
+  const state = startScenario(id, randomSeed, island, options);
   SETUPS[id]?.(new ParkBuilder(state));
   return state;
 }

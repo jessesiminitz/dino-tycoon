@@ -35,6 +35,8 @@ export const CLEAN_RADIUS = 1;
 export const REFILL_BELOW = 0.4;
 /** Workers repair fences below this condition. */
 export const REPAIR_BELOW = 60;
+/** A fence this weak is one storm hit from falling: workers fix it first. */
+export const BADLY_DAMAGED = 30;
 /** Fraction of a fence's build cost charged to bring it back to full condition. */
 export const REPAIR_COST_FRACTION = 0.3;
 export const MEDICINE_COST = 150;

@@ -7,6 +7,7 @@ import { allFenceEdges, fenceAt, fenceHp, setFenceHp } from '../fences';
 import type { SimContext } from './context';
 import { spawnVisitor } from './visitors';
 import { SCENARIOS } from '../data/scenarios';
+import { BADLY_DAMAGED } from '../data/staff';
 import { currentSeason, SEASON_INFO, type Season } from '../seasons';
 
 /** Rough hourly odds; e.g. a storm every ~12 days on average. */
@@ -74,23 +75,35 @@ const HEAVY_HIT_CHANCE = 0.01;
 /**
  * Each storm hour batters every fence; now and then a falling tree does real
  * damage. Stronger fences shrug off more of it (concrete takes a quarter of
- * what wood does), so building well pays off in bad weather.
+ * what wood does), so building well pays off in bad weather. A sound fence
+ * never falls to one hit: it is left badly damaged, with a warning, so a
+ * worker has time to patch it before the next one.
  */
 export function stormHour(ctx: SimContext): void {
   const { state, rng } = ctx;
   let broken = 0;
+  let weakened = 0;
   for (const e of allFenceEdges(state)) {
     const type = fenceAt(state, e);
     if (!type) continue;
     const toughness = 1.5 / FENCE_TYPES[type].strength;
     const hit = (rng.chance(HEAVY_HIT_CHANCE) ? rng.int(30, 50) : rng.int(1, 3)) * toughness;
-    const next = fenceHp(state, e) - hit;
+    const hp = fenceHp(state, e);
+    const next = hp >= BADLY_DAMAGED ? Math.max(BADLY_DAMAGED / 2, hp - hit) : hp - hit;
     setFenceHp(state, e, next);
     if (next <= 0) broken++;
+    else if (hp >= BADLY_DAMAGED && next < BADLY_DAMAGED) weakened++;
   }
   if (broken > 0) {
     ctx.invalidateWorld();
     ctx.emit({ text: `⛈️ The storm knocked down ${broken} fence segment${broken === 1 ? '' : 's'}!`, kind: 'bad' });
+  }
+  if (weakened > 0) {
+    const workers = state.staff.some((m) => m.role === 'worker');
+    ctx.emit({
+      text: `⚠️ The storm badly damaged ${weakened} fence segment${weakened === 1 ? '' : 's'}. ${workers ? 'Workers will patch them first.' : 'Hire a worker to patch them before they fall!'}`,
+      kind: 'bad',
+    });
   }
 }
 

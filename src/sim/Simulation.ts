@@ -47,6 +47,7 @@ export class Simulation {
   private eventListeners = new Set<EventListener>();
   private actionListeners = new Set<(action: DinoAction) => void>();
   private regionCache?: { revision: number; map: RegionMap };
+  private enclosureCache?: { revision: number; map: RegionMap };
 
   constructor(public state: GameState) {
     unlockCompletedFossils(state);
@@ -100,6 +101,7 @@ export class Simulation {
       interactiveHatching: this.interactiveHatching,
       rng,
       regions: this.regions(),
+      enclosures: this.enclosures(),
       emit: (e) => this.emitEvent(e),
       animate: (action) => { for (const fn of this.actionListeners) fn(action); },
       invalidateWorld: () => this.worldRevision++,
@@ -151,6 +153,14 @@ export class Simulation {
       this.regionCache = { revision: this.worldRevision, map: computeRegions(this.state) };
     }
     return this.regionCache.map;
+  }
+
+  /** Paddocks as built, with broken fences still closing them. */
+  enclosures(): RegionMap {
+    if (this.enclosureCache?.revision !== this.worldRevision) {
+      this.enclosureCache = { revision: this.worldRevision, map: computeRegions(this.state, true) };
+    }
+    return this.enclosureCache.map;
   }
 
   setSpeed(speed: Speed): void {

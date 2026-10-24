@@ -15,7 +15,7 @@ await page.goto('http://localhost:5173/', { waitUntil: 'networkidle0' });
 await page.evaluate(async () => { localStorage.clear(); await new Promise((r) => { const q = indexedDB.deleteDatabase('dino-tycoon'); q.onsuccess = q.onerror = q.onblocked = r; }); });
 await page.reload({ waitUntil: 'networkidle0' });
 await sleep(500);
-await tap('[data-go="new"]');
+await tap('[data-go="challenges"]');
 await tap('[data-scenario="first-steps"]');
 await sleep(900);
 await tap('.tutorial-skip-all');

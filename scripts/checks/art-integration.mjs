@@ -21,19 +21,22 @@ try {
     const { paintDino, dinoShape } = await import('/src/render/dinoArt.ts');
     const {dinoWorldScale}=await import('/src/render/dinoSize.ts');
     const { SPECIES } = await import('/src/sim/data/species.ts');
+    const { handDrawnRex } = await import('/src/render/parkMotion.ts');
     const failures=[];
     for (const id of Object.keys(SPECIES)) {
+      // The hand-drawn T-rex has its own palette and canvas (fun-moves-check.mjs covers it).
+      const rex=handDrawnRex(id,'blender');
       const sp=SPECIES[id], expected=paintDino(sp).toDataURL();
       const card=[...document.querySelectorAll('#catalog .species-card')].find((c) => c.querySelector('h3').textContent===sp.name);
       if (card.querySelector('img').src!==expected) failures.push(`${id} catalog mismatch`);
       if (document.querySelector(`#guide .guide-item[data-species="${id}"] img`).src!==expected) failures.push(`${id} guide mismatch`);
       const skin={...sp,art:{...sp.art,body:'#f040a0',dark:'#541c69',accent:'#f7d45c'}};
-      if (paintDino(skin).toDataURL()===expected) failures.push(`${id} palette override ignored`);
+      if (!rex && paintDino(skin).toDataURL()===expected) failures.push(`${id} palette override ignored`);
       for (let f=0;f<4;f++) for (const baby of [false,true]) {
         const tex=game.textures.get(`dino-${id}-${f}${baby ? '-baby' : ''}`).getSourceImage();
         if (tex.toDataURL()!==paintDino(sp,f,baby,'blender',dinoWorldScale(id, 'blender')).toDataURL()) failures.push(`${id}:${f}:${baby} texture mismatch`);
         const shape=dinoShape(sp,f,baby,'blender',dinoWorldScale(id, 'blender'));
-        if (tex.width!==shape[0].length+2 || tex.height!==shape.length+2) failures.push(`${id} canvas anchor changed`);
+        if (!rex && (tex.width!==shape[0].length+2 || tex.height!==shape.length+2)) failures.push(`${id} canvas anchor changed`);
       }
     }
     const {BUILDING_TYPES}=await import('/src/sim/data/economy.ts');
@@ -53,13 +56,12 @@ try {
     const {sim,game}=window.__dino,scene=game.scene.getScene('park');
     const {SPECIES_IDS}=await import('/src/sim/data/species.ts');
     const {BLENDER_MOTION}=await import('/src/render/generated/blenderMotion.ts');
-    const {motionWalkSpeed}=await import('/src/render/immersionMotion.ts');
-    const {dinoWorldScale}=await import('/src/render/dinoSize.ts');
+    const {walkCycle}=await import('/src/render/parkMotion.ts');
     const failures=[],saved=sim.state.dinos;sim.state.hours=4;sim.speed=1;
     for(const [i,species] of SPECIES_IDS.entries())for(const left of [false,true]){
       const d={...saved[0],species,id:98000+i,x:22,px:left?23:21,y:20,py:20,baby:false,hunger:0};
       sim.state.dinos=[d];scene.entities.motions.delete(d.id);
-      const cycle=motionWalkSpeed(species)*BLENDER_MOTION[species].walk.durationMs/1000*dinoWorldScale(species,'blender');
+      const cycle=walkCycle(species,false,'blender');
       for(let pose=0;pose<8;pose++){
         Object.defineProperty(sim,'stepProgress',{configurable:true,get:()=>pose*cycle/128});
         scene.entities.update(1000);const img=scene.entities.dinos.get(d.id);
@@ -100,8 +102,9 @@ try {
     await page.setViewport({width,height,deviceScaleFactor:1,isMobile:true,hasTouch:true});
     await page.evaluate(() => {
       document.querySelectorAll('.modal').forEach(m=>m.classList.add('hidden'));
-      document.getElementById('catalog').classList.remove('hidden');
+      document.getElementById('btn-catalog').click();
     });
+    await new Promise(r=>setTimeout(r,400));
     const fits=await page.evaluate(() => {
       const card=document.querySelector('#catalog .modal-card').getBoundingClientRect();
       const imgs=[...document.querySelectorAll('#catalog .species-art')];
@@ -116,12 +119,13 @@ try {
   await page.goto(`${url}/scripts/art/review.html`, {waitUntil:'networkidle0'});
   const expectedAssets=await page.evaluate(async()=>{const {SPECIES_IDS}=await import('/src/sim/data/species.ts');const {BUILDING_TYPES}=await import('/src/sim/data/economy.ts');const {BLENDER_ENVIRONMENT,BLENDER_TERRAIN}=await import('/src/render/generated/blenderEnvironment.ts');return SPECIES_IDS.length+Object.keys(BUILDING_TYPES).length+Object.keys(BLENDER_ENVIRONMENT).length+Object.keys(BLENDER_TERRAIN).length;});
   check('all registered assets are available in the comparison', await page.$$eval('#asset option',options=>options.length)===expectedAssets);
-  check('interactive comparison loads', await page.evaluate(async()=>{
-    const {BLENDER_ART}=await import('/src/render/generated/blenderArt.ts');
-    return document.getElementById('blender').width===(BLENDER_ART.tyrannosaurus.width+2)*4;
-  }));
   await page.screenshot({path:`${out}comparison-rex.png`});
   await page.select('#asset','triceratops');
+  // The T-rex shown first is hand-drawn now; the Triceratops is still straight from Blender.
+  check('interactive comparison loads', await page.evaluate(async()=>{
+    const {BLENDER_ART}=await import('/src/render/generated/blenderArt.ts');
+    return document.getElementById('blender').width===(BLENDER_ART.triceratops.width+2)*4;
+  }));
   await page.screenshot({path:`${out}comparison-triceratops.png`});
   await page.select('#asset','tower');
   check('tower comparison preserves dimensions',await page.$eval('#blender',c=>c.width===24*4 && c.height===42*4));

@@ -3,6 +3,7 @@ import { CLOSE_HOUR, OPEN_HOUR } from '../data/economy';
 import { FEEDER_TYPES } from '../data/feeders';
 import { SPECIES, type SpeciesId } from '../data/species';
 import { earn } from '../finance';
+import { ferryCapacity, newPort } from '../port';
 import type { RegionMap } from '../regions';
 import { Rng } from '../rng';
 import type { GameEvent, SimContext } from './context';
@@ -44,6 +45,9 @@ const placesToEat = (state: GameState) => state.buildings.filter((b) => b.kind =
 const pathDirt = (state: GameState) => state.messes.filter((m) => m.kind !== 'dung').length;
 const feedersOk = (state: GameState) => state.feeders.filter((f) => f.stock >= FEEDER_TYPES[f.kind].capacity / 2).length;
 const hasPaths = (state: GameState) => state.paths.some((p) => p === 1);
+/** The ferry office speaks up only in a park's first week, while it still has its first boat. */
+const FERRY_TIP_DAYS = 7;
+const STARTING_SEATS = ferryCapacity(newPort());
 
 type Draft = Omit<ParkRequest, 'id' | 'createdHour' | 'status' | 'progress'> & { progress?: number };
 
@@ -161,6 +165,20 @@ const TEMPLATES: Record<RequestKind, (state: GameState, regions: RegionMap, rng:
       reward: { money: 300, reputation: 1 },
     };
   },
+  ferry(state, regions) {
+    if (calendar(state).day > FERRY_TIP_DAYS || !hasPaths(state) || ferryCapacity(state.port) > STARTING_SEATS) return null;
+    // Only once the boat is filling up: people were left on the quay yesterday, or nearly will be.
+    if (state.port.lastTurnedAway === 0 && expectedArrivals(state, regions) < STARTING_SEATS * 0.8) return null;
+    const hours = 48;
+    return {
+      kind: 'ferry',
+      icon: '⛴️',
+      target: STARTING_SEATS + 1,
+      text: `The ferry office says the boat is getting full: build a pier at the Port (Park report → Port) and add a second ferry by ${clock(state, state.hours + hours)} the day after tomorrow`,
+      expiresHour: state.hours + hours,
+      reward: { money: 750, reputation: 1 },
+    };
+  },
 };
 
 const KINDS = Object.keys(TEMPLATES) as RequestKind[];
@@ -190,6 +208,9 @@ function evaluate(state: GameState, r: ParkRequest): boolean {
     case 'feeders':
       r.progress = feedersOk(state);
       return state.hours >= r.expiresHour && r.progress >= state.feeders.length;
+    case 'ferry':
+      r.progress = ferryCapacity(state.port);
+      return r.progress >= r.target;
   }
 }
 
@@ -204,6 +225,7 @@ function short(r: ParkRequest): string {
     treats: 'spoiling the dinos',
     clean: "the mayor's visit",
     feeders: 'the vet check',
+    ferry: 'the ferry office',
   };
   return names[r.kind];
 }

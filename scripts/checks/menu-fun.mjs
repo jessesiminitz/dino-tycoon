@@ -2,7 +2,7 @@ import puppeteer from 'puppeteer-core';
 import { mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { ready, check, finish } from './lib.mjs';
-const art=process.env.ART_STYLE ?? 'blender', base=process.env.BASE_URL ?? 'http://127.0.0.1:5174';
+const art=process.env.ART_STYLE ?? 'blender', base=process.env.BASE_URL ?? 'http://localhost:5173';
 const out=fileURLToPath(new URL(`../../docs/menu-fun/${art}/`,import.meta.url));mkdirSync(out,{recursive:true});
 const browser=await puppeteer.launch({executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true,args:['--use-angle=swiftshader','--enable-unsafe-swiftshader']});
 const errors=[];
@@ -48,12 +48,13 @@ try {
  await page.goto(`${base}/?quickstart&stress&art=${art}`,{waitUntil:'load'});await ready(page);
  const care=await page.evaluate(async()=>{
   const {sim,game}=window.__dino; const scene=game.scene.getScene('park'),entities=scene.entities;
-  game.loop.sleep();sim.setSpeed(0);sim.state.hours=4;
+  game.loop.sleep();sim.setSpeed(0);sim.state.hours=12; // midday: awake
   const {updateSettings}=await import('/src/ui/settings.ts');updateSettings({animation:true});
   const d=sim.state.dinos[0];Object.assign(d,{hunger:10,sick:false,escaped:false,lastPatHour:-999,lastTreatHour:-999});
   let clock=game.loop.now;entities.update(clock);const base=entities.dinoSprite(d.id),angle=base.angle,x=d.x,y=d.y,hours=sim.state.hours;
   scene.care(d.id,'patDino');for(let i=0;i<3;i++)entities.update(clock+=100);
-  const happy=entities.dinoSprite(d.id).angle!==angle;
+  // the pixel art dances when patted; the cartoon edition tilts
+  const happy=String(entities.dinoSprite(d.id).frame.name).startsWith('dance-')||entities.dinoSprite(d.id).angle!==angle;
   for(let i=0;i<15;i++)entities.update(clock+=100);
   const reset=entities.dinoSprite(d.id).angle===0;
   scene.care(d.id,'treatDino');entities.update(clock+=200);

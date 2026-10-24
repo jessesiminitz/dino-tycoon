@@ -442,7 +442,7 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
   sandbox: {
     id: 'sandbox',
     name: 'Sandbox',
-    blurb: 'No goals, no deadline, every species available and a healthy budget. Build the park of your dreams.',
+    blurb: 'No deadline and a healthy budget. Dig up fossils to discover new species, or start with every one. Build the park of your dreams.',
     difficulty: 0,
     startMoney: 100_000,
     seed: null,

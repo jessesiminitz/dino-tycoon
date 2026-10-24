@@ -3,7 +3,7 @@ import { mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { ready, check, finish } from './lib.mjs';
 const art=process.env.ART_STYLE ?? 'blender';
-const base=process.env.BASE_URL ?? 'http://127.0.0.1:5174';
+const base=process.env.BASE_URL ?? 'http://localhost:5173';
 const out=fileURLToPath(new URL(`../../docs/hatching-review/${art==='cartoon'?'cartoon/':''}`,import.meta.url));
 mkdirSync(out,{recursive:true});
 const browser=await puppeteer.launch({executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true,args:['--use-angle=swiftshader','--enable-unsafe-swiftshader']});
@@ -17,6 +17,8 @@ try {
     await page.evaluate(async ({id,extra})=>{
       const {sim}=window.__dino; const {HATCH_HOURS}=await import('/src/sim/systems/breeding.ts');
       const {habitatOf}=await import('/src/sim/data/species.ts');
+      // After hours, so no decision card turns up to hold the pause.
+      const {calendar}=await import('/src/sim/GameState.ts');sim.state.pendingChoice=null;while(calendar(sim.state).hour!==20)sim.state.hours++;
       sim.setSpeed(3);sim.state.eggs.push({id:sim.state.nextId++,species:id,x:4,y:4,laidHour:sim.state.hours-HATCH_HOURS});
       if(extra)sim.state.eggs.push({id:sim.state.nextId++,species:'triceratops',x:5,y:4,laidHour:sim.state.hours-HATCH_HOURS});
       if(habitatOf(id)==='water') {sim.state.stepInHour=23; const {STEPS_PER_HOUR}=await import('/src/sim/systems/dinos.ts');sim.state.stepInHour=STEPS_PER_HOUR-1;sim.step();}

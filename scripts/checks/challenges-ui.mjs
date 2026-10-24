@@ -26,7 +26,7 @@ for (const unlocked of [false, true]) {
   }, unlocked);
   await page.reload({ waitUntil: 'load' });
   await page.evaluate(() => document.fonts.ready); await sleep(700);
-  await click('[data-go="new"]');
+  await click('[data-go="challenges"]');
   if (!unlocked) await shot('0-builds');
   await click('[data-folder="challenges"]');
   await shot(`1-challenges-${unlocked ? 'unlocked' : 'locked'}`);
@@ -49,7 +49,7 @@ await shot('4-loose-dinos');
 // The Money Pit's money report.
 await page.goto('http://localhost:5173/', { waitUntil: 'load' });
 await sleep(600);
-await click('[data-go="new"]'); await click('[data-folder="challenges"]');
+await click('[data-go="challenges"]'); await click('[data-folder="challenges"]');
 await click('[data-scenario="money-pit"]');
 await page.evaluate(() => document.querySelector('[data-use]')?.click()); await sleep(1800);
 await click('#briefing [data-go]');

@@ -107,9 +107,13 @@ describe('aviaries', () => {
     expect(regions.regions[regions.tileRegion[idx(17, 5)]].covered).toBe(true);
     expect(regions.regions[regions.tileRegion[idx(5, 5)]].covered).toBe(false);
     expect(applyCommand(s, { type: 'buyDino', species: 'pteranodon', x: 17, y: 5 }).ok).toBe(true);
-    // Break one net segment and it's no longer an aviary: the flyer is out.
+    // Break one net segment and it's no longer an aviary: the flyer is out once it flies through the gap.
     setFenceHp(s, edges[0], 0);
     const sim = new Simulation(s);
+    sim.step();
+    expect(s.dinos[0].escaped).toBe(false);
+    s.dinos[0].x = 12;
+    s.dinos[0].path = [];
     sim.step();
     expect(s.dinos[0].escaped).toBe(true);
   });

@@ -13,7 +13,7 @@ const click = async (sel) => { await page.evaluate((s) => document.querySelector
 await page.goto('http://localhost:5173/', { waitUntil: 'load' });
 await page.evaluate(() => localStorage.setItem('dino-tycoon-challenges', JSON.stringify({ 'great-escape': 1 })));
 await page.reload({ waitUntil: 'load' }); await sleep(800);
-await click('[data-go="new"]'); await click('[data-folder="challenges"]');
+await click('[data-go="challenges"]'); await click('[data-folder="challenges"]');
 await shot('0-menu');
 await click('[data-scenario="fire-mountain"]');
 await page.evaluate(() => document.querySelector('[data-use]')?.click()); await sleep(1500);

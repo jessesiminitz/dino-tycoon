@@ -1,5 +1,31 @@
 # Dino Tycoon: handoff notes
 
+## Audit fixes, balance and free-play goals — October 24, 2026
+
+This round carries out the plan in the Claude Docs doc "Dino Tycoon audit and plan" (https://claude.ai/artifact/JFKZ67B1ZRedupKPovshRS). The owner said "implement the plan" without filling in its Decisions table, so the doc's recommendations were taken: free play digs for dinosaurs by default (with a switch), big dinosaurs get more appeal rather than lower prices, storms still let dinosaurs out but only through a real gap after a warning, and the challenges are back on the title menu. Each is easy to reverse if the owner disagrees.
+
+Fixes:
+- **Escapes** (`regions.ts`, `incidents.ts`, `Simulation.enclosures()`): a broken fence no longer marks the whole paddock escaped. `computeRegions(state, true)` keeps broken fences closed ("paddocks as built"), and `stepEscapes` uses that map, so an animal is loose only once it walks out through the gap. One alarm per animal that leaves, not per animal inside. Removing a fence on purpose still frees them at once. A dino inside a broken paddock says "There's a hole in my fence!" (tag `fence`).
+- **Storms** (`events.ts` `stormHour`): a fence at 30+ condition (`BADLY_DAMAGED`) never falls to a single storm hour; it drops to 15 at worst and the news warns ("badly damaged … workers will patch them first"). Workers give those sections priority (+30).
+- **Tapping a dinosaur** (`EntityLayer.ts`): a sleeping one stays lying down (no wink; a pat or treat also keeps the rest pose). A walking one winks once it stops, if within 3 s (`WINK_WAIT_MS`); a pat or treat while walking keeps the walk legs.
+- **Pteranodon wing:** the far wing stays tucked behind the body on the downstroke (`models.py` `flyer`), so no one-pixel stick pokes out under the body. All 10 Pteranodon clips and its canonical art were re-rendered.
+
+Balance:
+- **Appeal:** T-rex 10→14, Spinosaurus 11→14, Argentinosaurus 12→16, Allosaurus 8→10. In a park with a full harbor every land species now earns its paddock back in 12 to 58 days (was up to 95). `tests/speciesBalance.test.ts` keeps all of them under 75. With the starting jetty, the ferry caps visitors near 99 a day and the big ones still take months: the port is the real limit there.
+- **Ferry office request** (`requests.ts`, kind `ferry`): in the first week, once people are turned away or the boat is nearly full, a Park request asks for a pier and a second ferry (+$750). No save change (a new value of an existing union).
+
+Free play:
+- **Dig for dinosaurs:** the island screen has a switch, **🦴 Dig for dinosaurs** (default: the 6 starters, the rest from fossils, so the dig mini-game is back) or **🦖 All 28 now**. `newPark(id, seed, island, { discover })`. Goal parks and challenges keep their own species lists.
+- **Goal track** (`sim/freePlayGoals.ts`): first dinosaur, first baby, 200 visitors in a day, 10 species, all 28 species. Shown in the HUD tracker (no deadline) and the Park report's Goals tab; reaching one toasts and names the next. Worked out live from the park, so nothing new is saved. Three new stickers: Packed park, Ten of a kind, Every last one.
+- **Challenges button** on the title menu: two folders, 🎯 Goal parks (First Steps, Fossil Fever, Storm Coast, Rex Rising) and 🧩 Parks in trouble (the four challenges, unlocking in order). This restores the screen removed on Oct 17.
+
+Browser checks brought up to date: the 8 scenario-menu checks use `[data-go="challenges"]`; `islands-ui`/`art-offline` go straight from New park to the island screen; `menu-fun`, `menu-scale-review`, `hatching-review` use the normal server (5173), pat at midday, and keep decision cards away; `art-integration`, `menu-scale-review` and `pixel-size-review` measure the hand-drawn T-rex and the park's own walk frames; `environment-review` expects the season's ground tint. New: `npm run art:tap-poses` and `npm run check:freeplay` (both phone sizes).
+
+Dev-server note: a second, older Vite (from `dino-tycoon-blender-art`, Oct 11) listens on 127.0.0.1:5173, so any check using `127.0.0.1:5173` was testing that folder, not this one (`pixel-size-review` and `cartoon-review` were; both now use `localhost`, and their v21 save expectations became v22). Checks reach this repo's server through `localhost`. A Vite server left running across art regeneration can load two copies of `dinoArt.ts` and make art checks fail; restart it first.
+
+Saves stay v22.
+
+
 ## White eyes and a wink — October 23, 2026
 
 Every dinosaur's eye now has a white behind the pupil, and there's a new wink clip. In the park:
@@ -216,7 +242,7 @@ Everything a fresh session needs to carry on. Last updated 2026-10-05, after res
   - honest reviews
   - one-drag fence boxes
 - **Plan in progress:** `docs/PLAN-challenges.md`. Phases 1–3 are done.
-- **Next:** **Phase 4, the Staff Strike.** It needs staff mood, wages per role, a staff room, negotiation cards (built on `choices.ts`), and doing a job yourself. Then Phase 5: Baby Boom, Dino Flu, Grand Opening, Heatwave, Clean-Up Crew and Island Hop. The owner said "start on that one" for each challenge in turn, so ask before starting Phase 4.
+- **Next (challenges are back on the menu since Oct 24):** **Phase 4, the Staff Strike.** It needs staff mood, wages per role, a staff room, negotiation cards (built on `choices.ts`), and doing a job yourself. Then Phase 5: Baby Boom, Dino Flu, Grand Opening, Heatwave, Clean-Up Crew and Island Hop. The owner said "start on that one" for each challenge in turn, so ask before starting Phase 4.
 - **Every new challenge follows the same recipe:**
   1. A `SCENARIOS` entry with `category: 'challenge'`, a briefing, a timeline and `loseIf`.
   2. A `ParkBuilder` setup in `src/sim/challenges.ts`.

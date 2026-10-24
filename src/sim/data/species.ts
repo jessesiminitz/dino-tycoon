@@ -228,7 +228,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
   },
   allosaurus: {
     id: 'allosaurus', name: 'Allosaurus', diet: 'carnivore', price: 22000, size: 4,
-    hungerRate: 2.4, meal: 30, fenceNeeded: 3, space: 40, appeal: 8, pace: 2, social: false, starter: false,
+    hungerRate: 2.4, meal: 30, fenceNeeded: 3, space: 40, appeal: 10, pace: 2, social: false, starter: false,
     period: 'Late Jurassic', lengthM: 9.5,
     fact: 'The top predator of the Jurassic in North America, with small horns above its eyes and dozens of serrated teeth.',
     weight: 'about 2 tonnes',
@@ -258,7 +258,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
   },
   tyrannosaurus: {
     id: 'tyrannosaurus', name: 'Tyrannosaurus rex', diet: 'carnivore', price: 40000, size: 5,
-    hungerRate: 2.2, meal: 45, fenceNeeded: 4, space: 60, appeal: 10, pace: 2, social: false, starter: false,
+    hungerRate: 2.2, meal: 45, fenceNeeded: 4, space: 60, appeal: 14, pace: 2, social: false, starter: false,
     period: 'Late Cretaceous', lengthM: 12,
     fact: 'Had one of the strongest bites of any land animal, strong enough to crunch through bone.',
     weight: '8 to 14 tonnes',
@@ -337,7 +337,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
   },
   spinosaurus: {
     id: 'spinosaurus', name: 'Spinosaurus', diet: 'piscivore', price: 44000, size: 5,
-    hungerRate: 2.3, meal: 42, fenceNeeded: 3, space: 60, appeal: 11, pace: 2, social: false, starter: false,
+    hungerRate: 2.3, meal: 42, fenceNeeded: 3, space: 60, appeal: 14, pace: 2, social: false, starter: false,
     period: 'Late Cretaceous', lengthM: 14,
     fact: 'A towering back sail, narrow crocodile-like jaws and a deep tail made this fish hunter unmistakable.',
     weight: 'about 7 tonnes (estimates vary)',
@@ -487,7 +487,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
   },
   argentinosaurus: {
     id: 'argentinosaurus', name: 'Argentinosaurus', diet: 'herbivore', price: 52000, size: 5,
-    hungerRate: 1.5, meal: 80, fenceNeeded: 3, space: 80, appeal: 12, pace: 4, social: true, starter: false,
+    hungerRate: 1.5, meal: 80, fenceNeeded: 3, space: 80, appeal: 16, pace: 4, social: true, starter: false,
     period: 'Late Cretaceous', lengthM: 35,
     fact: 'An immense titanosaur with a bulky body, pillar-like legs and a long neck for reaching plants.',
     weight: 'perhaps 70 tonnes; estimates vary widely',

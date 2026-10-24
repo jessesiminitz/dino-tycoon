@@ -17,6 +17,7 @@ import { STAFF_ROLES, STAFF_TYPES } from '../sim/data/staff';
 import { dailyWages, describeTask } from '../sim/systems/staff';
 import { MEDALS, SCENARIOS } from '../sim/data/scenarios';
 import { daysLeft, describeReward, goalProgress, goalShown } from '../sim/goals';
+import { freePlayProgress, hasFreePlayGoals } from '../sim/freePlayGoals';
 import { formatMoney, type Hud } from './hud';
 import { dailyCosts } from '../sim/moneyAdvice';
 import { calendar } from '../sim/GameState';
@@ -45,7 +46,7 @@ export function mountParkPanel(sim: Simulation, hud: Hud): { open(tab?: Tab): vo
   const modal = document.getElementById('park')!;
   const body = document.getElementById('park-body')!;
   const tabs = Array.from(modal.querySelectorAll<HTMLButtonElement>('.tab-btn'));
-  const hasGoals = SCENARIOS[sim.state.scenario.id].rounds.length > 0;
+  const hasGoals = SCENARIOS[sim.state.scenario.id].rounds.length > 0 || hasFreePlayGoals(sim.state);
   // Opens on the goals first, so it's always clear what to aim for.
   let tab: Tab = hasGoals ? 'goals' : 'overview';
   for (const t of tabs) if (t.dataset.tab === 'goals') t.hidden = !hasGoals;
@@ -209,8 +210,26 @@ export function mountParkPanel(sim: Simulation, hud: Hud): { open(tab?: Tab): vo
       </table>`;
   }
 
+  /** Free play's goal track: no deadline, a sticker for each. */
+  function freePlayGoalsTab(): string {
+    const rows = freePlayProgress(sim.state)
+      .map(({ goal, value, done }) => {
+        const pct = Math.min(100, (100 * Math.max(0, value)) / goal.target);
+        return `<li class="goal ${done ? 'done' : ''}">
+          <span>${done ? '✅' : '⬜'} ${goal.icon} ${goal.label}</span><span class="goal-value">${goal.target > 1 ? `${Math.min(value, goal.target)}/${goal.target}` : done ? 'Done' : ''}</span>
+          <span class="meter"><span style="width:${pct}%"></span></span>
+        </li>`;
+      })
+      .join('');
+    return `
+      <h3>Free play</h3>
+      <p class="note">No deadline: build at your own pace. Each goal earns a sticker for your sticker book.</p>
+      <ul class="goals">${rows}</ul>`;
+  }
+
   function goalsTab(): string {
     const { state } = sim;
+    if (hasFreePlayGoals(state)) return freePlayGoalsTab();
     const sc = SCENARIOS[state.scenario.id];
     const left = daysLeft(state);
     const done = state.scenario.round;

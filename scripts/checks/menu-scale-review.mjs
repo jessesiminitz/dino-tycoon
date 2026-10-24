@@ -2,7 +2,7 @@ import puppeteer from 'puppeteer-core';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { check, finish } from './lib.mjs';
-const base=process.env.BASE_URL ?? 'http://127.0.0.1:5174',style=process.env.ART_STYLE ?? 'blender';
+const base=process.env.BASE_URL ?? 'http://localhost:5173',style=process.env.ART_STYLE ?? 'blender';
 const out=fileURLToPath(new URL(`../../docs/menu-scale-review/${style}/`,import.meta.url));mkdirSync(out,{recursive:true});
 const browser=await puppeteer.launch({executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true});const errors=[];
 try {
@@ -14,6 +14,7 @@ try {
   const {dinoCanvasBounds,paintDinoRows}=await import('/src/render/dinoArt.ts');
   const {dinoWorldScale}=await import('/src/render/dinoSize.ts');const {BLENDER_MOTION}=await import('/src/render/generated/blenderMotion.ts');
   const {ART_STYLE}=await import('/src/render/artStyle.ts');
+  const {handDrawnRex,paintMotionFrame}=await import('/src/render/parkMotion.ts');
   const failures=[],zooms=[],widths={};let count=0;
   for(const id of SPECIES_IDS){
    const size=menuDinoSize(paintMenuDino(id));const img=document.querySelector(`.menu-parade-group:first-child [data-species="${id}"] img`);
@@ -23,7 +24,8 @@ try {
     if(m.width!==size.width||m.height!==size.height)failures.push(`${id}:${clip}:${f} canvas changed size`);
    }
    if(ART_STYLE==='blender'){
-    const menu=paintMenuDino(id),game=paintDinoRows(SPECIES[id],BLENDER_MOTION[id].walk.frames[0],false,dinoWorldScale(id));
+    // What the park shows: the Blender walk, or the hand-drawn T-rex.
+    const menu=paintMenuDino(id),game=handDrawnRex(id)?paintMotionFrame(id,'walk',0,false):paintDinoRows(SPECIES[id],BLENDER_MOTION[id].walk.frames[0],false,dinoWorldScale(id));
     const m=dinoCanvasBounds(menu),g=dinoCanvasBounds(game);widths[id]=m.right-m.left;
     if(m.right-m.left!==g.right-g.left||m.bottom-m.top!==g.bottom-g.top)failures.push(id+' differs from game body size');
    }

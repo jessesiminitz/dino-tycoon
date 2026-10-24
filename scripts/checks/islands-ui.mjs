@@ -12,8 +12,6 @@ await page.goto('http://localhost:5173/', { waitUntil: 'load' });
 await page.evaluate(() => document.fonts.ready); await sleep(800);
 const click = async (sel) => { await page.evaluate((s) => document.querySelector(s).click(), sel); await sleep(400); };
 await click('[data-go="new"]');
-await page.screenshot({ path: `${OUT}${w}-islands-0-new.png` });
-await click('[data-go="island"]');
 await page.screenshot({ path: `${OUT}${w}-islands-1-picker.png` });
 await click('[data-shape="river"]');
 await click('[data-start-sandbox]');

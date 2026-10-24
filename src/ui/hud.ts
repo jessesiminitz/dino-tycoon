@@ -331,7 +331,7 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
 
   const parkPanel = mountParkPanel(sim, hud);
   $('btn-park').addEventListener('click', () => parkPanel.open());
-  mountTracker(sim, () => parkPanel.open('goals'));
+  mountTracker(sim, () => parkPanel.open('goals'), (t) => hud.toast(t));
   mountLog(sim);
   mountPeople(sim, ui);
   mountRequests(sim);

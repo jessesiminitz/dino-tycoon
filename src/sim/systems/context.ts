@@ -20,6 +20,8 @@ export interface SimContext {
   state: GameState;
   rng: Rng;
   regions: RegionMap;
+  /** Paddocks as built, broken fences included (see computeRegions); defaults to `regions`. */
+  enclosures?: RegionMap;
   emit(event: GameEvent): void;
   /** Presentation only; never stored in a save or the park log. */
   animate?(action: DinoAction): void;

@@ -8,21 +8,22 @@ const errors=[];
 try {
   const page=await browser.newPage();page.on('pageerror',e=>errors.push(e.message));
   await page.setViewport({width:1180,height:820});
-  await page.goto(`${process.env.BASE_URL??'http://127.0.0.1:5173'}/?art=blender&quickstart&stress`,{waitUntil:'load'});await ready(page);
+  await page.goto(`${process.env.BASE_URL??'http://localhost:5173'}/?art=blender&quickstart&stress`,{waitUntil:'load'});await ready(page);
   const result=await page.evaluate(async()=>{
     const {sim,game}=window.__dino,park=game.scene.getScene('park'),entities=park.entities;
     sim.setSpeed(0);game.loop.sleep();
     const {SPECIES,SPECIES_IDS}=await import('/src/sim/data/species.ts');
-    const {dinoWorldScale}=await import('/src/render/dinoSize.ts');
-    const {paintDino,dinoCanvasBounds}=await import('/src/render/dinoArt.ts');
-    const {motionTexture}=await import('/src/render/parkMotion.ts');
+    const {dinoCanvasBounds}=await import('/src/render/dinoArt.ts');
+    const {motionTexture,paintMotionFrame}=await import('/src/render/parkMotion.ts');
     const failures=[];let frames=0;
     for(const id of SPECIES_IDS)for(const baby of [false,true]){
       const texture=game.textures.get(motionTexture(park,id,baby));
       const src=texture.getSourceImage(),ctx=src.getContext('2d');
       for(const clip of ['walk','idle','eat','rest'])for(let index=0;index<8;index++){
         const f=texture.get(`${clip}-${index}`),pixels=ctx.getImageData(f.cutX,f.cutY,f.cutWidth,f.cutHeight).data;
-        let eyes=0,filled=0;for(let p=0;p<pixels.length;p+=4){if(pixels[p+3])filled++;if(pixels[p]===16&&pixels[p+1]===16&&pixels[p+2]===16&&pixels[p+3])eyes++;}
+        // Blender pupils are #101010; the hand-drawn T-rex's eye shows as its near-white eye white (tinted on babies).
+        const eye=id==='tyrannosaurus'?(r,g,b)=>r>=230&&g>=225&&b>=200:(r,g,b)=>r===16&&g===16&&b===16;
+        let eyes=0,filled=0;for(let p=0;p<pixels.length;p+=4){if(pixels[p+3])filled++;if(pixels[p+3]&&eye(pixels[p],pixels[p+1],pixels[p+2]))eyes++;}
         if(!eyes||filled<3||f.customData.renderResolution!==1)failures.push(`${id}:${baby}:${clip}:${index} face/size`);
         frames++;
       }
@@ -32,7 +33,8 @@ try {
     entities.motions.delete(comp.id);entities.update(1000);
     const img=entities.dinoSprite(comp.id),hit=entities.dinoAt(img.x+8,img.y-2);
     if(hit?.id!==comp.id)failures.push('tiny Compsognathus expanded touch target');
-    const sprite=paintDino(SPECIES.compsognathus,0,false,'blender',dinoWorldScale('compsognathus','blender'));
+    // Measured on the park's own walk frame, the size players actually see.
+    const sprite=paintMotionFrame('compsognathus','walk',0,false);
     const b=dinoCanvasBounds(sprite);
     // Render all species and the visitor at one shared 3x park zoom.
     const visitor=game.textures.get('visitor-0-0-a-n').getSourceImage();
@@ -42,7 +44,7 @@ try {
     document.body.style.cssText='margin:0;padding:24px;background:#a5be71;color:#202519;font:16px system-ui;overflow:auto;height:auto';
     const title=document.createElement('h1');title.textContent='Pixel dinosaur sizes · shared 3× park zoom';document.body.append(title);
     for(const id of [...SPECIES_IDS].sort((a,b)=>SPECIES[a].lengthM-SPECIES[b].lengthM)){
-      const canvas=paintDino(SPECIES[id],0,false,'blender',dinoWorldScale(id,'blender'));
+      const canvas=paintMotionFrame(id,'walk',0,false);
       const bounds=dinoCanvasBounds(canvas);widths[id]=bounds.right-bounds.left;
       const row=document.createElement('div');row.dataset.species=id;row.style.cssText='display:flex;align-items:end;gap:24px;padding:12px 0;border-bottom:1px solid #66864b';
       const label=document.createElement('div');label.style.cssText='width:220px;flex-shrink:0';label.textContent=`${SPECIES[id].name} · ${SPECIES[id].lengthM} m`;

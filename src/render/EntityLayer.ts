@@ -37,6 +37,8 @@ const JEEP_KEY = 'jeep';
 const ZZZ = ['XXX', '..X', '.X.', 'XXX'];
 /** How long hearts or a "Nope!" stay up, in ms. */
 const EFFECT_MS = 1100;
+/** A tapped dinosaur that is walking winks if it stops within this long. */
+const WINK_WAIT_MS = 3000;
 const HEART = ['.X.X.', 'XXXXX', '.XXX.', '..X..'];
 export type Selection = { kind: 'dino' | 'feeder' | 'building' | 'visitor' | 'staff' | 'egg'; id: number } | null;
 
@@ -222,10 +224,13 @@ export class EntityLayer {
     return this.sim.state.buildings.find((b) => b.x === tx && b.y === ty);
   }
 
-  /** When each dinosaur was last tapped (real-time clock): it winks back. */
-  private greetings = new Map<number, number>();
+  /**
+   * When each dinosaur was last tapped (real-time clock): it winks back, once
+   * it has stopped walking (`start`). A sleeping one stays lying down.
+   */
+  private greetings = new Map<number, { tapped: number; start?: number }>();
   greet(dinoId: number): void {
-    if (hasFunClips()) this.greetings.set(dinoId, this.reactionTime);
+    if (hasFunClips()) this.greetings.set(dinoId, { tapped: this.reactionTime });
   }
 
   /** Show how an animal reacted to a treat or pat. */
@@ -429,8 +434,17 @@ export class EntityLayer {
       const d = state.dinos.find(d => d.id === e.dinoId);
       if (d && e.kind === 'hearts') reactions.set(e.dinoId, dinoReaction(d.species,e.action,this.reactionTime-e.start,getSettings().animation,hasFunClips()));
     }
-    for (const [id, at] of this.greetings) {
-      const d = state.dinos.find(d => d.id === id), wink = d && winkReaction(d.species, this.reactionTime - at, getSettings().animation);
+    for (const [id, greeting] of this.greetings) {
+      const d = state.dinos.find(d => d.id === id);
+      if (!d || isAsleep(state, d)) { this.greetings.delete(id); continue; }
+      if (greeting.start === undefined) {
+        // Winking mid-stride would freeze the legs while the animal glides on: wait for it to stop.
+        const walking = this.sim.speed !== 0 && (d.x !== d.px || d.y !== d.py);
+        if (!walking) greeting.start = this.reactionTime;
+        else if (this.reactionTime - greeting.tapped > WINK_WAIT_MS) this.greetings.delete(id);
+        if (greeting.start === undefined) continue;
+      }
+      const wink = winkReaction(d.species, this.reactionTime - greeting.start, getSettings().animation);
       if (!wink) this.greetings.delete(id);
       else if (!reactions.get(id)?.clip) reactions.set(id, wink);
     }
@@ -444,8 +458,8 @@ export class EntityLayer {
         img = this.scene.add.image(0, 0, dinoKey(d.species)).setOrigin(0.5, 1);
         this.dinos.set(d.id, img);
       }
-      const reaction = reactions.get(d.id);
       const moving = d.x !== d.px || d.y !== d.py;
+      let reaction = reactions.get(d.id);
       if (this.sim.speed !== 0 && d.x !== d.px) this.facingLeft.set(d.id, d.x < d.px);
       let { x, y } = this.dinoPosition(d);
       // Authored walk poses lift the feet; keep planted legs on the ground.
@@ -455,6 +469,8 @@ export class EntityLayer {
       const habitat = habitatOf(d.species);
       const scale = dinoWorldScale(d.species) * (d.baby ? .6 : 1);
       const asleep = isAsleep(state, d);
+      // A pat or treat never stands a sleeper up or stops a walker's legs: it keeps its own pose.
+      if (reaction?.clip && (asleep || (moving && this.sim.speed !== 0))) reaction = asleep ? undefined : { ...reaction, clip: undefined };
       if (ART_STYLE !== 'original') {
         const model = BLENDER_ART[d.species];
         const modelPadding = 'modelOffsetX' in model ? model.modelOffsetX : 0;

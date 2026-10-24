@@ -1,6 +1,7 @@
 import { NEVER, type GameState } from './GameState';
 import { MEDALS, SCENARIO_IDS, SCENARIOS, type ScenarioId } from './data/scenarios';
 import { habitatOf, SPECIES, SPECIES_IDS } from './data/species';
+import { speciesOnShow } from './freePlayGoals';
 
 /**
  * Stickers: a collection that lasts across every park on this device. The
@@ -43,6 +44,9 @@ const MOMENTS: Moment[] = [
   { id: 'moment:lagoon', name: 'Splash!', icon: '🌊', hint: 'Keep a sea reptile in a lagoon.', earned: (s) => s.dinos.some((d) => habitatOf(d.species) === 'water') },
   { id: 'moment:aviary', name: 'Taking flight', icon: '🪽', hint: 'Keep a flying reptile in an aviary.', earned: (s) => s.dinos.some((d) => habitatOf(d.species) === 'air') },
   { id: 'moment:fossil', name: 'Fossil hunter', icon: '🦴', hint: 'Dig up a fossil by brushing away the sand.', earned: () => false }, // awarded by the dig mini-game
+  { id: 'moment:crowd-200', name: 'Packed park', icon: '🎡', hint: 'Welcome 200 visitors in one day.', earned: (s) => Math.max(s.stats.bestDayVisitors, s.finance.today.visitors) >= 200 },
+  { id: 'moment:ten-species', name: 'Ten of a kind', icon: '🦖', hint: 'Show 10 different species at once.', earned: (s) => speciesOnShow(s) >= 10 },
+  { id: 'moment:every-species', name: 'Every last one', icon: '🌍', hint: 'Keep every species in your park at once.', earned: (s) => speciesOnShow(s) >= SPECIES_IDS.length },
   { id: 'moment:all-species', name: 'The whole collection', icon: '🏛️', hint: 'Unlock every species.', earned: (s) => s.unlockedSpecies.length >= SPECIES_IDS.length },
 ];
 

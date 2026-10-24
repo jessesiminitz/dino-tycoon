@@ -1,8 +1,11 @@
 import { newGame, type GameState } from '../sim/GameState';
 import { newPark } from '../sim/challenges';
+import { challengeUnlocked, bestMedals } from './challengeRecords';
 import { ISLAND_SHAPE_IDS, ISLAND_SHAPES, type IslandShape } from '../sim/island';
-import { paintMinimap } from '../render/minimap';
-import { SCENARIOS } from '../sim/data/scenarios';
+import { paintMinimap, paintParkMinimap } from '../render/minimap';
+import { BUILD_IDS, CHALLENGE_IDS, MEDALS, SCENARIOS, type ScenarioId } from '../sim/data/scenarios';
+import { goalLabel } from '../sim/goals';
+import { SPECIES_IDS, STARTER_SPECIES } from '../sim/data/species';
 import { mountMenuParade } from './menuParade';
 import {
   deleteSlot,
@@ -16,9 +19,12 @@ import {
 } from '../save/storage';
 import { renderSettings } from './settings';
 
-type Screen = 'main' | 'island' | 'load' | 'settings';
+type Screen = 'main' | 'island' | 'challenges' | 'load' | 'settings';
 
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+const stars = (n: number) => '★'.repeat(n) + '☆'.repeat(3 - n);
+/** The goal parks: every build scenario but free play, which is "New park". */
+const GOAL_IDS = BUILD_IDS.filter((id) => id !== 'sandbox');
 const STATUS_LABEL = { playing: 'In progress', won: '🏆 Won', lost: 'Ended', free: 'Free play' } as const;
 
 function ago(ts: number): string {
@@ -35,7 +41,7 @@ export interface MenuHandlers {
   start(state: GameState, slot: SlotId): void;
 }
 
-/** The title screen: continue, new free-play park, load/export/import/delete parks, settings. */
+/** The title screen: continue, new free-play park, challenges, load/export/import/delete parks, settings. */
 export function showMenu(handlers: MenuHandlers): void {
   const root = document.getElementById('menu')!;
   const body = root.querySelector<HTMLElement>('.menu-body')!;
@@ -49,7 +55,17 @@ export function showMenu(handlers: MenuHandlers): void {
   let confirmDelete: SlotId | null = null;
   /** The Sandbox island being chosen: its shape, size and seed (🎲 picks a new seed). */
   const island = { shape: 'classic' as IslandShape, big: false, seed: (Math.random() * 2 ** 32) >>> 0 };
+  /** Free play starts with the starter dinosaurs and digs up the rest, unless every one is wanted now. */
+  let discover = true;
+  /** Which folder the Challenges screen shows. */
+  let folder: 'goals' | 'challenges' = 'goals';
   const previews = new Map<string, string>();
+  /** A challenge's prebuilt park, as a map preview. */
+  const parkPreview = (id: ScenarioId) => {
+    const key = `park:${id}`;
+    if (!previews.has(key)) previews.set(key, paintParkMinimap(newPark(id, 1)).toDataURL());
+    return previews.get(key)!;
+  };
   /** A map preview as an image URL (cached: generating an island takes a few milliseconds). */
   const preview = (seed: number, shape: IslandShape, big = false) => {
     const key = `${seed}:${shape}:${big}`;
@@ -97,10 +113,49 @@ export function showMenu(handlers: MenuHandlers): void {
         <div class="menu-buttons">
           ${cont ? `<button class="menu-btn primary" data-play="${last}">Continue<small>${SCENARIOS[cont.summary.scenario].name} · Day ${cont.summary.day}</small></button>` : ''}
           <button class="menu-btn ${cont ? '' : 'primary'}" data-go="new">New park</button>
+          <button class="menu-btn" data-go="challenges">Challenges</button>
           <button class="menu-btn" data-go="load">Load park</button>
           <button class="menu-btn" data-go="settings">Settings</button>
         </div>
         <p class="note version">Version ${__APP_VERSION__} · ${__BUILD_DATE__}</p>`;
+    } else if (screen === 'challenges') {
+      const tabs = `<div class="folder-tabs" role="tablist">
+          <button class="folder-tab ${folder === 'goals' ? 'active' : ''}" data-folder="goals" role="tab">🎯 Goal parks<small>Build to a target, win medals</small></button>
+          <button class="folder-tab ${folder === 'challenges' ? 'active' : ''}" data-folder="challenges" role="tab">🧩 Parks in trouble<small>Fix a park that needs you</small></button>
+        </div>`;
+      if (folder === 'challenges') {
+        body.innerHTML = `${tabs}
+          <div class="scenario-grid">${CHALLENGE_IDS.map((id, i) => {
+            const sc = SCENARIOS[id];
+            const open = challengeUnlocked(id);
+            const best = bestMedals(id);
+            const medals = best ? `Best: ${MEDALS.slice(0, best).map((m) => m.icon).join('')}` : 'Not won yet';
+            const lock = open ? '' : `<span class="tag locked-tag">🔒 Earn a medal in ${SCENARIOS[CHALLENGE_IDS[i - 1]].name} to unlock</span>`;
+            return `<button class="scenario-card ${open ? '' : 'locked'}" ${open ? `data-scenario="${id}"` : 'disabled'}>
+              <img class="map-preview" alt="" src="${parkPreview(id)}">
+              <span class="scenario-head"><b>${sc.briefing?.icon ?? ''} ${sc.name}</b><span class="stars">${stars(sc.difficulty)}</span></span>
+              <span class="note">${sc.blurb}</span>
+              ${lock || `<span class="note">${medals} · start with ${money.format(sc.startMoney)}</span>`}
+            </button>`;
+          }).join('')}</div>
+          <button class="menu-btn back" data-go="main">Back</button>`;
+        return;
+      }
+      body.innerHTML = `${tabs}
+        <div class="scenario-grid">${GOAL_IDS.map((id) => {
+          const sc = SCENARIOS[id];
+          const first = sc.rounds[0];
+          const goals = first ? first.goals.map((g) => `<li>${goalLabel(g)}</li>`).join('') : '';
+          const map = sc.seed !== null ? `<img class="map-preview" alt="" src="${preview(sc.seed, sc.island ?? 'classic')}">` : '';
+          return `<button class="scenario-card" data-scenario="${id}">
+            ${map}
+            <span class="scenario-head"><b>${sc.name}</b><span class="stars">${stars(sc.difficulty)}</span></span>
+            <span class="note">${sc.blurb}</span>
+            ${goals ? `<ul>${goals}</ul><span class="note">🥉 Bronze within ${first.days} days, then 🥈 Silver and 🥇 Gold · start with ${money.format(sc.startMoney)}</span>` : `<span class="note">Start with ${money.format(sc.startMoney)}</span>`}
+            ${sc.tutorial ? '<span class="tag">Includes a tutorial</span>' : ''}
+          </button>`;
+        }).join('')}</div>
+        <button class="menu-btn back" data-go="main">Back</button>`;
     } else if (screen === 'island') {
       body.innerHTML = `
         <h2>Choose your island</h2><p class="note">Build your dinosaur park at your own pace.</p>
@@ -119,6 +174,13 @@ export function showMenu(handlers: MenuHandlers): void {
           </span>
           <button class="step-btn" data-reroll>🎲 Another island</button>
         </div>
+        <div class="island-options">
+          <span class="seg" role="group" aria-label="Dinosaurs">
+            <button class="step-btn ${discover ? 'active' : ''}" data-discover="1">🦴 Dig for dinosaurs</button>
+            <button class="step-btn ${discover ? '' : 'active'}" data-discover="0">🦖 All ${SPECIES_IDS.length} now</button>
+          </span>
+        </div>
+        <p class="note">${discover ? `Start with ${STARTER_SPECIES.length} kinds of dinosaur and dig up fossils to discover the rest.` : 'Every dinosaur is ready to buy from day one.'}</p>
         <div class="menu-buttons">
           <button class="menu-btn primary" data-start-sandbox>Start building</button>
           <button class="menu-btn back" data-go="main">Back</button>
@@ -166,8 +228,16 @@ export function showMenu(handlers: MenuHandlers): void {
     } else if ('reroll' in d) {
       island.seed = (Math.random() * 2 ** 32) >>> 0;
       render('island');
+    } else if (d.folder) {
+      folder = d.folder as typeof folder;
+      render('challenges');
+    } else if (d.scenario) {
+      placeNew(newPark(d.scenario as ScenarioId, (Math.random() * 2 ** 32) >>> 0));
     } else if ('startSandbox' in d) {
-      placeNew(newPark('sandbox', island.seed, { shape: island.shape, big: island.big }));
+      placeNew(newPark('sandbox', island.seed, { shape: island.shape, big: island.big }, { discover }));
+    } else if (d.discover) {
+      discover = d.discover === '1';
+      render('island');
     } else if (d.use && pendingState) {
       begin(pendingState, Number(d.use) as SlotId);
     } else if (d.play) {

@@ -1,17 +1,46 @@
 import type { Simulation } from '../sim/Simulation';
 import { MEDALS, SCENARIOS } from '../sim/data/scenarios';
 import { daysLeft, goalProgress, goalShown } from '../sim/goals';
+import { freePlayProgress, hasFreePlayGoals } from '../sim/freePlayGoals';
 
 /**
  * A little bar under the money showing the current medal's next unmet goal,
- * its progress and the days left. Tap it for the full list (Park → Goals).
+ * its progress and the days left (in free play, the next free-play goal).
+ * Tap it for the full list (Park → Goals).
  */
-export function mountTracker(sim: Simulation, openGoals: () => void): void {
+export function mountTracker(sim: Simulation, openGoals: () => void, toast: (text: string) => void): void {
   const el = document.getElementById('goal-tracker')!;
   el.addEventListener('click', openGoals);
   let last = '';
+  /** Free-play goals already met, so reaching the next one is cheered once (not again on loading). */
+  let met = new Set(freePlayProgress(sim.state).filter((g) => g.done).map((g) => g.goal.id));
+  const freePlay = () => {
+    const goals = freePlayProgress(sim.state);
+    for (const g of goals) {
+      if (!g.done || met.has(g.goal.id)) continue;
+      const next = goals.find((o) => !o.done);
+      toast(`🎯 Goal reached: ${g.goal.label}!${next ? ` Next: ${next.goal.label.toLowerCase()}.` : ' Every free-play goal done!'}`);
+    }
+    met = new Set(goals.filter((g) => g.done).map((g) => g.goal.id));
+    const next = goals.find((g) => !g.done);
+    document.body.classList.toggle('has-tracker', !!next);
+    if (!next) {
+      el.hidden = true;
+      return;
+    }
+    const html = `<span class="tracker-medal">${next.goal.icon}</span>
+      <span class="tracker-goal">${next.goal.label}</span>
+      ${next.goal.target > 1 ? `<b>${Math.min(next.value, next.goal.target)}/${next.goal.target}</b>` : ''}
+      <small>${met.size}/${goals.length} done</small>`;
+    el.hidden = false;
+    if (html !== last) {
+      el.innerHTML = html;
+      last = html;
+    }
+  };
   const render = () => {
     const { state } = sim;
+    if (state.scenario.status === 'free' && hasFreePlayGoals(state)) return freePlay();
     const playing = state.scenario.status === 'playing';
     document.body.classList.toggle('has-tracker', playing);
     if (!playing) {

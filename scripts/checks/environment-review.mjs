@@ -30,10 +30,13 @@ try {
     const {ALL_DECOR_KINDS}=await import('/src/sim/data/decor.ts');
     for(const kind of ALL_DECOR_KINDS) texture(`decor-${kind}`,art.paintDecor(kind));
     const atlas=game.textures.get('terrain-tiles').getSourceImage();
+    // The atlas carries the season's ground tone over the unseasoned tiles.
+    const {paintSeasonalTile}=await import('/src/render/seasonArt.ts');
+    const tone=scene.seasons?.tone ?? 'summer';
     const c=document.createElement('canvas');c.width=16;c.height=16;const ctx=c.getContext('2d');
     for(let t=0;t<TERRAIN_COUNT;t++) for(let v=0;v<4;v++) {
       ctx.clearRect(0,0,16,16);ctx.drawImage(atlas,(t*4+v)*16,0,16,16,0,0,16,16);
-      if(c.toDataURL()!==terrain.paintTerrainTile(t,v).toDataURL()) failures.push(`terrain ${t}:${v} atlas mismatch`);
+      if(c.toDataURL()!==paintSeasonalTile(terrain.paintTerrainTile(t,v),t,tone).toDataURL()) failures.push(`terrain ${t}:${v} atlas mismatch (${tone})`);
       if(ctx.getImageData(0,0,16,16).data.some((value,i)=>i%4===3 && value!==255)) failures.push(`terrain ${t}:${v} transparent`);
     }
     const pair=[...scene.scenery.trees].find(([,img])=>img.texture.key.startsWith('tree-') && img.visible);

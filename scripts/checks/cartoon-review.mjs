@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { ready, check, finish } from './lib.mjs';
 const out = fileURLToPath(new URL('../../docs/cartoon-review/', import.meta.url));
 mkdirSync(out, { recursive: true });
-const errors = [], base = process.env.BASE_URL ?? 'http://127.0.0.1:5173';
+const errors = [], base = process.env.BASE_URL ?? 'http://localhost:5173';
 const exhaustive = !process.argv.includes('--smoke');
 const browser = await puppeteer.launch({ executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless:true, args:['--use-angle=swiftshader','--enable-unsafe-swiftshader'] });
 try {
@@ -76,9 +76,9 @@ try {
     const rest=entities.dinoSprite(rex.id).frame.name.startsWith('rest-');
     const {saveSlot,loadSlot}=await import('/src/save/storage.ts');
     saveSlot(3,sim.state);const saved=await loadSlot(3);
-    return {eating,pause,rest,saved:saved?.state.version===21&&saved.state.dinos[0].species==='tyrannosaurus'};
+    return {eating,pause,rest,saved:saved?.state.version===22&&saved.state.dinos[0].species==='tyrannosaurus'};
   });
-  check('cartoon eating, nighttime rest, pause and v21 saves work',Object.values(behavior).every(Boolean),behavior);
+  check('cartoon eating, nighttime rest, pause and v22 saves work',Object.values(behavior).every(Boolean),behavior);
   await page.setViewport({width:1180,height:820});
   await page.goto(`${base}/`,{waitUntil:'networkidle0'});
   await page.screenshot({path:`${out}menu.png`});

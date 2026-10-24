@@ -10,7 +10,7 @@ for (const [w, h, safe] of [[667, 375, 0], [812, 375, 44], [844, 390, 47], [932,
   await page.reload({ waitUntil: 'load' });
   await sleep(800);
   await page.addStyleTag({ content: `:root{--safe-left:${safe}px !important;--safe-right:${safe}px !important}` });
-  await page.evaluate(() => document.querySelector('[data-go="new"]').click()); await sleep(300);
+  await page.evaluate(() => document.querySelector('[data-go="challenges"]').click()); await sleep(300);
   await page.evaluate(() => document.querySelector('[data-scenario="first-steps"]').click()); await sleep(400);
   // All park slots taken by earlier runs: replace the first.
   await page.evaluate(() => document.querySelector('[data-use]')?.click()); await sleep(1500);

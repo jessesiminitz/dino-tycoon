@@ -1,9 +1,15 @@
 {
   "result": {
     "tested": 1792,
-    "atlasMB": 116.08642578125,
+    "atlasMB": 298.4765625,
     "geometryAssets": 53,
     "failures": []
+  },
+  "behavior": {
+    "eating": true,
+    "pause": true,
+    "rest": true,
+    "saved": true
   },
   "errors": []
 }

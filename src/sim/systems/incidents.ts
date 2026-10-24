@@ -52,9 +52,14 @@ export function hourlyFences(ctx: SimContext): void {
   }
 }
 
-/** Every step: notice dinos that got out (or were fenced back in) and remember home tiles. */
+/**
+ * Every step: notice dinos that got out (or were fenced back in) and remember
+ * home tiles. A broken fence alone frees nobody: an animal is out once it has
+ * walked through the gap, off the paddock as it was built.
+ */
 export function stepEscapes(ctx: SimContext): void {
-  const { state, regions } = ctx;
+  const { state } = ctx;
+  const regions = ctx.enclosures ?? ctx.regions;
   for (const d of state.dinos) {
     const region = regions.regions[regions.tileRegion[d.y * state.map.width + d.x]];
     // Flyers are only held by an aviary: a paddock netted all round.

@@ -25,7 +25,8 @@ export function dinoConcerns(state: GameState, regions: RegionMap, d: Dino): Con
   const regionId = regions.tileRegion[d.y * w + d.x];
   const region = regions.regions[regionId];
   const out: Concern<DinoTag>[] = [];
-  if (d.escaped || region?.kind !== 'paddock') out.push({ text: "I'm out! Send a guard to bring me home.", good: false, tag: 'escaped' });
+  if (d.escaped) out.push({ text: "I'm out! Send a guard to bring me home.", good: false, tag: 'escaped' });
+  else if (region?.kind !== 'paddock') out.push({ text: "There's a hole in my fence! A worker should fix it before I wander off.", good: false, tag: 'fence' });
   if (d.sick) out.push({ text: 'I feel awful. A vet would help.', good: false, tag: 'sick' });
   if (d.hunger >= 80) out.push({ text: "I'm starving!", good: false, tag: 'hungry' });
   else if (d.hunger >= 50) out.push({ text: 'Getting hungry...', good: false, tag: 'hungry' });

@@ -1,7 +1,7 @@
 import type { GameState, Staff, StaffTask } from '../GameState';
 import { refillCost, repairCost } from '../commands';
 import { FEEDER_TYPES } from '../data/feeders';
-import { CLEAN_RADIUS, MEDICINE_COST, REFILL_BELOW, REPAIR_BELOW, STAFF_SPEED, STAFF_TYPES, WORK_STEPS } from '../data/staff';
+import { CLEAN_RADIUS, MEDICINE_COST, BADLY_DAMAGED, REFILL_BELOW, REPAIR_BELOW, STAFF_SPEED, STAFF_TYPES, WORK_STEPS } from '../data/staff';
 import { spend } from '../finance';
 import { allFenceEdges, fenceHp, fenceTypeAt, setFenceHp } from '../fences';
 import type { Edge } from '../grid';
@@ -67,7 +67,7 @@ function candidateTasks(state: GameState, m: Staff): { task: StaffTask; bonus: n
     for (const x of state.messes) if (x.kind === 'dung') out.push({ task: { kind: 'clean', messId: x.id }, bonus: -12 });
     for (const e of allFenceEdges(state)) {
       const hp = fenceHp(state, e);
-      if (hp < REPAIR_BELOW) out.push({ task: { kind: 'repair', dir: e.dir, x: e.x, y: e.y }, bonus: hp <= 0 ? 60 : 0 });
+      if (hp < REPAIR_BELOW) out.push({ task: { kind: 'repair', dir: e.dir, x: e.x, y: e.y }, bonus: hp <= 0 ? 60 : hp < BADLY_DAMAGED ? 30 : 0 });
     }
     for (const f of state.feeders) {
       if (f.stock < FEEDER_TYPES[f.kind].capacity * REFILL_BELOW) out.push({ task: { kind: 'refill', feederId: f.id }, bonus: f.stock === 0 ? 40 : 10 });

@@ -10,7 +10,7 @@ await page.goto('http://localhost:5173/', { waitUntil: 'networkidle0' });
 await page.evaluate(async () => { localStorage.clear(); await new Promise((r) => { const q = indexedDB.deleteDatabase('dino-tycoon'); q.onsuccess = q.onerror = q.onblocked = r; }); });
 await page.reload({ waitUntil: 'networkidle0' });
 await sleep(400);
-await (await page.$('[data-go="new"]')).tap(); await sleep(300);
+await (await page.$('[data-go="challenges"]')).tap(); await sleep(300);
 await page.screenshot({ path: `${OUT}ms-0-cards.png` });
 await (await page.$('[data-scenario="first-steps"]')).tap(); await sleep(900);
 await (await page.$('.tutorial-skip-all'))?.tap(); await sleep(300);

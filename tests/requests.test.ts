@@ -96,9 +96,36 @@ describe('park requests', () => {
   it('only asks for what the park can manage', () => {
     const s = newGame(3); // bare island: no paths, dinos or feeders
     const { added } = board(s);
-    for (const r of added) expect(['see', 'visitors', 'review', 'food', 'clean', 'photo', 'treats', 'feeders']).toContain(r.kind);
+    for (const r of added) expect(['see', 'visitors', 'review', 'food', 'clean', 'photo', 'treats', 'feeders', 'ferry']).toContain(r.kind);
     expect(added.every((r) => r.kind !== 'photo' && r.kind !== 'treats' && r.kind !== 'feeders')).toBe(true);
     expect(added.every((r) => r.kind !== 'visitors' && r.kind !== 'food')).toBe(true);
+  });
+
+  it('in the first week, a full ferry points the way to the Port', () => {
+    const find = (s: GameState) => {
+      for (let seed = 1; seed <= 40; seed++) {
+        s.requests = [];
+        const r = board(s, seed).added.find((r) => r.kind === 'ferry');
+        if (r) return r;
+      }
+      return undefined;
+    };
+    const s = openPark();
+    expect(find(s)).toBeUndefined(); // nobody turned away yet
+    s.port.lastTurnedAway = 6;
+    const r = find(s)!;
+    expect(r.text).toMatch(/Port/);
+    applyCommand(s, { type: 'upgradePort' }); // a jetty has room for one boat
+    applyCommand(s, { type: 'buyFerry', size: 'small' });
+    const money = s.money;
+    updateRequests(s, () => {});
+    expect(r.status).toBe('done');
+    expect(s.money).toBe(money + r.reward.money);
+    // Past the first week, or with a second boat, the ferry office keeps quiet.
+    const late = openPark();
+    late.port.lastTurnedAway = 6;
+    late.hours += 8 * 24;
+    expect(find(late)).toBeUndefined();
   });
 
   it('treats and photos count as they happen, and pay out', () => {

@@ -58,7 +58,7 @@ export interface Dino {
   huntRestUntil: number;
 }
 
-export type RequestKind = 'see' | 'food' | 'visitors' | 'review' | 'photo' | 'treats' | 'clean' | 'feeders';
+export type RequestKind = 'see' | 'food' | 'visitors' | 'review' | 'photo' | 'treats' | 'clean' | 'feeders' | 'ferry';
 
 /** A short goal from someone visiting the park (see systems/requests.ts). */
 export interface ParkRequest {
@@ -473,12 +473,17 @@ function bedsFor(state: GameState): FossilBed[] {
   );
 }
 
+/** How a new park starts: `discover` keeps to the starter species, the rest dug up as fossils. */
+export interface ParkOptions {
+  discover?: boolean;
+}
+
 /** A fresh park set up for a scenario: its island, budget, unlocked species and tutorial. */
-export function startScenario(id: ScenarioId, randomSeed: number, island: IslandOptions = {}): GameState {
+export function startScenario(id: ScenarioId, randomSeed: number, island: IslandOptions = {}, options: ParkOptions = {}): GameState {
   const sc = SCENARIOS[id];
   const state = newGame(sc.seed ?? randomSeed, { shape: sc.island, big: sc.big, ...island });
   state.money = sc.startMoney;
-  if (sc.unlocked) state.unlockedSpecies = [...sc.unlocked];
+  if (sc.unlocked && !options.discover) state.unlockedSpecies = [...sc.unlocked];
   state.scenario = { id, status: sc.rounds.length > 0 ? 'playing' : 'free', round: 0, roundStart: 1, earned: [], briefed: !sc.briefing, timeline: 0 };
   state.tutorialStep = sc.tutorial ? 0 : null;
   return state;

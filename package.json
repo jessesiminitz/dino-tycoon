@@ -24,6 +24,8 @@
     "art:rex": "node scripts/art/convert_rex.mjs",
     "art:rex:check": "node scripts/art/convert_rex.mjs --check",
     "art:fun-moves": "node scripts/checks/fun-moves-check.mjs",
+    "art:tap-poses": "node scripts/checks/tap-poses.mjs",
+    "check:freeplay": "node scripts/checks/freeplay-check.mjs",
     "art:motion-controls": "node scripts/checks/park-motion-controls.mjs",
     "check:pacing": "node scripts/checks/menu-pacing.mjs",
     "check:fossil-depth": "node scripts/checks/fossil-depth.mjs",

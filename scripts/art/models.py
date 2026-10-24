@@ -206,8 +206,11 @@ def flyer(scene, phase, asset):
     flap=math.cos(phase*math.tau); sweep=math.sin(phase*math.tau)
     tip_y=(h-3)/2-flap*(h-7)/2
     tip_x=5+sweep*2
-    profile(scene,'far_wing',[(cx+2,cy-3),(cx+11+sweep*2,max(1,tip_y-1)),
-                              (cx+14,tip_y+4),(cx+5,cy+2)],'F',4)
+    # The far wing stays tucked behind the body on the downstroke: seen edge-on
+    # below it, the big wing thinned to a one-pixel stick.
+    far_y=min(tip_y,cy) if large else tip_y
+    profile(scene,'far_wing',[(cx+2,cy-3),(cx+11+sweep*2,max(1,far_y-1)),
+                              (cx+14,far_y+4),(cx+5,cy+2)],'F',4)
     ellipse(scene,'body',cx,cy,5.5 if large else 4,3,'B',0)
     profile(scene,'near_membrane',[(cx+2,cy-3),(cx-7,cy-7*flap),(tip_x,tip_y),
                                    (tip_x+4,tip_y+4),(cx-9,cy+2),(cx,cy+2)],'A',-3)

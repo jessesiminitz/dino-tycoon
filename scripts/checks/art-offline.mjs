@@ -44,13 +44,13 @@ try {
   },expected);
   check('production build uses the new art with production dev hooks stripped',active);
   const tap=async selector=>{await (await page.waitForSelector(selector,{visible:true})).tap();};
-  await tap('[data-go="new"]');await tap('[data-go="island"]');await tap('[data-start-sandbox]');
+  await tap('[data-go="new"]');await tap('[data-start-sandbox]');
   await page.waitForSelector('#game canvas');
   const saved=await page.evaluate(()=>{
     const rec=JSON.parse(localStorage.getItem('dino-tycoon:slot:1'));
-    return rec?.state.version===21 && document.body.classList.contains('in-park');
+    return rec?.state.version===22 && document.body.classList.contains('in-park');
   });
-  check('production build starts and saves a normal v21 park',saved);
+  check('production build starts and saves a normal v22 park',saved);
   await page.evaluate(async()=>{await navigator.serviceWorker.ready;});
   await page.reload({waitUntil:'networkidle0'});
   check('service worker controls the Pages subpath',await page.evaluate(()=>!!navigator.serviceWorker.controller));
@@ -64,7 +64,7 @@ try {
   },expected));
   await tap('[data-play="1"]');
   await page.waitForSelector('#game canvas');
-  check('populated v21 park resumes offline',await page.evaluate(()=>document.body.classList.contains('in-park')&&JSON.parse(localStorage.getItem('dino-tycoon:slot:1')).state.dinos.length>=30));
+  check('populated v22 park resumes offline',await page.evaluate(()=>document.body.classList.contains('in-park')&&JSON.parse(localStorage.getItem('dino-tycoon:slot:1')).state.dinos.length>=30));
   await new Promise(resolve=>setTimeout(resolve,1000));
   const before=await page.screenshot();await new Promise(resolve=>setTimeout(resolve,800));const after=await page.screenshot();
   check('offline populated park keeps animating',!before.equals(after));
