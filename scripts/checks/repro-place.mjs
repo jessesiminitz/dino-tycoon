@@ -1,6 +1,6 @@
 // Reproduce: build a paddock, feeder, buy + release a dino, then delete a path, all through touch UI.
 import puppeteer from 'puppeteer-core';
-import { HERE, check, finish, shopPick, toScreen as screenAt } from './lib.mjs';
+import { HERE, check, finish, shopPick, toScreen as screenAt, reach } from './lib.mjs';
 const OUT = HERE;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
@@ -8,7 +8,7 @@ const page = await browser.newPage();
 const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
 await page.setViewport({ width: 844, height: 390, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
-const tap = async (sel) => { const el = await page.waitForSelector(sel, { visible: true }); await el.tap(); await sleep(250); };
+const tap = async (sel) => { const el = await reach(page, sel); await el.tap(); await sleep(250); };
 const toasts = () => page.$$eval('.toast', (t) => t.map((x) => x.textContent).join(' | '));
 const info = () => page.$eval('#info-text', (e) => e.textContent);
 await page.goto('http://localhost:5173/', { waitUntil: 'networkidle0' });

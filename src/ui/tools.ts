@@ -171,9 +171,9 @@ const SHOP_MODES: ShopMode[] = ['building', 'feeder', 'fence', 'path', 'decor'];
 const isShopMode = (m: string): m is ShopMode => (SHOP_MODES as string[]).includes(m);
 
 /**
- * The bottom toolbar. Build tools open a picture sheet of everything they can
- * make; choosing one starts placing it, and a chip above the toolbar shows
- * what's chosen (tap it to change).
+ * The build tools, in the Buy sheet. Each opens a picture sheet of everything
+ * it can make; choosing one starts placing it, and a chip beside the Buy
+ * button shows what's chosen (tap it to change, or Done to stop).
  */
 export function mountTools(sim: Simulation, ui: UiState): void {
   const current: Record<ShopMode, () => string> = {
@@ -207,21 +207,38 @@ export function mountTools(sim: Simulation, ui: UiState): void {
   for (const b of toolButtons) {
     b.addEventListener('click', () => {
       const mode = b.dataset.mode as Mode;
-      // Tapping the active tool again goes back to Look.
-      if (ui.mode === mode) ui.setMode('select');
-      else if (isShopMode(mode)) shops[mode].open();
+      if (isShopMode(mode)) shops[mode].open();
       else ui.setMode(mode);
     });
   }
 
+  // Beside the Buy button while a tool is in use: what it's placing (tap to change) and Done.
   const chip = document.getElementById('pick-chip')!;
+  const change = chip.querySelector<HTMLButtonElement>('.chip-change')!;
   const chipImg = chip.querySelector('img')!;
   const chipName = chip.querySelector('b')!;
   const chipPrice = chip.querySelector('small')!;
-  chip.querySelector('button')!.addEventListener('click', () => isShopMode(ui.mode) && shops[ui.mode].open());
+  const chipEm = chip.querySelector('em')!;
+  change.addEventListener('click', () => isShopMode(ui.mode) && shops[ui.mode].open());
+  chip.querySelector('.chip-done')!.addEventListener('click', () => ui.setMode('select'));
+  /** Tools without a picker still get the chip, so there's a Done button. */
+  const PLAIN_TOOLS: Partial<Record<Mode, [string, string, string]>> = {
+    demolish: ['🧨', 'Remove', 'Tap or drag'],
+    land: ['🗺️', 'Buy land', 'Tap a plot'],
+  };
 
   const render = () => {
     for (const b of toolButtons) b.classList.toggle('active', b.dataset.mode === ui.mode);
+    const plain = PLAIN_TOOLS[ui.mode];
+    if (plain) {
+      chipImg.hidden = true;
+      chipEm.hidden = true;
+      change.disabled = true;
+      chipName.textContent = `${plain[0]} ${plain[1]}`;
+      chipPrice.textContent = plain[2];
+      chip.classList.remove('hidden');
+      return;
+    }
     if (!isShopMode(ui.mode)) {
       chip.classList.add('hidden');
       return;
@@ -229,6 +246,9 @@ export function mountTools(sim: Simulation, ui: UiState): void {
     const id = current[ui.mode]();
     const it = shops[ui.mode].item(id);
     if (!it) return;
+    chipImg.hidden = false;
+    chipEm.hidden = false;
+    change.disabled = false;
     chipImg.src = shops[ui.mode].artUrl(id);
     chipName.textContent = it.name;
     chipPrice.textContent = it.facts[0][1];

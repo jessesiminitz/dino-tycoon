@@ -45,8 +45,9 @@ await click('#btn-menu');
 await expectSpeed('☰ open', 0);
 await click('[data-pause="resume"]');
 await expectSpeed('B08 ☰ Resume after the player paused', 0);
-// …and from 3×, Resume goes back to 3×.
-await click('.speed-btn[data-speed="3"]');
+// …and from 3×, Resume goes back to 3×. (▶ cycles 1× → 3× → 8×.)
+await click('#btn-speed');
+await click('#btn-speed');
 await click('#btn-menu');
 await click('[data-pause="resume"]');
 await expectSpeed('☰ Resume after 3×', 3);
@@ -61,7 +62,7 @@ await click('.choice-later');
 await expectSpeed('B09 Decide later after the player paused', 0);
 
 // B10: at 1×, a decision and an outcome both open; close the outcome first.
-await click('.speed-btn[data-speed="1"]');
+await page.evaluate(() => window.__dino.sim.setSpeed(1));
 await page.evaluate(() => (window.__dino.sim.state.pendingChoice = null));
 await pendChoice();
 await sleep(300);

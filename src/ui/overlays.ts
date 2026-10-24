@@ -25,7 +25,7 @@ export interface PauseHandlers {
   toast(text: string): void;
 }
 
-/** ☰ menu: pauses the park while open. */
+/** ☰ menu: pauses the park while open. Also the way to People and the Dino book. */
 export function mountPauseMenu(sim: Simulation, handlers: PauseHandlers): void {
   const modal = $('pause');
   const settings = modal.querySelector<HTMLElement>('.settings')!;
@@ -46,6 +46,7 @@ export function mountPauseMenu(sim: Simulation, handlers: PauseHandlers): void {
     if (!el) return;
     switch (el.dataset.pause) {
       case 'resume':
+      case 'panel': // People or the Dino book: that button opens its own panel
         return close();
       case 'save':
         handlers.save();

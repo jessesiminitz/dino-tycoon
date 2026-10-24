@@ -360,7 +360,7 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
       icon: '🌊',
       story:
         'The park is built on both banks of a river, and the rainy season has begun. Every few days heavy rain makes the river flood the low meadows, right where three of your paddocks are. Dinosaurs stuck in the water catch chills, and you have no vet!',
-      tip: 'Blue stripes show where the next flood will reach. Lay 🌊 sandbags (🚧 Fence) along the riverbank, build a 🚰 pump house (🏪 Build) to keep ground dry, move dinosaurs up to the high paddock, and hire a 🩺 vet.',
+      tip: 'Blue stripes show where the next flood will reach. Lay 🌊 sandbags (🛒 Buy → 🚧 Fences) along the riverbank, build a 🚰 pump house (🛒 Buy → 🏪 Buildings) to keep ground dry, move dinosaurs up to the high paddock, and hire a 🩺 vet.',
     },
     floods: { starts: [30, 100, 170, 240, 310, 380, 450, 520, 590, 660], peak: 3, rise: 3, hold: 6, drain: 3 },
     timeline: [

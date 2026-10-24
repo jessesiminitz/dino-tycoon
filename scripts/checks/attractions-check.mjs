@@ -1,6 +1,6 @@
 // A safari track loop past a paddock, a station, a tower and a petting pen, with visitors riding.
 import puppeteer from 'puppeteer-core';
-import { HERE, check, finish, ready, gameUrl } from './lib.mjs';
+import { HERE, check, finish, ready, gameUrl, reach } from './lib.mjs';
 const OUT = HERE;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const [W, H] = (process.argv[2] ?? '844x390').split('x').map(Number);
@@ -54,7 +54,7 @@ await page.screenshot({ path: `${OUT}attractions-${W}.png` });
 check('a jeep has set off or taken riders', setup.jeeps.some((j) => j.riders > 0 || j.steps > 0), setup.jeeps);
 // The Paths & tracks shop with its four choices (after tucking away any decision card that popped up).
 if (await page.$eval('#choice', (m) => !m.classList.contains('hidden'))) await (await page.$('.choice-later')).tap();
-await (await page.$('.tool-btn[data-mode="path"]')).tap(); await sleep(300);
+await (await reach(page, '.tool-btn[data-mode="path"]')).tap(); await sleep(300);
 const picker = await page.evaluate(() => {
   const shop = [...document.querySelectorAll('.modal:not(.hidden)')].find((m) => m.querySelector('.shop-card'));
   if (!shop) return { open: [...document.querySelectorAll('.modal:not(.hidden)')].map((m) => m.id || m.getAttribute('aria-label')), left: -1, right: 0, vw: 0, cards: [] };

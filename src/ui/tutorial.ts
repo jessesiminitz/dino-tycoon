@@ -17,12 +17,12 @@ const STEPS: Step[] = [
     button: 'Let’s build',
   },
   {
-    text: 'Dinosaurs need a paddock. Tap 🚧 Fence and choose Wooden. Then drag from one corner of your paddock to the opposite corner, and the whole box is fenced.',
+    text: 'Dinosaurs need a paddock. Tap 🛒 Buy, then 🚧 Fences, and choose Wooden. Then drag from one corner of your paddock to the opposite corner, and the whole box is fenced.',
     target: '.tool-btn[data-mode="fence"]',
     done: (sim) => sim.regions().regions.some((r) => r.kind === 'paddock'),
   },
   {
-    text: 'Dinosaurs get hungry. Tap 🍖 Feeder, choose the Plant feeder, and tap inside your paddock to put it there.',
+    text: 'Dinosaurs get hungry. Tap 🛒 Buy, then 🍖 Feeders, choose the Plant feeder, and tap inside your paddock to put it there.',
     target: '.tool-btn[data-mode="feeder"]',
     done: (sim) => {
       const { regions, tileRegion } = sim.regions();
@@ -33,12 +33,12 @@ const STEPS: Step[] = [
     },
   },
   {
-    text: 'Now the fun part! Tap 🦖 Dinos, buy a Protoceratops, then tap inside your paddock to let it out.',
+    text: 'Now the fun part! Tap 🛒 Buy, then 🦖 Dinosaurs, buy a Protoceratops, then tap inside your paddock to let it out.',
     target: '#btn-catalog',
     done: (sim) => sim.state.dinos.length > 0,
   },
   {
-    text: 'Visitors walk on paths. Tap 🛤️ Path, choose Path, and drag from the gate up to your paddock so they can see your dinosaur.',
+    text: 'Visitors walk on paths. Tap 🛒 Buy, then 🛤️ Paths, choose Path, and drag from the gate up to your paddock so they can see your dinosaur.',
     target: '.tool-btn[data-mode="path"]',
     done: (sim) => {
       const { state } = sim;
@@ -57,7 +57,7 @@ const STEPS: Step[] = [
     },
   },
   {
-    text: 'Hungry visitors spend money. Tap 🏪 Build, choose the Restaurant (the giant fries!), and tap right next to your path.',
+    text: 'Hungry visitors spend money. Tap 🛒 Buy, then 🏪 Buildings, choose the Restaurant (the giant fries!), and tap right next to your path.',
     target: '.tool-btn[data-mode="building"]',
     done: (sim) => sim.state.buildings.some((b) => b.kind === 'restaurant'),
   },
@@ -67,7 +67,7 @@ const STEPS: Step[] = [
     done: (sim) => sim.state.staff.some((m) => m.role === 'worker'),
   },
   {
-    text: 'You’re open for business! Visitors will soon need restrooms, drinks and trash cans: tap 👥 People to hear what they think. Tap ▶▶ to speed up time, and check 📊 Park to see your goals.',
+    text: 'You’re open for business! Visitors will soon need restrooms, drinks and trash cans: open ☰ and tap 👥 People to hear what they think. Tap ▶ to speed up time, and check 📊 Park to see your goals.',
     target: '#btn-park',
     button: 'Finish',
   },
@@ -87,10 +87,15 @@ export function mountTutorial(sim: Simulation, toast: (text: string) => void): v
   let highlighted: Element | null = null;
   let celebrating = false;
 
+  let viaBuy: Element | null = null;
   const highlight = (selector?: string) => {
     highlighted?.classList.remove('tutorial-target');
+    viaBuy?.classList.remove('tutorial-target');
     highlighted = selector ? document.querySelector(selector) : null;
     highlighted?.classList.add('tutorial-target');
+    // Tools live in the Buy sheet: pulse the Buy button too, so the way in is clear.
+    viaBuy = highlighted?.closest('#buy') ? document.getElementById('btn-buy') : null;
+    viaBuy?.classList.add('tutorial-target');
   };
 
   const finish = (message: string) => {

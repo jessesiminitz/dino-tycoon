@@ -25,7 +25,14 @@ const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD
 const compactMoney = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', notation: 'compact', maximumFractionDigits: 1 });
 export const formatMoney = (n: number) => money.format(n);
 
-const TOAST_MS = 3200;
+/** Pop-ups stay long enough to read: a few seconds, longer for long ones. */
+const TOAST_MS = 5000;
+const TOAST_MS_PER_CHAR = 40;
+const TOAST_MAX_MS = 9000;
+/** News pop-ups beyond the few on screen wait their turn, up to this many. */
+const MAX_WAITING = 6;
+const SPEED_GLYPHS: Record<Speed, string> = { 0: '▶', 1: '▶', 3: '▶▶', 8: '▶▶▶' };
+const PLAY_SPEEDS: Speed[] = [1, 3, 8];
 const MAX_TOASTS = 3;
 /** Park events arriving this close together are shown as one batch. */
 const EVENT_BATCH_MS = 150;
@@ -141,7 +148,8 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
   const smallButtons: HTMLButtonElement[] = [];
   const toasts = $('toasts');
   const guestsEl = $('hud-guests');
-  const speedButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('.speed-btn[data-speed]'));
+  const pauseButton = document.querySelector<HTMLButtonElement>('.speed-btn[data-speed="0"]')!;
+  const speedButton = $('btn-speed') as HTMLButtonElement;
   const catalog = mountCatalog(sim, ui);
 
   // --- money, clock, speed ---
@@ -205,20 +213,42 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
     guestsEl.textContent = String(state.visitors.length);
     guestsEl.hidden = state.visitors.length === 0;
     moneyEl.classList.toggle('negative', state.money < 0);
-    for (const b of speedButtons) b.classList.toggle('active', Number(b.dataset.speed) === sim.speed);
+    pauseButton.classList.toggle('active', sim.speed === 0);
+    speedButton.classList.toggle('active', sim.speed !== 0);
+    const shown = SPEED_GLYPHS[sim.speed === 0 ? playSpeed : sim.speed];
+    if (speedButton.textContent !== shown) speedButton.textContent = shown;
   };
-  for (const b of speedButtons) {
-    b.addEventListener('click', () => sim.setSpeed(Number(b.dataset.speed) as Speed));
-  }
+  /** The speed a paused park resumes at: the play button shows it, and cycles it while running. */
+  let playSpeed: Speed = sim.speed === 0 ? 1 : sim.speed;
+  pauseButton.addEventListener('click', () => sim.setSpeed(0));
+  speedButton.addEventListener('click', () => {
+    if (sim.speed !== 0) playSpeed = PLAY_SPEEDS[(PLAY_SPEEDS.indexOf(sim.speed) + 1) % PLAY_SPEEDS.length];
+    sim.setSpeed(playSpeed);
+  });
   sim.onChange(render);
   render(sim.state);
 
-  // --- tools ---
+  // --- tools: one Buy button opens a sheet of everything to buy or build ---
+  const buy = $('buy');
+  const closeBuy = () => buy.classList.add('hidden');
+  $('btn-buy').addEventListener('click', () => buy.classList.remove('hidden'));
+  buy.querySelector('.modal-close')!.addEventListener('click', closeBuy);
+  buy.addEventListener('click', (e) => {
+    // Choosing a tool (or tapping outside the card) closes the sheet; the tool opens its own picker.
+    if (e.target === buy || (e.target as HTMLElement).closest('.tool-btn')) closeBuy();
+  });
   mountTools(sim, ui);
   $('btn-catalog').addEventListener('click', () => {
     ui.setMode('select');
     catalog.open();
   });
+  // New stickers wait in the Dino book, behind ☰.
+  const stickersBadge = $('stickers-badge');
+  const menuBadge = $('menu-badge');
+  new MutationObserver(() => {
+    menuBadge.classList.toggle('hidden', stickersBadge.classList.contains('hidden'));
+    menuBadge.textContent = stickersBadge.textContent;
+  }).observe(stickersBadge, { attributes: true, attributeFilter: ['class'], childList: true, characterData: true, subtree: true });
 
   let prevHint: string | null = null;
   const renderTools = () => {
@@ -307,22 +337,46 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
       parkPanel.open('port');
     },
     toast(text, kind = 'ok') {
-      const el = document.createElement('div');
-      el.className = `toast ${kind}`;
-      el.textContent = text;
-      toasts.appendChild(el);
-      // Keep the newest few (the update banner, if showing, stays at the top of the column).
+      // A reply to something the player just did shows at once, making room if it must.
       const shown = toasts.querySelectorAll('.toast');
-      for (let i = 0; i < shown.length - MAX_TOASTS; i++) shown[i].remove();
-      window.setTimeout(() => el.remove(), TOAST_MS);
+      if (shown.length >= MAX_TOASTS) shown[0].remove();
+      addToast(text, kind);
     },
   };
+
+  /**
+   * Park news waits its turn: a few pop-ups at a time, each long enough to read, instead of
+   * new ones pushing the shown ones off early. At high speed the oldest waiting ones give way
+   * (the News keeps everything).
+   */
+  const waiting: { text: string; kind: 'ok' | 'error' }[] = [];
+  function addToast(text: string, kind: 'ok' | 'error'): void {
+    const el = document.createElement('div');
+    el.className = `toast ${kind}`;
+    el.textContent = text;
+    toasts.appendChild(el);
+    window.setTimeout(() => {
+      el.remove();
+      showNews();
+    }, Math.min(TOAST_MAX_MS, TOAST_MS + text.length * TOAST_MS_PER_CHAR));
+  }
+  function showNews(): void {
+    while (waiting.length > 0 && toasts.querySelectorAll('.toast').length < MAX_TOASTS) {
+      const { text, kind } = waiting.shift()!;
+      addToast(text, kind);
+    }
+  }
+  function queueNews(text: string, kind: 'ok' | 'error'): void {
+    waiting.push({ text, kind });
+    if (waiting.length > MAX_WAITING) waiting.splice(0, waiting.length - MAX_WAITING);
+    showNews();
+  }
 
   let pending: GameEvent[] = [];
   sim.onEvent((e) => {
     if (pending.length === 0) {
       window.setTimeout(() => {
-        for (const b of batchEvents(pending)) hud.toast(b.text, b.kind === 'bad' ? 'error' : 'ok');
+        for (const b of batchEvents(pending)) queueNews(b.text, b.kind === 'bad' ? 'error' : 'ok');
         pending = [];
       }, EVENT_BATCH_MS);
     }
@@ -353,10 +407,9 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
   // A top-bar button lights up while its panel is open.
   const panelsFor: Record<string, string[]> = {
     'btn-park': ['park'],
-    'btn-people': ['people'],
     'btn-requests': ['requests'],
-    'btn-book': ['guide', 'stickers'],
     'btn-log': ['log'],
+    'btn-buy': ['buy', 'catalog'],
   };
   const syncOpen = () => {
     for (const [btn, panels] of Object.entries(panelsFor))

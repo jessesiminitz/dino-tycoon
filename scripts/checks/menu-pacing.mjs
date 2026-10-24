@@ -75,7 +75,8 @@ try {
     sim.accumulator = 0;
     sim.setSpeed(1);
     const label = document.getElementById('hud-clock').getAttribute('aria-label');
-    const selected = document.querySelector('.speed-btn.active').dataset.speed;
+    // The one play button shows the chosen speed (▶ 1×, ▶▶ 3×, ▶▶▶ 8×).
+    const selected = { '▶': '1', '▶▶': '3', '▶▶▶': '8' }[document.getElementById('btn-speed').textContent];
     let time = game.loop.now;
     scene.entities.update(time);
     const animalBefore = scene.entities.animalTime;

@@ -227,7 +227,7 @@ export function mountPeople(sim: Simulation, ui: UiState): void {
     const counts = DINO_FILTERS.map((f) => ({ id: f.id, label: f.label, count: all.filter(f.test).length + (f.id === 'babies' ? state.eggs.length : 0) }));
     return [
       chipRow(counts),
-      `<div class="people-grid">${[...eggs, ...cards].join('') || `<p class="note">${state.dinos.length ? 'No dinosaurs match this filter.' : 'No dinosaurs yet. Buy some from 🦖 Dinos.'}</p>`}</div>`,
+      `<div class="people-grid">${[...eggs, ...cards].join('') || `<p class="note">${state.dinos.length ? 'No dinosaurs match this filter.' : 'No dinosaurs yet. Buy some from 🛒 Buy → 🦖 Dinosaurs.'}</p>`}</div>`,
     ];
   }
 

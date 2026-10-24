@@ -88,7 +88,7 @@ function startGame(state: GameState, slot: SlotId): void {
   game.scene.add('weather', WeatherScene, true, { sim });
 
   // Dev-only handle for debugging and automated browser checks; stripped from production builds.
-  if (import.meta.env.DEV) Object.assign(window, { __dino: { game, sim, ui, slot, audioDebug, playSfx } });
+  if (import.meta.env.DEV) Object.assign(window, { __dino: { game, sim, ui, hud, slot, audioDebug, playSfx } });
 }
 
 // Offline support + updates. A home-screen app can stay open for days, so also

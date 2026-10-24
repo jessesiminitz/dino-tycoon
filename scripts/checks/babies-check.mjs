@@ -1,6 +1,6 @@
 // A paddock with grown-ups, a baby and an egg about to hatch; the People panel's Babies & eggs filter.
 import puppeteer from 'puppeteer-core';
-import { HERE, finish, ready } from './lib.mjs';
+import { HERE, finish, ready, reach } from './lib.mjs';
 const OUT = HERE;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
@@ -33,7 +33,7 @@ const p = await page.evaluate(({ A }) => { const c = window.__dino.game.scene.ge
 await page.touchscreen.tap(p.x, p.y); await sleep(300);
 console.log('egg info:', await page.$eval('#info-text', (e) => e.textContent));
 // People → Dinos → Babies & eggs.
-await (await page.$('#btn-people')).tap(); await sleep(300);
+await (await reach(page, '#btn-people')).tap(); await sleep(300);
 await (await page.$('[data-tab="dinos"]')).tap(); await sleep(300);
 await (await page.$('[data-filter="babies"]')).tap(); await sleep(300);
 console.log('cards:', await page.$$eval('#people .person-card', (c) => c.map((x) => x.querySelector('.pname')?.textContent + ' / ' + x.querySelector('.sub')?.textContent)));

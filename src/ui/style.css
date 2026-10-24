@@ -40,7 +40,10 @@ body {
   color: var(--text);
   /* A chunky old-computer font, scaled so its small x-height reads like the others. */
   font-family: 'VT323', ui-monospace, 'SF Mono', Menlo, monospace;
-  font-size-adjust: 0.56;
+  font-size-adjust: 0.5;
+  /* Phones enlarge text in landscape unless told not to. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
   /* No iOS text selection, callouts, tap flashes or rubber-band scrolling. */
   -webkit-user-select: none;
   user-select: none;
@@ -241,9 +244,115 @@ button {
   pointer-events: none;
 }
 
-.tools {
+.toolbar-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.buy-group {
   padding: 3px;
+}
+
+/* The one way into everything you can buy or build. */
+.buy-btn {
+  min-width: 64px;
+  min-height: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 2px 10px;
+  font-size: 20px;
+  line-height: 1;
+  color: #1b1b1b;
+  background: var(--accent);
+  border: 2px solid #1b1b1b;
+  border-radius: 4px;
+}
+
+.buy-btn span {
+  font-size: 13px;
+  font-weight: bold;
+}
+
+/* The Buy sheet: one tile per tool. */
+.modal-card.sheet.buy-card {
+  width: min(100%, 640px);
+  height: auto;
+}
+
+.buy-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  padding: 8px;
+  overflow-y: auto;
+}
+
+body.in-park #buy .buy-grid .tool-btn {
+  min-height: 84px;
   gap: 3px;
+  padding: 6px 4px;
+  font-size: 26px;
+  line-height: 1;
+  background: var(--tint);
+  border: 1px solid rgba(60, 45, 20, 0.18);
+}
+
+body.in-park #buy .buy-grid .tool-btn span {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+body.in-park #buy .buy-grid .tool-btn small {
+  font-size: 11px;
+  line-height: 1.2;
+  color: var(--muted);
+}
+
+@media (max-height: 340px) {
+  body.in-park #buy .buy-grid .tool-btn {
+    min-height: 64px;
+    font-size: 22px;
+  }
+  body.in-park #buy .buy-grid .tool-btn small {
+    display: none;
+  }
+}
+
+.pick-chip .chip-done {
+  min-height: var(--tap);
+  margin-left: 2px;
+  padding: 0 12px;
+  font-size: 14px;
+  font-weight: bold;
+  background: var(--panel-hi);
+  border: 2px solid var(--panel-lo);
+  border-radius: 4px;
+}
+
+.pick-chip {
+  display: flex;
+  align-items: center;
+}
+
+.pause-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.pause-row .menu-btn {
+  position: relative;
+  min-width: 0;
+  flex: 1;
+  margin: 0;
+}
+
+#btn-menu {
+  position: relative;
 }
 
 .tool-btn {
@@ -532,9 +641,9 @@ body.has-tracker .toasts {
 
 .species-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
   align-content: start;
-  gap: 8px;
+  gap: 6px;
   padding: 8px;
   overflow-x: hidden;
   overflow-y: auto;
@@ -563,7 +672,7 @@ body.has-tracker .toasts {
 }
 
 .species-art {
-  height: 54px;
+  height: 44px;
   max-width: 100%;
   object-fit: contain;
   align-self: center;
@@ -724,18 +833,8 @@ body.has-tracker .toasts {
 }
 
 
-/* Small phones: tighter stats and an icon-only toolbar so the info panel has room beside it. */
+/* Small phones: tighter stats so the info panel has room beside the Buy button. */
 @media (max-width: 740px) {
-  .tool-btn span {
-    display: none;
-  }
-
-  .tool-btn {
-    min-width: 38px;
-    font-size: 19px;
-    padding: 2px;
-  }
-
   .info {
     font-size: 12px;
   }
@@ -1310,7 +1409,7 @@ body:not(.in-park) #info {
 .menu-title {
   margin: 0 0 10px;
   font-family: var(--pixel-font);
-  font-size: clamp(34px, 8vw, 64px);
+  font-size: clamp(30px, 6vw, 52px);
   line-height: 0.95;
   color: var(--accent);
   text-shadow: 4px 4px 0 #6b3a12, 8px 8px 0 rgba(0, 0, 0, 0.25);
@@ -1321,9 +1420,29 @@ body:not(.in-park) #info {
   margin: 0 auto;
 }
 
+/* Past the title screen the logo steps back, so the choices get the room. */
+.menu:not([data-screen='main']) .menu-title {
+  margin-bottom: 4px;
+  font-size: clamp(22px, 3.6vw, 30px);
+}
+
+.menu:not([data-screen='main']) .menu-title br {
+  display: none;
+}
+
+/* The menu's pixel font a touch smaller than the park's, so cards read without crowding. */
+.menu {
+  font-size-adjust: 0.46;
+}
+
+.island-card .note,
+.scenario-card .note {
+  line-height: 1.2;
+}
+
 .menu-body h2 {
-  margin: 6px 0 10px;
-  font-size: 18px;
+  margin: 4px 0 8px;
+  font-size: 16px;
   color: #fff;
   text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35);
 }
@@ -1340,18 +1459,35 @@ body:not(.in-park) #info {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-width: 240px;
+  min-width: 210px;
   min-height: var(--tap);
   margin: 0 auto;
-  padding: 6px 18px;
+  padding: 4px 16px;
   font-family: var(--pixel-font);
-  font-size: 16px;
+  font-size: 15px;
   color: var(--text);
   background: var(--panel);
   border: 3px solid;
   border-color: var(--bevel);
   border-radius: 4px;
   box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Short landscape phones: the main buttons two by two, clear of the dinosaur parade. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .menu[data-screen='main'] .menu-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 210px);
+    justify-content: center;
+  }
+  .menu[data-screen='main'] .menu-buttons > [data-play] {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+  .menu[data-screen='main'] .menu-buttons .menu-btn {
+    min-width: 0;
+    width: 100%;
+  }
 }
 
 .menu-btn small {
@@ -1415,7 +1551,7 @@ body:not(.in-park) #info {
 
 .scenario-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 10px;
   text-align: left;
 }
@@ -1461,10 +1597,10 @@ body:not(.in-park) #info {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 160px;
+  min-width: 150px;
   min-height: var(--tap);
-  padding: 6px 14px;
-  font-size: 16px;
+  padding: 4px 12px;
+  font-size: 14px;
   font-weight: bold;
   background: var(--panel);
   border: 3px solid;
@@ -1499,7 +1635,7 @@ body:not(.in-park) #info {
 
 .map-preview {
   width: 100%;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 16 / 10;
   object-fit: cover;
   image-rendering: pixelated;
   border: 2px solid var(--panel-lo);
@@ -1508,7 +1644,7 @@ body:not(.in-park) #info {
 
 .island-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 8px;
   text-align: left;
 }

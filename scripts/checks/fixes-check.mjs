@@ -1,6 +1,6 @@
 // Top buttons (plain, lit only while their panel is open) and a fence box drawn with one drag.
 import puppeteer from 'puppeteer-core';
-import { HERE, finish, ready } from './lib.mjs';
+import { HERE, finish, ready, reach } from './lib.mjs';
 const OUT = HERE + 'tour/';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
@@ -13,7 +13,7 @@ await page.evaluate(() => window.__dino.sim.setSpeed(0));
 const lit = () => page.evaluate(() => [...document.querySelectorAll('.hud-btn')].filter((b) => b.classList.contains('active')).map((b) => b.id));
 console.log('lit at start:', await lit());
 await page.screenshot({ path: `${OUT}fix-hud.png`, clip: { x: 0, y: 0, width: 844, height: 70 } });
-await (await page.$('#btn-people')).tap(); await sleep(300);
+await (await reach(page, '#btn-people')).tap(); await sleep(300);
 console.log('lit with People open:', await lit());
 await page.evaluate(() => document.querySelectorAll('.modal').forEach((m) => m.classList.add('hidden'))); await sleep(200);
 console.log('lit after closing:', await lit());

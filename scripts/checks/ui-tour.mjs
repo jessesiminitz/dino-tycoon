@@ -1,6 +1,6 @@
 // A tour of the main screens on an iPhone: top bar, each build screen, the chip, Dinos, Book and Park.
 import puppeteer from 'puppeteer-core';
-import { HERE, finish, ready } from './lib.mjs';
+import { HERE, finish, ready, reach } from './lib.mjs';
 const OUT = HERE + 'tour/';
 import { mkdirSync } from 'fs';
 mkdirSync(OUT, { recursive: true });
@@ -15,7 +15,7 @@ await page.evaluate(() => document.fonts.ready); await sleep(1300);
 await page.evaluate(() => window.__dino.sim.setSpeed(0));
 const shot = (name) => page.screenshot({ path: `${OUT}${w}-${name}.png` });
 const closeAll = () => page.evaluate(() => document.querySelectorAll('.modal').forEach((m) => m.classList.add('hidden')));
-const tap = async (sel) => { await (await page.$(sel)).tap(); await sleep(450); };
+const tap = async (sel) => { await (await reach(page, sel)).tap(); await sleep(450); };
 await shot('0-hud');
 for (const mode of ['building', 'feeder', 'fence', 'path', 'decor']) {
   await tap(`.tool-btn[data-mode="${mode}"]`);

@@ -43,7 +43,7 @@ try {
  }
  // A runtime-created shop must use the same containing block as the static menu.
  await page.evaluate(()=>window.__setVisibleViewport(305));
- await page.click('[data-mode="fence"]');
+ await page.evaluate(()=>document.querySelector('#buy [data-mode="fence"]').click());
  await page.waitForSelector('.modal:not(.hidden) .shop-card',{visible:true});
  const dialog=await page.$eval('.modal:not(.hidden) .shop-card',b=>{const r=b.closest('.modal').getBoundingClientRect();return {top:r.top,bottom:r.bottom};});
  check('runtime shop fits the visible viewport',dialog.top===0&&dialog.bottom===305,dialog);

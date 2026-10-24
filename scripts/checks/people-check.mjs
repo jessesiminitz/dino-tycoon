@@ -1,5 +1,5 @@
 import puppeteer from 'puppeteer-core';
-import { HERE, finish, ready } from './lib.mjs';
+import { HERE, finish, ready, reach } from './lib.mjs';
 const OUT = HERE;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
@@ -36,7 +36,8 @@ const r = await page.evaluate(() => {
 console.log(JSON.stringify(r, null, 1));
 await sleep(700);
 await page.screenshot({ path: `${OUT}people-0-park-${W}.png` });
-await (await page.$('#btn-people')).tap(); await sleep(300);
+await page.evaluate(() => document.querySelector('#choice:not(.hidden) .choice-later')?.click()); await sleep(200); // a decision card may have turned up
+await (await reach(page, '#btn-people')).tap(); await sleep(300);
 await page.screenshot({ path: `${OUT}people-1-visitors-${W}.png` });
 await page.evaluate(() => { document.querySelector('.people-body').scrollTop = 120; }); await sleep(100);
 await page.screenshot({ path: `${OUT}people-1b-cards-${W}.png` });

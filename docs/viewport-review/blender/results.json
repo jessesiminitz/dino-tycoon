@@ -74,14 +74,14 @@
         "height": 305
       },
       "toolbar": {
-        "top": 219,
+        "top": 213,
         "bottom": 275,
-        "height": 56
+        "height": 62
       },
       "hud": {
         "top": 6,
-        "bottom": 62,
-        "height": 56
+        "bottom": 64,
+        "height": 58
       },
       "camera": 305
     },
@@ -99,14 +99,14 @@
         "height": 250
       },
       "toolbar": {
-        "top": 194,
+        "top": 188,
         "bottom": 250,
-        "height": 56
+        "height": 62
       },
       "hud": {
         "top": 36,
-        "bottom": 92,
-        "height": 56
+        "bottom": 94,
+        "height": 58
       },
       "camera": 250
     },
@@ -124,14 +124,14 @@
         "height": 375
       },
       "toolbar": {
-        "top": 289,
+        "top": 283,
         "bottom": 345,
-        "height": 56
+        "height": 62
       },
       "hud": {
         "top": 6,
-        "bottom": 62,
-        "height": 56
+        "bottom": 64,
+        "height": 58
       },
       "camera": 375
     },

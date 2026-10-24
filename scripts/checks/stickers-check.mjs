@@ -1,6 +1,6 @@
 // Earn a few stickers in a park, see the badge and the pop-up, and open the book.
 import puppeteer from 'puppeteer-core';
-import { HERE, finish, ready, gameUrl } from './lib.mjs';
+import { HERE, finish, ready, gameUrl, reach } from './lib.mjs';
 const OUT = HERE;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const [W, H] = (process.argv[2] ?? '667x375').split('x').map(Number);
@@ -30,7 +30,7 @@ await sleep(2600);
 const badge = await page.$eval('#stickers-badge', (b) => ({ text: b.textContent, hidden: b.classList.contains('hidden') }));
 console.log('badge:', badge, '| toasts:', await page.$$eval('.toast', (t) => t.map((x) => x.textContent).filter((x) => x.includes('sticker'))));
 await page.screenshot({ path: `${OUT}stickers-0-toast-${W}.png` });
-await (await page.$('#btn-book')).tap(); await sleep(500);
+await (await reach(page, '#btn-book')).tap(); await sleep(500);
 const book = await page.evaluate(() => ({
   count: document.querySelector('.stickers-count').textContent,
   earned: document.querySelectorAll('.sticker.earned').length,

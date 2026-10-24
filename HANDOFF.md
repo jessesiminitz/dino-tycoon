@@ -1,5 +1,20 @@
 # Dino Tycoon: handoff notes
 
+## One Buy button, a smaller top bar and calmer text — October 24, 2026
+
+The owner found the menu text too large, wanted a single Buy button instead of the row of tools, fewer top buttons, and pop-ups that stay long enough to read.
+
+- **Buy button** (bottom-right, `#btn-buy`): opens the **Buy & build** sheet (`#buy`), with 8 tiles: Dinosaurs, Feeders, Fences, Paths, Buildings, Garden, Land, Remove. The tiles are the old `.tool-btn` buttons (same ids and `data-mode`), so `tools.ts` and the catalog are wired as before. Choosing a tile closes the sheet and opens that tool's picker. A tool tap now always opens its picker (it used to toggle back to Look).
+- **Chip + Done:** while a tool is in use the chip beside Buy shows what's being placed (Change) and a **Done** button back to Look. Remove and Land get the chip too (no Change).
+- **Top bar:** Park, Requests, News; then pause, one **▶ speed** button (`#btn-speed`: tap to play, tap again to cycle 1× → 3× → 8×; it remembers the speed after a pause) and ☰. **People** and the **Dino book** moved into ☰ (same ids, `data-pause="panel"`); a red badge on ☰ mirrors the new-stickers badge.
+- **Text:** the pixel font's `font-size-adjust` went 0.56 → 0.5 (0.46 in the title menu), `text-size-adjust: 100%` stops iPhone Safari enlarging text in landscape, the in-park sheet scale is 13/11/16/14 px (was 14/12/18/15), shop cards fit 4 across, the title menu's logo shrinks past the main screen, and on short landscape phones the main menu buttons sit two by two (the parade hint no longer overlaps Settings).
+- **Pop-ups:** up to 3 at a time, each for 5 s plus 40 ms a character (max 9 s). Park news (`sim` events) queues, up to 6 waiting, instead of pushing the shown ones off early, which is what made them vanish in about a second when several arrived together. `hud.toast` (a reply to the player's own tap, like "Nope!") still shows at once, replacing the oldest if three are up.
+- **Tutorial:** steps say "Tap 🛒 Buy, then …", and the Buy button pulses along with the tool inside the sheet.
+- **Checks:** `lib.mjs` has `reach(page, selector)`, which opens the Buy sheet or ☰ first when the button lives there, and `openTool(page, mode)`; `shopPick` uses it. New `npm run check:buy-menu`. The dev hook now exposes `__dino.hud`.
+
+No save change.
+
+
 ## Audit fixes, balance and free-play goals — October 24, 2026
 
 This round carries out the plan in the Claude Docs doc "Dino Tycoon audit and plan" (https://claude.ai/artifact/JFKZ67B1ZRedupKPovshRS). The owner said "implement the plan" without filling in its Decisions table, so the doc's recommendations were taken: free play digs for dinosaurs by default (with a switch), big dinosaurs get more appeal rather than lower prices, storms still let dinosaurs out but only through a real gap after a warning, and the challenges are back on the title menu. Each is easy to reverse if the owner disagrees.

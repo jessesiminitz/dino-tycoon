@@ -1,6 +1,6 @@
 // iPads held upright: no rotate screen, top bar and toolbar on screen and not overlapping, panels fit.
 import puppeteer from 'puppeteer-core';
-import { HERE, finish, ready, gameUrl } from './lib.mjs';
+import { HERE, finish, ready, gameUrl, reach } from './lib.mjs';
 const OUT = HERE;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
@@ -26,8 +26,9 @@ for (const [w, h, name] of [[744, 1133, 'mini'], [820, 1180, 'air'], [1024, 1366
   });
   // Open a couple of panels and make sure they fit.
   const panels = {};
-  for (const [btn, modal] of [['#btn-people', '#people'], ['#btn-book', '#guide'], ['#btn-park', '#park']]) {
-    await (await page.$(btn))?.tap(); await sleep(300);
+  // An upright phone shows the rotate hint over the park: no panels to open there.
+  for (const [btn, modal] of r.rotateHint ? [] : [['#btn-people', '#people'], ['#btn-book', '#guide'], ['#btn-park', '#park']]) {
+    await (await reach(page, btn)).tap(); await sleep(300);
     panels[modal] = await page.evaluate((m) => { const c = document.querySelector(`${m} .modal-card`)?.getBoundingClientRect(); return c ? c.bottom <= innerHeight + 1 && c.right <= innerWidth + 1 : 'n/a'; }, modal);
     await page.evaluate((m) => document.querySelector(m)?.classList.add('hidden'), modal);
   }

@@ -1,6 +1,6 @@
 import puppeteer from 'puppeteer-core';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { check, finish, ready, gameUrl, shopPick, toScreen } from './lib.mjs';
+import { check, finish, ready, gameUrl, shopPick, toScreen, reach } from './lib.mjs';
 const style=process.env.ART_STYLE??'blender', out=`docs/lagoon-review/${style}`;
 await mkdir(out,{recursive:true});
 const browser=await puppeteer.launch({executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true,args:['--use-angle=swiftshader','--enable-unsafe-swiftshader']});
@@ -41,11 +41,11 @@ try {
   check(`one drag creates paid water and an enclosed lagoon ${width}`,built.water===16&&built.home==='paddock'&&built.money===41200,built);
   check(`water dinosaur and fish feeder work immediately ${width}`,built.release&&built.feeder,built);
   await sleep(500);await page.screenshot({path:`${out}/lagoon-${width}.png`});
-  await page.click('.tool-btn[data-mode="decor"]');
+  await (await reach(page, '.tool-btn[data-mode="decor"]')).click();
   const waterGarden=await page.$$eval('.modal:not(.hidden) .shop-card',cards=>cards.some(c=>['pond','drain'].includes(c.dataset.id)));
   check(`Gardening has no pond or marsh tools ${width}`,!waterGarden);
   await page.click('.modal:not(.hidden) .modal-close');
-  await page.click('.tool-btn[data-mode="demolish"]');
+  await (await reach(page, '.tool-btn[data-mode="demolish"]')).click();
   const drain=await page.evaluate(({x,y})=>{const {sim,game}=window.__dino;const d={x:x+7,y:y+2};sim.state.map.tiles[d.y*sim.state.map.width+d.x]=10;sim.worldRevision++;game.scene.getScene('park').cameras.main.centerOn((d.x+.5)*16,(d.y+.5)*16);return d;},area);
   await sleep(250);const dp=await toScreen(page,drain.x+.5,drain.y+.5);
   await page.touchscreen.tap(dp.x,dp.y);await sleep(250);
