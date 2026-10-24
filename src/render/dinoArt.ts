@@ -721,7 +721,27 @@ function scaledGrid(s: Sprite, scale: number): Sprite {
       else if (white) out.set(x, y, 'Y');
       else if (filled >= (x1 - x0) * (y1 - y0) * 0.4) out.set(x, y, [...counts].sort((a, b) => b[1] - a[1])[0][0]);
     }
+  if (s.grid.some((row) => row.includes('Y'))) openEye(out);
   return out;
+}
+
+/**
+ * At park size the pupil swallows the white beside it, so an open eye is drawn again on the small grid:
+ * white behind the pupil, and over it too on all but the smallest animals, so the eye reads at a glance.
+ * Shut eyes (a wink) have no white in the source and stay a lid line.
+ */
+function openEye(s: Sprite): void {
+  const pupil: [number, number][] = [];
+  for (let y = 0; y < s.h; y++) for (let x = 0; x < s.w; x++) if (s.get(x, y) === 'E') pupil.push([x, y]);
+  if (!pupil.length) return;
+  const left = Math.min(...pupil.map(([x]) => x)), right = Math.max(...pupil.map(([x]) => x));
+  const top = Math.min(...pupil.map(([, y]) => y)), bottom = Math.max(...pupil.map(([, y]) => y));
+  let painted = 0;
+  const white = (x: number, y: number) => { const k = s.get(x, y); if (k && k !== 'E') { s.set(x, y, 'Y'); painted++; } };
+  for (let y = top; y <= bottom; y++) white(left - 1, y);
+  if (s.w >= 40) for (let x = left - 1; x <= right; x++) white(x, top - 1);
+  // a pupil right at the back of a tiny head: the white goes over or under it instead
+  if (!painted) { white(left, top - 1); if (!painted) white(left, bottom + 1); }
 }
 
 /** A speckled egg in the species' colours (about the size of a baby's head). */

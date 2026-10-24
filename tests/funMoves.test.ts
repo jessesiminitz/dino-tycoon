@@ -4,7 +4,8 @@ import { dinoReaction, REACTION_MS, winkReaction } from '../src/render/dinoReact
 import { BLENDER_MOTION, FUN_CLIPS } from '../src/render/generated/blenderMotion';
 import { REX_ART, REX_PALETTE, REX_SCALE, REX_WALK_CONTACTS, REX_WALK_CYCLE } from '../src/render/generated/rexArt';
 import { dinoWorldScale } from '../src/render/dinoSize';
-import { SPECIES_IDS } from '../src/sim/data/species';
+import { SPECIES, SPECIES_IDS } from '../src/sim/data/species';
+import { dinoShape } from '../src/render/dinoArt';
 
 const input = { species: 'tyrannosaurus' as const, baby: false, x: 20, y: 20, time: 0, paused: false, moving: false, asleep: false, ambient: true };
 
@@ -108,6 +109,17 @@ describe('eyes', () => {
       expect(lid.length, `${id}:${i}`).toBe(1);
     }
     for (const id of SPECIES_IDS) expect(BLENDER_MOTION[id].wink.frames[0].join('')).toContain('Y');
+  });
+
+  it('still show their white at park size, adults and babies (all but the speck-sized Microraptor)', () => {
+    for (const id of SPECIES_IDS) for (const baby of [false, true]) {
+      if (id === 'microraptor') continue;
+      const rows = dinoShape(SPECIES[id], 0, baby, 'blender', dinoWorldScale(id, 'blender'));
+      const at = (k: string) => rows.flatMap((r, y) => r.flatMap((c, x) => c === k ? [[x, y]] : []));
+      const white = at('Y'), pupil = at('E');
+      expect(white.length, `${id}${baby ? ' baby' : ''}`).toBeGreaterThan(0);
+      expect(white.some(([x, y]) => pupil.some(([px, py]) => Math.abs(px - x) <= 1 && Math.abs(py - y) <= 1)), id).toBe(true);
+    }
   });
 
   it('wink back at a tap, in order, then stop', () => {

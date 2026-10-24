@@ -183,7 +183,7 @@ function rex2(o) {
     c.line(...P(...head([85, 10.5])), ...P(...head([89, 11.5])), "Q")
     // the eye: white behind a dark pupil that looks forward; shut (a wink), a dark lid line
     const E = P(...head([86.5, 12.6])), shut = (o.shut ?? 0) > 0.5
-    c.px(E[0], E[1], shut ? "q" : "w"); c.px(E[0] + 1, E[1], shut ? "q" : "p"); if (s >= 1) c.px(E[0] - 1, E[1], shut ? "q" : "w")
+    c.px(E[0], E[1], shut ? "q" : "w"); c.px(E[0] + 1, E[1], shut ? "q" : "p"); if (s >= 0.5) c.px(E[0] - 1, E[1], shut ? "q" : "w")
     c.px(...P(...head([100.5, 13.6])), "q")
     c.line(...P(...head([80.5, 14])), ...P(...head([82, 19])), "Q")
     leg(c, 1, "qQnNo", 0)                                  // near leg
