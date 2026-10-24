@@ -269,7 +269,7 @@ export const SPECIES: Record<SpeciesId, Species> = {
       'It had some of the largest teeth of any meat-eating dinosaur, up to about 30 cm long including the root.',
     ],
     fossilsNeeded: FOSSILS_TO_UNLOCK, fossilWeight: 6,
-    art: { template: 'theropod', body: '#6b7a4a', dark: '#40492a', accent: '#c9573b', pattern: 'stripes' },
+    art: { template: 'theropod', body: '#97633a', dark: '#56351f', accent: '#d0a26b', pattern: 'stripes' },
   },
   plesiosaurus: {
     id: 'plesiosaurus', name: 'Plesiosaurus', diet: 'piscivore', habitat: 'water', price: 14000, size: 3,

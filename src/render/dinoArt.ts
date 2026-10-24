@@ -2,6 +2,7 @@ import { hash2 } from '../sim/rng';
 import type { Species, SpeciesId } from '../sim/data/species';
 import { ART_STYLE, type ArtStyle } from './artStyle';
 import { BLENDER_ART } from './generated/blenderArt';
+import { REX_ART, REX_PALETTE } from './generated/rexArt';
 import { cartoonMetadata, paintCartoonAsset, paintCartoonEgg } from './cartoonArt';
 
 /**
@@ -755,6 +756,11 @@ export function paintEgg(species: Species): HTMLCanvasElement {
 
 export function paintDino(species: Species, frame = 0, baby = false, style: ArtStyle = ART_STYLE, scale = 1): HTMLCanvasElement {
   if (style === 'cartoon') return paintCartoonAsset(species.id, frame, species, baby, scale);
+  // The pixel park's T-rex is hand-drawn: standing at the menus' native size, or at the park's size.
+  if (style === 'blender' && species.id === 'tyrannosaurus') {
+    const art = REX_ART[baby ? 'baby' : 'adult'];
+    return paintRexRows(scale === 1 ? art.still : art.clips.idle[0], baby);
+  }
   const grown = shapeFor(species, frame, style);
   return paintDinoSprite(species, grown, baby, scale);
 }
@@ -769,6 +775,34 @@ export function paintDinoRows(species: Species, rows: readonly string[], baby = 
     for (let x = 0; x < row.length; x++) grown.grid[y][x] = row[x] === '.' ? null : row[x] as Key;
   });
   return paintDinoSprite(species, grown, baby, scale);
+}
+
+/**
+ * The hand-drawn T-rex (generated/rexArt.ts) keeps its own colours and outline and is already drawn at
+ * the park's size. `width` pads it to the Blender clip's canvas, centred, so shadows and the touch target
+ * see the same room around the animal; babies are a touch paler, as the role painter makes them.
+ */
+export function paintRexRows(rows: readonly string[], baby = false, width = rows[0].length): HTMLCanvasElement {
+  const w = rows[0].length, h = rows.length, left = Math.floor((Math.max(w, width) - w) / 2);
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(w, width);
+  canvas.height = h;
+  const ctx = canvas.getContext('2d')!;
+  const bounds = { left: canvas.width, right: 0, top: h, bottom: 0 };
+  rows.forEach((row, y) => {
+    for (let x = 0; x < w; x++) {
+      const color = REX_PALETTE[row[x]];
+      if (!color) continue;
+      ctx.fillStyle = baby ? tint(color, 0.12) : color;
+      ctx.fillRect(left + x, y, 1, 1);
+      bounds.left = Math.min(bounds.left, left + x);
+      bounds.right = Math.max(bounds.right, left + x + 1);
+      bounds.top = Math.min(bounds.top, y);
+      bounds.bottom = Math.max(bounds.bottom, y + 1);
+    }
+  });
+  paintedBounds.set(canvas, bounds);
+  return canvas;
 }
 
 function paintDinoSprite(species: Species, grown: Sprite, baby: boolean, scale: number): HTMLCanvasElement {

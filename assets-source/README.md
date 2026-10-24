@@ -123,6 +123,33 @@ meal cues, gait phase, wind and particles are presentation state. See
 [docs/PLAN-animation-immersion.md](../docs/PLAN-animation-immersion.md) for the
 MCP recipe, grounded gait, review links, performance limits and full validation.
 
+## Playful clips and the hand-drawn T-rex
+
+Every species has five more eight-frame clips beside walk, idle, eat and rest:
+roar, stomp, happy dance, hop and sneeze. `scripts/art/fun_motion.py` authors
+them on the same Blender models and timelines as `full_motion.py`; each
+species' neck, jaw hinge, shoulder and tail are read off its model. A hop
+leaves the ground and a stomp lifts a foot, so only their first and last frames
+must stand; a thin tail or spine tip that breaks off by a pixel when bent is
+joined back to the body with its own colour, never erased.
+
+```sh
+/Applications/Blender.app/Contents/MacOS/Blender --background --python scripts/art/fun_motion.py -- all
+npm run art:motion:convert
+```
+
+The park plays one now and then while an animal stands about (every 10 to
+18 s; carnivores tend to roar, happy animals dance) and the happy dance when
+it is patted. The cartoon edition keeps its four clips.
+
+In the pixel art the park's T-rex is hand-drawn, not Blender: rex2 in
+`pxl/dinos/tyrannosaurus.px.js`, drawn with the pxl skill straight at the
+park's size (`game_<adult|baby>_<clip>` anims, and `game_*_still` for the
+menus). Build those anims with pxl, then `npm run art:rex` stores them as
+palette rows in `src/render/generated/rexArt.ts`. Its walk is a planted gait
+whose ground speed is `REX_WALK_CYCLE`. `npm run art:fun-moves` checks all of
+it in a running park.
+
 ## Anatomy attachments
 
 `scripts/art/anatomy.py` supplies surface intersections and accessory bindings to

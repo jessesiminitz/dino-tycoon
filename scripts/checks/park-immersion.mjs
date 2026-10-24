@@ -14,17 +14,17 @@ try{
     const {sim,game}=window.__dino,park=game.scene.getScene('park'),entities=park.entities;
     const {SPECIES_IDS,SPECIES,habitatOf}=await import('/src/sim/data/species.ts');
     const {BLENDER_MOTION}=await import('/src/render/generated/blenderMotion.ts');
-    const {paintDinoRows}=await import('/src/render/dinoArt.ts');
-    const {motionTexture}=await import('/src/render/parkMotion.ts');
+    const {motionTexture,paintMotionFrame,walkCycle,MOTION_CLIPS}=await import('/src/render/parkMotion.ts');
     const {motionWalkSpeed}=await import('/src/render/immersionMotion.ts');
     const {dinoWorldScale}=await import('/src/render/dinoSize.ts');
     game.loop.stop();const saved=sim.state.dinos,failures=[];let atlasFrames=0;
     sim.speed=1;sim.state.hours=4;
-    const clips=['walk','idle','eat','rest'];
+    // all nine clips, from the game's own painter (the pixel park's T-rex is hand-drawn)
+    const clips=MOTION_CLIPS;
     for(const species of SPECIES_IDS)for(const baby of [false,true]){
       const key=motionTexture(park,species,baby),texture=game.textures.get(key);
       for(const clip of clips)for(let frame=0;frame<8;frame++){
-        const expected=paintDinoRows(SPECIES[species],BLENDER_MOTION[species][clip].frames[frame],baby,dinoWorldScale(species,'blender'));
+        const expected=paintMotionFrame(species,clip,frame,baby,'blender');
         const canvas=document.createElement('canvas');canvas.width=expected.width;canvas.height=expected.height;
         const ctx=canvas.getContext('2d'),f=texture.get(`${clip}-${frame}`);
         ctx.drawImage(texture.getSourceImage(),f.cutX,f.cutY,f.cutWidth,f.cutHeight,0,0,canvas.width,canvas.height);
@@ -36,7 +36,7 @@ try{
     for(const [i,species] of SPECIES_IDS.entries())for(const left of [false,true])for(const baby of [false,true]){
       const d={...saved[0],id:90000+i,species,baby,x:22,px:left?23:21,y:20,py:20,path:[],hunger:0};
       sim.state.dinos=[d];entities.motions.delete(d.id);
-      const cycle=motionWalkSpeed(species)*BLENDER_MOTION[species].walk.durationMs/1000*(baby?.6:1)*dinoWorldScale(species,'blender');
+      const cycle=walkCycle(species,baby,'blender');
       for(let frame=0;frame<8;frame++){
         Object.defineProperty(sim,'stepProgress',{configurable:true,get:()=>frame*cycle/128});
         entities.update(1000);const img=entities.dinos.get(d.id);
@@ -58,7 +58,7 @@ try{
     sim.state.dinos=saved;sim.state.hours=4;sim.speed=1;game.loop.start(game.step.bind(game));
     return {failures,atlasFrames,tested,meal,chewing,idle,sleep,frozen};
   });
-  check('all 1,792 adult/baby atlas frames match the Blender painter',result.atlasFrames===1792&&result.failures.length===0,result.failures.slice(0,12));
+  check('all 4,032 adult/baby atlas frames match the park painter',result.atlasFrames===4032&&result.failures.length===0,result.failures.slice(0,12));
   check('all eight runtime walk phases work for 28 species, babies and both directions',result.tested===896&&result.failures.length===0);
   check('actual feeder consumption triggers chewing and returns to idle',result.meal&&result.chewing&&result.idle,result);
   check('night selects rest and pause freezes poses, positions and wind',result.sleep&&result.frozen);

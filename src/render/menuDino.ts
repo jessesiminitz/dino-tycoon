@@ -1,8 +1,8 @@
 import { SPECIES, type SpeciesId } from '../sim/data/species';
 import { ART_STYLE, type ArtStyle } from './artStyle';
-import { paintDino, paintDinoRows } from './dinoArt';
+import { paintDino } from './dinoArt';
 import { dinoWorldScale } from './dinoSize';
-import { BLENDER_MOTION } from './generated/blenderMotion';
+import { paintMotionFrame } from './parkMotion';
 import { paintCartoonAsset, cartoonMetadata } from './cartoonArt';
 import type { MotionClip } from './immersionMotion';
 
@@ -10,7 +10,7 @@ import type { MotionClip } from './immersionMotion';
 export function paintMenuDino(id: SpeciesId, clip: MotionClip = 'walk', frame = 0, style: ArtStyle = ART_STYLE): HTMLCanvasElement {
   const scale = dinoWorldScale(id, style);
   return style === 'cartoon' ? paintCartoonAsset(id, frame, SPECIES[id], false, scale, clip)
-    : style === 'blender' ? paintDinoRows(SPECIES[id], BLENDER_MOTION[id][clip].frames[frame], false, scale)
+    : style === 'blender' ? paintMotionFrame(id, clip, frame, false, style)
     : paintDino(SPECIES[id], frame % 2, false, style, scale);
 }
 

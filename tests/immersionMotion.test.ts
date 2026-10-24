@@ -1,6 +1,6 @@
 import { habitatOf } from '../src/sim/data/species';
 import { describe, expect, it } from 'vitest';
-import { BLENDER_MOTION } from '../src/render/generated/blenderMotion';
+import { BLENDER_MOTION, FUN_CLIPS } from '../src/render/generated/blenderMotion';
 import { MOTION_SPECIES, motionFrame, motionWalkSpeed, type MotionClip } from '../src/render/immersionMotion';
 
 describe('Blender prototype motion',()=>{
@@ -13,7 +13,9 @@ describe('Blender prototype motion',()=>{
           expect(rows).toHaveLength(clip.height);
           expect(rows.every(row=>row.length===clip.width && /^[.BDFAGWEM]+$/.test(row))).toBe(true);
           expect(rows.join('')).toContain('E');
-          if(habitatOf(id)==='land'){
+          // a hop leaves the ground and a stomp lifts a foot: the playful clips start and end standing
+          const standing=!(FUN_CLIPS as readonly string[]).includes(name)||i===0||i===7;
+          if(habitatOf(id)==='land'&&standing){
             expect(rows.at(-1)).toMatch(/[BDFAGWEM]/);
             expect(clip.contacts[i].some(foot=>foot.planted)).toBe(true);
           }

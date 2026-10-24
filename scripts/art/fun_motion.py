@@ -11,6 +11,8 @@ export; only the per-frame pose differs. Each clip is a list of eight keyed pose
   near/far  a foot's step forward and lift [dx, up] (px)
 Run: Blender --background --python scripts/art/fun_motion.py -- tyrannosaurus[,allosaurus|all] [clip ...]
 """
+import hashlib
+import json
 import math
 import runpy
 
@@ -49,7 +51,7 @@ def rig(asset, scene, height):
     else:
         quad = any(n.startswith(QUAD) for n in meshes)
         r = {'head': HEAD, 'jaw': ('jaw', 'mouth', 'tooth', 'fang'), 'arms': ARMS,
-             'near': ('near_front',) if quad else ('near_0', 'near_1', 'near_foot', 'near_claws', 'near_joint', 'near_tip'),
+             'near': ('near_front',) if quad else ('near_0', 'near_1', 'near_foot', 'near_claws', 'near_joint', 'near_tip', 'sickle', 'hind_feather'),
              'far': ('far_back',) if quad else ('far_0', 'far_1', 'far_foot', 'far_joint', 'far_tip'),
              'others': ('near_back', 'far_front') if quad else ()}
         if asset in AIR + WATER: r['near'] = r['far'] = r['others'] = ()
@@ -157,6 +159,8 @@ def fun_pose(asset, clip, index):
     if not r['hinge']: p['jaw'] = 0
     if not r['shoulder']: p['arms'] = 0
     tail_root, tail_tip = r['tail']
+    # a thin tail tip lifted far breaks apart at native resolution: a short tail lifts less
+    if 'tail' in p: p['tail'] = max(-1, min(1, p['tail'] / max(1e-6, .1 * (tail_root - tail_tip)))) * .1 * (tail_root - tail_tip) if abs(p['tail']) > .1 * (tail_root - tail_tip) else p['tail']
     meshes = [(o, o.name.removeprefix(scene.name + '_')) for o in scene.objects if o.type == 'MESH']
     is_head = lambda o, part: part.startswith(r['head']) or o.get('attachment') == 'neck'
     # a nodding head stays above the soil (full_motion's grazing rule)
@@ -201,6 +205,43 @@ def fun_pose(asset, clip, index):
         result[part] = points
     return scene, result
 
+def bridge(rows):
+    """A thin tail or spine tip bent by a fraction of a pixel can break off at native resolution: join any
+    small piece within four pixels of the body (a tiny tip within eight) back to it with its own colour, never erasing pixels."""
+    grid = [list(r) for r in rows]; h, w = len(grid), len(grid[0])
+    seen, parts = set(), []
+    for y in range(h):
+        for x in range(w):
+            if grid[y][x] == '.' or (x, y) in seen: continue
+            group, queue = [], [(x, y)]; seen.add((x, y))
+            while queue:
+                cx, cy = queue.pop(); group.append((cx, cy))
+                for dy in (-1, 0, 1):
+                    for dx in (-1, 0, 1):
+                        n = (cx + dx, cy + dy)
+                        if 0 <= n[0] < w and 0 <= n[1] < h and n not in seen and grid[n[1]][n[0]] != '.':
+                            seen.add(n); queue.append(n)
+            parts.append(group)
+    parts.sort(key=len, reverse=True)
+    body = parts[0] if parts else []
+    for group in parts[1:]:
+        if len(group) > 12: continue   # a whole loose accessory is a real fault: leave it for the check
+        (gx, gy), (bx, by) = min(((g, b) for g in group for b in body), key=lambda gb: max(abs(gb[0][0]-gb[1][0]), abs(gb[0][1]-gb[1][1])))
+        if max(abs(gx - bx), abs(gy - by)) > (8 if len(group) <= 4 else 4): continue
+        role = grid[gy][gx]
+        steps = max(abs(gx - bx), abs(gy - by))
+        for i in range(1, steps):
+            x, y = round(gx + (bx - gx) * i / steps), round(gy + (by - gy) * i / steps)
+            if grid[y][x] == '.': grid[y][x] = role
+    return [''.join(r) for r in grid]
+
+def bridge_clip(asset, clip):
+    path = FM['OUTPUT'] / f'{asset}-{clip}.json'
+    payload = json.loads(path.read_text())
+    payload['frames'] = [bridge(rows) for rows in payload['frames']]
+    payload['hashes'] = [hashlib.sha256('\n'.join(rows).encode()).hexdigest() for rows in payload['frames']]
+    path.write_text(json.dumps(payload, indent=2) + '\n')
+
 # runpy hands back a copy of the module's globals: patch the dictionary its functions really use
 FM['prepare'].__globals__['pose'] = fun_pose
 FM['CLIPS'].update({name: ms for name, (ms, _) in FUN.items()})
@@ -220,3 +261,4 @@ if __name__ == '__main__':
         ART['MANIFEST']['assets'][asset]['grounded'] = False
         FM['save_source'](asset, clip)
         FM['render_clip'](asset, clip)
+        bridge_clip(asset, clip)

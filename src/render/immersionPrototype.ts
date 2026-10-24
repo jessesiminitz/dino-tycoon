@@ -16,7 +16,8 @@ const baby = input<HTMLInputElement>('baby'), left = input<HTMLInputElement>('le
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 let paused = reducedMotion.matches, clock = 0, lastTime = 0, lastDraw = 0, manualFrame = 0;
 const sprites = new Map<string,HTMLCanvasElement>();
-for (const id of PROTOTYPE_SPECIES) for (const clip of Object.keys(BLENDER_MOTION[id]) as MotionClip[]) {
+// the prototype shows the four behaviour clips; the playful ones live in the park
+for (const id of PROTOTYPE_SPECIES) for (const clip of ['walk', 'idle', 'eat', 'rest'] as MotionClip[]) {
   for (const small of [false,true]) BLENDER_MOTION[id][clip].frames.forEach((rows,frame) => {
     sprites.set(`${id}:${clip}:${frame}:${small}`,paintDinoRows(SPECIES[id],rows,small));
   });

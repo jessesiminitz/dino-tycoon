@@ -20,7 +20,7 @@ import { walkFrame } from './dinoAnimation';
 import { ART_STYLE } from './artStyle';
 import { BLENDER_MOTION } from './generated/blenderMotion';
 import { BLENDER_ART } from './generated/blenderArt';
-import { advanceMotion, motionTexture, type AnimalMotion } from './parkMotion';
+import { advanceMotion, hasFunClips, motionTexture, walkLanding, type AnimalMotion } from './parkMotion';
 import { getSettings } from '../ui/settings';
 import { isWater, Terrain } from '../sim/terrain';
 import { depthAt, tileDepth, obscuringFenceKeys, FOOT_Y, DEPTH_EPSILON } from './worldDepth';
@@ -421,7 +421,7 @@ export class EntityLayer {
     const reactions = new Map<number, DinoReaction>();
     for (const e of this.effects) {
       const d = state.dinos.find(d => d.id === e.dinoId);
-      if (d && e.kind === 'hearts') reactions.set(e.dinoId, dinoReaction(d.species,e.action,this.reactionTime-e.start,getSettings().animation));
+      if (d && e.kind === 'hearts') reactions.set(e.dinoId, dinoReaction(d.species,e.action,this.reactionTime-e.start,getSettings().animation,hasFunClips()));
     }
 
     // Dinosaurs
@@ -448,15 +448,18 @@ export class EntityLayer {
         const model = BLENDER_ART[d.species];
         const modelPadding = 'modelOffsetX' in model ? model.modelOffsetX : 0;
         const previous = this.motions.get(d.id);
-        const motion = advanceMotion(previous, {species:d.species,baby:d.baby,x,y,time:animalTime,offset:d.id*137,paused:this.sim.speed===0,moving,asleep,eatingSince:this.meals.get(d.id),ambient:getSettings().animation,style:ART_STYLE});
+        const motion = advanceMotion(previous, {species:d.species,baby:d.baby,x,y,time:animalTime,offset:d.id*137,paused:this.sim.speed===0,moving,asleep,eatingSince:this.meals.get(d.id),ambient:getSettings().animation,style:ART_STYLE,happiness:d.happiness});
         this.motions.set(d.id,motion);
         x=motion.x; y=motion.y;
-        img.setTexture(motionTexture(this.scene,d.species,d.baby),`${reaction?.clip ?? motion.clip}-${reaction?.clip ? reaction.frame : motion.frame}`);
+        const shownClip = reaction?.clip ?? motion.fun ?? motion.clip;
+        img.setTexture(motionTexture(this.scene,d.species,d.baby),`${shownClip}-${reaction?.clip ? reaction.frame : motion.frame}`);
         fitPaintedImage(img);
         img.setCrop();
         if (habitat === 'water') {
           // Padding is above the animal; preserve the original submerged fraction.
-          const shown=Math.round((BLENDER_MOTION[d.species].walk.height-8)*WATERLINE*scale)+Math.round(8*scale)+1;
+          // A playful clip's taller canvas adds its room over the head, so count that too.
+          const headroom=BLENDER_MOTION[d.species][shownClip].height-BLENDER_MOTION[d.species].walk.height;
+          const shown=Math.round((BLENDER_MOTION[d.species].walk.height-8)*WATERLINE*scale)+Math.round((8+headroom)*scale)+1;
           img.setCrop(0,0,img.width,shown / img.scaleY);
           img.setPosition(Math.round(x),Math.round(y)-2+img.displayHeight-shown);
           sh.lineStyle(1,0xe8f6fb,.55).strokeEllipse(Math.round(x),Math.round(y)-2,(img.displayWidth-16*scale)*.8,4);
@@ -468,13 +471,12 @@ export class EntityLayer {
           sh.fillStyle(0x000000,.22).fillEllipse(Math.round(x),Math.round(y)-1,Math.max(6,groundWidth*(habitat==='air'?.45:.7)),habitat==='air'?3:Math.max(4,(img.displayHeight-8*scale)*.14));
         }
         if (getSettings().animation && this.sim.speed!==0 && moving && previous && motion.frame!==previous.frame && this.scene.cameras.main.worldView.contains(x,y)) {
-          const walk=BLENDER_MOTION[d.species].walk;
-          const landed=walk.contacts[motion.frame].find(foot=>foot.planted && !walk.contacts[previous.frame].find(old=>old.name===foot.name)?.planted);
-          if (landed || (habitat==='water' && motion.frame%2===0)) {
+          const landed=walkLanding(d.species,d.baby,previous.frame,motion.frame);
+          if (landed!==undefined || (habitat==='water' && motion.frame%2===0)) {
             const tile=state.map.tiles[d.y*state.map.width+d.x];
             const wet=habitat==='water'||isWater(tile)||tile===Terrain.Marsh||state.stormHours>0;
             const direction=this.facingLeft.get(d.id)?-1:1;
-            this.footfalls.push({x:Math.round(x+(landed?(landed.x-walk.width/2)*scale*direction:0)),y:Math.round(y)-1,born:animalTime,wet});
+            this.footfalls.push({x:Math.round(x+(landed??0)*direction),y:Math.round(y)-1,born:animalTime,wet});
             if(this.footfalls.length>96)this.footfalls.shift();
           }
         }

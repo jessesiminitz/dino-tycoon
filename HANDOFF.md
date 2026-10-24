@@ -1,5 +1,36 @@
 # Dino Tycoon: handoff notes
 
+## Playful moves and the hand-drawn T-rex — October 23, 2026
+
+Every dinosaur now has five more clips: **roar, stomp, happy dance, hop and sneeze** (eight frames each, on the same Blender models). In the park:
+- **While standing about,** an animal does one every 10 to 18 s. Carnivores mostly roar and stomp; happy animals (75+) dance every other time.
+- **A pat** starts the happy dance. A treat is still the eating clip.
+- **When:** only with world animation on, and only in the pixel art. The cartoon edition keeps its four clips.
+
+The pixel park's **T-rex is the hand-drawn brown one** (rex2, `assets-source/pxl/dinos/tyrannosaurus.px.js`), not the Blender model. Details:
+- **Everywhere:** its catalog, guide, menu and baby art use it too.
+- **Size:** drawn straight at the park's size, matching the Blender T-rex's length.
+- **Walk:** a planted gait (`REX_WALK_CYCLE`).
+- **Colours:** the T-rex's species colours are now brown to match: eggs, and the cartoon edition.
+
+Also: the Kentrosaurus spikes were moved (committed earlier today).
+
+- **Data:** `BLENDER_MOTION` has 9 clips (`FUN_CLIPS`); `src/render/generated/rexArt.ts` is new. The main chunk is 4.16 MB, still under the 5 MB precache limit. Regeneration steps are in `assets-source/README.md`.
+- **Code:** `parkMotion.ts` (`idleFun`, `walkCycle`, `walkLanding`, `paintMotionFrame`, a 9-row atlas), `dinoReaction.ts` (pat → dance), `paintRexRows` in `dinoArt.ts`.
+- **No save change:** presentation only, so saves stay v22.
+
+Validation:
+- **Tests:** 531 pass, including 10 new in `tests/funMoves.test.ts`.
+- **Build:** the production build passed.
+- **New browser check:** `npm run art:fun-moves` passed at 844×390 and 667×375. It covers:
+  - every clip in the atlas
+  - the brown adult and baby T-rex
+  - six species each doing moves and returning to idle
+  - a pat starting the dance
+  - the catalog T-rex
+- **Existing checks:** `art:park-motion` (4,032 atlas frames, all walk phases), `art:immersion`, `art:motion-controls`, `care-check` and `babies-check` passed.
+- **Still to do:** physical iPhone/iPad review.
+
 ## Ferry port and seasonal crowds — October 21, 2026
 
 Every visitor now arrives by ferry, and crowds follow the seasons (recommendations A and B from the DinoPark research). Saves are **v22**: the `port` field was added, and finance ledgers gain a `ferries` expense category.
