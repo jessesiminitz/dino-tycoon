@@ -1,4 +1,4 @@
-import { dinoReaction, type DinoReactionAction, type DinoReaction } from './dinoReaction';
+import { dinoReaction, winkReaction, type DinoReactionAction, type DinoReaction } from './dinoReaction';
 import { addPaintedTexture, fitPaintedImage } from './paintedTexture';
 import { paintCartoonPerson } from './cartoonArt';
 import Phaser from 'phaser';
@@ -222,6 +222,12 @@ export class EntityLayer {
     return this.sim.state.buildings.find((b) => b.x === tx && b.y === ty);
   }
 
+  /** When each dinosaur was last tapped (real-time clock): it winks back. */
+  private greetings = new Map<number, number>();
+  greet(dinoId: number): void {
+    if (hasFunClips()) this.greetings.set(dinoId, this.reactionTime);
+  }
+
   /** Show how an animal reacted to a treat or pat. */
   careEffect(dinoId: number, kind: CareEffect, action: DinoReactionAction = 'pat'): void {
     this.effects = this.effects.filter(e => { if (e.dinoId !== dinoId) return true; e.label?.destroy(); return false; });
@@ -422,6 +428,11 @@ export class EntityLayer {
     for (const e of this.effects) {
       const d = state.dinos.find(d => d.id === e.dinoId);
       if (d && e.kind === 'hearts') reactions.set(e.dinoId, dinoReaction(d.species,e.action,this.reactionTime-e.start,getSettings().animation,hasFunClips()));
+    }
+    for (const [id, at] of this.greetings) {
+      const d = state.dinos.find(d => d.id === id), wink = d && winkReaction(d.species, this.reactionTime - at, getSettings().animation);
+      if (!wink) this.greetings.delete(id);
+      else if (!reactions.get(id)?.clip) reactions.set(id, wink);
     }
 
     // Dinosaurs

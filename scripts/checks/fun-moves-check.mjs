@@ -71,16 +71,16 @@ const atlas = await page.evaluate(() => {
   };
   return { rex: names('motion-tyrannosaurus'), baby: names('motion-tyrannosaurus-baby'), allo: names('motion-allosaurus'), rexColours: colours('motion-tyrannosaurus'), babyColours: colours('motion-tyrannosaurus-baby') };
 });
-const CLIPS = ['walk', 'idle', 'eat', 'rest', 'roar', 'stomp', 'dance', 'hop', 'sneeze'];
+const CLIPS = ['walk', 'idle', 'eat', 'rest', 'roar', 'stomp', 'dance', 'hop', 'sneeze', 'wink'];
 for (const [label, list] of [['T-rex', atlas.rex], ['baby T-rex', atlas.baby], ['Allosaurus', atlas.allo]])
-  check(`${label} atlas holds all nine clips × 8 frames`, CLIPS.every((c) => [...Array(8)].every((_, i) => list.includes(`${c}-${i}`))), list.length);
+  check(`${label} atlas holds all ten clips × 8 frames`, CLIPS.every((c) => [...Array(8)].every((_, i) => list.includes(`${c}-${i}`))), list.length);
 // rex2's hide: the red-brown back (#97633a) and the tan flank (#a07c56); the Blender T-rex's green is gone
 check('the park T-rex is the brown hand-drawn one', atlas.rexColours.includes('#97633a') && atlas.rexColours.includes('#a07c56') && !atlas.rexColours.includes('#6b7a4a'), atlas.rexColours.length);
 check('the baby T-rex is the same, a touch paler', atlas.babyColours.length > 0 && !atlas.babyColours.includes('#97633a'), atlas.babyColours.slice(0, 4));
 
 await page.screenshot({ path: `${OUT}fun-1-paddock-${W}.png` });
 const seen = await watch(9000);
-const fun = new Set(['roar', 'stomp', 'dance', 'hop', 'sneeze']);
+const fun = new Set(['roar', 'stomp', 'dance', 'hop', 'sneeze', 'wink']);
 for (const sp of [...SPECIES, 'baby']) {
   const names = seen[ids[sp]] ?? [];
   const moves = [...new Set(names.filter((n) => fun.has(n?.split('-')[0])).map((n) => n.split('-')[0]))];
@@ -118,7 +118,17 @@ await page.evaluate((id) => {
 }, ids.triceratops);
 await sleep(250);
 const p = await page.evaluate((id) => { const sc = window.__dino.game.scene.getScene('park'); const d = window.__dino.sim.state.dinos.find((x) => x.id === id); const q = sc.entities.dinoPosition(d); const c = sc.cameras.main; const cx = c.width / 2, cy = c.height / 2; return { x: (q.x - c.scrollX - cx) * c.zoom + cx, y: (q.y - 10 - c.scrollY - cy) * c.zoom + cy }; }, ids.triceratops);
-await page.touchscreen.tap(p.x, p.y); await sleep(350);
+await page.touchscreen.tap(p.x, p.y); await sleep(80);
+// tapping it makes it wink back
+const winked = new Set();
+let shot = false;
+for (let i = 0; i < 40; i++) {
+  const name = await page.evaluate((id) => window.__dino.game.scene.getScene('park').entities.dinoSprite(id).frame.name, ids.triceratops);
+  winked.add(name);
+  if (!shot && /^wink-[34]$/.test(name)) { shot = true; await page.screenshot({ path: `${OUT}fun-4-tap-wink-${W}.png` }); }
+  await sleep(25);
+}
+check('tapping the triceratops makes it wink, eye shut and open again', shot && [...winked].filter((n) => n.startsWith('wink')).length >= 5, [...winked]);
 const smalls = await page.$$('#info-actions .action-btn.small');
 await smalls[1].tap();
 const danced = new Set();

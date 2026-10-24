@@ -114,6 +114,7 @@ pal({
   f: "#a07c56", F: "#c09a6c",                     // tan flank and belly
   y: "#d9c56a", Y: "#f4ecb0",                     // pale yellow eye
   u: "#b8606a", U: "#7c3038",                     // mouth
+  w: "#f6f1e2",                                   // the white of the eye
 })
 ramps("pqQnNoO")
 
@@ -180,7 +181,9 @@ function rex2(o) {
     }
     // the brow knob over the eye, the eye under it, a fold behind it, the nostril at the snout's corner
     c.line(...P(...head([85, 10.5])), ...P(...head([89, 11.5])), "Q")
-    const E = P(...head([86.5, 12.6])); c.px(E[0], E[1], "y"); c.px(E[0] + 1, E[1], "p"); if (s >= 1) c.px(E[0] - 1, E[1], "Y")
+    // the eye: white behind a dark pupil that looks forward; shut (a wink), a dark lid line
+    const E = P(...head([86.5, 12.6])), shut = (o.shut ?? 0) > 0.5
+    c.px(E[0], E[1], shut ? "q" : "w"); c.px(E[0] + 1, E[1], shut ? "q" : "p"); if (s >= 1) c.px(E[0] - 1, E[1], shut ? "q" : "w")
     c.px(...P(...head([100.5, 13.6])), "q")
     c.line(...P(...head([80.5, 14])), ...P(...head([82, 19])), "Q")
     leg(c, 1, "qQnNo", 0)                                  // near leg
@@ -246,6 +249,10 @@ const MOVES = {
     nearUp: [[0, 0], [2, 4], [3, 6], [4, 4], [5, 0]], farUp: [[0, 0], [2, 4], [3, 6], [4, 4], [5, 0]],
     tailUp: [[0, 0], [1, -2.5], [3, 4], [5, -3], [7, 0]], arms: [[0, 0], [2, 0.7], [4, 0.7], [6, -0.3], [7, 0]],
     lift: [[0, 0], [1, -0.1], [3, 0.12], [6, -0.1], [7, 0]] }],
+  // a cheeky wink: the head cocks, the eye shuts for two frames, a little grin and a tail flick
+  wink: [8, { shut: [[0, 0], [2, 0], [3, 1], [4, 1], [5, 0], [7, 0]], lift: [[0, 0], [2, 0.08], [3, 0.12], [4, 0.12], [5, 0.06], [7, 0]],
+    gape: [[0, 0], [2, 0.08], [3, 0.14], [4, 0.14], [5, 0.05], [7, 0]], tailUp: [[0, 0], [2, 2], [3, 3], [4, 3], [5, 1], [7, 0]],
+    crouch: [[0, 0], [3, 0.6], [4, 0.6], [6, 0]] }],
   // a breath in with the head going up, then achoo: snapped down, the jaw open, a little shake
   sneeze: [6, { lift: [[0, 0], [1, 0.15], [2, 0.28], [3, 0.36], [4, -0.38], [5, -0.18], [6, -0.26], [7, 0]],
     gape: [[0, 0], [2, 0.2], [3, 0.35], [4, 0.7], [5, 0.1], [6, 0.2], [7, 0]], crouch: [[0, 0], [3, -1], [4, 3], [5, 1.2], [7, 0]],

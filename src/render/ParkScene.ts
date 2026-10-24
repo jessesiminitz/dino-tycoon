@@ -280,6 +280,7 @@ export class ParkScene extends Phaser.Scene {
     this.selectFence(null);
     this.cursor.setVisible(false);
     this.entities.selection = { kind: target.kind, id: target.id };
+    if (target.kind === 'dino') this.entities.greet(target.id);
     this.showSelection();
   }
 
@@ -512,7 +513,8 @@ export class ParkScene extends Phaser.Scene {
     if (selection) {
       this.cursor.setVisible(false);
       this.entities.selection = selection;
-      if (dino) playCall(dino.species, dino.baby);
+      // a tapped dinosaur calls out and winks back
+      if (dino) { playCall(dino.species, dino.baby); this.entities.greet(dino.id); }
       this.showSelection();
       return;
     }

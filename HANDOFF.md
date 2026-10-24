@@ -1,5 +1,27 @@
 # Dino Tycoon: handoff notes
 
+## White eyes and a wink — October 23, 2026
+
+Every dinosaur's eye now has a white behind the pupil, and there's a new wink clip. In the park:
+- **Tap a dinosaur** and it winks back at you.
+- **Standing about:** the wink is one of the playful moves.
+- **Pixel art only:** the cartoon edition is unchanged.
+
+How it works:
+- **New role `Y`:** the white of the eye, encoded `#ff8000` in `export-manifest.json`. `rect()` in `render_sprites.py` adds an `eye_white` mesh behind every dinosaur pupil (buildings are left out). The poses grow it 1.4× about the pupil.
+- **Painting:** the painter draws it `#f6f1e2`, and `scaledGrid` keeps it at every size.
+- **The wink:** in `fun_motion.py` (`blink`), the pupil flattens to a one-pixel lid line, centred on a pixel row, and the white folds away.
+- **Brown T-rex:** rex2 has white eyes (`w`) and a wink too.
+- **Data:** `BLENDER_MOTION` now has 10 clips. The main chunk is 4.39 MB, under the 5 MB precache limit. No save change.
+
+Validation:
+- **Tests:** 535 pass, including new eye and wink tests in `tests/funMoves.test.ts`.
+- **Build:** passed.
+- **Browser checks:**
+  - `art:fun-moves` passed at 844×390 and 667×375 (tap → wink).
+  - `art:park-motion` passed (4,480 atlas frames).
+  - `art:immersion`, `care-check` and `babies-check` passed.
+
 ## Playful moves and the hand-drawn T-rex — October 23, 2026
 
 Every dinosaur now has five more clips: **roar, stomp, happy dance, hop and sneeze** (eight frames each, on the same Blender models). In the park:

@@ -9,6 +9,7 @@ export; only the per-frame pose differs. Each clip is a list of eight keyed pose
   crouch the body settles toward planted feet (px)
   jump   the whole animal leaves the ground (px), the legs tucking under
   near/far  a foot's step forward and lift [dx, up] (px)
+  blink  the eye closes (1): the pupil flattens to a one-pixel lid line and the white goes behind it
 Run: Blender --background --python scripts/art/fun_motion.py -- tyrannosaurus[,allosaurus|all] [clip ...]
 """
 import hashlib
@@ -123,6 +124,13 @@ FUN = {
         ('tail', [(0, 0), (1, -3), (3, 5), (5, -4), (7, 0)]),
         ('arms', [(0, 0), (2, -.7), (4, -.7), (6, .3), (7, 0)]),
         ('head', [(0, 0), (1, .1), (3, -.12), (6, .1), (7, 0)]))),
+    # a cheeky wink: the head cocks, the eye shuts for two frames, a little grin and a tail flick
+    'wink': (1200, keys(
+        ('blink', [(0, 0), (2, 0), (3, 1), (4, 1), (5, 0), (7, 0)]),
+        ('head', [(0, 0), (2, -.1), (3, -.14), (4, -.14), (5, -.08), (7, 0)]),
+        ('jaw', [(0, 0), (2, .08), (3, .14), (4, .14), (5, .06), (7, 0)]),
+        ('tail', [(0, 0), (2, 2), (3, 3.5), (4, 3.5), (5, 1), (7, 0)]),
+        ('crouch', [(0, 0), (3, .8), (4, .8), (6, 0)]))),
     # the breath in, head up, then achoo: snapped down with the jaw open, a little shake
     'sneeze': (1200, keys(
         ('head', [(0, 0), (1, -.18), (2, -.32), (3, -.4), (4, .4), (5, .22), (6, .3), (7, 0)]),
@@ -171,6 +179,10 @@ def fun_pose(asset, clip, index):
             low = max((rotate(x, y, r['neck'], a)[1] for x, y in verts), default=0)
             if low + p.get('crouch', 0) * min(1, max(0, (height - low) / (height * .45))) + 1 <= height: break
             p['head'] *= .85
+    pupil = next((o for o, part in meshes if part == 'eye'), None)
+    pupil_x = sum(v.co.x for v in pupil.data.vertices) / len(pupil.data.vertices) if pupil else 0
+    pupil_y = height - sum(v.co.z for v in pupil.data.vertices) / len(pupil.data.vertices) if pupil else 0
+    shut = p.get('blink', 0)
     result = {}
     for obj, part in meshes:
         verts = obj.data.vertices
@@ -179,7 +191,10 @@ def fun_pose(asset, clip, index):
         for vertex in verts:
             x, depth, z = vertex.co
             y = height - z
-            if part == 'eye': x, y = cx + (x - cx) * 1.8, cy + (y - cy) * 1.8
+            # the pupil grows to about two pixels (as in full_motion.py); shut, it is a lid line one
+            # pixel tall and a little wider, and the white folds away behind it
+            if part == 'eye': x, y = cx + (x - cx) * 1.8 * (1 + .2 * shut), cy + (y - cy) * (1.8 - .9 * shut)
+            if part == 'eye_white': x, y = pupil_x + (x - pupil_x) * 1.4 * (1 - shut), pupil_y + (y - pupil_y) * 1.4 * (1 - shut)
             # a foot's step and lift, weighted from the hip down (as the walk does)
             for side in ('near', 'far', 'others'):
                 key = 'near' if side == 'others' else side
@@ -201,8 +216,14 @@ def fun_pose(asset, clip, index):
                 y += p['crouch'] * min(1, max(0, (height - y) / (height * .45)))
             if p.get('jump'): y -= p['jump']
             if part == 'eye': depth = -30
+            if part == 'eye_white': depth = -29
             points.append((x + 8, depth, height - y))
         result[part] = points
+    if shut > .5 and 'eye' in result:
+        # the shut eye's lid line is under a pixel tall: centre it on a pixel so it stays one row
+        pts = result['eye']; mx = sum(p[0] for p in pts) / len(pts); mz = sum(p[2] for p in pts) / len(pts)
+        dx, dz = math.floor(mx) + .5 - mx, math.floor(mz) + .5 - mz
+        result['eye'] = [(x + dx, d, z + dz) for x, d, z in pts]
     return scene, result
 
 def bridge(rows):

@@ -93,9 +93,9 @@ export interface AnimalMotion {
 
 /** Every 10 to 18 s of standing about, a dinosaur does something silly; the hunters like to roar. */
 const FUN_BY_DIET: Record<string, readonly FunClip[]> = {
-  carnivore: ['roar', 'stomp', 'sneeze', 'roar', 'hop'],
-  piscivore: ['roar', 'hop', 'sneeze', 'dance'],
-  herbivore: ['dance', 'hop', 'sneeze', 'stomp', 'dance'],
+  carnivore: ['roar', 'stomp', 'wink', 'sneeze', 'roar', 'hop'],
+  piscivore: ['roar', 'hop', 'wink', 'sneeze', 'dance'],
+  herbivore: ['dance', 'hop', 'wink', 'sneeze', 'stomp', 'dance'],
 };
 export function idleFun(species: SpeciesId, offset: number, idleMs: number, happiness = 50): { clip: FunClip; frame: number } | undefined {
   const every = 10_000 + Math.floor(hash2(offset, 7, 31) * 8000);

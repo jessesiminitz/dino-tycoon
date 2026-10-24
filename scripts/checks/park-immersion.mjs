@@ -58,7 +58,7 @@ try{
     sim.state.dinos=saved;sim.state.hours=4;sim.speed=1;game.loop.start(game.step.bind(game));
     return {failures,atlasFrames,tested,meal,chewing,idle,sleep,frozen};
   });
-  check('all 4,032 adult/baby atlas frames match the park painter',result.atlasFrames===4032&&result.failures.length===0,result.failures.slice(0,12));
+  check('all 4,480 adult/baby atlas frames match the park painter',result.atlasFrames===4480&&result.failures.length===0,result.failures.slice(0,12));
   check('all eight runtime walk phases work for 28 species, babies and both directions',result.tested===896&&result.failures.length===0);
   check('actual feeder consumption triggers chewing and returns to idle',result.meal&&result.chewing&&result.idle,result);
   check('night selects rest and pause freezes poses, positions and wind',result.sleep&&result.frozen);

@@ -11,12 +11,12 @@ import { cartoonMetadata, paintCartoonAsset, paintCartoonEgg } from './cartoonAr
  * and outlined. Everything faces right with the feet on the bottom row.
  *
  *   B body · D belly · F far-side limbs (in shadow) · A accent (plates, frill,
- *   crest, feathers) · G far-side accent · W horn/claw/teeth · E eye · M mouth
+ *   crest, feathers) · G far-side accent · W horn/claw/teeth · E eye · M mouth · Y the white of the eye
  *
  * No Phaser dependency, so the DOM catalog and guide can reuse the canvases.
  */
 
-type Key = 'B' | 'D' | 'F' | 'A' | 'G' | 'W' | 'E' | 'M';
+type Key = 'B' | 'D' | 'F' | 'A' | 'G' | 'W' | 'E' | 'M' | 'Y';
 type Pt = [number, number];
 type Node3 = [number, number, number];
 export interface DinoPixelBounds { left: number; right: number; top: number; bottom: number }
@@ -706,16 +706,19 @@ function scaledGrid(s: Sprite, scale: number): Sprite {
       const y1 = Math.max(y0 + 1, Math.floor((y + 1) / scale));
       const counts = new Map<Key, number>();
       let filled = 0;
-      let eye = false;
+      let eye = false, white = false;
       for (let sy = y0; sy < y1; sy++)
         for (let sx = x0; sx < x1; sx++) {
           const k = s.get(sx, sy);
           if (!k) continue;
           filled++;
           if (k === 'E') eye = true;
+          if (k === 'Y') white = true;
           counts.set(k, (counts.get(k) ?? 0) + 1);
         }
       if (eye) out.set(x, y, 'E');
+      // the white of the eye is as small as the pupil: keep it at any size, beside the pupil
+      else if (white) out.set(x, y, 'Y');
       else if (filled >= (x1 - x0) * (y1 - y0) * 0.4) out.set(x, y, [...counts].sort((a, b) => b[1] - a[1])[0][0]);
     }
   return out;
@@ -767,7 +770,7 @@ export function paintDino(species: Species, frame = 0, baby = false, style: ArtS
 
 /** Paint additional Blender clips with the same palette, baby scale and outline. */
 export function paintDinoRows(species: Species, rows: readonly string[], baby = false, scale = 1): HTMLCanvasElement {
-  if (!rows.length || !rows[0].length || rows.some(row => row.length !== rows[0].length || /[^.BDFAGWEM]/.test(row))) {
+  if (!rows.length || !rows[0].length || rows.some(row => row.length !== rows[0].length || /[^.BDFAGWEMY]/.test(row))) {
     throw new RangeError('Invalid dinosaur role grid');
   }
   const grown = new Sprite(rows[0].length, rows.length);
@@ -824,6 +827,7 @@ function paintDinoSprite(species: Species, grown: Sprite, baby: boolean, scale: 
     G: tint(accent, -0.35),
     W: '#f4ecd2',
     E: '#101010',
+    Y: '#f6f1e2',
     M: tint(dark, -0.45),
   };
   const light: Partial<Record<Key, string>> = { B: tint(body, 0.28), A: tint(accent, 0.25), D: tint(dark, 0.12), F: tint(body, -0.2) };

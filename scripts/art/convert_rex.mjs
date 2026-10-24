@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const strips = `${root}assets-source/pxl/dinos/out/anims/`;
-const CLIPS = ['walk', 'idle', 'eat', 'rest', 'roar', 'stomp', 'dance', 'hop', 'sneeze'];
+const CLIPS = ['walk', 'idle', 'eat', 'rest', 'roar', 'stomp', 'dance', 'hop', 'sneeze', 'wink'];
 const KEYS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 const palette = new Map();
 

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { advanceMotion, handDrawnRex, idleFun, MOTION_CLIPS } from '../src/render/parkMotion';
-import { dinoReaction, REACTION_MS } from '../src/render/dinoReaction';
+import { dinoReaction, REACTION_MS, winkReaction } from '../src/render/dinoReaction';
 import { BLENDER_MOTION, FUN_CLIPS } from '../src/render/generated/blenderMotion';
-import { REX_ART, REX_SCALE, REX_WALK_CONTACTS, REX_WALK_CYCLE } from '../src/render/generated/rexArt';
+import { REX_ART, REX_PALETTE, REX_SCALE, REX_WALK_CONTACTS, REX_WALK_CYCLE } from '../src/render/generated/rexArt';
 import { dinoWorldScale } from '../src/render/dinoSize';
 import { SPECIES_IDS } from '../src/sim/data/species';
 
@@ -10,7 +10,7 @@ const input = { species: 'tyrannosaurus' as const, baby: false, x: 20, y: 20, ti
 
 describe('playful moves', () => {
   it('gives every species the five new clips, eight frames each, beside the four it had', () => {
-    expect(MOTION_CLIPS).toEqual(['walk', 'idle', 'eat', 'rest', 'roar', 'stomp', 'dance', 'hop', 'sneeze']);
+    expect(MOTION_CLIPS).toEqual(['walk', 'idle', 'eat', 'rest', 'roar', 'stomp', 'dance', 'hop', 'sneeze', 'wink']);
     for (const id of SPECIES_IDS) for (const clip of FUN_CLIPS) {
       const c = BLENDER_MOTION[id][clip];
       expect(c.frames).toHaveLength(8);
@@ -83,6 +83,47 @@ describe('playful moves', () => {
     expect(dinoReaction('pteranodon', 'pat', 300, true, true)).toMatchObject({ clip: 'dance' });
     expect(dinoReaction('pteranodon', 'pat', 300, true, false)).toMatchObject({ clip: 'walk' });
     expect(dinoReaction('triceratops', 'pat', REACTION_MS, true, true)).toEqual({ frame: 0, lift: 0, angle: 0 });
+  });
+});
+
+describe('eyes', () => {
+  it('have a white behind the pupil, looking forward, in every open-eyed frame', () => {
+    for (const id of SPECIES_IDS) for (const [name, clip] of Object.entries(BLENDER_MOTION[id])) clip.frames.forEach((rows, i) => {
+      if (name === 'wink' && (i === 3 || i === 4)) return;
+      const white = rows.flatMap((r, y) => [...r].flatMap((k, x) => k === 'Y' ? [[x, y]] : []));
+      const pupil = rows.flatMap((r, y) => [...r].flatMap((k, x) => k === 'E' ? [[x, y]] : []));
+      expect(white.length, `${id}:${name}:${i}`).toBeGreaterThan(0);
+      // toward the back of the head (a nodding head turns it a little), touching the pupil
+      const mean = (pts: number[][]) => pts.reduce((a, [x]) => a + x, 0) / pts.length;
+      expect(mean(white), `${id}:${name}:${i}`).toBeLessThan(mean(pupil));
+      expect(white.some(([x, y]) => pupil.some(([px, py]) => Math.abs(px - x) <= 1 && Math.abs(py - y) <= 1)), `${id}:${name}:${i}`).toBe(true);
+    });
+  });
+
+  it('shut for the wink: a lid line, one pixel tall, and no white', () => {
+    for (const id of SPECIES_IDS) for (const i of [3, 4]) {
+      const rows = BLENDER_MOTION[id].wink.frames[i];
+      expect(rows.join(''), id).not.toContain('Y');
+      const lid = rows.flatMap((r, y) => r.includes('E') ? [y] : []);
+      expect(lid.length, `${id}:${i}`).toBe(1);
+    }
+    for (const id of SPECIES_IDS) expect(BLENDER_MOTION[id].wink.frames[0].join('')).toContain('Y');
+  });
+
+  it('wink back at a tap, in order, then stop', () => {
+    const d = BLENDER_MOTION.triceratops.wink.durationMs;
+    expect([...Array(8)].map((_, i) => winkReaction('triceratops', (i + .5) * d / 8)?.frame)).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
+    expect(winkReaction('triceratops', d)).toBeUndefined();
+    expect(winkReaction('triceratops', 100, false)).toBeUndefined();
+  });
+
+  it('the brown T-rex has white eyes too, and shuts one to wink', () => {
+    for (const size of ['adult', 'baby'] as const) {
+      const art = REX_ART[size], open = art.clips.idle[0].join(''), shut = art.clips.wink[3].join('');
+      const white = Object.entries(REX_PALETTE).find(([, hex]) => hex === '#f6f1e2')![0];
+      expect(open).toContain(white);
+      expect(shut).not.toContain(white);
+    }
   });
 });
 

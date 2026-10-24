@@ -126,7 +126,12 @@ def limb(scene, name, points, role='B', depth=0):
 
 
 def rect(scene, name, x, y, w, h, role, depth):
-    return profile(scene, name, [(x,y), (x+w,y), (x+w,y+h), (x,y+h)], role, depth)
+    obj = profile(scene, name, [(x,y), (x+w,y), (x+w,y+h), (x,y+h)], role, depth)
+    if name == 'eye' and role == 'E' and MANIFEST['assets'].get(scene.get('asset'), {}).get('kind') == 'dino':
+        # The white of the eye (role Y), just behind the pupil, toward the back of the head: every
+        # dinosaur faces right, so the pupil looks forward. The motion poses grow it with the pupil.
+        profile(scene, 'eye_white', [(x-w,y), (x,y), (x,y+h), (x-w,y+h)], 'Y', depth+.5)
+    return obj
 
 
 def rex(scene, phase):
@@ -253,7 +258,7 @@ def convert(scene, image, frame):
     patches = PATCHES['assets'].get(scene['asset'], {})
     for x,y,role in patches.get('all', []) + patches.get(str(frame), []):
         x += spec.get('modelOffsetX',0)
-        if not (0 <= x < width and 0 <= y < height) or role not in set('.BDFAGWEM'):
+        if not (0 <= x < width and 0 <= y < height) or role not in set('.BDFAGWEMY'):
             raise ValueError('Invalid cleanup patch')
         rows[y][x] = role
     if spec['grounded'] and not any(role != '.' for role in rows[-1]):

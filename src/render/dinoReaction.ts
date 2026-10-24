@@ -1,8 +1,16 @@
 import { habitatOf, SPECIES, type SpeciesId } from '../sim/data/species';
 import type { MotionClip } from './immersionMotion';
+import { BLENDER_MOTION } from './generated/blenderMotion';
 export type DinoReactionAction = 'pat' | 'treat';
 export const REACTION_MS = 1200;
 export interface DinoReaction { clip?: MotionClip; frame: number; lift: number; angle: number }
+
+/** Tapping a dinosaur in the pixel park: it winks back. */
+export function winkReaction(id: SpeciesId, elapsed: number, animate = true): DinoReaction | undefined {
+  const duration = BLENDER_MOTION[id].wink.durationMs;
+  if (!animate || elapsed < 0 || elapsed >= duration) return undefined;
+  return {clip:'wink',frame:Math.min(7,Math.floor(elapsed/duration*8)),lift:0,angle:0};
+}
 
 /**
  * Player gestures use a real-time clock, so a paused park can still answer a pat. A pat starts the happy

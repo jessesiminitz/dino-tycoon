@@ -76,6 +76,9 @@ def pose(asset, clip, index):
     if asset in AIR and clip == 'rest':
         feet=[height-v.co.z for o in scene.objects if o.type == 'MESH' and '_feet_' in o.name for v in o.data.vertices]
         rest_shift=height-max(feet)
+    pupil = next((o for o in scene.objects if o.type == 'MESH' and o.name.endswith('_eye')), None)
+    pupil_x = sum(v.co.x for v in pupil.data.vertices)/len(pupil.data.vertices) if pupil else 0
+    pupil_y = height-sum(v.co.z for v in pupil.data.vertices)/len(pupil.data.vertices) if pupil else 0
     result = {}
     for obj in scene.objects:
         if obj.type != 'MESH': continue
@@ -89,6 +92,9 @@ def pose(asset, clip, index):
                 center_x = sum(v.co.x for v in obj.data.vertices)/len(obj.data.vertices)
                 center_y = height-sum(v.co.z for v in obj.data.vertices)/len(obj.data.vertices)
                 x,y = center_x+(x-center_x)*1.8,center_y+(y-center_y)*1.8
+            if part == 'eye_white':
+                # Grows a little less than the pupil, so about a pixel of white shows behind it.
+                x,y = pupil_x+(x-pupil_x)*1.4,pupil_y+(y-pupil_y)*1.4
             if asset in ('tyrannosaurus','triceratops') and clip == 'walk':
                 if asset == 'tyrannosaurus':
                     limb = 'near' if part.startswith(('near_thigh','near_shin','near_toes','near_claws')) else 'far' if part.startswith(('far_leg','far_toes')) else None
@@ -114,6 +120,7 @@ def pose(asset, clip, index):
                 if clip == 'eat' and part.startswith(('jaw','mouth','tooth')):
                     y += breath*.8
             if part == 'eye': depth = -30
+            if part == 'eye_white': depth = -29
             if asset in AIR and clip == 'rest' and part.startswith(('near_membrane','far_wing','wing_fingers')):
                 # Fold at the actual shoulder shared by the membrane and finger.
                 shoulder_x=(30 if asset == 'pteranodon' else 21)+spec.get('modelOffsetX',0)

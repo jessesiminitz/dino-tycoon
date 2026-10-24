@@ -9,7 +9,7 @@ const species = Object.keys(manifest.assets).filter(id => manifest.assets[id].ki
 const clips = ['walk','idle','eat','rest'];
 // Playful clips (scripts/art/fun_motion.py): a hop leaves the ground and a stomp lifts a foot, so only the
 // first and last frames must stand.
-const fun = ['roar','stomp','dance','hop','sneeze'];
+const fun = ['roar','stomp','dance','hop','sneeze','wink'];
 const data = {};
 for (const asset of species) {
   data[asset] = {};
@@ -18,7 +18,7 @@ for (const asset of species) {
     if (p.asset !== asset || p.clip !== clip || p.frames.length !== 8 || p.contacts.length !== 8 || p.durationMs <= 0) throw new Error(`Invalid clip ${asset}:${clip}`);
     p.frames.forEach((rows, i) => {
       const hash = createHash('sha256').update(rows.join('\n')).digest('hex');
-      if (rows.length !== p.height || rows.some(row => row.length !== p.width || /[^.BDFAGWEM]/.test(row)) || hash !== p.hashes[i]) throw new Error(`Invalid frame ${asset}:${clip}:${i}`);
+      if (rows.length !== p.height || rows.some(row => row.length !== p.width || /[^.BDFAGWEMY]/.test(row)) || hash !== p.hashes[i]) throw new Error(`Invalid frame ${asset}:${clip}:${i}`);
       const standing = manifest.assets[asset].grounded && (!fun.includes(clip) || i === 0 || i === 7);
       if (!rows.some(row => row.includes('E')) || (standing && !/[^.]/.test(rows.at(-1)))) throw new Error(`Missing face or planted feet ${asset}:${clip}:${i}`);
       assertAttachedSilhouette(rows, `${asset}:${clip}:${i}`);

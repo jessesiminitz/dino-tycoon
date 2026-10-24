@@ -14,7 +14,7 @@ for (const [asset, spec] of Object.entries(manifest.assets)) {
   const frames = spec.frames.map((_, frame) => {
     const result = JSON.parse(readFileSync(`${root}assets-source/renders/${asset}-${frame}.json`, 'utf8'));
     if (result.asset !== asset || result.frame !== frame || result.rows.length !== spec.height ||
-        result.rows.some((row) => row.length !== spec.width || /[^.BDFAGWEM]/.test(row))) {
+        result.rows.some((row) => row.length !== spec.width || /[^.BDFAGWEMY]/.test(row))) {
       throw new Error(`Invalid exported frame ${asset}:${frame}`);
     }
     const hash = createHash('sha256').update(result.rows.join('\n')).digest('hex');

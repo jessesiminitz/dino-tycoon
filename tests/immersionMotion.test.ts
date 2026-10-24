@@ -11,12 +11,12 @@ describe('Blender prototype motion',()=>{
         expect(clip.frames).toHaveLength(8);
         for(const [i,rows] of clip.frames.entries()) {
           expect(rows).toHaveLength(clip.height);
-          expect(rows.every(row=>row.length===clip.width && /^[.BDFAGWEM]+$/.test(row))).toBe(true);
+          expect(rows.every(row=>row.length===clip.width && /^[.BDFAGWEMY]+$/.test(row))).toBe(true);
           expect(rows.join('')).toContain('E');
           // a hop leaves the ground and a stomp lifts a foot: the playful clips start and end standing
           const standing=!(FUN_CLIPS as readonly string[]).includes(name)||i===0||i===7;
           if(habitatOf(id)==='land'&&standing){
-            expect(rows.at(-1)).toMatch(/[BDFAGWEM]/);
+            expect(rows.at(-1)).toMatch(/[BDFAGWEMY]/);
             expect(clip.contacts[i].some(foot=>foot.planted)).toBe(true);
           }
         }
