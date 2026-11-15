@@ -71,9 +71,9 @@ const atlas = await page.evaluate(() => {
   };
   return { rex: names('motion-tyrannosaurus'), baby: names('motion-tyrannosaurus-baby'), allo: names('motion-allosaurus'), rexColours: colours('motion-tyrannosaurus'), babyColours: colours('motion-tyrannosaurus-baby') };
 });
-const CLIPS = ['walk', 'idle', 'eat', 'rest', 'roar', 'stomp', 'dance', 'hop', 'sneeze', 'wink'];
+const CLIPS = ['walk', 'idle', 'eat', 'rest', 'roar', 'stomp', 'dance', 'hop', 'sneeze', 'wink', 'look', 'sniff', 'swish', 'yawn'];
 for (const [label, list] of [['T-rex', atlas.rex], ['baby T-rex', atlas.baby], ['Allosaurus', atlas.allo]])
-  check(`${label} atlas holds all ten clips × 8 frames`, CLIPS.every((c) => [...Array(8)].every((_, i) => list.includes(`${c}-${i}`))), list.length);
+  check(`${label} atlas holds all fourteen clips: the walk's 16 frames, 8 for the rest`, CLIPS.every((c) => [...Array(c === 'walk' ? 16 : 8)].every((_, i) => list.includes(`${c}-${i}`))), list.length);
 // rex2's hide: the red-brown back (#97633a) and the tan flank (#a07c56); the Blender T-rex's green is gone
 check('the park T-rex is the brown hand-drawn one', atlas.rexColours.includes('#97633a') && atlas.rexColours.includes('#a07c56') && !atlas.rexColours.includes('#6b7a4a'), atlas.rexColours.length);
 check('the baby T-rex is the same, a touch paler', atlas.babyColours.length > 0 && !atlas.babyColours.includes('#97633a'), atlas.babyColours.slice(0, 4));
@@ -86,6 +86,8 @@ for (const sp of [...SPECIES, 'baby']) {
   const moves = [...new Set(names.filter((n) => fun.has(n?.split('-')[0])).map((n) => n.split('-')[0]))];
   const frames = new Set(names.filter((n) => fun.has(n?.split('-')[0])));
   check(`${sp} does a playful move while standing about`, moves.length > 0 && frames.size >= 4, moves);
+  const small = [...new Set(names.filter((n) => /^(look|sniff|swish|yawn)-/.test(n ?? '')).map((n) => n.split('-')[0]))];
+  check(`${sp} does small things between (a look, a sniff, a swish, a yawn)`, small.length > 0, small);
   check(`${sp} goes back to idling`, names.at(-1)?.startsWith('idle') || names.slice(-40).some((n) => n?.startsWith('idle')), names.at(-1));
 }
 
@@ -125,14 +127,26 @@ let shot = false;
 for (let i = 0; i < 40; i++) {
   const name = await page.evaluate((id) => window.__dino.game.scene.getScene('park').entities.dinoSprite(id).frame.name, ids.triceratops);
   winked.add(name);
-  if (!shot && /^wink-[34]$/.test(name)) { shot = true; await page.screenshot({ path: `${OUT}fun-4-tap-wink-${W}.png` }); }
   await sleep(25);
 }
+// (a screenshot stalls the page on a busy machine and would swallow the rest of the wink: sample first, then wink again for the picture)
+const pose = async (start, want, file) => {
+  await page.evaluate(start, ids.triceratops);
+  for (let i = 0; i < 60; i++) {
+    if (want.test(await page.evaluate((id) => window.__dino.game.scene.getScene('park').entities.dinoSprite(id).frame.name, ids.triceratops))) { await page.screenshot({ path: `${OUT}${file}-${W}.png` }); return true; }
+    await sleep(20);
+  }
+  return false;
+};
+shot = await pose((id) => window.__dino.game.scene.getScene('park').entities.greet(id), /^wink-[34]$/, 'fun-4-tap-wink');
+await sleep(1500);
 check('tapping the triceratops makes it wink, eye shut and open again', shot && [...winked].filter((n) => n.startsWith('wink')).length >= 5, [...winked]);
 const smalls = await page.$$('#info-actions .action-btn.small');
 await smalls[1].tap();
 const danced = new Set();
-for (let i = 0; i < 20; i++) { danced.add(await page.evaluate((id) => window.__dino.game.scene.getScene('park').entities.dinoSprite(id).frame.name, ids.triceratops)); if (i === 6) await page.screenshot({ path: `${OUT}fun-3-pat-dance-${W}.png` }); await sleep(60); }
+for (let i = 0; i < 20; i++) { danced.add(await page.evaluate((id) => window.__dino.game.scene.getScene('park').entities.dinoSprite(id).frame.name, ids.triceratops)); await sleep(60); }
+await sleep(800);
+await pose((id) => window.__dino.game.scene.getScene('park').entities.careEffect(id, 'hearts', 'pat'), /^dance-[2-5]$/, 'fun-3-pat-dance');
 check('patting the triceratops starts its happy dance', [...danced].filter((n) => n.startsWith('dance')).length >= 4, [...danced]);
 
 // The catalog's T-rex is the hand-drawn one too.

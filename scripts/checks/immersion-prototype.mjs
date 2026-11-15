@@ -17,7 +17,7 @@ try {
   await page.goto(href,{waitUntil:'load'});await page.waitForFunction(()=>window.__immersion);
   await page.evaluate(()=>localStorage.setItem('immersion-save-sentinel','unchanged'));
   const initial=await page.evaluate(()=>window.__immersion.snapshot());
-  check('three dinosaurs and all cached adult/baby clips',initial.actors.length===3&&initial.cachedSprites===192,initial.cachedSprites);
+  check('three dinosaurs and all cached adult/baby clips',initial.actors.length===3&&initial.cachedSprites===240,initial.cachedSprites);
   await page.screenshot({path:`${out}immersion-dusk-desktop.png`,fullPage:true});
   await page.click('#pause');
   const frozen=await page.evaluate(()=>({state:window.__immersion.snapshot(),pixels:document.querySelector('#world').toDataURL()}));
@@ -85,7 +85,7 @@ try {
     await new Promise(resolve=>{const tick=time=>{if(previous!==undefined)samples.push(time-previous);previous=time;if(samples.length<90)requestAnimationFrame(tick);else resolve();};requestAnimationFrame(tick);});
     samples.sort((a,b)=>a-b);return {p95FrameMs:samples[Math.floor(samples.length*.95)],cachedSprites:window.__immersion.snapshot().cachedSprites};
   });
-  check('animation does not grow its sprite cache',performance.cachedSprites===192,performance);
+  check('animation does not grow its sprite cache',performance.cachedSprites===240,performance);
   for(const [width,height,name]of [[390,844,'phone'],[844,390,'phone-landscape'],[820,1180,'ipad']]) {
     await page.setViewport({width,height,deviceScaleFactor:1,isMobile:true,hasTouch:true});
     const layout=await page.evaluate(()=>({width:innerWidth,content:document.documentElement.scrollWidth,cards:document.querySelectorAll('.card').length,canvas:document.querySelector('#world').getBoundingClientRect().width}));

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { advanceMotion, handDrawnRex, idleFun, MOTION_CLIPS } from '../src/render/parkMotion';
+import { advanceMotion, handDrawnRex, idleMove, idleTurnMs, MOTION_CLIPS, shutEyes } from '../src/render/parkMotion';
 import { dinoReaction, REACTION_MS, winkReaction } from '../src/render/dinoReaction';
-import { BLENDER_MOTION, FUN_CLIPS } from '../src/render/generated/blenderMotion';
+import { BLENDER_MOTION, FUN_CLIPS, IDLE_CLIPS } from '../src/render/generated/blenderMotion';
 import { REX_ART, REX_PALETTE, REX_SCALE, REX_WALK_CONTACTS, REX_WALK_CYCLE } from '../src/render/generated/rexArt';
 import { dinoWorldScale } from '../src/render/dinoSize';
 import { SPECIES, SPECIES_IDS } from '../src/sim/data/species';
@@ -11,8 +11,8 @@ const input = { species: 'tyrannosaurus' as const, baby: false, x: 20, y: 20, ti
 
 describe('playful moves', () => {
   it('gives every species the five new clips, eight frames each, beside the four it had', () => {
-    expect(MOTION_CLIPS).toEqual(['walk', 'idle', 'eat', 'rest', 'roar', 'stomp', 'dance', 'hop', 'sneeze', 'wink']);
-    for (const id of SPECIES_IDS) for (const clip of FUN_CLIPS) {
+    expect(MOTION_CLIPS).toEqual(['walk', 'idle', 'eat', 'rest', 'roar', 'stomp', 'dance', 'hop', 'sneeze', 'wink', 'look', 'sniff', 'swish', 'yawn']);
+    for (const id of SPECIES_IDS) for (const clip of [...FUN_CLIPS, ...IDLE_CLIPS]) {
       const c = BLENDER_MOTION[id][clip];
       expect(c.frames).toHaveLength(8);
       // the same canvas width as the walk, so the animal doesn't jump sideways when a move starts
@@ -26,37 +26,66 @@ describe('playful moves', () => {
       const seen = new Set<string>();
       let idle = 0;
       for (let t = 0; t < 120_000; t += 50) {
-        const fun = idleFun(id, 3, t);
+        const fun = idleMove(id, 3, t);
         if (!fun) { idle++; continue; }
-        expect(FUN_CLIPS).toContain(fun.clip);
+        expect([...FUN_CLIPS, ...IDLE_CLIPS]).toContain(fun.clip);
         expect(fun.frame).toBeGreaterThanOrEqual(0);
         expect(fun.frame).toBeLessThan(8);
         seen.add(fun.clip);
       }
-      expect(seen.size).toBeGreaterThanOrEqual(2);
-      // mostly it just stands
-      expect(idle / 2400).toBeGreaterThan(.75);
+      // playful moves and small ones both come round
+      expect([...seen].filter((c) => (FUN_CLIPS as readonly string[]).includes(c)).length).toBeGreaterThanOrEqual(2);
+      expect([...seen].filter((c) => (IDLE_CLIPS as readonly string[]).includes(c)).length).toBeGreaterThanOrEqual(2);
+      // between moves it just stands, for a good part of the time
+      expect(idle / 2400).toBeGreaterThan(.4);
       // not straight away
-      expect(idleFun(id, 3, 5000)).toBeUndefined();
+      expect(idleMove(id, 3, idleTurnMs(3) - 1)).toBeUndefined();
+      // a move always fits inside its turn, so none is cut short
+      for (const clip of [...FUN_CLIPS, ...IDLE_CLIPS, 'eat'] as const) expect(BLENDER_MOTION[id][clip].durationMs).toBeLessThanOrEqual(3600);
     }
   });
 
   it('keeps every frame of a move in order, start to finish', () => {
     let start = 0;
-    while (!idleFun('allosaurus', 0, start)) start += 10;
-    const clip = idleFun('allosaurus', 0, start)!.clip, duration = BLENDER_MOTION.allosaurus[clip].durationMs;
-    expect([...Array(8)].map((_, i) => idleFun('allosaurus', 0, start + (i + .5) * duration / 8)?.frame)).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
-    expect(idleFun('allosaurus', 0, start + duration + 1)).toBeUndefined();
+    while (!idleMove('allosaurus', 0, start)) start += 10;
+    const clip = idleMove('allosaurus', 0, start)!.clip, duration = BLENDER_MOTION.allosaurus[clip].durationMs;
+    expect([...Array(8)].map((_, i) => idleMove('allosaurus', 0, start + (i + .5) * duration / 8)?.frame)).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
+    expect(idleMove('allosaurus', 0, start + duration + 1)).toBeUndefined();
   });
 
   it('happy animals dance more, and the hunters roar', () => {
     const count = (id: typeof SPECIES_IDS[number], clip: string, happiness: number) => {
       let n = 0;
-      for (let t = 0; t < 600_000; t += 100) if (idleFun(id, 5, t, happiness)?.clip === clip) n++;
+      for (let t = 0; t < 600_000; t += 100) if (idleMove(id, 5, t, happiness)?.clip === clip) n++;
       return n;
     };
     expect(count('triceratops', 'dance', 90)).toBeGreaterThan(count('triceratops', 'dance', 40));
     expect(count('tyrannosaurus', 'roar', 50)).toBeGreaterThan(0);
+  });
+
+  it('does something small every few seconds: mostly a look, a sniff, a swish or a yawn', () => {
+    for (const id of ['triceratops', 'allosaurus', 'pteranodon', 'mosasaurus'] as const) {
+      const starts: number[] = [], clips = new Set<string>();
+      let was = false;
+      for (let t = 0; t < 300_000; t += 50) {
+        const move = idleMove(id, 9, t);
+        if (move && !was) starts.push(t);
+        if (move) clips.add(move.clip);
+        was = !!move;
+      }
+      // a move about every 4 to 8 s on average (the old playful moves alone came every 10 to 18 s)
+      expect(300_000 / starts.length).toBeGreaterThan(3500);
+      expect(300_000 / starts.length).toBeLessThan(8000);
+      // nobody sniffs the ground from the air or the water
+      expect(clips.has('sniff')).toBe(id === 'triceratops' || id === 'allosaurus');
+      expect(clips.has('look')).toBe(true);
+    }
+  });
+
+  it('bends down for a drink only beside water', () => {
+    const drinks = (beside: boolean) => { let n = 0; for (let t = 0; t < 300_000; t += 200) if (idleMove('triceratops', 9, t, 50, beside)?.clip === 'eat') n++; return n; };
+    expect(drinks(false)).toBe(0);
+    expect(drinks(true)).toBeGreaterThan(0);
   });
 
   it('only shows a move when standing, with motion on, in the pixel art', () => {
@@ -90,7 +119,7 @@ describe('playful moves', () => {
 describe('eyes', () => {
   it('have a white behind the pupil, looking forward, in every open-eyed frame', () => {
     for (const id of SPECIES_IDS) for (const [name, clip] of Object.entries(BLENDER_MOTION[id])) clip.frames.forEach((rows, i) => {
-      if (name === 'wink' && (i === 3 || i === 4)) return;
+      if ((name === 'wink' && (i === 3 || i === 4)) || (name === 'look' && i === 4) || (name === 'yawn' && i >= 3 && i <= 5)) return;
       const white = rows.flatMap((r, y) => [...r].flatMap((k, x) => k === 'Y' ? [[x, y]] : []));
       const pupil = rows.flatMap((r, y) => [...r].flatMap((k, x) => k === 'E' ? [[x, y]] : []));
       expect(white.length, `${id}:${name}:${i}`).toBeGreaterThan(0);
@@ -109,6 +138,23 @@ describe('eyes', () => {
       expect(lid.length, `${id}:${i}`).toBe(1);
     }
     for (const id of SPECIES_IDS) expect(BLENDER_MOTION[id].wink.frames[0].join('')).toContain('Y');
+  });
+
+  it('shut in a blink while looking round, through a yawn, and all night asleep', () => {
+    for (const id of SPECIES_IDS) {
+      for (const [clip, frames] of [['look', [4]], ['yawn', [3, 4, 5]]] as const) for (const i of frames) {
+        const rows = BLENDER_MOTION[id][clip].frames[i];
+        expect(rows.join(''), `${id}:${clip}:${i}`).not.toContain('Y');
+        expect(rows.filter((r) => r.includes('E')).length, `${id}:${clip}:${i}`).toBe(1);
+      }
+      for (const rows of BLENDER_MOTION[id].rest.frames) {
+        const shut = shutEyes(rows);
+        expect(shut.join('')).not.toContain('Y');
+        expect(shut.filter((r) => r.includes('E')).length).toBe(1);
+        // nothing else changes: the same silhouette
+        expect(shut.map((r) => r.replace(/[^.]/g, 'x'))).toEqual(rows.map((r) => r.replace(/[^.]/g, 'x')));
+      }
+    }
   });
 
   it('still show their white at park size, adults and babies (all but the speck-sized Microraptor)', () => {
@@ -146,11 +192,11 @@ describe('the hand-drawn T-rex', () => {
     expect(handDrawnRex('allosaurus', 'blender')).toBe(false);
   });
 
-  it('has all nine clips for adults and babies, on one canvas size each', () => {
+  it('has every clip for adults and babies, on one canvas size each', () => {
     for (const size of ['adult', 'baby'] as const) {
       const art = REX_ART[size], { length: h } = art.clips.walk[0], w = art.clips.walk[0][0].length;
       for (const clip of MOTION_CLIPS) {
-        expect(art.clips[clip]).toHaveLength(8);
+        expect(art.clips[clip]).toHaveLength(clip === 'walk' ? 16 : 8);
         for (const rows of art.clips[clip]) {
           expect(rows).toHaveLength(h);
           expect(rows.every((r) => r.length === w)).toBe(true);
@@ -180,15 +226,15 @@ describe('the hand-drawn T-rex', () => {
 
   it('keeps a planted foot still on the ground while it walks', () => {
     let checked = 0;
-    for (let i = 0; i < 8; i++) for (const before of REX_WALK_CONTACTS[i]) {
-      const after = REX_WALK_CONTACTS[(i + 1) % 8].find((f) => f.name === before.name)!;
+    for (let i = 0; i < 16; i++) for (const before of REX_WALK_CONTACTS[i]) {
+      const after = REX_WALK_CONTACTS[(i + 1) % 16].find((f) => f.name === before.name)!;
       if (!before.planted || !after.planted) continue;
-      // the body moves forward one eighth of a cycle; the foot slides back the same in the picture
-      expect(Math.abs(REX_WALK_CYCLE / 8 + after.x - before.x)).toBeLessThan(.05);
+      // the body moves forward one sixteenth of a cycle; the foot slides back the same in the picture
+      expect(Math.abs(REX_WALK_CYCLE / 16 + after.x - before.x)).toBeLessThan(.05);
       checked++;
     }
-    expect(checked).toBeGreaterThanOrEqual(6);
+    expect(checked).toBeGreaterThanOrEqual(12);
     const previous = advanceMotion(undefined, { ...input, moving: true });
-    expect(advanceMotion(previous, { ...input, moving: true, x: input.x + REX_WALK_CYCLE / 4 }).frame).toBe(2);
+    expect(advanceMotion(previous, { ...input, moving: true, x: input.x + REX_WALK_CYCLE / 4 }).frame).toBe(4);
   });
 });

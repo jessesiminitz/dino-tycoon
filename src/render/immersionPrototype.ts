@@ -124,7 +124,7 @@ function advance(actor:Actor,dt:number) {
   if(actor.clip==='walk' && actor.frame!==actor.previous && footsteps.checked) {
     const contacts=BLENDER_MOTION[actor.id].walk.contacts;
     for(const foot of contacts[actor.frame]) {
-      const before=contacts[(actor.frame+7)%8].find(f=>f.name===foot.name);
+      const before=contacts[(actor.frame+contacts.length-1)%contacts.length].find(f=>f.name===foot.name);
       if(foot.planted && before && !before.planted) {
         const x=actor.x+(foot.x-(BLENDER_MOTION[actor.id].walk.width/2))*2*actor.facing;
         particles.push({x,y:actor.y-2,born:clock,wet:atmosphere.value==='rain'});footfallCount++;
@@ -210,7 +210,7 @@ function drawPreviews() {
     if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
     const c=canvas.getContext('2d')!;c.clearRect(0,0,w,h);c.save();c.imageSmoothingEnabled=false;
     if(left.checked){c.translate(w,0);c.scale(-1,1);}c.drawImage(source,0,0,w,h);c.restore();
-    preview.detail.textContent=`${clip} · frame ${frame+1}/8 · ${baby.checked?'baby':'adult'}`;
+    preview.detail.textContent=`${clip} · frame ${frame+1}/${BLENDER_MOTION[preview.id][clip].frames.length} · ${baby.checked?'baby':'adult'}`;
   }
 }
 function syncPause() {pause.textContent=paused?'Play':'Pause';pause.setAttribute('aria-pressed',String(paused));}

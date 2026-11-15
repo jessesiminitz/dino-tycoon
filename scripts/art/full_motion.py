@@ -18,6 +18,9 @@ SPECIES = tuple(asset for asset,spec in BASE_SPECS.items() if spec['kind'] == 'd
 WATER = ('plesiosaurus','mosasaurus')
 AIR = ('pteranodon','dimorphodon')
 CLIPS = {'walk': 960, 'idle': 1600, 'eat': 2000, 'rest': 2400}
+# Poses per clip: the walk has sixteen for a smoother gait, every other clip eight.
+FRAMES = {'walk': 16}
+def count(clip): return FRAMES.get(clip, 8)
 OUTPUT = ROOT / 'assets-source/renders/motion'
 
 
@@ -37,7 +40,7 @@ def pose(asset, clip, index):
     if hasattr(builder, 'func'):
         builder.func.__globals__['leg'].__globals__['gait'] = gait
         builder.func.__globals__['gait'] = gait
-    phase = index/8
+    phase = index/count(clip)
     builder(scene, phase if asset not in ('tyrannosaurus','triceratops') and (clip == 'walk' or asset in AIR+WATER) else 1/6)
     ART['offset_geometry'](scene)
     spec = ART['MANIFEST']['assets'][asset]
@@ -155,7 +158,8 @@ def prepare(asset, clip):
         for obj in objects:
             if obj.users == 0: bpy.data.objects.remove(obj)
     samples = []
-    for index in range(8):
+    n = count(clip)
+    for index in range(n):
         scene, points = pose(asset,clip,index)
         samples.append(points)
     # Keep one scene with a genuine editable animation timeline per clip.
@@ -166,12 +170,12 @@ def prepare(asset, clip):
         obj.name = scene.name+'_'+part
         for v,co in zip(obj.data.vertices,samples[0][part]): v.co = co
         obj.shape_key_add(name='Basis')
-        for index in range(8):
+        for index in range(n):
             key = obj.shape_key_add(name=f'{clip}_{index:02d}')
             for v,co in zip(key.data,samples[index][part]): v.co = co
-            for tick in range(9):
-                key.value = 1 if tick%8 == index else 0
-                key.keyframe_insert(data_path='value',frame=1+tick*CLIPS[clip]/80)
+            for tick in range(n+1):
+                key.value = 1 if tick%n == index else 0
+                key.keyframe_insert(data_path='value',frame=1+tick*CLIPS[clip]/(10*n))
     spec = ART['MANIFEST']['assets'][asset]
     spec['width'] += 16
     ART['PATCHES']['assets'].pop(asset,None)
@@ -184,7 +188,7 @@ def prepare(asset, clip):
     scene.frame_start,scene.frame_end = 1,CLIPS[clip]//10
     scene['clip'],scene['durationMs'] = clip,CLIPS[clip]
     OUTPUT.mkdir(parents=True,exist_ok=True)
-    print('Prepared',scene.name,'with eight shape-key poses')
+    print('Prepared',scene.name,'with',n,'shape-key poses')
     return scene
 
 
@@ -196,13 +200,15 @@ def save_source(asset, clip):
     print('Saved',asset,clip)
 
 
-def render_clip(asset, clip, start=0, end=8):
+def render_clip(asset, clip, start=0, end=None):
     scene = bpy.data.scenes[f'DinoTycoon_Motion_{asset}_{clip}']
     bpy.context.window.scene = scene
     spec = ART['MANIFEST']['assets'][asset]
     spec['width'],spec['height'] = scene.render.resolution_x,scene.render.resolution_y
+    n = count(clip)
+    if end is None: end = n
     for index in range(start,end):
-        scene.frame_set(1+index*CLIPS[clip]//80)
+        scene.frame_set(1+index*CLIPS[clip]//(10*n))
         scene.render.filepath = str(OUTPUT/f'{asset}-{clip}-{index}.png')
         bpy.ops.render.render(write_still=True,scene=scene.name)
         image = bpy.data.images.load(scene.render.filepath,check_existing=False)
@@ -220,8 +226,8 @@ def render_clip(asset, clip, start=0, end=8):
                          'x':round((min(xs)+max(xs))/2,3),
                          'y':round(bottom,3),'planted':bottom>=spec['height']-.05})
         (OUTPUT/f'{asset}-{clip}-{index}.json').write_text(json.dumps({'rows':rows,'contact':feet,'hash':frame_hash})+'\n')
-    if end == 8:
-        samples = [json.loads((OUTPUT/f'{asset}-{clip}-{i}.json').read_text()) for i in range(8)]
+    if end == n:
+        samples = [json.loads((OUTPUT/f'{asset}-{clip}-{i}.json').read_text()) for i in range(n)]
         payload = {'asset':asset,'clip':clip,'width':spec['width'],'height':spec['height'],
                    'durationMs':CLIPS[clip],'frames':[p['rows'] for p in samples],
                    'contacts':[p['contact'] for p in samples],'hashes':[p['hash'] for p in samples]}
@@ -229,17 +235,61 @@ def render_clip(asset, clip, start=0, end=8):
     print('Rendered',asset,clip,start,end)
 
 
+def bridge(rows):
+    """A thin tail or spine tip bent by a fraction of a pixel can break off at native resolution: join any
+    small piece within four pixels of the body (a tiny tip within eight) back to it with its own colour, never erasing pixels."""
+    grid = [list(r) for r in rows]; h, w = len(grid), len(grid[0])
+    seen, parts = set(), []
+    for y in range(h):
+        for x in range(w):
+            if grid[y][x] == '.' or (x, y) in seen: continue
+            group, queue = [], [(x, y)]; seen.add((x, y))
+            while queue:
+                cx, cy = queue.pop(); group.append((cx, cy))
+                for dy in (-1, 0, 1):
+                    for dx in (-1, 0, 1):
+                        n = (cx + dx, cy + dy)
+                        if 0 <= n[0] < w and 0 <= n[1] < h and n not in seen and grid[n[1]][n[0]] != '.':
+                            seen.add(n); queue.append(n)
+            parts.append(group)
+    parts.sort(key=len, reverse=True)
+    body = parts[0] if parts else []
+    for group in parts[1:]:
+        if len(group) > 12: continue   # a whole loose accessory is a real fault: leave it for the check
+        (gx, gy), (bx, by) = min(((g, b) for g in group for b in body), key=lambda gb: max(abs(gb[0][0]-gb[1][0]), abs(gb[0][1]-gb[1][1])))
+        if max(abs(gx - bx), abs(gy - by)) > (8 if len(group) <= 4 else 4): continue
+        role = grid[gy][gx]
+        steps = max(abs(gx - bx), abs(gy - by))
+        for i in range(1, steps):
+            x, y = round(gx + (bx - gx) * i / steps), round(gy + (by - gy) * i / steps)
+            if grid[y][x] == '.': grid[y][x] = role
+    return [''.join(r) for r in grid]
+
+def bridge_clip(asset, clip):
+    path = OUTPUT / f'{asset}-{clip}.json'
+    payload = json.loads(path.read_text())
+    payload['frames'] = [bridge(rows) for rows in payload['frames']]
+    payload['hashes'] = [hashlib.sha256('\n'.join(rows).encode()).hexdigest() for rows in payload['frames']]
+    path.write_text(json.dumps(payload, indent=2) + '\n')
+
+
 def export(asset, clip):
     prepare(asset,clip)
     save_source(asset,clip)
     render_clip(asset,clip)
+    # the sixteen-pose walk has in-between poses where a thin tip can part from the body by a pixel
+    if count(clip) > 8: bridge_clip(asset,clip)
 
 if __name__ == '__main__':
     import sys,traceback
-    requested = sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else list(SPECIES)
+    # -- [all | species[,species] ...] [--clips walk,idle]: every species and all four clips by default
+    args = sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else []
+    only = args[args.index('--clips')+1].split(',') if '--clips' in args else list(CLIPS)
+    if '--clips' in args: del args[args.index('--clips'):]
+    requested = list(SPECIES) if not args or args[0] == 'all' else [a for arg in args for a in arg.split(',')]
     failures=[]
     for asset in requested:
-        for clip in CLIPS:
+        for clip in only:
             try:
                 export(asset,clip)
             except Exception as error:

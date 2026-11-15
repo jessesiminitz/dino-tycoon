@@ -141,7 +141,8 @@ it('The Great Escape: doing nothing fails; active food lures and rescues win', (
       expect(s.scenario.round).toBe(0);
     }
   }
-});
+  // about 2 s alone; first in the file, it has gone past the 5 s default when the whole suite runs on a busy machine
+}, 20_000);
 it('Fire Mountain: doing nothing loses dinosaurs to the lava; saving them earns Bronze; rebuilding and growing wins Gold', () => {
   for (const mode of ['do nothing', 'evacuate only', 'sensible']) {
     const s = newPark('fire-mountain', 1);

@@ -150,6 +150,27 @@ palette rows in `src/render/generated/rexArt.ts`. Its walk is a planted gait
 whose ground speed is `REX_WALK_CYCLE`. `npm run art:fun-moves` checks all of
 it in a running park.
 
+## Sixteen-pose walks and small idle clips
+
+The walk has sixteen poses (`FRAMES` in `full_motion.py`); every other clip has eight.
+`fun_motion.py` also authors four small idle clips, `IDLES`: look, sniff, swish and
+yawn. A look blinks and a yawn shuts the eyes, with the same `blink` key as the wink.
+The walk's in-between poses can part a thin tail tip from the body by a pixel, so its
+export runs `bridge_clip` too.
+
+```sh
+/Applications/Blender.app/Contents/MacOS/Blender --background --python scripts/art/full_motion.py -- all --clips walk
+/Applications/Blender.app/Contents/MacOS/Blender --background --python scripts/art/fun_motion.py -- all look sniff swish yawn
+npm run art:motion:convert
+```
+
+Both runs take under a minute. The converter stores each shared row run-length
+encoded (`"12.5B3D"` is twelve `.`, five `B`, three `D`); the module decodes them
+when it loads. The T-rex has the same clips in `tyrannosaurus.px.js` (`WALK_FRAMES`,
+`IDLES`, and `shut` in `REST` for its sleeping eyes): build the changed
+`game_<adult|baby>_<clip>` anims with pxl, then `npm run art:rex`. Game code reads
+the pose count with `clipFrames()` in `parkMotion.ts`.
+
 ## Anatomy attachments
 
 `scripts/art/anatomy.py` supplies surface intersections and accessory bindings to

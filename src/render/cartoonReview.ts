@@ -35,7 +35,7 @@ function draw(time: number): void {
   const stamp = `${Math.floor(clock / 100)}:${clip.value}:${baby.checked}:${left.checked}`;
   if (stamp !== drawn) for (const id of SPECIES_IDS) {
     const behavior = clip.value as 'walk' | 'idle' | 'eat' | 'rest';
-    const index = Math.floor(clock / BLENDER_MOTION[id][behavior].durationMs * 8) % 8;
+    const index = Math.floor(clock / BLENDER_MOTION[id][behavior].durationMs * 8) % 8;   // the cartoon clips have eight poses each
     const key = `${id}:${behavior}:${index}:${baby.checked}`;
     let canvas = frames.get(key);
     if (!canvas) {

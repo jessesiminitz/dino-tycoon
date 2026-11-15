@@ -1,7 +1,7 @@
 import { calendar, type Dino, type Feeder, type GameState } from '../GameState';
 import { FEEDER_TYPES } from '../data/feeders';
 import { habitatOf, SPECIES } from '../data/species';
-import { isLand, Terrain } from '../terrain';
+import { isLand, isWater, Terrain } from '../terrain';
 import { canStep, findPath, onLand, walkableNeighbours, type CanEnter } from '../pathfind';
 import { fenceAt, tileEdges } from '../fences';
 import type { SimContext } from './context';
@@ -25,6 +25,14 @@ export const HUNGRY = 50;
 const STARVING_WARNING = 80;
 const WANDER_CHANCE = 0.35;
 const WANDER_RADIUS = 5;
+/** A baby looks for a grown-up of its kind this near to trail after. */
+const FOLLOW_REACH = 8;
+/** Herd animals notice their own kind this near, and drift back when further than HERD_LOOSE from their middle. */
+const HERD_REACH = 8;
+const HERD_LOOSE = 3;
+/** About one wander in this many goes to the water's edge, if there is water this near. */
+const WATER_VISIT_EVERY = 5;
+const WATER_REACH = 6;
 const FOOD_SEARCH = 80;
 const HUNT_SEARCH = 40;
 /**
@@ -215,10 +223,52 @@ export function stepDinos(ctx: SimContext): void {
     }
     if (!rng.chance(WANDER_CHANCE)) return null;
     const { width, height } = state.map;
-    const tx = Math.min(width - 1, Math.max(0, d.x + rng.int(-WANDER_RADIUS, WANDER_RADIUS)));
-    const ty = Math.min(height - 1, Math.max(0, d.y + rng.int(-WANDER_RADIUS, WANDER_RADIUS)));
-    const target = tileIndex(state, tx, ty);
+    const dx = rng.int(-WANDER_RADIUS, WANDER_RADIUS), dy = rng.int(-WANDER_RADIUS, WANDER_RADIUS);
+    const clamp = (x: number, y: number) => tileIndex(state, Math.min(width - 1, Math.max(0, x)), Math.min(height - 1, Math.max(0, y)));
+    // Company first: a baby trails a grown-up, a herd animal drifts back toward its herd, and now and then
+    // a land animal strolls to the water's edge. If that spot can't be reached, it wanders as it pleases.
+    const sociable = companionTarget(d, dx, dy);
+    if (sociable) {
+      const target = clamp(sociable.x, sociable.y);
+      const route = target === here ? null : findPath(state, here, (i) => i === target, WANDER_RADIUS * 3, enterFor(d));
+      if (route) return route;
+    }
+    const target = clamp(d.x + dx, d.y + dy);
     return findPath(state, here, (i) => i === target, WANDER_RADIUS * 3, enterFor(d));
+  }
+
+  /** Where company draws a wandering animal, if anywhere (no dice are rolled here: `dx`, `dy` are the wander's own). */
+  function companionTarget(d: Dino, dx: number, dy: number): { x: number; y: number } | null {
+    if (d.escaped) return null;
+    const sp = SPECIES[d.species];
+    const reach = (o: Dino) => Math.max(Math.abs(o.x - d.x), Math.abs(o.y - d.y));
+    if (d.baby) {
+      const adult = state.dinos.filter((o) => o.species === d.species && !o.baby && !o.escaped && reach(o) <= FOLLOW_REACH)
+        .sort((a, b) => reach(a) - reach(b) || a.id - b.id)[0];
+      // a spot within two tiles of the grown-up
+      if (adult) return { x: adult.x + Math.round(dx * .4), y: adult.y + Math.round(dy * .4) };
+    } else if (sp.social) {
+      const herd = state.dinos.filter((o) => o !== d && o.species === d.species && !o.escaped && reach(o) <= HERD_REACH);
+      if (herd.length) {
+        const cx = herd.reduce((sum, o) => sum + o.x, 0) / herd.length, cy = herd.reduce((sum, o) => sum + o.y, 0) / herd.length;
+        // strayed: head halfway back before wandering on
+        if (Math.max(Math.abs(cx - d.x), Math.abs(cy - d.y)) > HERD_LOOSE) return { x: Math.round((d.x + cx) / 2) + Math.round(dx * .4), y: Math.round((d.y + cy) / 2) + Math.round(dy * .4) };
+      }
+    }
+    if (habitatOf(d.species) === 'land' && (d.id + state.hours) % WATER_VISIT_EVERY === 0) {
+      // the nearest tile with water straight to its left or right, where it can bend down and drink
+      const { width, height, tiles } = state.map;
+      let best: { x: number; y: number } | null = null, bestD = Infinity;
+      for (let y = Math.max(0, d.y - WATER_REACH); y <= Math.min(height - 1, d.y + WATER_REACH); y++)
+        for (let x = Math.max(1, d.x - WATER_REACH); x <= Math.min(width - 2, d.x + WATER_REACH); x++) {
+          const i = y * width + x;
+          if (!isLand(tiles[i]) || !(isWater(tiles[i - 1]) || isWater(tiles[i + 1]))) continue;
+          const far = Math.abs(x - d.x) + Math.abs(y - d.y);
+          if (far > 0 && far < bestD) { best = { x, y }; bestD = far; }
+        }
+      return best;
+    }
+    return null;
   }
 }
 

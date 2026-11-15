@@ -90,7 +90,11 @@ describe('visitors', () => {
     const sim = new Simulation(s);
     runHours(sim, 6); // 08:00 → 14:00
     expect(s.finance.today.visitors).toBeGreaterThan(5);
-    expect(s.finance.today.income.admissions).toBe(s.finance.today.visitors * s.ticketPrice);
+    // everyone pays the full ticket, except a school trip's children, who come in at half price
+    const trip = s.log.some((e) => e.text.includes('school trip')) ? s.visitors.filter((v) => v.kid).length : 0;
+    const { visitors, income } = s.finance.today;
+    expect(income.admissions).toBeLessThanOrEqual(visitors * s.ticketPrice);
+    expect(income.admissions).toBeGreaterThanOrEqual((visitors - trip) * s.ticketPrice + trip * Math.round(s.ticketPrice / 2));
   });
 
   it('only ever stand on paths or the gate', () => {

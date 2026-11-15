@@ -272,7 +272,7 @@ anim("tyrannosaurus_roar_tall", { ...FUN, frames: ROAR.length, fps: 8 }, (c) => 
 // shows it (scripts/art/convert_rex.mjs reads these). One canvas for all clips, 16 px over the head for the
 // hop; GAME_SCALE matches the Blender T-rex's length in the park.
 const GAME_SCALE = 0.713
-const REST = keyed({ crouch: [[0, 9], [4, 9.6], [7, 9]], lift: [[0, -0.12], [4, -0.16], [7, -0.12]], tailUp: [[0, -2.5], [4, -2], [7, -2.5]] })
+const REST = keyed({ crouch: [[0, 9], [4, 9.6], [7, 9]], lift: [[0, -0.12], [4, -0.16], [7, -0.12]], tailUp: [[0, -2.5], [4, -2], [7, -2.5]], shut: [[0, 1], [7, 1]] })
 const ROAR8 = keyed({ lift: [[0, 0], [1, -0.15], [2, 0.3], [3, 0.55], [4, 0.57], [5, 0.55], [6, 0.25], [7, 0.03]],
   gape: [[0, 0], [1, 0.08], [2, 0.5], [3, 0.75], [4, 0.78], [5, 0.72], [6, 0.3], [7, 0.03]],
   tailUp: [[0, 0], [1, -0.8], [2, 1.8], [3, 3], [5, 3], [6, 1.2], [7, 0.2]], crouch: [[0, 0], [1, 0.6], [2, 0]] })
@@ -283,22 +283,38 @@ function GAIT(phase) {
   const swing = (phase - 2 / 3) * 3
   return [STRIDE * (-1 + 2 * swing), Math.sin(swing * Math.PI) * 3]
 }
+// the walk has sixteen poses, like the Blender animals' (FRAMES in scripts/art/full_motion.py)
+const WALK_FRAMES = 16
+// small things it does every few seconds while standing about (IDLES in scripts/art/fun_motion.py)
+const IDLES = {
+  // the head comes up for a look round, a blink, and settles
+  look: { lift: [[0, 0], [2, 0.2], [5, 0.2], [7, 0]], shut: [[0, 0], [3, 0], [4, 1], [5, 0], [7, 0]], tailUp: [[0, 0], [2, 1.2], [5, 1.2], [7, 0]] },
+  // nose toward the ground, two little sniffs
+  sniff: { lift: [[0, 0], [2, -0.3], [3, -0.22], [4, -0.32], [5, -0.22], [6, -0.3], [7, 0]], gape: [[0, 0], [2, 0], [3, 0.1], [4, 0], [5, 0.1], [6, 0], [7, 0]],
+    crouch: [[0, 0], [2, 1], [6, 1], [7, 0]], tailUp: [[0, 0], [2, 1.5], [6, 1.5], [7, 0]] },
+  // two lazy swishes of the tail
+  swish: { tailUp: [[0, 0], [1, 3.5], [3, -2.5], [5, 3.5], [6, -1.5], [7, 0]], crouch: [[0, 0], [1, 0.5], [3, 0], [5, 0.5], [7, 0]] },
+  // a long yawn: the head tips back, the jaw gapes, the eyes shut
+  yawn: { lift: [[0, 0], [2, 0.15], [4, 0.26], [5, 0.24], [7, 0]], gape: [[0, 0], [1, 0.1], [3, 0.6], [5, 0.65], [6, 0.2], [7, 0]],
+    shut: [[0, 0], [2, 0], [3, 1], [5, 1], [6, 0], [7, 0]], crouch: [[0, 0], [4, 1], [7, 0]] },
+}
 const GAME_POSES = {
   // a planted gait for the park: each foot slides back flat on the ground for two thirds of the cycle
   // (the ground going by), then swings forward lifted; the far leg half a cycle behind
   walk: (i) => {
-    const a = i / 8 * Math.PI * 2, foot = (phase) => GAIT(phase)
-    const [ns, nu] = foot(i / 8), [fs, fu] = foot(i / 8 + 0.5)
+    const a = i / WALK_FRAMES * Math.PI * 2, foot = (phase) => GAIT(phase)
+    const [ns, nu] = foot(i / WALK_FRAMES), [fs, fu] = foot(i / WALK_FRAMES + 0.5)
     return { flat: true, nearStride: ns, nearUp: nu, farStride: fs, farUp: fu, crouch: (1 - Math.cos(2 * a)) * 0.5, lift: Math.cos(2 * a) * 0.04, tailUp: Math.sin(2 * a) * 0.8 }
   },
   idle: (i) => { const a = i / 8 * Math.PI * 2; return { crouch: (1 - Math.cos(a)) * 0.4, lift: Math.sin(a) * 0.04, tailUp: Math.sin(a) * 0.8 } },
   eat: (i) => { const [lift, gape] = EAT[i]; return { lift, gape, crouch: -lift * 3, tailUp: -lift * 2.5 } },
   rest: REST, roar: ROAR8,
   ...Object.fromEntries(Object.entries(MOVES).map(([name, [, rows]]) => [name, keyed(rows)])),
+  ...Object.fromEntries(Object.entries(IDLES).map(([name, rows]) => [name, keyed(rows)])),
 }
 for (const [size, s] of [["adult", GAME_SCALE], ["baby", GAME_SCALE * 0.6]])
   for (const [clip, pose] of Object.entries(GAME_POSES))
-    anim(`game_${size}_${clip}`, { w: Math.ceil(106 * s), h: Math.ceil(64 * s), ...OPTS2, frames: 8, fps: 8 },
+    anim(`game_${size}_${clip}`, { w: Math.ceil(106 * s), h: Math.ceil(64 * s), ...OPTS2, frames: clip === 'walk' ? WALK_FRAMES : 8, fps: clip === 'walk' ? 16 : 8 },
       (c) => rex2({ yOff: 16, stride: -0.45, ...pose(c.frame), scale: s })(c))
 // the same T-rex standing, at the native size of the menus, catalog and guide (and a hatchling's)
 const STILL_SCALE = 0.842

@@ -7,7 +7,8 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const strips = `${root}assets-source/pxl/dinos/out/anims/`;
-const CLIPS = ['walk', 'idle', 'eat', 'rest', 'roar', 'stomp', 'dance', 'hop', 'sneeze', 'wink'];
+const CLIPS = ['walk', 'idle', 'eat', 'rest', 'roar', 'stomp', 'dance', 'hop', 'sneeze', 'wink', 'look', 'sniff', 'swish', 'yawn'];
+const count = (clip) => clip === 'walk' ? 16 : 8;
 const KEYS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 const palette = new Map();
 
@@ -44,7 +45,7 @@ for (const size of ['adult', 'baby']) {
   data[size] = { still: frames(`game_${size}_still`)[0], clips: {} };
   for (const clip of CLIPS) {
     const list = frames(`game_${size}_${clip}`);
-    if (list.length !== 8) throw new Error(`game_${size}_${clip} needs eight frames`);
+    if (list.length !== count(clip)) throw new Error(`game_${size}_${clip} needs ${count(clip)} frames`);
     data[size].clips[clip] = list;
   }
 }
@@ -53,7 +54,7 @@ for (const size of ['adult', 'baby']) {
 // the far leg 3 px back and half a cycle behind).
 const SCALE = 0.713, PAD = 1, STRIDE = 0.6;
 const gait = (phase) => { phase %= 1; return phase < 2 / 3 ? [STRIDE * (1 - 3 * phase), true] : [STRIDE * (-1 + 2 * (phase - 2 / 3) * 3), false]; };
-const contacts = [...Array(8)].map((_, i) => [['near_toes', i / 8, 0], ['far_toes', i / 8 + 0.5, -3]].map(([name, phase, dx]) => {
+const contacts = [...Array(16)].map((_, i) => [['near_toes', i / 16, 0], ['far_toes', i / 16 + 0.5, -3]].map(([name, phase, dx]) => {
   const [st, planted] = gait(phase);
   return { name, x: Math.round(((60 + dx + st * 11) * SCALE + PAD) * 100) / 100, planted };
 }));
@@ -80,4 +81,4 @@ const path = `${root}src/render/generated/rexArt.ts`;
 if (process.argv.includes('--check')) {
   if (readFileSync(path, 'utf8') !== source) throw new Error('Hand-drawn T-rex data is stale');
 } else writeFileSync(path, source);
-console.log(`T-rex: ${CLIPS.length} clips × 8 frames, adult and baby, ${palette.size} colours, ${rows.length} shared rows.`);
+console.log(`T-rex: ${CLIPS.length} clips (walk 16 frames, the rest 8), adult and baby, ${palette.size} colours, ${rows.length} shared rows.`);

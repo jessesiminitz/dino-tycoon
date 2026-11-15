@@ -1,4 +1,6 @@
-import { dinoReaction, winkReaction, type DinoReactionAction, type DinoReaction } from './dinoReaction';
+import { clipReaction, dinoReaction, winkReaction, type DinoReactionAction, type DinoReaction } from './dinoReaction';
+import { advanceGlide, glideAt, type Glide } from './dinoGlide';
+import type { MotionClip } from './immersionMotion';
 import { addPaintedTexture, fitPaintedImage } from './paintedTexture';
 import { paintCartoonPerson } from './cartoonArt';
 import Phaser from 'phaser';
@@ -6,7 +8,7 @@ import { accidentKind, type Building, type Dino, type Feeder, type Staff, type V
 import { STAFF_ROLES, type StaffRole } from '../sim/data/staff';
 import { BUILDING_TYPES, type BuildingKind } from '../sim/data/economy';
 import { hash2 } from '../sim/rng';
-import type { Simulation } from '../sim/Simulation';
+import { MS_PER_STEP, type Simulation } from '../sim/Simulation';
 import { FEEDER_TYPES, type FeederKind } from '../sim/data/feeders';
 import { habitatOf, SPECIES, SPECIES_IDS, type SpeciesId } from '../sim/data/species';
 import { dinoFrameCount, paintDino, paintEgg, dinoCanvasBounds, type DinoPixelBounds } from './dinoArt';
@@ -37,6 +39,10 @@ const JEEP_KEY = 'jeep';
 const ZZZ = ['XXX', '..X', '.X.', 'XXX'];
 /** How long hearts or a "Nope!" stay up, in ms. */
 const EFFECT_MS = 1100;
+/** A turn-round takes this long (real time): the animal narrows, swaps sides, and widens again. */
+const TURN_MS = 170;
+/** How far (tiles) a hop or dance finds a playmate, a roar turns heads, and a look finds a visitor. */
+const PLAY_REACH = 3, ROAR_REACH = 6, LOOK_REACH = 5;
 /** A tapped dinosaur that is walking winks if it stops within this long. */
 const WINK_WAIT_MS = 3000;
 const HEART = ['.X.X.', 'XXXXX', '.XXX.', '..X..'];
@@ -132,6 +138,12 @@ export class EntityLayer {
   private reactionTime = 0;
   private lastUpdateTime?: number;
   private motions = new Map<number, AnimalMotion>();
+  /** Each animal's walk from tile to tile, spread over its pace (dinoGlide.ts). */
+  private glides = new Map<number, Glide>();
+  /** Turn-rounds under way: when each began (real-time clock) and the side it faced before. */
+  private turns = new Map<number, { start: number; wasLeft: boolean }>();
+  /** Clips played in answer to a neighbour: hopping back at a playmate, looking up at a roar. */
+  private answers = new Map<number, { clip: MotionClip; start: number }>();
   private meals = new Map<number, number>();
   private footfalls: {x:number;y:number;born:number;wet:boolean}[] = [];
   private tracks: Phaser.GameObjects.Graphics;
@@ -246,15 +258,51 @@ export class EntityLayer {
 
   /** Where a dino is drawn right now (feet position, world pixels). */
   dinoPosition(d: Dino): { x: number; y: number } {
-    if (ART_STYLE !== 'original' && this.sim.speed === 0) {
-      const motion = this.motions.get(d.id);
-      if (motion) return { x: motion.x, y: motion.y };
+    const glide = this.glides.get(d.id);
+    if (glide) { const { x, y } = glideAt(glide, this.animalTime); return { x, y }; }
+    return { x: d.x * TILE + TILE / 2, y: d.y * TILE + FOOT_Y };
+  }
+
+  /** Whether an animal is walking between tiles right now. */
+  private gliding(d: Dino): boolean {
+    const glide = this.glides.get(d.id);
+    return !!glide && this.sim.speed !== 0 && glideAt(glide, this.animalTime).moving;
+  }
+
+  /** Turns an animal to face left or right; a change of side plays the turn-round. */
+  private face(id: number, left: boolean): void {
+    const was = this.facingLeft.get(id);
+    if (was === left) return;
+    this.facingLeft.set(id, left);
+    if (was !== undefined && getSettings().animation) this.turns.set(id, { start: this.reactionTime, wasLeft: was });
+  }
+
+  /**
+   * A new turn of standing about has begun (see idleMove): the animal takes notice of who is around.
+   * A look goes to the nearest visitor or keeper; a hop or dance turns to a playmate of its own kind,
+   * who answers in kind; a roar makes the neighbours look up.
+   */
+  private noticeOthers(d: Dino, move: MotionClip | undefined): void {
+    const { state } = this.sim;
+    const near = (o: { x: number; y: number }, reach: number) => Math.max(Math.abs(o.x - d.x), Math.abs(o.y - d.y)) <= reach;
+    const nearest = <T extends { x: number; y: number }>(list: T[], reach: number) => list.filter((o) => near(o, reach) && o.x !== d.x)
+      .sort((a, b) => Math.hypot(a.x - d.x, a.y - d.y) - Math.hypot(b.x - d.x, b.y - d.y))[0];
+    const free = (o: Dino) => o.id !== d.id && !isAsleep(state, o) && !this.gliding(o) && !this.answers.has(o.id) && !this.motions.get(o.id)?.fun;
+    if (move === 'look' || move === undefined) {
+      const person = nearest([...state.visitors, ...state.staff], LOOK_REACH);
+      if (person) this.face(d.id, person.x < d.x);
+    } else if (move === 'hop' || move === 'dance') {
+      const mate = nearest(state.dinos.filter((o) => o.species === d.species && free(o)), PLAY_REACH);
+      if (!mate) return;
+      this.face(d.id, mate.x < d.x);
+      this.face(mate.id, d.x < mate.x);
+      this.answers.set(mate.id, { clip: move, start: this.animalTime + 350 });
+    } else if (move === 'roar') {
+      for (const other of state.dinos.filter((o) => free(o) && near(o, ROAR_REACH)).slice(0, 4)) {
+        if (other.x !== d.x) this.face(other.id, d.x < other.x);
+        this.answers.set(other.id, { clip: 'look', start: this.animalTime + 250 + (other.id % 3) * 120 });
+      }
     }
-    const t = this.sim.stepProgress;
-    return {
-      x: (d.px + (d.x - d.px) * t) * TILE + TILE / 2,
-      y: (d.py + (d.y - d.py) * t) * TILE + FOOT_Y,
-    };
   }
 
   /** The dino drawn under a world point, preferring the one in front. */
@@ -429,6 +477,11 @@ export class EntityLayer {
     }
     if (this.selection?.kind === 'egg' && !state.eggs.some((e) => e.id === this.selection!.id)) this.selection = null;
 
+    // Every animal's walk first, so taps and neighbours' answers below see who is on the move this frame.
+    for (const d of state.dinos) {
+      this.glides.set(d.id, advanceGlide(this.glides.get(d.id), { tileX: d.x, tileY: d.y, x: d.x * TILE + TILE / 2, y: d.y * TILE + FOOT_Y,
+        tile: TILE, time: animalTime, stepMs: SPECIES[d.species].pace * MS_PER_STEP, last: d.path.length === 0 }));
+    }
     const reactions = new Map<number, DinoReaction>();
     for (const e of this.effects) {
       const d = state.dinos.find(d => d.id === e.dinoId);
@@ -439,7 +492,7 @@ export class EntityLayer {
       if (!d || isAsleep(state, d)) { this.greetings.delete(id); continue; }
       if (greeting.start === undefined) {
         // Winking mid-stride would freeze the legs while the animal glides on: wait for it to stop.
-        const walking = this.sim.speed !== 0 && (d.x !== d.px || d.y !== d.py);
+        const walking = this.gliding(d);
         if (!walking) greeting.start = this.reactionTime;
         else if (this.reactionTime - greeting.tapped > WINK_WAIT_MS) this.greetings.delete(id);
         if (greeting.start === undefined) continue;
@@ -447,6 +500,15 @@ export class EntityLayer {
       const wink = winkReaction(d.species, this.reactionTime - greeting.start, getSettings().animation);
       if (!wink) this.greetings.delete(id);
       else if (!reactions.get(id)?.clip) reactions.set(id, wink);
+    }
+
+    for (const [id, answer] of this.answers) {
+      const d = state.dinos.find(d => d.id === id);
+      if (!d || isAsleep(state, d) || this.gliding(d)) { this.answers.delete(id); continue; }
+      if (animalTime < answer.start) continue;
+      const reply = clipReaction(d.species, answer.clip, animalTime - answer.start, getSettings().animation && hasFunClips());
+      if (!reply) this.answers.delete(id);
+      else if (!reactions.get(id)?.clip) reactions.set(id, reply);
     }
 
     // Dinosaurs
@@ -458,9 +520,12 @@ export class EntityLayer {
         img = this.scene.add.image(0, 0, dinoKey(d.species)).setOrigin(0.5, 1);
         this.dinos.set(d.id, img);
       }
-      const moving = d.x !== d.px || d.y !== d.py;
+      const glide = this.glides.get(d.id)!;
+      const moving = glideAt(glide, animalTime).moving;
       let reaction = reactions.get(d.id);
-      if (this.sim.speed !== 0 && d.x !== d.px) this.facingLeft.set(d.id, d.x < d.px);
+      if (this.sim.speed !== 0 && moving && glide.toX !== glide.fromX) this.face(d.id, glide.toX < glide.fromX);
+      // a meal that began on the way to the feeder waits for the animal to get there
+      if (moving && this.meals.has(d.id)) this.meals.set(d.id, animalTime);
       let { x, y } = this.dinoPosition(d);
       // Authored walk poses lift the feet; keep planted legs on the ground.
       const hop = d.baby ? -2 : -1;
@@ -475,9 +540,21 @@ export class EntityLayer {
         const model = BLENDER_ART[d.species];
         const modelPadding = 'modelOffsetX' in model ? model.modelOffsetX : 0;
         const previous = this.motions.get(d.id);
-        const motion = advanceMotion(previous, {species:d.species,baby:d.baby,x,y,time:animalTime,offset:d.id*137,paused:this.sim.speed===0,moving,asleep,eatingSince:this.meals.get(d.id),ambient:getSettings().animation,style:ART_STYLE,happiness:d.happiness});
+        // a land animal standing with water right beside it may bend down for a drink
+        const row = d.y * state.map.width;
+        const waterSide = habitat !== 'land' ? 0 : (d.x > 0 && isWater(state.map.tiles[row + d.x - 1]) ? -1 : 0) + (d.x < state.map.width - 1 && isWater(state.map.tiles[row + d.x + 1]) ? 1 : 0);
+        const motion = advanceMotion(previous, {species:d.species,baby:d.baby,x,y,time:animalTime,offset:d.id*137,paused:this.sim.speed===0,moving,asleep,eatingSince:this.meals.get(d.id),ambient:getSettings().animation,style:ART_STYLE,happiness:d.happiness,drink:waterSide!==0});
         this.motions.set(d.id,motion);
         x=motion.x; y=motion.y;
+        if (motion.clip === 'idle' && previous?.clip === 'idle' && motion.turn !== previous.turn && getSettings().animation && this.sim.speed !== 0 && !reaction) this.noticeOthers(d, motion.fun);
+        if (motion.clip === 'idle' && motion.fun === 'eat' && waterSide !== 0) {
+          // drinking: nose to the water, with a ripple where it laps
+          this.face(d.id, waterSide < 0);
+          if (previous && motion.frame !== previous.frame && motion.frame % 3 === 1) {
+            this.footfalls.push({x:Math.round(x)+waterSide*Math.round(TILE*.75),y:Math.round(y)-1,born:animalTime,wet:true});
+            if(this.footfalls.length>96)this.footfalls.shift();
+          }
+        }
         const shownClip = reaction?.clip ?? motion.fun ?? motion.clip;
         img.setTexture(motionTexture(this.scene,d.species,d.baby),`${shownClip}-${reaction?.clip ? reaction.frame : motion.frame}`);
         fitPaintedImage(img);
@@ -531,7 +608,12 @@ export class EntityLayer {
       }
       if (reaction) img.y -= reaction.lift;
       img.setAngle(reaction?.angle ?? 0);
-      img.setFlipX(this.facingLeft.get(d.id) ?? false);
+      const turning = this.turns.get(d.id);
+      const turned = turning ? (this.reactionTime - turning.start) / TURN_MS : 1;
+      if (turning && turned >= 1) this.turns.delete(d.id);
+      img.setFlipX(turned < .5 && turning ? turning.wasLeft : this.facingLeft.get(d.id) ?? false);
+      // turning round: the animal narrows to a sliver and widens again facing the other way
+      if (turned < 1) img.scaleX *= Math.max(.3, Math.abs(Math.cos(turned * Math.PI)));
       const bounds = img.getBounds();
       const opaque = (img.frame.customData as { dinoBounds?: DinoPixelBounds }).dinoBounds;
       if (opaque && img.angle !== 0) {
@@ -590,6 +672,9 @@ export class EntityLayer {
         this.dinos.delete(id);
         this.facingLeft.delete(id);
         this.motions.delete(id);
+        this.glides.delete(id);
+        this.turns.delete(id);
+        this.answers.delete(id);
         this.meals.delete(id);
         if (this.selection?.kind === 'dino' && this.selection.id === id) this.selection = null;
       }

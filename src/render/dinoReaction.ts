@@ -5,6 +5,13 @@ export type DinoReactionAction = 'pat' | 'treat';
 export const REACTION_MS = 1200;
 export interface DinoReaction { clip?: MotionClip; frame: number; lift: number; angle: number }
 
+/** A clip played once in answer to something (another animal's hop or roar), or undefined when it is over. */
+export function clipReaction(id: SpeciesId, clip: MotionClip, elapsed: number, animate = true): DinoReaction | undefined {
+  const duration = BLENDER_MOTION[id][clip].durationMs;
+  if (!animate || elapsed < 0 || elapsed >= duration) return undefined;
+  return {clip,frame:Math.min(7,Math.floor(elapsed/duration*8)),lift:0,angle:0};
+}
+
 /** Tapping a dinosaur in the pixel park: it winks back. */
 export function winkReaction(id: SpeciesId, elapsed: number, animate = true): DinoReaction | undefined {
   const duration = BLENDER_MOTION[id].wink.durationMs;

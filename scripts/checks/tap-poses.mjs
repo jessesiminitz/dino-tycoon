@@ -22,11 +22,16 @@ const greet = () => page.evaluate((id) => window.__dino.game.scene.getScene('par
 const step = () => page.evaluate((id) => { const d = window.__dino.sim.state.dinos.find((d) => d.id === id); d.px = d.x; d.py = d.y; d.x += 1; }, id);
 const halt = () => page.evaluate((id) => { const d = window.__dino.sim.state.dinos.find((d) => d.id === id); d.px = d.x; d.py = d.y; }, id);
 
-await step(); await sleep(150); await greet();
-const walking = []; for (let i = 0; i < 6; i++) { await step(); walking.push(...await sample(3)); }
+// One tile takes a Triceratops about 2.3 s (it glides over its whole pace): tapped on the way, it walks on,
+// and winks when it gets there.
+// (on a busy machine the park may not have drawn the new animal yet: wait until it has, and for the step to show)
+const drawn = (moving) => page.waitForFunction((id, moving) => { const e = window.__dino.game.scene.getScene('park').entities, d = window.__dino.sim.state.dinos.find((d) => d.id === id); return e.glides.has(id) && e.gliding(d) === moving; }, {}, id, moving);
+await drawn(false); await step(); await drawn(true); await greet();
+const walking = await sample(20);
 check('a walking dino keeps walking when tapped', walking.every((f) => f.startsWith('walk-')), walking);
-await halt(); const stopped = await sample(16);
+const stopped = await sample(40);
 check('it winks once it stops (tapped under 3 s ago)', stopped.some((f) => f.startsWith('wink-')), stopped);
+await halt();
 
 await page.evaluate(async (id) => { const { calendar } = await import('/src/sim/GameState.ts'); const s = window.__dino.sim.state; while (calendar(s).hour !== 23) s.hours++; const d = s.dinos.find((d) => d.id === id); d.path = []; d.hunger = 0; d.px = d.x; d.py = d.y; }, id);
 await sleep(1200);

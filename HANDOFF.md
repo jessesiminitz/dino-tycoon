@@ -1,5 +1,45 @@
 # Dino Tycoon: handoff notes
 
+## Smoother, livelier dinosaurs — November 15, 2026
+
+The owner asked for better dinosaur animation and chose all four options offered: smoother movement, livelier standing, animals that react to each other, and more frames per walk. Pixel art only, except where noted; the cartoon edition keeps its eight-pose clips and gains the gliding walk and the wandering changes.
+
+**Smoother movement** (`render/dinoGlide.ts`, `EntityLayer.ts`, `parkMotion.ts`)
+- **Steady walking:** the simulation moves an animal one tile at a time, and a big one only every 2 to 4 steps (`pace`). It used to be drawn as a dash and a wait. Now each tile is spread over the whole pace (`advanceGlide`, `glideAt`), so a Brachiosaurus walks slowly and without stopping. A walk eases away from a stand and into a stop (the route's last tile).
+- **Turn-round:** on a change of side the animal narrows and widens again facing the other way (`TURN_MS`, 170 ms, real time), instead of mirroring in one frame.
+- **Stepping off and settling:** a walk starts from the pose the animal stands in (`standPhase`), and after the last step the legs come back to it one walk frame at a time, the short way round (`SETTLE_MS`), before the idle clip starts.
+- **Meals:** an animal that reaches its feeder still gliding starts chewing when it arrives.
+- **Position:** `dinoPosition()` is the glide, so taps, the selection ring and photos follow it. `d.px`/`d.py` are no longer used for drawing dinosaurs (visitors and staff still use theirs).
+
+**Livelier standing** (`fun_motion.py` `IDLES`, `parkMotion.ts` `idleMove`)
+- **Four small clips for every species:** look (head up, a blink), sniff (nose to the ground), swish (tail) and yawn (eyes shut). Eight frames each; `IDLE_CLIPS` in the generated data.
+- **Timing:** standing time is cut into turns of 3.6 to 6 s per animal (`idleTurnMs`). Every third turn opens with a playful move (roar, dance and so on: every 11 to 18 s, about as before); the turns between open with a small one, and about one in five has none. A stopped animal always stands one turn first (it used to be able to start mid-move).
+- **Asleep:** eyes are shut in the rest clip (`shutEyes` repaints the Blender rows; the T-rex's `REST` pose has `shut`).
+
+**Animals react to each other**
+- **Drawn** (`EntityLayer.noticeOthers`, at the start of each turn): a look goes toward the nearest visitor or keeper within 5 tiles; a hop or dance turns to a playmate of the same species within 3 tiles, who turns and answers with the same move; a roar makes up to four neighbours within 6 tiles look up. Answers are `answers` in the layer, played with `clipReaction`.
+- **Drinking:** a land animal standing with water directly left or right of it sometimes bends down (the eat clip) with a ripple.
+- **Simulation** (`systems/dinos.ts` `companionTarget`, inside the wander): a baby wanders to within two tiles of the nearest grown-up of its species (8 tiles); a `social` animal that has strayed more than 3 tiles from its herd's middle heads halfway back; about one wander in five goes to the nearest tile beside water (6 tiles). If that spot can't be reached it wanders as before. No new dice rolls and no state change, but animals do end up in different places, so seeded outcomes differ from before.
+
+**More frames per walk**
+- **Sixteen poses** for every species' walk (`FRAMES` in `full_motion.py`; `WALK_FRAMES` in the T-rex's pxl file), 960 ms as before. Other clips stay at eight. `clipFrames()` is the count to use; nothing should assume eight.
+- **Atlas:** eight columns; the walk takes two lines.
+- **Tips:** the in-between poses parted a thin tail tip from the body on four species, so the walk export now runs the same `bridge` step as the playful clips (moved into `full_motion.py`).
+
+**Data size:** rows in `blenderMotion.ts` are run-length encoded (`"12.5B3D"`), decoded once at load. The file went from 3.40 MB to 1.95 MB with half as many frames again (28 × 120), and the main chunk from 4.39 MB to 2.98 MB.
+
+**No save change:** saves stay v22.
+
+Validation:
+- **Tests:** 555 pass. New: `tests/company.test.ts` (trailing, herding, water, escaped), glide, settle and idle-turn cases in `parkMotion.test.ts` and `funMoves.test.ts`.
+  - `economy.test.ts`: the admissions case now allows for a school trip's half-price children (the new wandering shifted the dice so one arrives in that window).
+  - `challengeBalance.test.ts`: The Great Escape has a 20 s limit. It takes about 2 s alone, but ran past the 5 s default in the full suite on a busy machine (also before this change).
+- **Build:** passed.
+- **Browser checks:** `art:park-motion` (6,720 atlas frames; every species walks a tile both ways, adult and baby), `art:fun-moves` at 844×390 and 667×375, `art:tap-poses`, `art:motion-controls`, `art:immersion`, `check:menu-fun`, `check:pacing`, `care-check`, `babies-check`.
+  - `art:fun-moves` and `art:tap-poses` no longer take a screenshot mid-move or assume a frame was drawn between two commands: on a busy machine that swallowed the rest of the move.
+  - `art:park-motion`'s walk test was rewritten for the glide (it used to drive `stepProgress`).
+- **Still to do:** physical iPhone/iPad review. Things the owner may want tuned: the walking pace of the big animals (now steady but slow at 1×), how often small moves come, how tightly herds bunch (animals may overlap more), and the turn-round.
+
 ## One Buy button, a smaller top bar and calmer text — October 24, 2026
 
 The owner found the menu text too large, wanted a single Buy button instead of the row of tools, fewer top buttons, and pop-ups that stay long enough to read.

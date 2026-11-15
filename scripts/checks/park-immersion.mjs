@@ -5,7 +5,7 @@ import {fileURLToPath} from 'node:url';
 import {check,finish,ready} from './lib.mjs';
 const out=fileURLToPath(new URL('../../docs/art-review/',import.meta.url));mkdirSync(out,{recursive:true});
 const errors=[],url=process.env.BASE_URL??'http://localhost:5173';
-const browser=await puppeteer.launch({executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true,args:['--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+const browser=await puppeteer.launch({executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true,protocolTimeout:900000,args:['--use-angle=swiftshader','--enable-unsafe-swiftshader']});
 try{
   const page=await browser.newPage();page.on('pageerror',e=>errors.push(e.message));
   await page.setViewport({width:1000,height:650,deviceScaleFactor:1});
@@ -14,16 +14,16 @@ try{
     const {sim,game}=window.__dino,park=game.scene.getScene('park'),entities=park.entities;
     const {SPECIES_IDS,SPECIES,habitatOf}=await import('/src/sim/data/species.ts');
     const {BLENDER_MOTION}=await import('/src/render/generated/blenderMotion.ts');
-    const {motionTexture,paintMotionFrame,walkCycle,MOTION_CLIPS}=await import('/src/render/parkMotion.ts');
+    const {motionTexture,paintMotionFrame,walkCycle,clipFrames,MOTION_CLIPS}=await import('/src/render/parkMotion.ts');
     const {motionWalkSpeed}=await import('/src/render/immersionMotion.ts');
     const {dinoWorldScale}=await import('/src/render/dinoSize.ts');
     game.loop.stop();const saved=sim.state.dinos,failures=[];let atlasFrames=0;
     sim.speed=1;sim.state.hours=4;
-    // all nine clips, from the game's own painter (the pixel park's T-rex is hand-drawn)
+    // every clip (the walk has sixteen poses, the rest eight), from the game's own painter (the pixel park's T-rex is hand-drawn)
     const clips=MOTION_CLIPS;
     for(const species of SPECIES_IDS)for(const baby of [false,true]){
       const key=motionTexture(park,species,baby),texture=game.textures.get(key);
-      for(const clip of clips)for(let frame=0;frame<8;frame++){
+      for(const clip of clips)for(let frame=0;frame<clipFrames(species,clip,'blender');frame++){
         const expected=paintMotionFrame(species,clip,frame,baby,'blender');
         const canvas=document.createElement('canvas');canvas.width=expected.width;canvas.height=expected.height;
         const ctx=canvas.getContext('2d'),f=texture.get(`${clip}-${frame}`);
@@ -34,32 +34,51 @@ try{
     }
     let tested=0;
     for(const [i,species] of SPECIES_IDS.entries())for(const left of [false,true])for(const baby of [false,true]){
-      const d={...saved[0],id:90000+i,species,baby,x:22,px:left?23:21,y:20,py:20,path:[],hunger:0};
-      sim.state.dinos=[d];entities.motions.delete(d.id);
-      const cycle=walkCycle(species,baby,'blender');
-      for(let frame=0;frame<8;frame++){
-        Object.defineProperty(sim,'stepProgress',{configurable:true,get:()=>frame*cycle/128});
-        entities.update(1000);const img=entities.dinos.get(d.id);
-        if(img.frame.name!==`walk-${frame}`||img.flipX!==left)failures.push(`${species}:${left}:${baby}:${frame} runtime ${img.frame.name}`);
-        tested++;
+      // one tile's walk, drawn over the animal's pace: the legs follow the ground covered, sixteen poses a cycle
+      const d={...saved[0],id:90000+i,species,baby,x:22,px:22,y:20,py:20,path:[],hunger:0};
+      sim.state.dinos=[d];entities.motions.delete(d.id);entities.glides.delete(d.id);entities.facingLeft.delete(d.id);entities.turns.delete(d.id);
+      let clock=entities.lastUpdateTime??0;
+      const tick=()=>{clock+=100;entities.update(clock);};
+      tick();
+      const cycle=walkCycle(species,baby,'blender'),count=clipFrames(species,'walk','blender'),start=entities.dinos.get(d.id).x,seen=new Set();
+      d.px=d.x;d.x+=left?-1:1;
+      let arrived=false,last=start;
+      for(let n=0;n<80&&!arrived;n++){
+        tick();
+        const img=entities.dinos.get(d.id),motion=entities.motions.get(d.id);
+        const gliding=entities.gliding(d);
+        if(gliding){
+          const want=`walk-${Math.floor(motion.distance/cycle*count+1e-7)%count}`;
+          if(img.frame.name!==want||entities.facingLeft.get(d.id)!==left)failures.push(`${species}:${left}:${baby} runtime ${img.frame.name} for ${want}`);
+          if((img.x-last)*(left?-1:1)<0)failures.push(`${species}:${left}:${baby} walked backward`);
+          last=img.x;seen.add(img.frame.name);
+        }else arrived=true;
       }
-      delete sim.stepProgress;
+      const end=entities.dinos.get(d.id).x;
+      if(!arrived||Math.abs(end-start)!==16)failures.push(`${species}:${left}:${baby} covered ${end-start}px, arrived ${arrived}`);
+      // a land animal walks at least a couple of poses per tile; swimmers and flyers stroke by distance too
+      if(seen.size<2)failures.push(`${species}:${left}:${baby} only ${[...seen]}`);
+      // then the legs settle into the standing pose and it idles (a sleeping or eating animal aside)
+      for(let n=0;n<12;n++)tick();
+      const after=entities.motions.get(d.id).clip;
+      if(after!=='idle')failures.push(`${species}:${left}:${baby} ended on ${after}`);
+      tested++;
     }
     const feeder=sim.state.feeders.find(f=>f.kind==='plants');
     const d={...saved[0],id:99000,species:'triceratops',x:feeder.x,px:feeder.x,y:feeder.y,py:feeder.y,hunger:90,path:[],baby:false};
-    sim.state.dinos=[d];sim.step();entities.update(2000);
+    sim.state.dinos=[d];sim.step();let t=entities.lastUpdateTime;entities.update(t+=100);
     const meal=entities.motions.get(d.id).clip==='eat'&&d.hunger<50;
-    entities.update(2250);entities.update(2500);const chewing=entities.motions.get(d.id).frame>0;
-    entities.update(2750);const idle=entities.motions.get(d.id).clip==='idle';
-    sim.state.hours=15;entities.update(3000);const sleep=entities.motions.get(d.id).clip==='rest';
+    entities.update(t+=250);entities.update(t+=250);const chewing=entities.motions.get(d.id).frame>0;
+    entities.update(t+=250);const idle=entities.motions.get(d.id).clip==='idle';
+    sim.state.hours=15;entities.update(t+=250);const sleep=entities.motions.get(d.id).clip==='rest';
     const snapshot=()=>JSON.stringify({clock:entities.animalTime,dinos:[...entities.dinos.values()].map(img=>[img.x,img.y,img.texture.key,img.frame.name,img.flipX]),wind:[...park.scenery.trees.values()].map(img=>[img.texture.key,img.frame.name])});
-    sim.speed=0;entities.update(3100);park.scenery.update(park.worldTime);const before=snapshot();
-    entities.update(9000);park.scenery.update(park.worldTime);const frozen=before===snapshot();
+    sim.speed=0;entities.update(t+=100);park.scenery.update(park.worldTime);const before=snapshot();
+    entities.update(t+=6000);park.scenery.update(park.worldTime);const frozen=before===snapshot();
     sim.state.dinos=saved;sim.state.hours=4;sim.speed=1;game.loop.start(game.step.bind(game));
     return {failures,atlasFrames,tested,meal,chewing,idle,sleep,frozen};
   });
-  check('all 4,480 adult/baby atlas frames match the park painter',result.atlasFrames===4480&&result.failures.length===0,result.failures.slice(0,12));
-  check('all eight runtime walk phases work for 28 species, babies and both directions',result.tested===896&&result.failures.length===0);
+  check('all 6,720 adult/baby atlas frames match the park painter',result.atlasFrames===6720&&result.failures.length===0,result.failures.slice(0,12));
+  check('every species, adult and baby, walks a tile both ways at its pace with the legs following the ground',result.tested===112&&result.failures.length===0,result.tested);
   check('actual feeder consumption triggers chewing and returns to idle',result.meal&&result.chewing&&result.idle,result);
   check('night selects rest and pause freezes poses, positions and wind',result.sleep&&result.frozen);
   const wind=await page.evaluate(async()=>{
