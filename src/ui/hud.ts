@@ -242,9 +242,18 @@ export function mountHud(sim: Simulation, ui: UiState): Hud {
     ui.setMode('select');
     catalog.open();
   });
-  // New stickers wait in the Dino book, behind ☰.
+  // --- the Dino book and People: one top-bar button opens a sheet with both ---
+  const folks = $('folks');
+  const closeFolks = () => folks.classList.add('hidden');
+  $('btn-folks').addEventListener('click', () => folks.classList.remove('hidden'));
+  folks.querySelector('.modal-close')!.addEventListener('click', closeFolks);
+  folks.addEventListener('click', (e) => {
+    // Choosing one (or tapping outside the card) closes the sheet; the button opens its own panel.
+    if (e.target === folks || (e.target as HTMLElement).closest('.tool-btn')) closeFolks();
+  });
+  // New stickers wait in the Dino book: the top-bar button shows the same badge.
   const stickersBadge = $('stickers-badge');
-  const menuBadge = $('menu-badge');
+  const menuBadge = $('folks-badge');
   new MutationObserver(() => {
     menuBadge.classList.toggle('hidden', stickersBadge.classList.contains('hidden'));
     menuBadge.textContent = stickersBadge.textContent;

@@ -20,16 +20,8 @@ try {
     /** Every visible button inside the menu lies within the screen sideways (the menu scrolls up and down). */
     const fitsWide = () => page.$$eval('#menu button', (bs) => bs.filter((b) => b.offsetParent).every((b) => { const r = b.getBoundingClientRect(); return r.left >= -1 && r.right <= innerWidth + 1; }));
 
-    check(`${w}: title menu has a Challenges button`, !!(await page.$('[data-go="challenges"]')));
-    await tap('[data-go="challenges"]');
-    await page.screenshot({ path: `${out}${w}-challenges-goals.png` });
-    const goals = await page.$$eval('[data-scenario]', (c) => c.map((x) => x.dataset.scenario));
-    check(`${w}: goal parks listed, free play not among them`, goals.includes('first-steps') && !goals.includes('sandbox'), goals);
-    await tap('[data-folder="challenges"]');
-    await page.screenshot({ path: `${out}${w}-challenges-trouble.png` });
-    check(`${w}: parks in trouble listed`, (await page.$$('.scenario-card')).length === 4);
-    check(`${w}: challenge cards fit the width`, await fitsWide());
-    await tap('#menu [data-go="main"]');
+    // The challenges are set aside (SHOW_CHALLENGES in src/ui/menu.ts): no button for them on the title menu.
+    check(`${w}: title menu has no Challenges button`, !(await page.$('[data-go="challenges"]')));
 
     await tap('[data-go="new"]');
     check(`${w}: island screen defaults to digging`, await page.$eval('[data-discover="1"]', (b) => b.classList.contains('active')));

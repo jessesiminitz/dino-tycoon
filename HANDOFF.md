@@ -1,5 +1,17 @@
 # Dino Tycoon: handoff notes
 
+## Dinos & people button; challenges set aside — November 15, 2026
+
+The owner wanted People and the Dino book back on the main screen behind one button, and the challenges taken out of the game and put aside.
+
+- **📖 Dinos button** (`#btn-folks`, top bar after News): opens the **Dinos & people** sheet (`#folks`), two big tiles: 📖 Dino book (with the new-sticker badge) and 👥 People (with the visitor count). The tiles are the old `#btn-book` and `#btn-people` buttons, so their panels are wired as before; choosing one, or tapping outside, closes the sheet. The sticker badge shows on the top-bar button (`#folks-badge`, mirrored in `hud.ts`).
+- **☰** now holds only Resume, Save now, Settings and Save & main menu. It no longer has a badge.
+- **Text:** the tutorial's last step and the many-new-stickers toast point to 📖 Dinos instead of ☰.
+- **Challenges set aside:** the title menu has no Challenges button (`SHOW_CHALLENGES = false` in `src/ui/menu.ts`). Nothing else was removed: the Challenges screen (goal parks and parks in trouble), `sim/challenges.ts`, the scenarios and their tests are all still there, and a saved challenge park still loads and plays from Load park. Set the flag to `true` to bring the button back. The guided tutorial lived in the First Steps goal park, so new players no longer reach it.
+- **Checks:** new `npm run check:folks` (844×390, 667×375, 568×320, iPad both ways up). `lib.mjs` `reach()` opens the Dinos sheet for `#btn-people`/`#btn-book`. `check:buy-menu` counts 7 top-bar buttons. `check:freeplay` checks there is no Challenges button. The challenge checks (`challenges-ui`, `fire-ui`, `flood-ui`, `milestone-check`, `tracker-overlap`, `repro-place`) go through the Challenges button, so they only run with the flag on.
+
+Validation: 555 tests pass, build passes. `check:folks`, `check:buy-menu`, `check:freeplay`, `people-check`, `stickers-check`, `pause-check`, `hud-check` (every iPhone size keeps its labels, nothing clipped), `overflow-check` and `ipad-portrait` pass. No save change.
+
 ## Smoother, livelier dinosaurs — November 15, 2026
 
 The owner asked for better dinosaur animation and chose all four options offered: smoother movement, livelier standing, animals that react to each other, and more frames per walk. Pixel art only, except where noted; the cartoon edition keeps its eight-pose clips and gains the gliding walk and the wandering changes.

@@ -291,6 +291,28 @@ button {
   overflow-y: auto;
 }
 
+/* The Dinos & people sheet: two big tiles, the same look. */
+.modal-card.sheet.buy-card.folks-card {
+  width: min(100%, 420px);
+}
+
+.folks-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.folks-grid .tool-btn span {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.folks-grid .tool-btn .badge,
+.folks-grid .tool-btn .hud-count {
+  position: static;
+}
+
+body.in-park #folks .buy-grid .tool-btn,
 body.in-park #buy .buy-grid .tool-btn {
   min-height: 84px;
   gap: 3px;
@@ -301,11 +323,13 @@ body.in-park #buy .buy-grid .tool-btn {
   border: 1px solid rgba(60, 45, 20, 0.18);
 }
 
+body.in-park #folks .buy-grid .tool-btn span,
 body.in-park #buy .buy-grid .tool-btn span {
   font-size: 14px;
   font-weight: bold;
 }
 
+body.in-park #folks .buy-grid .tool-btn small,
 body.in-park #buy .buy-grid .tool-btn small {
   font-size: 11px;
   line-height: 1.2;
@@ -313,10 +337,12 @@ body.in-park #buy .buy-grid .tool-btn small {
 }
 
 @media (max-height: 340px) {
+  body.in-park #folks .buy-grid .tool-btn,
   body.in-park #buy .buy-grid .tool-btn {
     min-height: 64px;
     font-size: 22px;
   }
+  body.in-park #folks .buy-grid .tool-btn small,
   body.in-park #buy .buy-grid .tool-btn small {
     display: none;
   }
@@ -351,7 +377,7 @@ body.in-park #buy .buy-grid .tool-btn small {
   margin: 0;
 }
 
-#btn-menu {
+#btn-folks {
   position: relative;
 }
 

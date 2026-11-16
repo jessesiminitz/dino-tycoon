@@ -67,7 +67,7 @@ const STEPS: Step[] = [
     done: (sim) => sim.state.staff.some((m) => m.role === 'worker'),
   },
   {
-    text: 'You’re open for business! Visitors will soon need restrooms, drinks and trash cans: open ☰ and tap 👥 People to hear what they think. Tap ▶ to speed up time, and check 📊 Park to see your goals.',
+    text: 'You’re open for business! Visitors will soon need restrooms, drinks and trash cans: tap 📖 Dinos, then 👥 People, to hear what they think. Tap ▶ to speed up time, and check 📊 Park to see your goals.',
     target: '#btn-park',
     button: 'Finish',
   },

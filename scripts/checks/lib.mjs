@@ -51,14 +51,14 @@ export function openTool(page, mode) {
 }
 
 /**
- * A button that may sit inside the Buy sheet (tools, dinosaurs) or the ☰ menu
- * (People, Dino book): opens that first, then returns the visible button.
+ * A button that may sit inside the Buy sheet (tools, dinosaurs), the Dinos & people sheet
+ * (People, Dino book) or the ☰ menu: opens that first, then returns the visible button.
  */
 export async function reach(page, sel) {
   const holder = await page.evaluate((sel) => {
     const el = document.querySelector(sel);
-    const box = el?.closest('#buy, #pause');
-    return box && box.classList.contains('hidden') ? (box.id === 'buy' ? '#btn-buy' : '#btn-menu') : null;
+    const box = el?.closest('#buy, #folks, #pause');
+    return box && box.classList.contains('hidden') ? ({ buy: '#btn-buy', folks: '#btn-folks', pause: '#btn-menu' })[box.id] : null;
   }, sel);
   if (holder) {
     await (await page.waitForSelector(holder, { visible: true })).tap();

@@ -23,7 +23,7 @@ try {
     check(`${w}: the bottom bar is one Buy button`, bottom.length === 1 && bottom[0] === 'btn-buy', bottom);
     check(`${w}: Buy sits bottom-right`, await page.$eval('#btn-buy', (b) => { const r = b.getBoundingClientRect(); return r.right > innerWidth - 40 && r.bottom > innerHeight - 40; }));
     const top = await page.$$eval('#hud button', (bs) => bs.filter((b) => b.offsetParent).length);
-    check(`${w}: the top bar has 6 buttons (Park, Requests, News, pause, speed, menu)`, top === 6, top);
+    check(`${w}: the top bar has 7 buttons (Park, Requests, News, Dinos, pause, speed, menu)`, top === 7, top);
 
     await tap('#btn-buy');
     check(`${w}: Buy opens the sheet of every tool`, (await shown('#buy')) && (await page.$$('#buy .tool-btn')).length === 8);

@@ -21,6 +21,13 @@ import { renderSettings } from './settings';
 
 type Screen = 'main' | 'island' | 'challenges' | 'load' | 'settings';
 
+/**
+ * The challenges (goal parks and parks in trouble) are set aside for now: the title menu has no button for
+ * them. Everything behind it is kept (the screen below, sim/challenges.ts, the scenarios, saves of challenge
+ * parks still load and play). Set this to true to bring the button back.
+ */
+const SHOW_CHALLENGES = false;
+
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 const stars = (n: number) => '★'.repeat(n) + '☆'.repeat(3 - n);
 /** The goal parks: every build scenario but free play, which is "New park". */
@@ -113,7 +120,7 @@ export function showMenu(handlers: MenuHandlers): void {
         <div class="menu-buttons">
           ${cont ? `<button class="menu-btn primary" data-play="${last}">Continue<small>${SCENARIOS[cont.summary.scenario].name} · Day ${cont.summary.day}</small></button>` : ''}
           <button class="menu-btn ${cont ? '' : 'primary'}" data-go="new">New park</button>
-          <button class="menu-btn" data-go="challenges">Challenges</button>
+          ${SHOW_CHALLENGES ? '<button class="menu-btn" data-go="challenges">Challenges</button>' : ''}
           <button class="menu-btn" data-go="load">Load park</button>
           <button class="menu-btn" data-go="settings">Settings</button>
         </div>

@@ -29,11 +29,12 @@
         <button id="btn-park" class="hud-btn" aria-label="Park: goals, money and staff">📊<span>Park</span></button>
         <button id="btn-requests" class="hud-btn" aria-label="Park requests">📋<span>Requests</span><b id="requests-badge" class="badge hidden"></b></button>
         <button id="btn-log" class="hud-btn" aria-label="Park news">🔔<span>News</span><b id="log-badge" class="badge hidden"></b></button>
+        <button id="btn-folks" class="hud-btn" aria-label="Dinos and people: the Dino book and who is in the park">📖<span>Dinos</span><b id="folks-badge" class="badge hidden"></b></button>
       </div>
       <div class="hud-group" role="group" aria-label="Game speed">
         <button class="speed-btn" data-speed="0" aria-label="Pause">❚❚</button>
         <button id="btn-speed" class="speed-btn" aria-label="Play (tap again to go faster)">▶</button>
-        <button id="btn-menu" class="speed-btn" aria-label="Menu: people, dino book, save and settings">☰<b id="menu-badge" class="badge hidden"></b></button>
+        <button id="btn-menu" class="speed-btn" aria-label="Menu: save, settings and main menu">☰</button>
       </div>
     </div>
 
@@ -71,6 +72,19 @@
           <button class="tool-btn" data-mode="decor">🌳<span>Garden</span><small>Trees, ponds, benches</small></button>
           <button class="tool-btn" data-mode="land">🗺️<span>Land</span><small>Grow your park</small></button>
           <button class="tool-btn" data-mode="demolish">🧨<span>Remove</span><small>Clear things away</small></button>
+        </div>
+      </div>
+    </div>
+
+    <div id="folks" class="modal hidden" role="dialog" aria-label="Dinos and people">
+      <div class="modal-card sheet buy-card folks-card">
+        <header class="modal-head">
+          <h2>📖 Dinos &amp; people</h2>
+          <button class="modal-close" aria-label="Close">✕</button>
+        </header>
+        <div class="buy-grid folks-grid" role="group" aria-label="Dinos and people">
+          <button id="btn-book" class="tool-btn">📖<span>Dino book<b id="stickers-badge" class="badge hidden"></b></span><small>Every dinosaur and your stickers</small></button>
+          <button id="btn-people" class="tool-btn">👥<span>People<b id="hud-guests" class="hud-count">0</b></span><small>Visitors and staff</small></button>
         </div>
       </div>
     </div>
@@ -225,10 +239,6 @@
       <div class="modal-card pause-card">
         <h2>Paused</h2>
         <button class="menu-btn primary" data-pause="resume">Resume</button>
-        <div class="pause-row">
-          <button id="btn-people" class="menu-btn" data-pause="panel">👥 People<b id="hud-guests" class="hud-count">0</b></button>
-          <button id="btn-book" class="menu-btn" data-pause="panel">📖 Dino book<b id="stickers-badge" class="badge hidden"></b></button>
-        </div>
         <button class="menu-btn" data-pause="save">Save now</button>
         <button class="menu-btn" data-pause="settings">Settings</button>
         <div class="settings" hidden></div>
